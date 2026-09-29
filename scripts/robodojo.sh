@@ -523,6 +523,15 @@ EOF
     --additional_info "${additional_info}"
     --seed "${seed}"
   )
+  if [[ -n "${ATOMIC_RECORD_DIR:-}" ]]; then
+    client_args+=(--atomic_record_dir "${ATOMIC_RECORD_DIR}")
+    if [[ -n "${ATOMIC_RECORD_SPEC:-}" ]]; then
+      client_args+=(--atomic_record_spec "${ATOMIC_RECORD_SPEC}")
+    fi
+  elif [[ -n "${ATOMIC_RECORD_SPEC:-}" ]]; then
+    echo "[robodojo client] ATOMIC_RECORD_SPEC requires ATOMIC_RECORD_DIR" >&2
+    exit 2
+  fi
 
   echo "[robodojo client] task=${task} policy=${policy_name} server=${policy_host}:${policy_port} eval_num=${EVAL_NUM:-default}"
 
