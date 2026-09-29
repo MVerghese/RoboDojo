@@ -88,6 +88,14 @@ class AtomicSession:
         kind = event["kind"]
         if kind == "stage_success":
             return success_now
+        if kind == "first_predicate":
+            values = (
+                self.env.reward_manager.call_func_parser(
+                    (check["name"], deepcopy(check["args"])), self.env_idx
+                ) >= 1
+                for check in event["checks"]
+            )
+            return all(values) if event.get("mode", "any") == "all" else any(values)
         label = event["label"]
         current = self._object_pose(label)[:3]
         initial = self.initial_positions[label]

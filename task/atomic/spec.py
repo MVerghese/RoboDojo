@@ -14,7 +14,7 @@ FAMILIES = frozenset(
 GEOMETRY_KINDS = frozenset(
     {"point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"}
 )
-EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion"})
+EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate"})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "robot_ee_pose", "functional_point"})
 
 
@@ -50,6 +50,12 @@ def _validate_condition(condition):
         raise ValueError(f"condition {condition['id']} has unsupported event")
     if event["kind"] in ("first_lift", "first_motion") and not event.get("label"):
         raise ValueError(f"condition {condition['id']} event needs object label")
+    if event["kind"] == "first_predicate":
+        checks = event.get("checks")
+        if not isinstance(checks, list) or not checks or event.get("mode", "any") not in ("any", "all"):
+            raise ValueError(f"condition {condition['id']} first_predicate needs checks and any/all mode")
+        for check in checks:
+            _validate_check(check)
 
 
 def _validate_check(check):

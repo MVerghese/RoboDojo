@@ -150,6 +150,29 @@ class SessionTests(unittest.TestCase):
         self.assertTrue(session.step())
         self.assertEqual(session.summary()["geometry_observed"], 1)
 
+    def test_first_predicate_captures_geometry_before_stage_success(self):
+        layout = _FakeLayout()
+        scene = type("Scene", (), {"layout_manager": layout})()
+        env = type("Env", (), {"scene_manager": scene, "robot_manager": _FakeRobotManager(),
+                                 "reward_manager": _FakeReward(layout)})()
+        stage = AtomicStage.from_dict({
+            "id": "pour", "family": "pour", "instruction": "Pour balls",
+            "success_checks": [{"name": "is_lift", "args": {"z_threshold": 0.2}}],
+            "geometry": [{
+                "id": "cup_height", "slot": "source_pour_pose", "kind": "point",
+                "expected": [0, 0, 0.06], "tolerance": 0.01,
+                "measurement": {"kind": "object_position", "label": "cup"},
+                "event": {"kind": "first_predicate", "checks": [
+                    {"name": "is_lift", "args": {"z_threshold": 0.05}}
+                ]},
+            }],
+        })
+        session = AtomicSession(env, stage, 0)
+        layout.position[2] = 0.06
+        session.observe_events()
+        self.assertFalse(session.step())
+        self.assertEqual(session.summary()["geometry_pass_rate"], 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()
