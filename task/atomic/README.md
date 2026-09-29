@@ -1,6 +1,6 @@
 # Atomic geometry benchmark prototype
 
-This branch adds a separate evaluation mode on top of RoboDojo's existing full-task eval. Its [taxonomy](TAXONOMY.md) defines 11 manipulation families and five geometric modifier types. The [task map](TASK_MAP.md) sketches how all 54 task modules decompose. Three executable programs are included in `programs/`.
+This branch adds a separate evaluation mode on top of RoboDojo's existing full-task eval. Its [taxonomy](TAXONOMY.md) defines 11 manipulation families and five geometric modifier types. The [task map](TASK_MAP.md) sketches how all 54 task modules decompose. Four executable programs are included in `programs/`.
 
 ## What runs today
 
