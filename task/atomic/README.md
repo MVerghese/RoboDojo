@@ -6,8 +6,8 @@ This branch adds a separate evaluation mode on top of RoboDojo's existing full-t
 
 - A program JSON defines named atomic stages, an instruction, existing RoboDojo success predicates, and geometric conditions on typed slots.
 - Geometry conditions report continuous error and pass/fail for a point, SE(3) pose, landmark-relative displacement, landmark-relative orientation, or spatial relation.
-- `AtomicSession` measures conditions at specified events: first object lift, first object motion, or atomic-stage success. The result keeps **action success** and **geometry adherence** separate in `eval_result.details[*].atomic`.
-- A normal evaluation can record policy action traces. A trace can be annotated with action indices at stage starts. Atomic mode resets the original layout, replays the action prefix, starts a fresh stage scoring window, and stops when the selected atomic success checks pass or its step limit expires.
+- `AtomicSession` measures first object lift/motion at physics-step resolution and stage success after each policy action chunk. The result keeps **action success** and **geometry adherence** separate in `eval_result.details[*].atomic`.
+- A normal evaluation can record policy action traces and automatically mark stage starts for an executable program. Atomic mode resets the original layout, replays the action prefix, verifies preceding stage predicates at the recorded boundaries, starts a fresh stage scoring window, and stops when the selected atomic success checks pass or its step limit expires.
 - A variant JSON changes expected geometry, tolerances, references, event, and instruction while keeping the same stage success checks. This permits paired counterfactual trials.
 
 ## Program format
@@ -18,7 +18,7 @@ The included grasp and push examples measure the **nearest robot end-effector li
 
 ## Record, annotate, run
 
-Run a normal RoboDojo evaluation with the usual policy server and append `--atomic_record_dir /path/to/traces` to `scripts/eval_policy.sh`. This writes one JSON trace per episode. Use a successful episode and add stage boundaries as action indices; for `deposit_coin`, for example:
+Run a normal RoboDojo evaluation with the usual policy server and append `--atomic_record_dir /path/to/traces --atomic_record_spec task/atomic/programs/deposit_coin.json` to `scripts/eval_policy.sh`. This writes one JSON trace per episode, marking stage starts when each predicate first succeeds at a policy action boundary. For a task without an executable program, use `--atomic_record_dir` alone and annotate a successful trace manually; for `deposit_coin`, for example:
 
 ```json
 "stage_starts": {"pick_coin": 0, "insert_coin": 37}
@@ -33,6 +33,12 @@ The index `37` means replay actions `0..36`, then ask the policy to perform `ins
 ```
 
 To vary a geometric target, add `--atomic_variant /path/to/variant.json`. The example [`push_T_right_contact.json`](programs/variants/push_T_right_contact.json) changes the requested end-effector contact offset and atomic instruction. The launcher forwards these flags to `src/eval_client/main.py` and forces one environment and one trial in atomic mode.
+
+Stage recording currently requires predicates that are meaningful relative to the full episode start. A later-stage `is_moved` check relative to that baseline can fire before the intended action; such tasks need a stage-local predicate or a manual boundary. Successful full-task traces remain necessary to produce later-stage start states.
+
+## Existing Lustre demonstrations
+
+The cluster has a 112 GB simulated RoboDojo LeRobot dataset at `/lustre/fsw/portfolios/cosmos/projects/cosmos_base_training/cosmos3_action_datasets/robodojo_20260907/robodojo_sim_joint/arx_x5`. Its metadata lists 3,500 episodes, 35 tasks, 25 fps joint actions, and three video streams. These demonstrations are useful for inspecting motion and choosing geometric targets. Their episode records contain task text and frame ranges but no RoboDojo saved-layout ID or simulator object state, so they cannot directly serve as deterministic start-state traces for this eval harness. The trace recorder above produces the needed layout-linked action prefix.
 
 ## Remaining work and validation needs
 

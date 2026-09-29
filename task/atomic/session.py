@@ -100,9 +100,8 @@ class AtomicSession:
             return np.linalg.norm(current - initial) >= threshold
         raise ValueError(f"unknown event kind {kind!r}")
 
-    def step(self):
+    def _sample(self, success_now):
         self.sample_index += 1
-        success_now = self._check_success()
         for condition in self.stage.geometry:
             condition_id = condition["id"]
             if condition_id in self.results:
@@ -125,7 +124,21 @@ class AtomicSession:
                 ),
                 "result": result.as_dict(),
             }
+
+    def observe_events(self):
+        """Capture first-lift/motion geometry at physics-step resolution."""
+        self._sample(success_now=False)
+
+    def step(self):
+        """Evaluate stage success after a policy action chunk."""
+        success_now = self._check_success()
+        self._sample(success_now)
         self.success = self.success or success_now
+        return self.success
+
+    def check_success_only(self):
+        """Advance stage annotation without measuring geometric conditions."""
+        self.success = self.success or self._check_success()
         return self.success
 
     def summary(self):

@@ -16,6 +16,7 @@ parser.add_argument("--atomic_stage", type=str, default="", help="Atomic stage i
 parser.add_argument("--atomic_trace", type=str, default="", help="Action trace with the selected stage boundary")
 parser.add_argument("--atomic_variant", type=str, default="", help="JSON geometry condition overrides")
 parser.add_argument("--atomic_record_dir", type=str, default="", help="Directory for recorded policy action traces")
+parser.add_argument("--atomic_record_spec", type=str, default="", help="Program used to mark stage boundaries while recording")
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to spawn.")
 parser.add_argument(
     "--env_cfg_type",
@@ -285,6 +286,7 @@ def main():
     eval_cfg["atomic_trace"] = args_cli.atomic_trace
     eval_cfg["atomic_variant"] = args_cli.atomic_variant
     eval_cfg["atomic_record_dir"] = args_cli.atomic_record_dir
+    eval_cfg["atomic_record_spec"] = args_cli.atomic_record_spec
 
     deploy_cfg = {}
     deploy_cfg["policy_name"] = args_cli.policy_name

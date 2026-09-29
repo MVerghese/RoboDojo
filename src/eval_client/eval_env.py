@@ -75,6 +75,18 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self._atomic_sessions = {}
             self._atomic_record_dir = self.eval_cfg.get("atomic_record_dir")
             self._atomic_recorded_actions = [[] for _ in range(self.num_envs)]
+            self._atomic_record_program = None
+            self._atomic_record_sessions = {}
+            self._atomic_record_stage_indices = {}
+            self._atomic_record_stage_starts = [{} for _ in range(self.num_envs)]
+            if self.eval_cfg.get("atomic_record_spec"):
+                from task.atomic.spec import AtomicProgram
+
+                if not self._atomic_record_dir:
+                    raise ValueError("atomic_record_spec requires atomic_record_dir")
+                self._atomic_record_program = AtomicProgram.load(self.eval_cfg["atomic_record_spec"])
+                if self._atomic_record_program.task_name != self.task_name:
+                    raise ValueError("atomic recording program task_name does not match eval task")
             if self.eval_cfg.get("atomic_spec"):
                 from task.atomic.spec import AtomicProgram, AtomicTrace, load_variant
 
@@ -285,6 +297,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
 
             self._atomic_sessions = {}
             self._atomic_recorded_actions = [[] for _ in range(self.num_envs)]
+            self._atomic_record_sessions = {}
+            self._atomic_record_stage_indices = {}
+            self._atomic_record_stage_starts = [{} for _ in range(self.num_envs)]
 
             self.model_client.call(func_name="reset")
 
@@ -504,6 +519,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
 
             if self.atomic_stage is None or self._atomic_replaying:
                 self.reward_manager.step(env_idx_list=env_idx_list)
+            if self._atomic_record_program is not None and not self._atomic_replaying:
+                self._advance_recorded_stages(env_idx_list)
             if getattr(self, "interact", False):
                 if hasattr(self, "query_support_arm_traj"):
                     for env_idx in env_idx_list:
@@ -689,6 +706,11 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             for _ in range(decimation):
                 super().step(meta_control_list=meta_control_list)
                 self.sim_step(render=False)
+                if self.atomic_stage is not None and not self._atomic_replaying:
+                    for env_idx in env_idx_list:
+                        session = self._atomic_sessions.get(env_idx)
+                        if session is not None and not self.end_flag[env_idx]:
+                            session.observe_events()
 
         def _align_layout_success(self):
             for env_idx in range(self.num_envs):
@@ -819,24 +841,24 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
 
         def _start_atomic_stage(self):
             """Replay a recorded prefix, then start a fresh atomic score window."""
+            from task.atomic.replay import replay_prefix
             from task.atomic.session import AtomicSession
 
             start = 0
             if self.atomic_trace is not None:
                 if self.atomic_trace.layout_id != int(self.env_seeds[0]):
                     raise ValueError("atomic trace layout_id does not match the loaded scene")
-                if self.atomic_stage.id not in self.atomic_trace.stage_starts:
-                    raise ValueError(f"trace has no boundary for stage {self.atomic_stage.id!r}")
-                start = self.atomic_trace.stage_starts[self.atomic_stage.id]
-            if start:
                 self._atomic_replaying = True
                 try:
-                    for action in self.atomic_trace.actions[:start]:
-                        self.take_action(action)
+                    start = replay_prefix(
+                        self.atomic_program, self.atomic_stage, self.atomic_trace,
+                        self.take_action,
+                        lambda stage: AtomicSession(self, stage, 0).check_success_only(),
+                    )
                 finally:
                     self._atomic_replaying = False
-                if not self.success[0]:
-                    raise ValueError("trace replay failed a RoboDojo precondition before the atomic stage")
+                if self.take_action_cnt[0] != start:
+                    raise ValueError("trace replay stopped before the atomic stage boundary")
                 self.take_action_cnt[0] = 0
                 self.reward_manager.func_parser.init_state()
                 self.robot_manager.set_origin_endpose()
@@ -851,7 +873,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
         def _save_atomic_trace(self, env_idx, episode_index):
             os.makedirs(self._atomic_record_dir, exist_ok=True)
             file_name = f"{self.task_name}_{self.run_id}_{episode_index:07d}.json"
-            stage_starts = {self.atomic_stage.id: 0} if self.atomic_stage is not None else {}
+            stage_starts = self._atomic_record_stage_starts[env_idx]
+            if self.atomic_stage is not None:
+                stage_starts = {self.atomic_stage.id: 0}
             save_json(
                 {
                     "task_name": self.task_name,
@@ -863,12 +887,39 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 os.path.join(self._atomic_record_dir, file_name),
             )
 
+        def _advance_recorded_stages(self, env_idx_list):
+            from task.atomic.session import AtomicSession
+
+            stages = self._atomic_record_program.stages
+            for env_idx in env_idx_list:
+                session = self._atomic_record_sessions.get(env_idx)
+                if session is None or not session.check_success_only():
+                    continue
+                next_index = self._atomic_record_stage_indices[env_idx] + 1
+                self._atomic_record_stage_indices[env_idx] = next_index
+                if next_index < len(stages):
+                    next_stage = stages[next_index]
+                    self._atomic_record_stage_starts[env_idx][next_stage.id] = len(
+                        self._atomic_recorded_actions[env_idx]
+                    )
+                    self._atomic_record_sessions[env_idx] = AtomicSession(self, next_stage, env_idx)
+                else:
+                    self._atomic_record_sessions.pop(env_idx, None)
+
         def run_eval(self):
             self.run_reward()
             if self.atomic_stage is None and hasattr(self, "get_score"):
                 self.get_score()
             if self.atomic_stage is not None:
                 self._start_atomic_stage()
+            if self._atomic_record_program is not None:
+                from task.atomic.session import AtomicSession
+
+                first_stage = self._atomic_record_program.stages[0]
+                for env_idx in self.get_running_env_idx_list():
+                    self._atomic_record_stage_indices[env_idx] = 0
+                    self._atomic_record_stage_starts[env_idx][first_stage.id] = 0
+                    self._atomic_record_sessions[env_idx] = AtomicSession(self, first_stage, env_idx)
             exist_envs = self.get_running_env_idx_list()
             if getattr(self, "interact", False):
                 if hasattr(self, "query_support_arm_traj"):

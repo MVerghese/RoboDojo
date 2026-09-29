@@ -7,6 +7,7 @@ import unittest
 import numpy as np
 
 from task.atomic.geometry import evaluate_geometry
+from task.atomic.replay import replay_prefix
 from task.atomic.session import AtomicSession
 from task.atomic.spec import AtomicProgram, AtomicStage, AtomicTrace
 
@@ -68,6 +69,27 @@ class SpecTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "valid action boundaries"):
                 AtomicTrace.load(path)
 
+    def test_replay_checks_preceding_stage_at_recorded_boundary(self):
+        program = AtomicProgram.load(
+            Path(__file__).resolve().parents[1] / "task/atomic/programs/deposit_coin.json"
+        )
+        trace = AtomicTrace(
+            "deposit_coin", 3, ({"step": 0}, {"step": 1}, {"step": 2}),
+            {"pick_coin": 0, "insert_coin": 2},
+        )
+        played = []
+        start = replay_prefix(
+            program, program.stage("insert_coin"), trace,
+            lambda action: played.append(action["step"]),
+            lambda stage: played == [0, 1] and stage.id == "pick_coin",
+        )
+        self.assertEqual((start, played), (2, [0, 1]))
+        with self.assertRaisesRegex(ValueError, "replay diverged"):
+            replay_prefix(
+                program, program.stage("insert_coin"), trace,
+                lambda action: None, lambda stage: False,
+            )
+
 
 class _FakeLayout:
     def __init__(self):
@@ -117,6 +139,8 @@ class SessionTests(unittest.TestCase):
         session = AtomicSession(env, stage, 0)
         self.assertFalse(session.step())
         layout.position[2] = 0.04
+        session.observe_events()  # physics step before the policy chunk ends
+        self.assertEqual(session.summary()["geometry_observed"], 1)
         self.assertFalse(session.step())
         self.assertEqual(session.summary()["geometry_observed"], 1)
         layout.position[2] = 0.11
