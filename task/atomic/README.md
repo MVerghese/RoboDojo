@@ -6,7 +6,7 @@ This branch adds a separate evaluation mode on top of RoboDojo's existing full-t
 
 - A program JSON defines named atomic stages, an instruction, existing RoboDojo success predicates, and geometric conditions on typed slots.
 - Geometry conditions report continuous error and pass/fail for a point, SE(3) pose, landmark-relative displacement, landmark-relative orientation, or spatial relation.
-- `AtomicSession` measures first object lift/motion at physics-step resolution and stage success after each policy action chunk. The result keeps **action success** and **geometry adherence** separate in `eval_result.details[*].atomic`.
+- `AtomicSession` measures first object lift/motion at physics-step resolution and stage success after each policy action chunk. The result keeps **action success** and **geometry adherence** separate in `eval_result.details[*].atomic`. `geometry_pass_rate` is null until a condition is observed; `geometry_coverage` reports how many conditions fired.
 - A normal evaluation can record policy action traces and automatically mark stage starts for an executable program. Atomic mode resets the original layout, replays the action prefix, verifies preceding stage predicates at the recorded boundaries, starts a fresh stage scoring window, and stops when the selected atomic success checks pass or its step limit expires.
 - A variant JSON changes expected geometry, tolerances, references, event, and instruction while keeping the same stage success checks. This permits paired counterfactual trials.
 

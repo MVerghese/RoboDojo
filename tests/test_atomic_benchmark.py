@@ -138,9 +138,12 @@ class SessionTests(unittest.TestCase):
         })
         session = AtomicSession(env, stage, 0)
         self.assertFalse(session.step())
+        self.assertIsNone(session.summary()["geometry_pass_rate"])
+        self.assertEqual(session.summary()["geometry_coverage"], 0.0)
         layout.position[2] = 0.04
         session.observe_events()  # physics step before the policy chunk ends
         self.assertEqual(session.summary()["geometry_observed"], 1)
+        self.assertEqual(session.summary()["geometry_coverage"], 1.0)
         self.assertFalse(session.step())
         self.assertEqual(session.summary()["geometry_observed"], 1)
         layout.position[2] = 0.11

@@ -144,12 +144,14 @@ class AtomicSession:
     def summary(self):
         passed = sum(item["result"]["passed"] for item in self.results.values())
         total = len(self.stage.geometry)
+        observed = len(self.results)
         return {
             "stage_id": self.stage.id,
             "family": self.stage.family,
             "action_success": self.success,
-            "geometry_pass_rate": passed / total if total else None,
-            "geometry_observed": len(self.results),
+            "geometry_pass_rate": passed / observed if observed else None,
+            "geometry_coverage": observed / total if total else None,
+            "geometry_observed": observed,
             "geometry_total": total,
             "geometry": self.results,
         }
