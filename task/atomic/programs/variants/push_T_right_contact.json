@@ -1,0 +1,10 @@
+{
+  "stage_id": "push_t_to_pad",
+  "instruction": "Push the T-shaped block onto the gray pad while contacting its right side, 5 cm from its center.",
+  "conditions": {
+    "push_contact_offset": {
+      "expected": [0.05, 0.0, 0.0],
+      "tolerance": 0.03
+    }
+  }
+}

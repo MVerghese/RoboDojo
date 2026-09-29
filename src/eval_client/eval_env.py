@@ -40,6 +40,19 @@ def _patch_websockets_proxy_compat():
     websockets.connect = connect_without_proxy
 
 
+def _jsonable(value):
+    """Convert policy action arrays to a portable trace representation."""
+    if isinstance(value, dict):
+        return {key: _jsonable(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(item) for item in value]
+    if isinstance(value, np.ndarray):
+        return value.tolist()
+    if isinstance(value, np.generic):
+        return value.item()
+    return value
+
+
 def create_eval_env(config, app, resume_state=None, **kwargs):
     task_name = config.eval_cfg.get("task_name", None)
     if task_name is None:
@@ -55,6 +68,34 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self.eval_cfg = config.eval_cfg
             self.config_name = self.eval_cfg.get("config_name", None)
             self.task_name = self.eval_cfg.get("task_name", None)
+            self.atomic_program = None
+            self.atomic_stage = None
+            self.atomic_trace = None
+            self._atomic_replaying = False
+            self._atomic_sessions = {}
+            self._atomic_record_dir = self.eval_cfg.get("atomic_record_dir")
+            self._atomic_recorded_actions = [[] for _ in range(self.num_envs)]
+            if self.eval_cfg.get("atomic_spec"):
+                from task.atomic.spec import AtomicProgram, AtomicTrace, load_variant
+
+                if self.num_envs != 1:
+                    raise ValueError("atomic stage evaluation currently requires num_envs=1")
+                self.atomic_program = AtomicProgram.load(self.eval_cfg["atomic_spec"])
+                if self.atomic_program.task_name != self.task_name:
+                    raise ValueError("atomic program task_name does not match eval task")
+                stage_id = self.eval_cfg.get("atomic_stage")
+                if not stage_id:
+                    raise ValueError("atomic_stage is required when atomic_spec is set")
+                self.atomic_stage = self.atomic_program.stage(stage_id)
+                variant = load_variant(self.eval_cfg.get("atomic_variant"))
+                if variant:
+                    self.atomic_stage = self.atomic_stage.with_variant(variant)
+                if self.eval_cfg.get("atomic_trace"):
+                    self.atomic_trace = AtomicTrace.load(self.eval_cfg["atomic_trace"])
+                    if self.atomic_trace.task_name != self.task_name:
+                        raise ValueError("atomic trace task_name does not match eval task")
+                elif self.atomic_stage.id != self.atomic_program.stages[0].id:
+                    raise ValueError("a recorded trace is required to start after the first atomic stage")
             self.eval_batch = self.eval_cfg.get("eval_batch", False)
             self.eval_num = int(self.eval_cfg.get("eval_num", 50))
             self.policy_name = self.eval_cfg.get("policy_name", None)
@@ -242,6 +283,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self.robot_manager.set_robot_init_state()
             self.reward_manager.init_state()
 
+            self._atomic_sessions = {}
+            self._atomic_recorded_actions = [[] for _ in range(self.num_envs)]
+
             self.model_client.call(func_name="reset")
 
         def setup_scene(self):
@@ -281,6 +325,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     self._stream_vision(env_idx, data[env_idx])
                 env_data = deepcopy(data[env_idx])
                 env_data["env_idx"] = env_idx
+                if self.atomic_stage is not None:
+                    env_data["instruction"] = self.atomic_stage.instruction
                 data_list.append(env_data)
             return data_list
 
@@ -369,6 +415,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     continue
 
                 self.take_action_cnt[env_idx] += 1
+                if self._atomic_record_dir and not self._atomic_replaying:
+                    self._atomic_recorded_actions[env_idx].append(_jsonable(action))
                 print(
                     f"env{env_idx} step: \033[92m{self.take_action_cnt[env_idx]} / {self.step_lim}\033[0m",
                     end="\r",
@@ -454,7 +502,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                         self._check_physx_broken_envs()
                         self._check_endpose_finite(env_idx_list)
 
-            self.reward_manager.step(env_idx_list=env_idx_list)
+            if self.atomic_stage is None or self._atomic_replaying:
+                self.reward_manager.step(env_idx_list=env_idx_list)
             if getattr(self, "interact", False):
                 if hasattr(self, "query_support_arm_traj"):
                     for env_idx in env_idx_list:
@@ -768,10 +817,58 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
         def get_seeds_for_envs(self, env_idxs) -> set:
             return {self.current_env_seed_map[i] for i in env_idxs if i in self.current_env_seed_map}
 
+        def _start_atomic_stage(self):
+            """Replay a recorded prefix, then start a fresh atomic score window."""
+            from task.atomic.session import AtomicSession
+
+            start = 0
+            if self.atomic_trace is not None:
+                if self.atomic_trace.layout_id != int(self.env_seeds[0]):
+                    raise ValueError("atomic trace layout_id does not match the loaded scene")
+                if self.atomic_stage.id not in self.atomic_trace.stage_starts:
+                    raise ValueError(f"trace has no boundary for stage {self.atomic_stage.id!r}")
+                start = self.atomic_trace.stage_starts[self.atomic_stage.id]
+            if start:
+                self._atomic_replaying = True
+                try:
+                    for action in self.atomic_trace.actions[:start]:
+                        self.take_action(action)
+                finally:
+                    self._atomic_replaying = False
+                if not self.success[0]:
+                    raise ValueError("trace replay failed a RoboDojo precondition before the atomic stage")
+                self.take_action_cnt[0] = 0
+                self.reward_manager.func_parser.init_state()
+                self.robot_manager.set_origin_endpose()
+            if self.atomic_stage.step_limit is not None:
+                self.step_lim = self.atomic_stage.step_limit
+            self._atomic_sessions = {0: AtomicSession(self, self.atomic_stage, 0)}
+            if self._atomic_sessions[0]._check_success():
+                raise ValueError(
+                    f"atomic stage {self.atomic_stage.id!r} is already complete at its start boundary"
+                )
+
+        def _save_atomic_trace(self, env_idx, episode_index):
+            os.makedirs(self._atomic_record_dir, exist_ok=True)
+            file_name = f"{self.task_name}_{self.run_id}_{episode_index:07d}.json"
+            stage_starts = {self.atomic_stage.id: 0} if self.atomic_stage is not None else {}
+            save_json(
+                {
+                    "task_name": self.task_name,
+                    "layout_id": int(self.env_seeds[env_idx]),
+                    "actions": self._atomic_recorded_actions[env_idx],
+                    "stage_starts": stage_starts,
+                    "episode_success": bool(self.success[env_idx]),
+                },
+                os.path.join(self._atomic_record_dir, file_name),
+            )
+
         def run_eval(self):
             self.run_reward()
-            if hasattr(self, "get_score"):
+            if self.atomic_stage is None and hasattr(self, "get_score"):
                 self.get_score()
+            if self.atomic_stage is not None:
+                self._start_atomic_stage()
             exist_envs = self.get_running_env_idx_list()
             if getattr(self, "interact", False):
                 if hasattr(self, "query_support_arm_traj"):
@@ -782,7 +879,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             else:
                 self.eval_one_episode()
             success = 0
-            process_scores = self.reward_manager.get_score() if hasattr(self, "get_score") else None
+            process_scores = (
+                self.reward_manager.get_score()
+                if self.atomic_stage is None and hasattr(self, "get_score") else None
+            )
             # Envs flagged unstable during the episode (e.g. make_kong's
             # support-arm discard failed to knock the target tile down) are not
             # valid eval samples: skip their videos and exclude them from the
@@ -815,6 +915,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     "success": bool(self.success[env_idx]),
                     "score": episode_score,
                 }
+                if self.atomic_stage is not None:
+                    self.eval_result["details"][index]["atomic"] = self._atomic_sessions[env_idx].summary()
+                if self._atomic_record_dir:
+                    self._save_atomic_trace(env_idx, index)
                 video_path = os.path.join(self.save_dir, f"episode_{index:07d}.mp4")
                 self.save_video(env_idx, video_path, tag)
 
@@ -839,6 +943,26 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 print(f"[EvalEnv] persist_resume_manifest after run_eval failed: {e}")
 
         def is_episode_end(self):
+            if self._atomic_replaying:
+                return False
+            if self.atomic_stage is not None:
+                pre_end_flag = deepcopy(self.end_flag)
+                for env_idx, session in self._atomic_sessions.items():
+                    if self.end_flag[env_idx]:
+                        continue
+                    if session.step():
+                        self.end_flag[env_idx] = True
+                        self.success[env_idx] = True
+                    elif self.take_action_cnt[env_idx] >= self.step_lim:
+                        self.end_flag[env_idx] = True
+                        self.success[env_idx] = False
+                finished = [
+                    env_idx for env_idx in self._atomic_sessions
+                    if self.end_flag[env_idx] and not pre_end_flag[env_idx]
+                ]
+                if finished:
+                    self.get_obs_batch(env_idx_list=finished, last_frame=True)
+                return all(self.end_flag)
             pre_end_flag = deepcopy(self.end_flag)
             final_check = False
             for env_idx in range(self.num_envs):

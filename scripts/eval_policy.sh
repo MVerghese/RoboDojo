@@ -118,8 +118,6 @@ num_envs="$(python3 -c "import sys,yaml;print(yaml.safe_load(open(sys.argv[1])).
 echo "[INFO] render_interval = ${render_interval}"
 echo "[INFO] num_envs        = ${num_envs}"
 
-extra_args=()
-
 KIT_ENABLE_EXTS=(
   "isaacsim.replicator.behavior"
   "isaacsim.sensors.camera"

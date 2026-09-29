@@ -65,6 +65,10 @@ Assets/                downloaded robot, object, material, and layout assets
 
 ## 🔌 Policy Integration
 
+An experimental atomic-action and geometric-conditioning evaluation mode is documented in
+[`task/atomic/README.md`](task/atomic/README.md). It is separate from the official full-task
+RoboDojo evaluation and leaderboard.
+
 Policies live in [XPolicyLab](https://github.com/XPolicyLab/XPolicyLab/blob/main/README.md), which owns policy structure, dependencies, checkpoint layout, and server behavior. RoboDojo only assumes a policy directory provides:
 
 ```text

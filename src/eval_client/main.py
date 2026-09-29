@@ -11,6 +11,11 @@ MAX_INPROC_RESTARTS = 3
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--task_name", type=str)
+parser.add_argument("--atomic_spec", type=str, default="", help="JSON program defining atomic stages")
+parser.add_argument("--atomic_stage", type=str, default="", help="Atomic stage id to evaluate")
+parser.add_argument("--atomic_trace", type=str, default="", help="Action trace with the selected stage boundary")
+parser.add_argument("--atomic_variant", type=str, default="", help="JSON geometry condition overrides")
+parser.add_argument("--atomic_record_dir", type=str, default="", help="Directory for recorded policy action traces")
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to spawn.")
 parser.add_argument(
     "--env_cfg_type",
@@ -257,6 +262,10 @@ def main():
     """
     task_name = args_cli.task_name
     num_envs = args_cli.num_envs
+    if args_cli.atomic_spec:
+        if num_envs != 1:
+            print(f"[main] atomic eval requires one environment; forcing {num_envs} -> 1")
+        num_envs = 1
     eval_cfg_name = args_cli.env_cfg_type
     eval_cfg = load_yaml(os.path.join(ENV_CONFIG_PATH, eval_cfg_name + ".yml"))
     eval_cfg["task_name"] = task_name
@@ -265,9 +274,17 @@ def main():
     eval_batch = _eval_batch_from_deploy(args_cli.policy_name)
     eval_cfg["eval_batch"] = eval_batch
     eval_cfg["policy_name"] = args_cli.policy_name
-    eval_cfg["additional_info"] = args_cli.additional_info
+    eval_cfg["additional_info"] = (
+        f"{args_cli.additional_info}_atomic_{args_cli.atomic_stage}"
+        if args_cli.atomic_spec else args_cli.additional_info
+    )
     eval_cfg["seed"] = args_cli.seed
     eval_cfg["physx_monitor_enabled"] = enable_monitor
+    eval_cfg["atomic_spec"] = args_cli.atomic_spec
+    eval_cfg["atomic_stage"] = args_cli.atomic_stage
+    eval_cfg["atomic_trace"] = args_cli.atomic_trace
+    eval_cfg["atomic_variant"] = args_cli.atomic_variant
+    eval_cfg["atomic_record_dir"] = args_cli.atomic_record_dir
 
     deploy_cfg = {}
     deploy_cfg["policy_name"] = args_cli.policy_name
@@ -326,6 +343,8 @@ def main():
     OmegaConf.update(env_cfg, "eval_cfg.num_envs", num_envs, force_add=True)
     env_cfg = process_randomization(env_cfg)
     env_cfg, eval_num = process_config(env_cfg, task_name=task_name)
+    if args_cli.atomic_spec:
+        eval_num = 1
 
     if os.environ.get("EVAL_NUM"):
         _env_eval_num = os.environ.get("EVAL_NUM")
@@ -350,6 +369,10 @@ def main():
         env.env_seeds = None
     else:
         env.env_seeds = env.seed_manager.get_seeds(max_count=eval_num - eval_time)
+        if args_cli.atomic_spec and args_cli.atomic_trace:
+            from task.atomic.spec import AtomicTrace
+
+            env.env_seeds = [AtomicTrace.load(args_cli.atomic_trace).layout_id]
     while env.env_seeds is not None:
         retry_round = False
         if enable_monitor:
