@@ -42,7 +42,7 @@ def build_overlay(fork: Path, output: Path) -> str:
     return hashlib.sha256(output.read_bytes()).hexdigest()
 
 
-def patch_spec(spec: dict, remote: str, digest: str, task: str) -> dict:
+def patch_spec(spec: dict, remote: str, digest: str, task: str, reservation: str | None) -> dict:
     result = json.loads(json.dumps(spec))
     bootstrap = result["spec"]["container"]["command"][2]
     marker = "tar -xzf /tmp/robodojo-code.tar.gz -C /opt/imaginaire4"
@@ -58,6 +58,11 @@ def patch_spec(spec: dict, remote: str, digest: str, task: str) -> dict:
         {"name": "ATOMIC_RECORD_DIR", "value": "/workspace/robodojo-eval-output/traces"},
         {"name": "ATOMIC_RECORD_SPEC", "value": f"/workspace/RoboDojo/task/atomic/programs/{task}.json"},
     ))
+    if reservation:
+        result["spec"]["reservation_config"] = {
+            "reservation_id": reservation,
+            "allow_burst_to_other_reservations": True,
+        }
     return result
 
 
@@ -66,6 +71,7 @@ def main() -> None:
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--fork", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--task", default="pour_balls_into_vase")
+    parser.add_argument("--reservation", help="Existing Lepton reservation ID for the capture job")
     parser.add_argument("--credentials-file", type=Path)
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
@@ -81,7 +87,7 @@ def main() -> None:
     overlay = args.run_dir / "robodojo-overlay.tar.gz"
     digest = build_overlay(args.fork, overlay)
     remote = f"{plan['results_s3']}/robodojo-overlay.tar.gz"
-    patched = patch_spec(spec, remote, digest, args.task)
+    patched = patch_spec(spec, remote, digest, args.task, args.reservation)
     patched_path = args.run_dir / f"{plan['jobs'][0]}.atomic-job-spec.json"
     patched_path.write_text(json.dumps(patched, indent=2) + "\n")
     (args.run_dir / "overlay.sha256").write_text(digest + "  robodojo-overlay.tar.gz\n")
