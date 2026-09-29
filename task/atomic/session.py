@@ -41,7 +41,7 @@ class AtomicSession:
         if kind in ("object_pose", "object_position"):
             pose = self._object_pose(selector["label"])
             return pose if kind == "object_pose" else pose[:3]
-        if kind == "robot_tcp":
+        if kind == "robot_ee_pose":
             if selector["arm"] == "nearest":
                 target = self._object_pose(selector["label"])[:3]
                 candidates = [r for r in self.env.robot_manager.robot_list if r.type == "target"]
@@ -119,8 +119,8 @@ class AtomicSession:
                 "event": event,
                 "sample_index": self.sample_index,
                 "measurement": condition["measurement"],
-                "tcp_contact_proxy": (
-                    condition["measurement"]["kind"] == "robot_tcp"
+                "ee_contact_proxy": (
+                    condition["measurement"]["kind"] == "robot_ee_pose"
                     and event["kind"] in ("first_lift", "first_motion")
                 ),
                 "result": result.as_dict(),

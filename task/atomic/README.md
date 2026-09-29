@@ -14,7 +14,7 @@ This branch adds a separate evaluation mode on top of RoboDojo's existing full-t
 
 See [`deposit_coin.json`](programs/deposit_coin.json) for a two-stage example. Each stage has an `id`, `family`, `instruction`, `success_checks`, and `geometry`. A geometry entry has an `id`, `slot`, one of the five `kind` values, an `expected` value, `tolerance`, `measurement`, optional `reference`, and an `event`. All poses are environment-local with scalar-first quaternions. `relative_displacement` is expressed in the reference object's frame. Spatial directional relations use x right, y forward, z up in that frame. Values must be selected from feasible geometry for the task and calibrated against the chosen object asset.
 
-The included grasp and push examples measure the **nearest robot TCP as a proxy** at first lift/motion. They do not claim to recover the exact finger-object contact patch. A benchmark cell requiring exact contact needs PhysX contact reporting and a contact-point resolver.
+The included grasp and push examples measure the **nearest robot end-effector link pose as a proxy** at first lift/motion. They do not claim to recover the exact finger-object contact patch. A benchmark cell requiring exact contact needs PhysX contact reporting and a contact-point resolver.
 
 ## Record, annotate, run
 
@@ -32,13 +32,13 @@ The index `37` means replay actions `0..36`, then ask the policy to perform `ins
 --atomic_trace /path/to/annotated_trace.json
 ```
 
-To vary a geometric target, add `--atomic_variant /path/to/variant.json`. The example [`push_T_right_contact.json`](programs/variants/push_T_right_contact.json) changes the requested TCP contact offset and atomic instruction. The launcher forwards these flags to `src/eval_client/main.py` and forces one environment and one trial in atomic mode.
+To vary a geometric target, add `--atomic_variant /path/to/variant.json`. The example [`push_T_right_contact.json`](programs/variants/push_T_right_contact.json) changes the requested end-effector contact offset and atomic instruction. The launcher forwards these flags to `src/eval_client/main.py` and forces one environment and one trial in atomic mode.
 
 ## Remaining work and validation needs
 
 - The map is complete as an inventory, but only the three listed programs are executable. Each remaining task needs grounded labels, independent stage predicates, and action-boundary annotations. Some tasks require auxiliary states, such as an opponent move or a held stabilizing object.
 - Recorded action prefixes are replayed through the simulator. Determinism and state fidelity, especially for garments and fluids, must be checked in Isaac Sim. This workspace has no Isaac Sim, NVIDIA driver, or `Assets`, so only schema, math, and mock session tests run here.
-- Exact grasp and tool-contact geometry requires simulator contact points; the current TCP estimate is a named proxy in each result (`tcp_contact_proxy: true`).
+- Exact grasp and tool-contact geometry requires simulator contact points; the current end-effector link estimate is a named proxy in each result (`ee_contact_proxy: true`).
 - Geometric variants must remain physically feasible. A final-pose variant that conflicts with a stage's fixed success predicate is invalid; choose a success predicate that represents the action independently of the changed geometry.
 
 Run the local tests with `python3 -m unittest discover -s tests -p 'test_atomic_benchmark.py' -v`.

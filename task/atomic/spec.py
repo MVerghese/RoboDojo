@@ -15,7 +15,7 @@ GEOMETRY_KINDS = frozenset(
     {"point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"}
 )
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion"})
-MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "robot_tcp", "functional_point"})
+MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "robot_ee_pose", "functional_point"})
 
 
 def _read_json(path):
@@ -26,9 +26,9 @@ def _read_json(path):
 def _validate_selector(selector, name):
     if not isinstance(selector, dict) or selector.get("kind") not in MEASUREMENT_KINDS:
         raise ValueError(f"{name} must have kind in {sorted(MEASUREMENT_KINDS)}")
-    if selector["kind"] == "robot_tcp":
+    if selector["kind"] == "robot_ee_pose":
         if not selector.get("arm"):
-            raise ValueError(f"{name}.arm is required for robot_tcp")
+            raise ValueError(f"{name}.arm is required for robot_ee_pose")
         if selector["arm"] == "nearest" and not selector.get("label"):
             raise ValueError(f"{name}.label is required when arm is nearest")
     elif not selector.get("label"):

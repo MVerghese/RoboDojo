@@ -14,7 +14,7 @@
           "id": "coin_grasp_offset",
           "slot": "grasp_region",
           "kind": "relative_displacement",
-          "measurement": {"kind": "robot_tcp", "arm": "nearest", "label": "coin0"},
+          "measurement": {"kind": "robot_ee_pose", "arm": "nearest", "label": "coin0"},
           "reference": {"kind": "object_pose", "label": "coin0"},
           "event": {"kind": "first_lift", "label": "coin0", "threshold": 0.025},
           "expected": [0.0, 0.0, 0.0],

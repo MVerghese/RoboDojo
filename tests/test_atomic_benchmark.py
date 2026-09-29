@@ -109,7 +109,7 @@ class SessionTests(unittest.TestCase):
             "geometry": [{
                 "id": "grasp", "slot": "grasp_region", "kind": "relative_displacement",
                 "expected": [0.02, 0, 0], "tolerance": 0.001,
-                "measurement": {"kind": "robot_tcp", "arm": "left_arm"},
+                "measurement": {"kind": "robot_ee_pose", "arm": "left_arm"},
                 "reference": {"kind": "object_pose", "label": "target"},
                 "event": {"kind": "first_lift", "label": "target", "threshold": 0.025},
             }],

@@ -15,7 +15,7 @@
           "id": "push_contact_offset",
           "slot": "contact",
           "kind": "relative_displacement",
-          "measurement": {"kind": "robot_tcp", "arm": "nearest", "label": "t"},
+          "measurement": {"kind": "robot_ee_pose", "arm": "nearest", "label": "t"},
           "reference": {"kind": "object_pose", "label": "t"},
           "event": {"kind": "first_motion", "label": "t", "threshold": 0.01},
           "expected": [-0.05, 0.0, 0.0],
