@@ -10,6 +10,10 @@ from isaaclab.app import AppLauncher
 MAX_INPROC_RESTARTS = 3
 
 parser = argparse.ArgumentParser()
+parser.add_argument(
+    "--dataset_name", choices=("RoboDojo",), default="RoboDojo",
+    help="Dataset selected by scripts/robodojo.sh; this evaluator runs RoboDojo tasks",
+)
 parser.add_argument("--task_name", type=str)
 parser.add_argument("--atomic_spec", type=str, default="", help="JSON program defining atomic stages")
 parser.add_argument("--atomic_stage", type=str, default="", help="Atomic stage id to evaluate")

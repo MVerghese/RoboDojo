@@ -16,6 +16,7 @@ from pathlib import Path
 import shlex
 import subprocess
 import tarfile
+from urllib.parse import urlparse
 
 
 BENCHMARK_FILES = (
@@ -24,6 +25,29 @@ BENCHMARK_FILES = (
     "src/eval_client/eval_env.py",
     "src/eval_client/main.py",
 )
+
+
+def verify_checkpoint(checkpoint: str, credentials: dict) -> None:
+    """Fail before submitting a GPU job when its DCP model is unavailable."""
+    parsed = urlparse(checkpoint)
+    if parsed.scheme != "s3" or not parsed.netloc or not parsed.path.strip("/"):
+        raise ValueError("trace capture requires a full s3:// checkpoint prefix")
+    import boto3
+
+    client = boto3.client(
+        "s3",
+        endpoint_url=credentials["endpoint_url"],
+        aws_access_key_id=credentials["aws_access_key_id"],
+        aws_secret_access_key=credentials["aws_secret_access_key"],
+        region_name=credentials["region_name"],
+    )
+    key = f"{parsed.path.strip('/')}/model/.metadata"
+    try:
+        client.head_object(Bucket=parsed.netloc, Key=key)
+    except Exception as error:
+        raise RuntimeError(
+            f"checkpoint model metadata is unavailable at s3://{parsed.netloc}/{key}"
+        ) from error
 
 
 def build_overlay(fork: Path, output: Path) -> str:
@@ -101,6 +125,7 @@ def main() -> None:
     if args.credentials_file is None:
         raise ValueError("--credentials-file is required to upload the source bundles")
     credentials = json.loads(args.credentials_file.read_text())
+    verify_checkpoint(plan["checkpoint"], credentials)
     environment = dict(os.environ)
     environment["AWS_ACCESS_KEY_ID"] = credentials["aws_access_key_id"]
     environment["AWS_SECRET_ACCESS_KEY"] = credentials["aws_secret_access_key"]
