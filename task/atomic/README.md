@@ -41,6 +41,20 @@ To vary a geometric target, add `--atomic_variant /path/to/variant.json`. The ex
 
 For `scripts/robodojo.sh client`, use the corresponding `--atomic-spec`, `--atomic-stage`, `--atomic-trace`, and `--atomic-variant` flags. In a Lepton pod these can instead be set with `ATOMIC_SPEC`, `ATOMIC_STAGE`, `ATOMIC_TRACE`, and `ATOMIC_VARIANT`; all paths must exist inside the pod. Atomic settings require one `--task`. A full-task annotation program (`ATOMIC_RECORD_SPEC`) cannot be combined with atomic evaluation, but `ATOMIC_RECORD_DIR` alone can record the selected stage.
 
+To submit a later-stage Lepton evaluation, first prepare a fresh one-episode i4 dry-run plan for the program's task. Then package the program and captured trace into its overlay:
+
+```bash
+python scripts/atomic/submit_stage.py \
+  --run-dir /path/to/fresh-run \
+  --program task/atomic/programs/pour_balls_into_vase.json \
+  --stage pour_balls \
+  --trace /path/to/captured-trace.json \
+  --reservation cosmos-rollout-luemzvvo \
+  --dry-run
+```
+
+Add `--variant /path/to/variant.json` for a conditioned trial. Review the patched job spec and overlay, then omit `--dry-run` and supply `--credentials-file`. The helper rejects mismatched tasks and missing or unordered prefix boundaries, stages all inputs inside the pod, and records their SHA256 values in `atomic_settings.json` and the submitted run plan. Replay success and geometric adherence still require validation in Isaac Sim.
+
 Stage recording currently requires predicates that are meaningful relative to the full episode start. A later-stage `is_moved` check relative to that baseline can fire before the intended action; such tasks need a stage-local predicate or a manual boundary. Successful full-task traces remain necessary to produce later-stage start states.
 
 ## Existing Lustre demonstrations

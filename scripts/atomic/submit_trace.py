@@ -50,14 +50,18 @@ def verify_checkpoint(checkpoint: str, credentials: dict) -> None:
         ) from error
 
 
-def build_overlay(fork: Path, output: Path) -> str:
+def build_overlay(fork: Path, output: Path, extra_files: dict[str, Path] | None = None) -> str:
     files = [fork / relative for relative in BENCHMARK_FILES]
     files.extend(path for path in (fork / "task/atomic").rglob("*") if path.is_file() and "__pycache__" not in path.parts)
+    entries = {path.relative_to(fork).as_posix(): path for path in files}
+    for relative, path in (extra_files or {}).items():
+        if Path(relative).is_absolute() or ".." in Path(relative).parts or relative in entries:
+            raise ValueError(f"invalid or conflicting overlay path: {relative}")
+        entries[relative] = path
     with output.open("wb") as raw:
         with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as compressed:
             with tarfile.open(fileobj=compressed, mode="w") as archive:
-                for path in sorted(files):
-                    relative = path.relative_to(fork).as_posix()
+                for relative, path in sorted(entries.items()):
                     data = path.read_bytes()
                     info = tarfile.TarInfo(relative)
                     info.size = len(data)
@@ -66,7 +70,7 @@ def build_overlay(fork: Path, output: Path) -> str:
     return hashlib.sha256(output.read_bytes()).hexdigest()
 
 
-def patch_spec(spec: dict, remote: str, digest: str, task: str, reservation: str | None) -> dict:
+def patch_overlay_spec(spec: dict, remote: str, digest: str, reservation: str | None) -> dict:
     result = json.loads(json.dumps(spec))
     bootstrap = result["spec"]["container"]["command"][2]
     marker = "tar -xzf /tmp/robodojo-code.tar.gz -C /opt/imaginaire4"
@@ -78,16 +82,59 @@ def patch_spec(spec: dict, remote: str, digest: str, task: str, reservation: str
         "tar -xzf /tmp/robodojo-overlay.tar.gz -C /workspace/RoboDojo",
     ))
     result["spec"]["container"]["command"][2] = bootstrap.replace(marker, marker + "\n" + overlay_commands)
-    result["spec"]["envs"].extend((
-        {"name": "ATOMIC_RECORD_DIR", "value": "/workspace/robodojo-eval-output/traces"},
-        {"name": "ATOMIC_RECORD_SPEC", "value": f"/workspace/RoboDojo/task/atomic/programs/{task}.json"},
-    ))
     if reservation:
         result["spec"]["reservation_config"] = {
             "reservation_id": reservation,
             "allow_burst_to_other_reservations": True,
         }
     return result
+
+
+def patch_spec(spec: dict, remote: str, digest: str, task: str, reservation: str | None) -> dict:
+    result = patch_overlay_spec(spec, remote, digest, reservation)
+    result["spec"]["envs"].extend((
+        {"name": "ATOMIC_RECORD_DIR", "value": "/workspace/robodojo-eval-output/traces"},
+        {"name": "ATOMIC_RECORD_SPEC", "value": f"/workspace/RoboDojo/task/atomic/programs/{task}.json"},
+    ))
+    return result
+
+
+def submit_prepared(plan_path: Path, patched: dict, overlay: Path, digest: str,
+                    credentials_file: Path, provenance: dict | None = None) -> str:
+    from leptonai.api.v1.types.job import LeptonJob
+    from leptonai.api.v2.client import APIClient
+
+    plan = json.loads(plan_path.read_text())
+    if plan.get("submitted"):
+        raise ValueError("this run plan already has a submitted job")
+    job = LeptonJob.model_validate(patched)
+    credentials = json.loads(credentials_file.read_text())
+    verify_checkpoint(plan["checkpoint"], credentials)
+    environment = dict(os.environ)
+    environment["AWS_ACCESS_KEY_ID"] = credentials["aws_access_key_id"]
+    environment["AWS_SECRET_ACCESS_KEY"] = credentials["aws_secret_access_key"]
+    s5cmd = "/lustre/fsw/portfolios/cosmos/projects/cosmos_base_cap/users/mverghese/uv/envs/cosmos-benchmarks-workflow/bin/s5cmd"
+    for local in (plan_path.parent / "code.tar.gz", plan_path.parent / "source_manifest.json", overlay):
+        subprocess.run(
+            [s5cmd, "--endpoint-url", credentials["endpoint_url"], "cp", str(local),
+             f"{plan['results_s3']}/{local.name}"],
+            env=environment, check=True,
+        )
+    created = APIClient().job.create(job).model_dump(mode="json", by_alias=True, exclude_none=True)
+    job_id = created["metadata"]["id"]
+    plan["submitted"] = [{"name": plan["jobs"][0], "id": job_id}]
+    plan["staged"] = True
+    plan["atomic_overlay_sha256"] = digest
+    if provenance is not None:
+        plan["atomic"] = provenance
+    plan_path.write_text(json.dumps(plan, indent=2) + "\n")
+    subprocess.run(
+        [s5cmd, "--endpoint-url", credentials["endpoint_url"], "cp", str(plan_path),
+         f"{plan['results_s3']}/run_plan.json"],
+        env=environment, check=True,
+    )
+    print(f"Submitted {plan['jobs'][0]}: {job_id}")
+    return job_id
 
 
 def main() -> None:
@@ -118,39 +165,14 @@ def main() -> None:
 
     from leptonai.api.v1.types.job import LeptonJob
 
-    job = LeptonJob.model_validate(patched)
+    LeptonJob.model_validate(patched)
     print(f"Prepared {patched_path} and {overlay} ({overlay.stat().st_size} bytes)")
     if args.dry_run:
         return
     if args.credentials_file is None:
         raise ValueError("--credentials-file is required to upload the source bundles")
-    credentials = json.loads(args.credentials_file.read_text())
-    verify_checkpoint(plan["checkpoint"], credentials)
-    environment = dict(os.environ)
-    environment["AWS_ACCESS_KEY_ID"] = credentials["aws_access_key_id"]
-    environment["AWS_SECRET_ACCESS_KEY"] = credentials["aws_secret_access_key"]
-    s5cmd = "/lustre/fsw/portfolios/cosmos/projects/cosmos_base_cap/users/mverghese/uv/envs/cosmos-benchmarks-workflow/bin/s5cmd"
-    for local in (args.run_dir / "code.tar.gz", args.run_dir / "source_manifest.json", overlay):
-        subprocess.run(
-            [s5cmd, "--endpoint-url", "https://storage.googleapis.com", "cp", str(local),
-             f"{plan['results_s3']}/{local.name}"],
-            env=environment, check=True,
-        )
-
-    from leptonai.api.v2.client import APIClient
-
-    created = APIClient().job.create(job).model_dump(mode="json", by_alias=True, exclude_none=True)
-    job_id = created["metadata"]["id"]
-    plan["submitted"] = [{"name": plan["jobs"][0], "id": job_id}]
-    plan["staged"] = True
-    plan["atomic_overlay_sha256"] = digest
-    plan_path.write_text(json.dumps(plan, indent=2) + "\n")
-    subprocess.run(
-        [s5cmd, "--endpoint-url", "https://storage.googleapis.com", "cp", str(plan_path),
-         f"{plan['results_s3']}/run_plan.json"],
-        env=environment, check=True,
-    )
-    print(f"Submitted {plan['jobs'][0]}: {job_id}")
+    submit_prepared(plan_path, patched, overlay, digest, args.credentials_file,
+                    {"mode": "capture", "task": args.task})
 
 
 if __name__ == "__main__":

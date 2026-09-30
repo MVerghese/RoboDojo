@@ -2,6 +2,7 @@ import json
 import math
 from pathlib import Path
 import tempfile
+import tarfile
 import unittest
 
 import numpy as np
@@ -10,6 +11,8 @@ from task.atomic.geometry import evaluate_geometry
 from task.atomic.replay import replay_prefix
 from task.atomic.session import AtomicSession
 from task.atomic.spec import AtomicProgram, AtomicStage, AtomicTrace
+from scripts.atomic.submit_stage import validate_stage_inputs
+from scripts.atomic.submit_trace import build_overlay, patch_overlay_spec
 
 
 class GeometryTests(unittest.TestCase):
@@ -89,6 +92,47 @@ class SpecTests(unittest.TestCase):
                 program, program.stage("insert_coin"), trace,
                 lambda action: None, lambda stage: False,
             )
+
+
+class SubmissionTests(unittest.TestCase):
+    def test_later_stage_requires_matching_trace_and_preceding_boundaries(self):
+        program = AtomicProgram.load(
+            Path(__file__).resolve().parents[1] / "task/atomic/programs/deposit_coin.json"
+        )
+        validate_stage_inputs(program, "pick_coin", None, None)
+        with self.assertRaisesRegex(ValueError, "recorded trace"):
+            validate_stage_inputs(program, "insert_coin", None, None)
+        valid = AtomicTrace("deposit_coin", 3, ({}, {}), {"pick_coin": 0, "insert_coin": 1})
+        validate_stage_inputs(program, "insert_coin", valid, None)
+        mismatched = AtomicTrace("other_task", 3, valid.actions, valid.stage_starts)
+        with self.assertRaisesRegex(ValueError, "task_name"):
+            validate_stage_inputs(program, "insert_coin", mismatched, None)
+        same_boundary = AtomicTrace("deposit_coin", 3, valid.actions, {"pick_coin": 0, "insert_coin": 0})
+        with self.assertRaisesRegex(ValueError, "strictly increasing"):
+            validate_stage_inputs(program, "insert_coin", same_boundary, None)
+
+    def test_overlay_preserves_replay_payload_and_base_job(self):
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            trace = Path(directory) / "trace.json"
+            trace.write_text('{"layout_id": 17, "actions": [{"left_arm": [0.1]}]}\n')
+            overlay = Path(directory) / "overlay.tar.gz"
+            digest = build_overlay(root, overlay, {"task/atomic/inputs/trace.json": trace})
+            with tarfile.open(overlay) as archive:
+                self.assertEqual(archive.extractfile("task/atomic/inputs/trace.json").read(), trace.read_bytes())
+            with self.assertRaisesRegex(ValueError, "overlay path"):
+                build_overlay(root, overlay, {"../trace.json": trace})
+        base = {"spec": {
+            "container": {"command": ["bash", "-lc", "tar -xzf /tmp/robodojo-code.tar.gz -C /opt/imaginaire4\nexec runner"]},
+            "envs": [{"name": "CHECKPOINT", "value": "model"}],
+            "queue_config": {"priority_class": "high-8000"},
+        }}
+        patched = patch_overlay_spec(base, "s3://bucket/overlay.tar.gz", digest, "reservation")
+        self.assertNotIn("reservation_config", base["spec"])
+        self.assertEqual(patched["spec"]["envs"], base["spec"]["envs"])
+        self.assertEqual(patched["spec"]["queue_config"], base["spec"]["queue_config"])
+        self.assertEqual(patched["spec"]["reservation_config"]["reservation_id"], "reservation")
+        self.assertTrue(patched["spec"]["container"]["command"][2].endswith("exec runner"))
 
 
 class _FakeLayout:
