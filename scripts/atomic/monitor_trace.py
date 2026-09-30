@@ -72,6 +72,10 @@ def main() -> int:
             if result.returncode == 0:
                 record({"event": "collected", "job_state": state, "output": result.stdout.strip()})
                 return 0 if state == "Succeeded" else 1
+            if result.returncode == 2:
+                record({"event": "no_trace", "job_state": state, "output": result.stdout.strip(),
+                        "error": result.stderr.strip()})
+                return 2
             record({
                 "event": "collect_retry", "job_state": state,
                 "output": result.stdout.strip()[-1000:],

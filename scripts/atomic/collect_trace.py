@@ -21,7 +21,7 @@ def s3_location(url: str) -> tuple[str, str]:
     return parsed.netloc, parsed.path.strip("/")
 
 
-def main() -> None:
+def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--results-s3", required=True, help="Task/seed result prefix")
     parser.add_argument("--credentials-file", type=Path, required=True)
@@ -67,8 +67,10 @@ def main() -> None:
                   "stage starts:", trace.stage_starts, "episode success:", payload.get("episode_success"))
             count += 1
     if count < 1:
-        raise ValueError("the result archive contains no atomic traces")
+        print("the result archive contains no atomic traces", file=sys.stderr)
+        return 2
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())
