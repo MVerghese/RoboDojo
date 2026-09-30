@@ -72,6 +72,8 @@ parser.add_argument("--seed", type=int, required=True, help="policy seed for eva
 
 AppLauncher.add_app_launcher_args(parser)
 args_cli = parser.parse_args()
+if args_cli.atomic_spec and args_cli.atomic_record_spec:
+    parser.error("atomic_record_spec annotates a full task and cannot be combined with atomic_spec")
 
 # Safe to import before AppLauncher: env is a namespace package (no __init__)
 # and GLOBAL_CONFIGS only imports os, so this pulls in no app-dependent code.

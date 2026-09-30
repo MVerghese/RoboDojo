@@ -23,6 +23,8 @@ Run a normal RoboDojo evaluation with the usual policy server and append `--atom
 
 When launching through `scripts/robodojo.sh client`, set `ATOMIC_RECORD_DIR` and `ATOMIC_RECORD_SPEC` in the simulator environment. The client forwards them to `eval_policy.sh`. The Lepton trace capture helper is `scripts/atomic/submit_trace.py`; it overlays this fork onto the existing RoboDojo image and writes traces into the result archive.
 
+After submission, `scripts/atomic/monitor_trace.py --run-dir <run-dir> --credentials-file <credentials>` polls the Lepton job every 30 seconds for up to 24 hours. It logs state changes to `<run-dir>/monitor.jsonl` and invokes the trace collector after termination. The monitor is a running process and must remain alive until collection finishes. Submission verifies that the configured checkpoint's `model/.metadata` is accessible before uploading or creating a GPU job.
+
 ```json
 "stage_starts": {"pick_coin": 0, "insert_coin": 37}
 ```
@@ -36,6 +38,8 @@ The index `37` means replay actions `0..36`, then ask the policy to perform `ins
 ```
 
 To vary a geometric target, add `--atomic_variant /path/to/variant.json`. The example [`push_T_right_contact.json`](programs/variants/push_T_right_contact.json) changes the requested end-effector contact offset and atomic instruction. The launcher forwards these flags to `src/eval_client/main.py` and forces one environment and one trial in atomic mode.
+
+For `scripts/robodojo.sh client`, use the corresponding `--atomic-spec`, `--atomic-stage`, `--atomic-trace`, and `--atomic-variant` flags. In a Lepton pod these can instead be set with `ATOMIC_SPEC`, `ATOMIC_STAGE`, `ATOMIC_TRACE`, and `ATOMIC_VARIANT`; all paths must exist inside the pod. Atomic settings require one `--task`. A full-task annotation program (`ATOMIC_RECORD_SPEC`) cannot be combined with atomic evaluation, but `ATOMIC_RECORD_DIR` alone can record the selected stage.
 
 Stage recording currently requires predicates that are meaningful relative to the full episode start. A later-stage `is_moved` check relative to that baseline can fire before the intended action; such tasks need a stage-local predicate or a manual boundary. Successful full-task traces remain necessary to produce later-stage start states.
 

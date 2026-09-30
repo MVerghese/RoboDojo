@@ -346,6 +346,12 @@ run_client() {
   local dimensions=""
   local limit=""
   local dry_run="false"
+  local atomic_spec="${ATOMIC_SPEC:-}"
+  local atomic_stage="${ATOMIC_STAGE:-}"
+  local atomic_trace="${ATOMIC_TRACE:-}"
+  local atomic_variant="${ATOMIC_VARIANT:-}"
+  local atomic_record_dir="${ATOMIC_RECORD_DIR:-}"
+  local atomic_record_spec="${ATOMIC_RECORD_SPEC:-}"
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -364,6 +370,12 @@ run_client() {
       --action-type) need_value "$@"; action_type="$2"; shift 2 ;;
       --eval-num) need_value "$@"; eval_num="$2"; shift 2 ;;
       --connect-timeout) need_value "$@"; connect_timeout="$2"; shift 2 ;;
+      --atomic-spec) need_value "$@"; atomic_spec="$2"; shift 2 ;;
+      --atomic-stage) need_value "$@"; atomic_stage="$2"; shift 2 ;;
+      --atomic-trace) need_value "$@"; atomic_trace="$2"; shift 2 ;;
+      --atomic-variant) need_value "$@"; atomic_variant="$2"; shift 2 ;;
+      --atomic-record-dir) need_value "$@"; atomic_record_dir="$2"; shift 2 ;;
+      --atomic-record-spec) need_value "$@"; atomic_record_spec="$2"; shift 2 ;;
       --only) need_value "$@"; only_tasks="$2"; shift 2 ;;
       --tasks-file) need_value "$@"; tasks_file="$2"; shift 2 ;;
       --dimension)
@@ -412,6 +424,22 @@ Common options:
   --dimension NAMES      Batch mode capability dimensions
   --limit NUM            Batch mode task limit after filtering
   --dry-run              Print the resolved eval_policy.sh command without running it
+
+Atomic options (single-task mode; flags override the environment):
+  --atomic-spec PATH     Program JSON (ATOMIC_SPEC)
+  --atomic-stage ID      Selected stage (ATOMIC_STAGE)
+  --atomic-trace PATH    Recorded trace (ATOMIC_TRACE)
+  --atomic-variant PATH  Geometry variant (ATOMIC_VARIANT)
+  --atomic-record-dir PATH   Action trace output directory (ATOMIC_RECORD_DIR)
+  --atomic-record-spec PATH  Full-task annotation program (ATOMIC_RECORD_SPEC)
+
+Atomic evaluation environment:
+  ATOMIC_SPEC            Program JSON path inside the simulator
+  ATOMIC_STAGE           Stage id from that program
+  ATOMIC_TRACE           Recorded trace path; required after the first stage
+  ATOMIC_VARIANT         Optional geometry variant JSON path
+  ATOMIC_RECORD_DIR      Optional action trace output directory
+  ATOMIC_RECORD_SPEC     Program used to annotate a full-task capture
 EOF
         return 0
         ;;
@@ -447,6 +475,10 @@ EOF
   fi
 
   if [[ "${batch_mode}" == "true" ]]; then
+    if [[ -n "${atomic_spec}${atomic_stage}${atomic_trace}${atomic_variant}${atomic_record_dir}${atomic_record_spec}" ]]; then
+      echo "[robodojo client] atomic settings require a single --task" >&2
+      exit 2
+    fi
     if [[ -z "${policy_host}" || -z "${policy_port}" ]]; then
       echo "[robodojo client] batch mode requires --policy-host and --policy-port" >&2
       exit 2
@@ -523,12 +555,32 @@ EOF
     --additional_info "${additional_info}"
     --seed "${seed}"
   )
-  if [[ -n "${ATOMIC_RECORD_DIR:-}" ]]; then
-    client_args+=(--atomic_record_dir "${ATOMIC_RECORD_DIR}")
-    if [[ -n "${ATOMIC_RECORD_SPEC:-}" ]]; then
-      client_args+=(--atomic_record_spec "${ATOMIC_RECORD_SPEC}")
+  if [[ -n "${atomic_spec}" ]]; then
+    if [[ -z "${atomic_stage}" ]]; then
+      echo "[robodojo client] ATOMIC_SPEC requires ATOMIC_STAGE" >&2
+      exit 2
     fi
-  elif [[ -n "${ATOMIC_RECORD_SPEC:-}" ]]; then
+    if [[ -n "${atomic_record_spec}" ]]; then
+      echo "[robodojo client] ATOMIC_RECORD_SPEC annotates a full task and cannot be combined with ATOMIC_SPEC" >&2
+      exit 2
+    fi
+    client_args+=(--atomic_spec "${atomic_spec}" --atomic_stage "${atomic_stage}")
+    if [[ -n "${atomic_trace}" ]]; then
+      client_args+=(--atomic_trace "${atomic_trace}")
+    fi
+    if [[ -n "${atomic_variant}" ]]; then
+      client_args+=(--atomic_variant "${atomic_variant}")
+    fi
+  elif [[ -n "${atomic_stage}${atomic_trace}${atomic_variant}" ]]; then
+    echo "[robodojo client] atomic stage, trace, and variant settings require ATOMIC_SPEC" >&2
+    exit 2
+  fi
+  if [[ -n "${atomic_record_dir}" ]]; then
+    client_args+=(--atomic_record_dir "${atomic_record_dir}")
+    if [[ -n "${atomic_record_spec}" ]]; then
+      client_args+=(--atomic_record_spec "${atomic_record_spec}")
+    fi
+  elif [[ -n "${atomic_record_spec}" ]]; then
     echo "[robodojo client] ATOMIC_RECORD_SPEC requires ATOMIC_RECORD_DIR" >&2
     exit 2
   fi
