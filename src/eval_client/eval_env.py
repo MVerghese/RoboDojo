@@ -14,6 +14,7 @@ from env.global_configs import *
 from env.global_configs import BENCHMARK
 from env.observation_manager.obs_manager import ObsManager
 from env.seed_manager.seed_manager import SeedManager
+from src.eval_client.ws_compat import compatible_client_kwargs
 from utils.cluttered_generator import UnStableError
 from utils.pipeline_utils import get_robot_action_dim_info
 from utils.save_file import VideoStreamWriter, format_video_saved_message, save_json
@@ -238,7 +239,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             evaluation_id = self.deploy_cfg.get("evaluation_id", self.run_id)
             trial_id = self.deploy_cfg.get("trial_id", f"{self.task_name}-{self.run_id}")
             action_case_id = self.deploy_cfg.get("action_case_id", f"{self.task_name}_case")
-            self.model_client = WsModelClient(
+            client_kwargs = compatible_client_kwargs(
+                WsModelClient,
                 url=policy_server_url,
                 evaluation_id=evaluation_id,
                 trial_id=trial_id,
@@ -247,6 +249,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 ws_ping_interval_s=self.deploy_cfg.get("ws_ping_interval_s", 20.0),
                 ws_ping_timeout_s=self.deploy_cfg.get("ws_ping_timeout_s", 20.0),
             )
+            self.model_client = WsModelClient(**client_kwargs)
             self.robot_action_dim_info = get_robot_action_dim_info(env_cfg=self.eval_cfg)
 
         def close(self):

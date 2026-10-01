@@ -14,6 +14,7 @@ from task.atomic.session import AtomicSession
 from task.atomic.spec import AtomicProgram, AtomicStage, AtomicTrace
 from scripts.atomic.submit_stage import validate_stage_inputs
 from scripts.atomic.submit_trace import build_overlay, patch_overlay_spec
+from src.eval_client.ws_compat import compatible_client_kwargs
 
 
 class GeometryTests(unittest.TestCase):
@@ -164,6 +165,36 @@ class SubmissionTests(unittest.TestCase):
         self.assertEqual(patched["spec"]["queue_config"], base["spec"]["queue_config"])
         self.assertEqual(patched["spec"]["reservation_config"]["reservation_id"], "reservation")
         self.assertTrue(patched["spec"]["container"]["command"][2].endswith("exec runner"))
+
+
+class ClientCompatibilityTests(unittest.TestCase):
+    def test_legacy_client_keeps_identity_and_rejects_unsupported_custom_options(self):
+        # Signature from XPolicyLab fe71eb5, baked in the existing eval image.
+        class LegacyClient:
+            def __init__(self, *, url, evaluation_id, trial_id, action_case_id=None,
+                         repeat_index=None, client=None):
+                self.identity = (url, evaluation_id, trial_id, action_case_id, repeat_index)
+
+        options = dict(url="ws://localhost:9990", evaluation_id="eval-1", trial_id="trial-2",
+                       action_case_id="pour", repeat_index=3,
+                       ws_ping_interval_s=20.0, ws_ping_timeout_s=20.0)
+        client = LegacyClient(**compatible_client_kwargs(LegacyClient, **options))
+        self.assertEqual(client.identity, ("ws://localhost:9990", "eval-1", "trial-2", "pour", 3))
+        with self.assertRaisesRegex(ValueError, "does not support ws_ping_timeout_s"):
+            compatible_client_kwargs(LegacyClient, **dict(options, ws_ping_timeout_s=None))
+        with self.assertRaises(TypeError):
+            compatible_client_kwargs(LegacyClient, **dict(options, unknown_option=1))
+
+    def test_current_client_preserves_requested_keepalive_options(self):
+        class CurrentClient:
+            def __init__(self, *, url, evaluation_id, trial_id, ws_ping_interval_s=20.0,
+                         ws_ping_timeout_s=20.0):
+                self.keepalive = (ws_ping_interval_s, ws_ping_timeout_s)
+
+        options = dict(url="ws://localhost:9990", evaluation_id="eval-1", trial_id="trial-2",
+                       ws_ping_interval_s=15.0, ws_ping_timeout_s=None)
+        self.assertEqual(compatible_client_kwargs(CurrentClient, **options), options)
+        self.assertEqual(CurrentClient(**options).keepalive, (15.0, None))
 
 
 class _FakeLayout:

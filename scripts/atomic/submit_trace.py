@@ -88,6 +88,12 @@ def patch_overlay_spec(spec: dict, remote: str, digest: str, reservation: str | 
             "import sys; sys.path.insert(0, '/workspace/RoboDojo'); "
             "from env.camera_manager.capture.render_sync import add_zero_delay_kit_args; "
             "from task.RoboDojo.task_registry import load_task_class; "
+            "sys.path.insert(1, '/workspace/RoboDojo/XPolicyLab'); "
+            "from client_server.ws.model_client import WsModelClient; "
+            "from src.eval_client.ws_compat import compatible_client_kwargs; "
+            "compatible_client_kwargs(WsModelClient, url='ws://127.0.0.1:9990', "
+            "evaluation_id='preflight', trial_id='preflight', action_case_id='preflight', "
+            "repeat_index=None, ws_ping_interval_s=20.0, ws_ping_timeout_s=20.0); "
             "print('RoboDojo runtime overlay imports verified')"
         ),
     ))

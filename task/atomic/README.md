@@ -25,6 +25,8 @@ When launching through `scripts/robodojo.sh client`, set `ATOMIC_RECORD_DIR` and
 
 The overlay includes all Git-tracked first-party runtime files in `env`, `env_cfg`, `src`, `task`, `utils`, and `scripts` so the evaluator and its dependencies come from the same checkout. Add new runtime files to Git before packaging. Assets and submodule installations come from the image. Safe startup imports are checked before initializing the policy; local submission tests verify that runtime Python imports are included in the archive.
 
+The startup check also validates the evaluator's WebSocket client options against the installed XPolicyLab constructor without connecting to a server. Images with older clients omit the two default keepalive options they do not accept. Custom keepalive values require a client that supports them and fail explicitly on older images.
+
 After submission, `scripts/atomic/monitor_trace.py --run-dir <run-dir> --credentials-file <credentials>` polls the Lepton job every 30 seconds for up to 24 hours. It logs state changes to `<run-dir>/monitor.jsonl` and invokes the trace collector after termination. The monitor is a running process and must remain alive until collection finishes. Submission verifies that the configured checkpoint's `model/.metadata` is accessible before uploading or creating a GPU job.
 
 ```json
