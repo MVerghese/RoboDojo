@@ -23,6 +23,8 @@ Run a normal RoboDojo evaluation with the usual policy server and append `--atom
 
 When launching through `scripts/robodojo.sh client`, set `ATOMIC_RECORD_DIR` and `ATOMIC_RECORD_SPEC` in the simulator environment. The client forwards them to `eval_policy.sh`. The Lepton trace capture helper is `scripts/atomic/submit_trace.py`; it overlays this fork onto the existing RoboDojo image and writes traces into the result archive.
 
+The overlay includes all Git-tracked first-party runtime files in `env`, `env_cfg`, `src`, `task`, `utils`, and `scripts` so the evaluator and its dependencies come from the same checkout. Add new runtime files to Git before packaging. Assets and submodule installations come from the image. Safe startup imports are checked before initializing the policy; local submission tests verify that runtime Python imports are included in the archive.
+
 After submission, `scripts/atomic/monitor_trace.py --run-dir <run-dir> --credentials-file <credentials>` polls the Lepton job every 30 seconds for up to 24 hours. It logs state changes to `<run-dir>/monitor.jsonl` and invokes the trace collector after termination. The monitor is a running process and must remain alive until collection finishes. Submission verifies that the configured checkpoint's `model/.metadata` is accessible before uploading or creating a GPU job.
 
 ```json

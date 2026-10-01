@@ -1,3 +1,4 @@
+import ast
 import json
 import math
 from pathlib import Path
@@ -95,6 +96,36 @@ class SpecTests(unittest.TestCase):
 
 
 class SubmissionTests(unittest.TestCase):
+    def test_overlay_contains_evaluator_runtime_imports(self):
+        root = Path(__file__).resolve().parents[1]
+        with tempfile.TemporaryDirectory() as directory:
+            overlay = Path(directory) / "overlay.tar.gz"
+            build_overlay(root, overlay)
+            with tarfile.open(overlay) as archive:
+                names = set(archive.getnames())
+                # Regression: main.py imported this module, but the older
+                # image did not contain it and the partial overlay omitted it.
+                self.assertIn("env/camera_manager/capture/render_sync.py", names)
+                self.assertIn("env_cfg/arx_x5.yml", names)
+                self.assertIn("task/RoboDojo/config/pour_balls_into_vase.yml", names)
+                for name in names:
+                    if not name.endswith(".py"):
+                        continue
+                    tree = ast.parse(archive.extractfile(name).read(), filename=name)
+                    modules = []
+                    for node in ast.walk(tree):
+                        if isinstance(node, ast.Import):
+                            modules.extend(alias.name for alias in node.names)
+                        elif isinstance(node, ast.ImportFrom) and not node.level and node.module:
+                            modules.append(node.module)
+                    for module in modules:
+                        if module.split(".")[0] not in {"env", "env_cfg", "src", "task", "utils", "scripts"}:
+                            continue
+                        relative = module.replace(".", "/")
+                        for candidate in (relative + ".py", relative + "/__init__.py"):
+                            if (root / candidate).is_file():
+                                self.assertIn(candidate, names, f"{name} imports missing {module}")
+
     def test_later_stage_requires_matching_trace_and_preceding_boundaries(self):
         program = AtomicProgram.load(
             Path(__file__).resolve().parents[1] / "task/atomic/programs/deposit_coin.json"

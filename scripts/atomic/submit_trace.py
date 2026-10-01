@@ -2,7 +2,7 @@
 """Overlay this RoboDojo fork onto a staged i4 Lepton job and record one trace.
 
 First run i4's _submit_closed_loop_eval.py with --dry-run. This script packages
-only the fork files needed by its bundled RoboDojo image. Use --dry-run here to
+the fork's complete first-party runtime over its bundled RoboDojo image. Use --dry-run here to
 review the patched job spec before uploading or submitting it.
 """
 
@@ -19,12 +19,10 @@ import tarfile
 from urllib.parse import urlparse
 
 
-BENCHMARK_FILES = (
-    "scripts/eval_policy.sh",
-    "scripts/robodojo.sh",
-    "src/eval_client/eval_env.py",
-    "src/eval_client/main.py",
-)
+# Keep the evaluator and its dependencies from the same checkout. Replacing
+# only main.py/eval_env.py can leave newer imports absent in the baked image.
+# Assets and third-party/submodule installations remain supplied by the image.
+RUNTIME_PATHS = ("env", "env_cfg", "src", "task", "utils", "scripts")
 
 
 def verify_checkpoint(checkpoint: str, credentials: dict) -> None:
@@ -51,9 +49,13 @@ def verify_checkpoint(checkpoint: str, credentials: dict) -> None:
 
 
 def build_overlay(fork: Path, output: Path, extra_files: dict[str, Path] | None = None) -> str:
-    files = [fork / relative for relative in BENCHMARK_FILES]
-    files.extend(path for path in (fork / "task/atomic").rglob("*") if path.is_file() and "__pycache__" not in path.parts)
-    entries = {path.relative_to(fork).as_posix(): path for path in files}
+    # Tracked files exclude caches, generated output, and unrelated local data.
+    tracked = subprocess.check_output(
+        ["git", "-C", str(fork), "ls-files", "-z", "--", *RUNTIME_PATHS]
+    ).decode().split("\0")
+    entries = {relative: fork / relative for relative in tracked if relative}
+    if "src/eval_client/main.py" not in entries:
+        raise ValueError("--fork must be a RoboDojo Git checkout with its runtime files tracked")
     for relative, path in (extra_files or {}).items():
         if Path(relative).is_absolute() or ".." in Path(relative).parts or relative in entries:
             raise ValueError(f"invalid or conflicting overlay path: {relative}")
@@ -80,6 +82,14 @@ def patch_overlay_spec(spec: dict, remote: str, digest: str, reservation: str | 
         f"s5cmd --endpoint-url https://storage.googleapis.com cp {shlex.quote(remote)} /tmp/robodojo-overlay.tar.gz",
         f"printf '%s  %s\\n' {shlex.quote(digest)} /tmp/robodojo-overlay.tar.gz | sha256sum -c -",
         "tar -xzf /tmp/robodojo-overlay.tar.gz -C /workspace/RoboDojo",
+        # These imports are safe before SimulationApp and catch an incomplete
+        # runtime overlay before downloading/initializing a GPU policy model.
+        "/root/miniconda3/envs/RoboDojo/bin/python -c " + shlex.quote(
+            "import sys; sys.path.insert(0, '/workspace/RoboDojo'); "
+            "from env.camera_manager.capture.render_sync import add_zero_delay_kit_args; "
+            "from task.RoboDojo.task_registry import load_task_class; "
+            "print('RoboDojo runtime overlay imports verified')"
+        ),
     ))
     result["spec"]["container"]["command"][2] = bootstrap.replace(marker, marker + "\n" + overlay_commands)
     if reservation:
