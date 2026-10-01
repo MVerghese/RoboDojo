@@ -10,12 +10,30 @@ This branch adds a separate evaluation mode on top of RoboDojo's existing full-t
 - A `first_predicate` event can capture geometry when any or all read-only RoboDojo predicates first become true at a physics step. The `pour_balls_into_vase` program uses this to measure cup placement when the first ball enters the vase.
 - A normal evaluation can record policy action traces and automatically mark stage starts for an executable program. Atomic mode resets the original layout, replays the action prefix, verifies preceding stage predicates at the recorded boundaries, starts a fresh stage scoring window, and stops when the selected atomic success checks pass or its step limit expires.
 - A variant JSON changes expected geometry, tolerances, references, event, and instruction while keeping the same stage success checks. This permits paired counterfactual trials.
+- Each observed score saves its full condition, raw measurement and landmark state, resolved robot arm/link, and policy action index. Units and quaternion order are explicit in the atomic summary. The collector preserves `eval_report.json` and writes `atomic-score-audit.json`, which recomputes the scores from this raw evidence. Earlier runs without these fields are marked `missing_raw_evidence`.
 
 ## Program format
 
 See [`deposit_coin.json`](programs/deposit_coin.json) for a two-stage example. Each stage has an `id`, `family`, `instruction`, `success_checks`, and `geometry`. A geometry entry has an `id`, `slot`, one of the five `kind` values, an `expected` value, `tolerance`, `measurement`, optional `reference`, and an `event`. All poses are environment-local with scalar-first quaternions. `relative_displacement` is expressed in the reference object's frame. Spatial directional relations use x right, y forward, z up in that frame. Values must be selected from feasible geometry for the task and calibrated against the chosen object asset.
 
 The included grasp and push examples measure the **nearest robot end-effector link pose as a proxy** at first lift/motion. They do not claim to recover the exact finger-object contact patch. A benchmark cell requiring exact contact needs PhysX contact reporting and a contact-point resolver.
+
+## Steerability pilot
+
+`variants/pick_cup_positive_x.json` and `variants/pick_cup_negative_x.json` request end-effector offsets of +4 cm and -4 cm along the cup's local x axis. They keep the cup-lift success predicate and layout unchanged and use a 3 cm Euclidean tolerance, so their acceptance regions do not overlap. Run both as `pick_cup` stage trials on the same layout/checkpoint. At the first 2.5 cm cup lift, compare each outcome against its requested target and the opposite target; also compare signed x offsets between trials. The atomic instruction replaces the observation's `instruction`, which the demo policy adapter sends to the server and the Cosmos observation composer uses as `prompt`.
+
+These are initial calibration targets; object reachability and the end-effector link origin must be inspected in the live results before drawing conclusions about policy steerability. One paired episode is a plumbing check, not a statistical estimate. A missing lift event yields zero geometry coverage and no geometric score, even if an unobserved condition might otherwise appear favorable.
+
+To audit a collected trial against its original target and the opposite target:
+
+```bash
+python scripts/atomic/audit_scores.py \
+  --report /path/to/run/eval_report.json \
+  --variant task/atomic/programs/variants/pick_cup_negative_x.json \
+  --output /path/to/run/opposite-target-scores.json
+```
+
+Rescoring an outcome does not test policy response to the new instruction; that requires the second simulator trial. Offline rescoring permits only target/tolerance changes. Changing the measurement, landmark, or event requires a fresh run.
 
 ## Record, annotate, run
 

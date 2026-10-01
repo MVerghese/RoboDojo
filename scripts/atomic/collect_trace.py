@@ -12,6 +12,7 @@ import boto3
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from task.atomic.spec import AtomicTrace
+from scripts.atomic.audit_scores import audit_report
 
 
 def s3_location(url: str) -> tuple[str, str]:
@@ -38,6 +39,13 @@ def main() -> int:
     bucket, prefix = s3_location(args.results_s3)
     report = json.loads(client.get_object(Bucket=bucket, Key=f"{prefix}/eval_report.json")["Body"].read())
     print("evaluation:", report["status"], "completed episodes:", report["completed_episodes"])
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    (args.output_dir.parent / "eval_report.json").write_text(json.dumps(report, indent=2) + "\n")
+    audit = audit_report(report)
+    if audit["atomic_episodes"]:
+        audit_path = args.output_dir.parent / "atomic-score-audit.json"
+        audit_path.write_text(json.dumps(audit, indent=2) + "\n")
+        print("atomic score audit:", audit_path)
 
     body = client.get_object(Bucket=bucket, Key=f"{prefix}/results.tar.gz")["Body"]
     args.output_dir.mkdir(parents=True, exist_ok=True)

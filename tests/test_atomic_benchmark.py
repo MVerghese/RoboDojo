@@ -19,10 +19,36 @@ from scripts.atomic.submit_trace import build_overlay, patch_overlay_spec, patch
 from scripts.atomic import gpu_admission
 from scripts.atomic.gpu_memory_log import record_admission
 from scripts.atomic.node_neighbors import collect_node_neighbors, save_node_neighbors, summarize_job
+from scripts.atomic.audit_scores import audit_atomic
 from src.eval_client.ws_compat import compatible_client_kwargs
 
 
 class GeometryTests(unittest.TestCase):
+    def test_all_five_kinds_detect_known_target_changes_in_a_rotated_frame(self):
+        q = [math.sqrt(0.5), 0, 0, math.sqrt(0.5)]
+        reference = [1, 2, 3, *q]
+        measured = [1, 2.1, 3.2, *q]  # local position [0.1, 0, 0.2], local orientation identity
+        cases = [
+            ({"kind": "point", "expected": [0.1, 0, 0.2]},
+             {"expected": [0.15, 0, 0.2]}, "position_m", 0.05),
+            ({"kind": "relative_displacement", "expected": [0.1, 0, 0.2]},
+             {"expected": [0.15, 0, 0.2]}, "displacement_m", 0.05),
+            ({"kind": "pose", "expected": {"position": [0.1, 0, 0.2], "orientation": [1, 0, 0, 0]},
+              "angle_tolerance_rad": 0.001},
+             {"expected": {"position": [0.1, 0, 0.2], "orientation": q}}, "orientation_rad", math.pi / 2),
+            ({"kind": "relative_orientation", "expected": [1, 0, 0, 0]},
+             {"expected": q}, "orientation_rad", math.pi / 2),
+            ({"kind": "spatial_relation", "expected": "above", "margin": 0.15},
+             {"expected": "below"}, "relation_error_m", 0.35),
+        ]
+        for condition, change, component, expected_error in cases:
+            with self.subTest(kind=condition["kind"]):
+                condition["tolerance"] = 0.001
+                self.assertTrue(evaluate_geometry(condition, measured, reference).passed)
+                result = evaluate_geometry({**condition, **change}, measured, reference)
+                self.assertFalse(result.passed)
+                self.assertAlmostEqual(result.components[component], expected_error)
+
     def test_point_and_displacement_use_landmark_frame(self):
         # Landmark yaw = 90 degrees; its local +x is world +y.
         reference = [1, 2, 0, math.sqrt(0.5), 0, 0, math.sqrt(0.5)]
@@ -325,6 +351,7 @@ class _FakeReward:
 class _FakeRobot:
     arm_name = "left_arm"
     type = "target"
+    ee_link_name = "gripper_origin"
 
 
 class _FakeRobotManager:
@@ -359,6 +386,21 @@ class SessionTests(unittest.TestCase):
         session.observe_events()  # physics step before the policy chunk ends
         self.assertEqual(session.summary()["geometry_observed"], 1)
         self.assertEqual(session.summary()["geometry_coverage"], 1.0)
+        saved = session.summary()["geometry"]["grasp"]
+        self.assertEqual(saved["measured_state"], [0.02, 0, 0.04, 1, 0, 0, 0])
+        self.assertEqual(saved["reference_state"], [0, 0, 0.04, 1, 0, 0, 0])
+        self.assertEqual(saved["measurement_source"]["resolved_arm"], "left_arm")
+        self.assertEqual(saved["measurement_source"]["ee_link_name"], "gripper_origin")
+        own = audit_atomic(session.summary())["conditions"]["grasp"]
+        self.assertEqual(own["status"], "reproduced")
+        self.assertTrue(own["rescored_result"]["passed"])
+        changed = audit_atomic(session.summary(), {"stage_id": "pick", "conditions": {
+            "grasp": {"expected": [-0.02, 0, 0]}}})["conditions"]["grasp"]
+        self.assertFalse(changed["rescored_result"]["passed"])
+        self.assertAlmostEqual(changed["rescored_result"]["error"], 0.04)
+        with self.assertRaisesRegex(ValueError, "requires a new simulator run"):
+            audit_atomic(session.summary(), {"stage_id": "pick", "conditions": {
+                "grasp": {"reference": {"kind": "object_pose", "label": "other"}}}})
         self.assertFalse(session.step())
         self.assertEqual(session.summary()["geometry_observed"], 1)
         layout.position[2] = 0.11

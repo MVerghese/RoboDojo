@@ -37,10 +37,14 @@ class AtomicSession:
         return np.concatenate((_array(position), _array(orientation)))
 
     def _resolve(self, selector):
+        return self._resolve_with_source(selector)[0]
+
+    def _resolve_with_source(self, selector):
+        source = {**selector, "frame": "environment_local_world"}
         kind = selector["kind"]
         if kind in ("object_pose", "object_position"):
             pose = self._object_pose(selector["label"])
-            return pose if kind == "object_pose" else pose[:3]
+            return (pose if kind == "object_pose" else pose[:3]), source
         if kind == "robot_ee_pose":
             if selector["arm"] == "nearest":
                 target = self._object_pose(selector["label"])[:3]
@@ -60,7 +64,9 @@ class AtomicSession:
             if robot is None:
                 raise ValueError(f"unknown robot arm {selector['arm']!r}")
             poses = self.env.robot_manager.get_real_endpose(robot, env_idx_list=[self.env_idx], is_relative=True)
-            return _array(poses[self.env_idx])
+            source.update({"resolved_arm": robot.arm_name,
+                           "ee_link_name": getattr(robot, "ee_link_name", None)})
+            return _array(poses[self.env_idx]), source
         if kind == "functional_point":
             lm = self.env.scene_manager.layout_manager
             inst_name = lm.get_instance_name(env_idx=self.env_idx, label=selector["label"])
@@ -74,7 +80,7 @@ class AtomicSession:
             index = int(selector.get("index", 0))
             if not points or index >= len(points):
                 raise ValueError(f"functional point {selector['tag']!r} is unavailable")
-            return _array(points[index])
+            return _array(points[index]), source
         raise ValueError(f"unknown measurement kind {kind!r}")
 
     def _check_success(self):
@@ -117,15 +123,27 @@ class AtomicSession:
             event = condition.get("event", {"kind": "stage_success"})
             if not self._event_fired(event, success_now):
                 continue
-            measured = self._resolve(condition["measurement"])
-            reference = self._resolve(condition["reference"]) if condition.get("reference") else None
+            measured, measurement_source = self._resolve_with_source(condition["measurement"])
+            if condition.get("reference"):
+                reference, reference_source = self._resolve_with_source(condition["reference"])
+            else:
+                reference, reference_source = None, None
             result = evaluate_geometry(condition, measured, reference)
             self.results[condition_id] = {
                 "slot": condition["slot"],
                 "kind": condition["kind"],
                 "event": event,
                 "sample_index": self.sample_index,
+                "policy_action_index": (
+                    int(self.env.take_action_cnt[self.env_idx])
+                    if hasattr(self.env, "take_action_cnt") else None
+                ),
                 "measurement": condition["measurement"],
+                "condition": deepcopy(condition),
+                "measured_state": measured.tolist(),
+                "reference_state": reference.tolist() if reference is not None else None,
+                "measurement_source": measurement_source,
+                "reference_source": reference_source,
                 "ee_contact_proxy": (
                     condition["measurement"]["kind"] == "robot_ee_pose"
                     and event["kind"] in ("first_lift", "first_motion")
@@ -156,6 +174,12 @@ class AtomicSession:
         return {
             "stage_id": self.stage.id,
             "family": self.stage.family,
+            "instruction": self.stage.instruction,
+            "conditions": deepcopy(list(self.stage.geometry)),
+            "coordinate_frame": "environment_local_world",
+            "quaternion_order": "wxyz",
+            "distance_unit": "metres",
+            "angle_unit": "radians",
             "action_success": self.success,
             "geometry_pass_rate": passed / observed if observed else None,
             "geometry_coverage": observed / total if total else None,

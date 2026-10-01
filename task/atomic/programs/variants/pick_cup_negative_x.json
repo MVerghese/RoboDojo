@@ -1,0 +1,10 @@
+{
+  "stage_id": "pick_cup",
+  "instruction": "Pick up the cup containing the balls. Grasp from the cup's negative local x side: at the first lift, keep the gripper end-effector origin approximately 4 cm along the cup's negative local x axis from the cup's centre, with no y or z offset. Keep the balls inside the cup.",
+  "conditions": {
+    "cup_grasp_offset": {
+      "expected": [-0.04, 0.0, 0.0],
+      "tolerance": 0.03
+    }
+  }
+}
