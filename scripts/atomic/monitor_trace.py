@@ -14,6 +14,7 @@ from leptonai.api.v2.client import APIClient
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from scripts.atomic.gpu_memory_log import record_admission
+from scripts.atomic.node_neighbors import collect_node_neighbors, save_node_neighbors
 TERMINAL_STATES = {"Completed", "Succeeded", "Failed", "Cancelled", "Canceled", "Stopped"}
 
 
@@ -88,6 +89,32 @@ def main() -> int:
                     admission, f"{results}/gpu_admission.json",
                 )
                 (args.run_dir / "gpu_admission.json").write_text(json.dumps(admission, indent=2) + "\n")
+                if any(
+                    gpu["used_mib"] > admission["max_used_mib"]
+                    or any(p["gpu_uuid"] == gpu["uuid"] for p in sample["compute_processes"])
+                    for sample in admission["samples"] for gpu in sample["gpus"]
+                ):
+                    neighbors_path = args.run_dir / "gpu_node_neighbors.json"
+                    neighbors = None
+                    if neighbors_path.exists():
+                        saved = json.loads(neighbors_path.read_text())
+                        if (saved["replica_id"] == placement["id"]
+                                and saved["incident_observed_at"] == admission["samples"][0]["observed_at"]):
+                            neighbors = saved
+                    if neighbors is None:
+                        job = client.job.get(job_id).model_dump(
+                            mode="json", by_alias=True, exclude_none=True)
+                        groups = (job["spec"].get("affinity") or {}).get("allowed_dedicated_node_groups", [])
+                        neighbors = collect_node_neighbors(
+                            client, groups, placement["status"]["node"]["name"], job_id,
+                            placement["id"], admission,
+                        )
+                        neighbors_path.write_text(json.dumps(neighbors, indent=2) + "\n")
+                    save_node_neighbors(ledger.parent / "gpu-node-neighbors.jsonl", neighbors)
+                    record({"event": "node_neighbors", "evidence": str(neighbors_path),
+                            "neighbor_jobs": len([w for w in neighbors["workloads"]
+                                                  if w["type"] == "job" and not w["is_our_job"]]),
+                            "errors": neighbors["errors"]})
                 record({"event": "gpu_admission", "admitted": admission["admitted"],
                         "reason": admission["reason"], "gpu_memory_counts": summary})
                 admission_logged = True

@@ -6,7 +6,7 @@ from pathlib import Path
 import tempfile
 import tarfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import numpy as np
 
@@ -18,6 +18,7 @@ from scripts.atomic.submit_stage import validate_stage_inputs
 from scripts.atomic.submit_trace import build_overlay, patch_overlay_spec, patch_spec
 from scripts.atomic import gpu_admission
 from scripts.atomic.gpu_memory_log import record_admission
+from scripts.atomic.node_neighbors import collect_node_neighbors, save_node_neighbors, summarize_job
 from src.eval_client.ws_compat import compatible_client_kwargs
 
 
@@ -226,6 +227,53 @@ class GpuAdmissionTests(unittest.TestCase):
             summary = record_admission(ledger, "job-2", "replica-2", "node-a", admission, "source")
             self.assertEqual(summary["affected_placements"], 2)
             self.assertEqual(summary["affected_unique_gpus"], 1)
+
+
+class NodeNeighborTests(unittest.TestCase):
+    def test_contact_summary_excludes_commands_and_unrelated_secrets(self):
+        job = {"metadata": {"owner": "owner@example.com", "created_by": "creator@example.com"},
+               "spec": {"container": {"command": ["secret command"]},
+                        "envs": [{"name": "AWS_SECRET_ACCESS_KEY", "value": "private-value"},
+                                 {"name": "CUDA_VISIBLE_DEVICES", "value": "0"}]}}
+        summary = summarize_job(job)
+        self.assertEqual(summary["owner"], "owner@example.com")
+        self.assertIsNone(summary["privileged"])
+        self.assertEqual(summary["gpu_scope_envs_in_job_spec"], {"CUDA_VISIBLE_DEVICES": "0"})
+        self.assertNotIn("private-value", json.dumps(summary))
+        self.assertNotIn("secret command", json.dumps(summary))
+
+    def test_neighbors_retain_unreadable_jobs_and_do_not_assign_gpu_ownership(self):
+        client = Mock()
+        client._get.return_value.json.return_value = [{"metadata": {"id": "node-a"},
+            "status": {"workloads": [
+                {"type": "job", "id": "ours", "replica_id": "ours-0", "gpu_count": 1},
+                {"type": "job", "id": "neighbor", "replica_id": "neighbor-0", "gpu_count": 1},
+                {"type": "job", "id": "unreadable", "replica_id": "unreadable-0", "gpu_count": 2}]}}]
+        def get_job(job_id):
+            if job_id == "unreadable":
+                raise RuntimeError("private error body")
+            model = Mock()
+            model.model_dump.return_value = {"metadata": {"owner": job_id + "@example.com"},
+                "spec": {"user_security_context": {"privileged": True}}}
+            return model
+        client.job.get.side_effect = get_job
+        admission = {"samples": [GpuAdmissionTests.snapshot(6699)]}
+        snapshot = collect_node_neighbors(client, ["group-a"], "node-a", "ours", "ours-0", admission)
+        self.assertEqual(len(snapshot["workloads"]), 3)
+        self.assertTrue(snapshot["workloads"][0]["is_our_job"])
+        self.assertEqual(snapshot["workloads"][1]["owner"], "neighbor@example.com")
+        self.assertTrue(snapshot["workloads"][1]["privileged"])
+        self.assertEqual(snapshot["workloads"][2]["lookup_error"], "RuntimeError")
+        self.assertNotIn("private error body", json.dumps(snapshot))
+        self.assertNotIn("gpu_uuid", snapshot["workloads"][1])
+        with tempfile.TemporaryDirectory() as directory:
+            ledger = Path(directory) / "neighbors.jsonl"
+            save_node_neighbors(ledger, snapshot)
+            save_node_neighbors(ledger, snapshot)
+            self.assertEqual(len(ledger.read_text().splitlines()), 1)
+            report = ledger.with_suffix(".md").read_text()
+            self.assertIn("neighbor@example.com", report)
+            self.assertNotIn("ours@example.com", report)
 
 
 class ClientCompatibilityTests(unittest.TestCase):
