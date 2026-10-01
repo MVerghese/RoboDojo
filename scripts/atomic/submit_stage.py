@@ -14,7 +14,7 @@ import sys
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 
-from scripts.atomic.submit_trace import build_overlay, patch_overlay_spec, submit_prepared
+from scripts.atomic.submit_trace import add_gpu_admission, build_overlay, patch_overlay_spec, submit_prepared
 from task.atomic.spec import AtomicProgram, AtomicTrace, load_variant
 
 
@@ -46,6 +46,8 @@ def main() -> None:
     parser.add_argument("--variant", type=Path)
     parser.add_argument("--reservation")
     parser.add_argument("--credentials-file", type=Path)
+    parser.add_argument("--max-initial-gpu-memory-mib", type=int,
+                        help="Require an idle GPU before policy loading; allow this much driver memory")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -64,6 +66,7 @@ def main() -> None:
     envs = [
         {"name": "ATOMIC_SPEC", "value": "/workspace/RoboDojo/task/atomic/inputs/program.json"},
         {"name": "ATOMIC_STAGE", "value": args.stage},
+        {"name": "ATOMIC_RECORD_DIR", "value": "/workspace/robodojo-eval-output/traces"},
     ]
     for name, source in (("trace", args.trace), ("variant", args.variant)):
         if source:
@@ -77,6 +80,7 @@ def main() -> None:
         spec, f"{plan['results_s3']}/robodojo-overlay.tar.gz", digest, args.reservation
     )
     patched["spec"]["envs"].extend(envs)
+    patched = add_gpu_admission(patched, args.max_initial_gpu_memory_mib)
     patched_path = args.run_dir / f"{plan['jobs'][0]}.atomic-job-spec.json"
     patched_path.write_text(json.dumps(patched, indent=2) + "\n")
     (args.run_dir / "overlay.sha256").write_text(digest + "  robodojo-overlay.tar.gz\n")
@@ -84,6 +88,10 @@ def main() -> None:
         "mode": "stage", "task": program.task_name, "stage": args.stage,
         "inputs": {name: hashlib.sha256(path.read_bytes()).hexdigest() for name, path in inputs.items()},
     }
+    if args.max_initial_gpu_memory_mib is not None:
+        provenance["gpu_admission"] = {
+            "max_used_mib": args.max_initial_gpu_memory_mib, "reject_compute_processes": True,
+        }
     (args.run_dir / "atomic_settings.json").write_text(json.dumps(provenance, indent=2) + "\n")
 
     from leptonai.api.v1.types.job import LeptonJob

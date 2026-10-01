@@ -106,13 +106,8 @@ def patch_overlay_spec(spec: dict, remote: str, digest: str, reservation: str | 
     return result
 
 
-def patch_spec(spec: dict, remote: str, digest: str, task: str, reservation: str | None,
-               max_initial_gpu_memory_mib: int | None = None) -> dict:
-    result = patch_overlay_spec(spec, remote, digest, reservation)
-    result["spec"]["envs"].extend((
-        {"name": "ATOMIC_RECORD_DIR", "value": "/workspace/robodojo-eval-output/traces"},
-        {"name": "ATOMIC_RECORD_SPEC", "value": f"/workspace/RoboDojo/task/atomic/programs/{task}.json"},
-    ))
+def add_gpu_admission(result: dict, max_initial_gpu_memory_mib: int | None) -> dict:
+    """Wrap a prepared capture or stage workload with its GPU admission check."""
     if max_initial_gpu_memory_mib is not None:
         if max_initial_gpu_memory_mib < 0:
             raise ValueError("initial GPU memory limit must be nonnegative")
@@ -126,6 +121,16 @@ def patch_spec(spec: dict, remote: str, digest: str, task: str, reservation: str
         )
         result["spec"]["container"]["command"][2] = bootstrap.replace("\nexec ", "\nexec " + guard)
     return result
+
+
+def patch_spec(spec: dict, remote: str, digest: str, task: str, reservation: str | None,
+               max_initial_gpu_memory_mib: int | None = None) -> dict:
+    result = patch_overlay_spec(spec, remote, digest, reservation)
+    result["spec"]["envs"].extend((
+        {"name": "ATOMIC_RECORD_DIR", "value": "/workspace/robodojo-eval-output/traces"},
+        {"name": "ATOMIC_RECORD_SPEC", "value": f"/workspace/RoboDojo/task/atomic/programs/{task}.json"},
+    ))
+    return add_gpu_admission(result, max_initial_gpu_memory_mib)
 
 
 def submit_prepared(plan_path: Path, patched: dict, overlay: Path, digest: str,
