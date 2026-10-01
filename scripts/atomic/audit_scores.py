@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from task.atomic.geometry import evaluate_geometry
 
 
-TARGET_FIELDS = {"expected", "tolerance", "angle_tolerance_rad", "margin", "half_extents"}
+TARGET_FIELDS = {"expected", "tolerance", "angle_tolerance_rad", "margin", "half_extents", "min_overlap_fraction"}
 
 
 def audit_atomic(atomic, variant=None):
@@ -51,7 +51,8 @@ def audit_atomic(atomic, variant=None):
             "ee_contact_proxy": item.get("ee_contact_proxy", False),
         }
     for condition_id in conditions.keys() - rows.keys():
-        rows[condition_id] = {"status": "event_not_observed"}
+        failure = atomic.get('measurement_failures', {}).get(condition_id)
+        rows[condition_id] = failure or {"status": "event_not_observed"}
     output = {
         "stage_id": atomic["stage_id"], "instruction": atomic.get("instruction"),
         "action_success": atomic["action_success"],

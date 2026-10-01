@@ -5,6 +5,11 @@ from copy import deepcopy
 import numpy as np
 
 from task.atomic.geometry import evaluate_geometry
+from task.atomic.contacts import ContactUnavailable
+
+
+def _state(value):
+    return deepcopy(value) if isinstance(value, dict) else value.tolist()
 
 
 def _array(value):
@@ -21,6 +26,8 @@ class AtomicSession:
         self.success = False
         self.results = {}
         self.closest_approach = {}
+        self.measurement_failures = {}
+        self.interaction_observed = False
         self.sample_index = 0
         self.initial_positions = {}
         for condition in stage.geometry:
@@ -45,7 +52,18 @@ class AtomicSession:
         kind = selector["kind"]
         if kind in ("object_pose", "object_position"):
             pose = self._object_pose(selector["label"])
+            source['landmark'] = 'object root frame origin, not geometric centre'
             return (pose if kind == "object_pose" else pose[:3]), source
+        if kind in ('object_center_pose', 'object_center_position'):
+            pose = self.env._atomic_surfaces.center_pose(selector['label'], self.env_idx,
+                                                       self._object_pose(selector['label']))
+            source['landmark'] = 'centre of local mesh bounds, transformed by live rigid-body pose'
+            return (pose if kind == 'object_center_pose' else pose[:3]), source
+        if kind == 'contact_points':
+            contacts = getattr(self.env, '_atomic_contacts', None)
+            if contacts is None:
+                raise RuntimeError('PhysX contacts were not initialized')
+            return contacts.resolve(selector, self.env_idx)
         if kind == "robot_ee_pose":
             if selector["arm"] == "nearest":
                 target = self._object_pose(selector["label"])[:3]
@@ -68,16 +86,20 @@ class AtomicSession:
             source.update({"resolved_arm": robot.arm_name,
                            "ee_link_name": getattr(robot, "ee_link_name", None)})
             return _array(poses[self.env_idx]), source
-        if kind == "functional_point":
+        if kind in ('functional_point', 'support_point'):
             lm = self.env.scene_manager.layout_manager
             inst_name = lm.get_instance_name(env_idx=self.env_idx, label=selector["label"])
             if inst_name is None:
                 raise ValueError(f"unknown object label {selector['label']!r}")
-            points = lm.get_functional_points(
+            resolver = lm.get_functional_points if kind == 'functional_point' else lm.get_support_points
+            points = resolver(
                 tag=selector["tag"], type=selector.get("type", "active"),
                 config=lm.get_instance_metadata(inst_name=inst_name, env_idx=self.env_idx),
                 ret="list", obj_name=inst_name, env_idx=self.env_idx,
             )
+            if kind == 'support_point':
+                points, radii = points
+                source['support_radii_m'] = list(radii)
             index = int(selector.get("index", 0))
             if not points or index >= len(points):
                 raise ValueError(f"functional point {selector['tag']!r} is unavailable")
@@ -86,10 +108,32 @@ class AtomicSession:
 
     def _check_success(self):
         for check in self.stage.success_checks:
-            func = (check["name"], deepcopy(check["args"]))
-            if self.env.reward_manager.call_func_parser(func, self.env_idx) < 1:
+            if not self._predicate(check):
                 return False
         return True
+
+    def _predicate(self, check):
+        if check['name'] in ('is_atomic_entry', 'is_atomic_inserted'):
+            from task.atomic.geometry import _rotation
+            args = check['args']
+            tip = self._resolve({'kind': 'functional_point', 'label': args['label_A'],
+                                 'tag': args.get('tip_tag', 'insert'), 'type': 'active'})
+            lm = self.env.scene_manager.layout_manager
+            metadata = lm.get_instance_metadata(env_idx=self.env_idx, label=args['label_B'])
+            for tag in metadata.get('passive', {}).get('support', {}):
+                if not tag.startswith('socket/'):
+                    continue
+                target = self._resolve({'kind': 'support_point', 'label': args['label_B'], 'tag': tag,
+                                        'type': 'passive', 'index': 0})
+                local = _rotation(target[3:]).T @ (tip[:3] - target[:3])
+                angle = np.arccos(np.clip((_rotation(tip[3:])[:, 2] @ _rotation(target[3:])[:, 2]), -1, 1))
+                depth = -local[2]
+                if (np.linalg.norm(local[:2]) <= args.get('xy_tolerance', 0.012)
+                        and args.get('min_depth', 0.0) <= depth <= args.get('max_depth', 0.025)
+                        and angle <= np.deg2rad(args.get('angle_tolerance_deg', 30))):
+                    return True
+            return False
+        return self.env.reward_manager.call_func_parser((check['name'], deepcopy(check['args'])), self.env_idx) >= 1
 
     def _event_fired(self, event, success_now):
         kind = event["kind"]
@@ -97,9 +141,7 @@ class AtomicSession:
             return success_now
         if kind == "first_predicate":
             values = (
-                self.env.reward_manager.call_func_parser(
-                    (check["name"], deepcopy(check["args"])), self.env_idx
-                ) >= 1
+                self._predicate(check)
                 for check in event["checks"]
             )
             return all(values) if event.get("mode", "any") == "all" else any(values)
@@ -119,17 +161,23 @@ class AtomicSession:
         self.sample_index += 1
         for condition in self.stage.geometry:
             condition_id = condition["id"]
-            if condition_id in self.results:
+            if condition_id in self.results or condition_id in self.measurement_failures:
                 continue
             event = condition.get("event", {"kind": "stage_success"})
             if not self._event_fired(event, success_now):
                 continue
-            measured, measurement_source = self._resolve_with_source(condition["measurement"])
-            if condition.get("reference"):
-                reference, reference_source = self._resolve_with_source(condition["reference"])
-            else:
-                reference, reference_source = None, None
+            try:
+                measured, measurement_source, reference, reference_source = self._resolve_condition(condition)
+            except ContactUnavailable as error:
+                self.measurement_failures[condition_id] = {
+                    'event': deepcopy(event), 'event_observed': True,
+                    'status': 'contact_not_observed_at_event', 'reason': str(error),
+                    'policy_action_index': int(self.env.take_action_cnt[self.env_idx]),
+                }
+                continue
             result = evaluate_geometry(condition, measured, reference)
+            if condition['measurement']['kind'] == 'contact_points':
+                self.interaction_observed = True
             self.results[condition_id] = {
                 "slot": condition["slot"],
                 "kind": condition["kind"],
@@ -141,8 +189,8 @@ class AtomicSession:
                 ),
                 "measurement": condition["measurement"],
                 "condition": deepcopy(condition),
-                "measured_state": measured.tolist(),
-                "reference_state": reference.tolist() if reference is not None else None,
+                "measured_state": _state(measured),
+                "reference_state": _state(reference) if reference is not None else None,
                 "measurement_source": measurement_source,
                 "reference_source": reference_source,
                 "ee_contact_proxy": (
@@ -151,6 +199,24 @@ class AtomicSession:
                 ),
                 "result": result.as_dict(),
             }
+
+    def _resolve_condition(self, condition):
+        measured, source = self._resolve_with_source(condition['measurement'])
+        reference, reference_source = self._resolve_with_source(condition['reference']) if condition.get('reference') else (None, None)
+        if condition.get('relation_scope') == 'objects':
+            surfaces = self.env._atomic_surfaces
+            measured = surfaces.resolve(condition['measurement']['label'], self.env_idx,
+                                        self._object_pose(condition['measurement']['label']))
+            reference = surfaces.resolve(condition['reference']['label'], self.env_idx,
+                                         self._object_pose(condition['reference']['label']))
+            source['geometry_representation'] = measured['geometry_representation']
+            reference_source['geometry_representation'] = reference['geometry_representation']
+            if condition['expected'] == 'on_top':
+                from task.atomic.geometry import _rotation
+                measured['support_contact'] = self.env._atomic_contacts.has_support_contact(
+                    condition['measurement']['label'], condition['reference']['label'], self.env_idx,
+                    _rotation(reference['orientation'])[:, 2])
+        return measured, source, reference, reference_source
 
     def observe_events(self):
         """Capture first-lift/motion geometry at physics-step resolution."""
@@ -162,19 +228,25 @@ class AtomicSession:
         self._sample(success_now)
         # Diagnostic scores for failed attempts, separate from the required event.
         for condition in self.stage.geometry:
-            measured, source = self._resolve_with_source(condition["measurement"])
-            reference = self._resolve(condition["reference"]) if condition.get("reference") else None
+            if not condition.get('track_closest', True):
+                continue
+            try:
+                measured, source, reference, _ = self._resolve_condition(condition)
+            except ContactUnavailable:
+                continue
             result = evaluate_geometry(condition, measured, reference).as_dict()
             old = self.closest_approach.get(condition["id"])
             if old is None or result["error"] < old["result"]["error"]:
                 self.closest_approach[condition["id"]] = {
-                    "condition": deepcopy(condition), "measured_state": measured.tolist(),
-                    "reference_state": reference.tolist() if reference is not None else None,
+                    "condition": deepcopy(condition), "measured_state": _state(measured),
+                    "reference_state": _state(reference) if reference is not None else None,
                     "measurement_source": source, "result": result,
                     "policy_action_index": int(self.env.take_action_cnt[self.env_idx]) if hasattr(self.env, "take_action_cnt") else None,
                     "measurement_context": "closest approach at policy action boundaries; not required-event adherence",
                     "ee_contact_proxy": condition["measurement"]["kind"] == "robot_ee_pose",
                 }
+        if any(c['measurement']['kind'] == 'contact_points' for c in self.stage.geometry):
+            success_now = success_now and self.interaction_observed
         self.success = self.success or success_now
         return self.success
 
@@ -203,4 +275,8 @@ class AtomicSession:
             "geometry_total": total,
             "geometry": self.results,
             "closest_approach": self.closest_approach,
+            'measurement_failures': deepcopy(self.measurement_failures),
+            'interaction_observed': self.interaction_observed,
+            'recognition_checks': deepcopy(list(self.stage.success_checks)),
+            'initial_object_positions': {k: v.tolist() for k, v in self.initial_positions.items()},
         }

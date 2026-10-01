@@ -77,6 +77,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self._atomic_record_dir = self.eval_cfg.get("atomic_record_dir")
             self._atomic_recorded_actions = [[] for _ in range(self.num_envs)]
             self._atomic_record_program = None
+            self._atomic_contacts = None
+            self._atomic_surfaces = None
+            self._policy_prompt_history = []
             self._atomic_sequences = {}
             self._atomic_record_sessions = {}
             self._atomic_record_stage_indices = {}
@@ -254,6 +257,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self.robot_action_dim_info = get_robot_action_dim_info(env_cfg=self.eval_cfg)
 
         def close(self):
+            if getattr(self, '_atomic_contacts', None) is not None:
+                self._atomic_contacts.close()
             self._abort_video_writers()
             self.obs_manager.reset()
             super().close()
@@ -261,6 +266,20 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
         def _post_setup_scene(self, sim):
             super()._post_setup_scene(sim)
             self.obs_manager.initialize(self)
+            program = self._atomic_record_program or self.atomic_program
+            if program is not None:
+                from task.atomic.surfaces import ObjectSurfaces
+                self._atomic_surfaces = ObjectSurfaces(self)
+                if any(c['measurement']['kind'] == 'contact_points' or c.get('expected') == 'on_top'
+                       for s in program.stages for c in s.geometry):
+                    from task.atomic.contacts import PhysXContacts
+                    self._atomic_contacts = PhysXContacts(self)
+
+        def sim_step(self, render=True):
+            contacts = getattr(self, '_atomic_contacts', None)
+            if contacts is not None:
+                contacts.begin_step()
+            super().sim_step(render=render)
 
         def reset(self, seed=None, options=None):
             seed = list(seed)
@@ -293,6 +312,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     self.current_env_seed_map[idx] = seed[idx]
 
             super().reset(seed=self.env_seeds, options=options)
+            if self._atomic_surfaces is not None:
+                self._atomic_surfaces.cache.clear()
             self.obs_manager.reset()  # Reset observation manager for the next episode
             self.setup_scene()
             self.robot_manager.set_origin_endpose()
@@ -300,6 +321,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self.reward_manager.init_state()
 
             self._atomic_sessions = {}
+            self._policy_prompt_history = []
             self._atomic_recorded_actions = [[] for _ in range(self.num_envs)]
             self._atomic_sequences = {}
             self._atomic_record_sessions = {}
@@ -349,6 +371,14 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     env_data["instruction"] = self.atomic_stage.instruction
                 elif self._atomic_record_program is not None and self._atomic_record_program.instruction:
                     env_data["instruction"] = self._atomic_record_program.instruction
+                if self._atomic_record_program is not None and self._atomic_record_program.geometric_instruction:
+                    if not isinstance(env_data['instruction'], str):
+                        raise ValueError('geometric prompt append requires a native string instruction')
+                    env_data['instruction'] += ' ' + self._atomic_record_program.geometric_instruction
+                prompt = env_data['instruction']
+                if not self._policy_prompt_history or self._policy_prompt_history[-1]['instruction'] != prompt:
+                    self._policy_prompt_history.append({'instruction': _jsonable(prompt), 'env_idx': env_idx,
+                                                        'policy_action_index': self.take_action_cnt[env_idx]})
                 data_list.append(env_data)
             return data_list
 
@@ -967,6 +997,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     self.eval_result["details"][index]["atomic"] = self._atomic_sessions[env_idx].summary()
                 if env_idx in self._atomic_sequences:
                     self.eval_result["details"][index]["atomic_sequence"] = self._atomic_sequences[env_idx].summary()
+                    self.eval_result['details'][index]['policy_prompt_history'] = deepcopy(self._policy_prompt_history)
+                    if self._atomic_contacts is not None:
+                        self.eval_result['details'][index]['contact_instrumentation'] = self._atomic_contacts.summary()
                 if self._atomic_record_dir:
                     self._save_atomic_trace(env_idx, index)
                 video_path = os.path.join(self.save_dir, f"episode_{index:07d}.mp4")

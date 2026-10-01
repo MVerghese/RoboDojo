@@ -21,8 +21,8 @@ def generate_cases(base):
     cases = [{"id": "baseline", "stage": None, "kind": None, "program": baseline}]
     for stage_index, stage in enumerate(base["stages"]):
         pick = stage["id"] == "pick_cup"
-        measurement = {"kind": "robot_ee_pose", "arm": "nearest", "label": "cup"} if pick else {"kind": "object_pose", "label": "cup"}
-        reference = {"kind": "object_pose", "label": "cup" if pick else "vase"}
+        measurement = {"kind": "contact_points", "arm": "any", "label": "cup", 'min_finger_bodies': 2} if pick else {"kind": "object_center_pose", "label": "cup"}
+        reference = {"kind": "object_center_pose", "label": "cup" if pick else "vase"}
         for kind in ("point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"):
             for setting in range(2):
                 offset = ([-0.04 if setting == 0 else 0.04, 0, 0] if pick
@@ -52,6 +52,17 @@ def generate_cases(base):
                 condition = program["stages"][stage_index]["geometry"][0]
                 condition.update(kind=kind, measurement=measurement, reference=reference,
                                  expected=expected, tolerance=0.03 if pick else 0.05)
+                condition.pop('axes', None)
+                condition.pop('relation_scope', None)
+                if pick and kind in ('pose', 'relative_orientation'):
+                    condition['measurement'] = {'kind': 'object_center_pose', 'label': 'cup'}
+                    condition['slot'] = 'object_pose'
+                    program['instruction'] = program['instruction'].replace('gripper end-effector link origin', 'cup centre').replace('gripper end-effector link', 'cup')
+                elif pick:
+                    program['instruction'] = program['instruction'].replace('gripper end-effector link origin', 'each actual finger contact').replace('gripper end-effector origin', 'each actual finger contact')
+                if kind == 'spatial_relation' and not pick:
+                    condition['relation_scope'] = 'objects'
+                    condition['min_overlap_fraction'] = 0.1
                 if kind == "pose":
                     condition["angle_tolerance_rad"] = math.radians(30)
                 elif kind == "relative_orientation":

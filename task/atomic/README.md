@@ -17,7 +17,17 @@ This branch adds a separate evaluation mode on top of RoboDojo's existing full-t
 
 See [`deposit_coin.json`](programs/deposit_coin.json) for a two-stage example. Each stage has an `id`, `family`, `instruction`, `success_checks`, and `geometry`. A geometry entry has an `id`, `slot`, one of the five `kind` values, an `expected` value, `tolerance`, `measurement`, optional `reference`, and an `event`. All poses are environment-local with scalar-first quaternions. `relative_displacement` is expressed in the reference object's frame. Spatial directional relations use x right, y forward, z up in that frame. Values must be selected from feasible geometry for the task and calibrated against the chosen object asset.
 
-The included grasp and push examples measure the **nearest robot end-effector link pose as a proxy** at first lift/motion. They do not claim to recover the exact finger-object contact patch. A benchmark cell requiring exact contact needs PhysX contact reporting and a contact-point resolver.
+The included grasp and push examples now use **force-bearing PhysX finger/object contact points** at first lift/motion. Grasps require two distinct finger bodies of the same arm. Each contact is scored; its centroid cannot hide incorrect contacts. Missing contact evidence is recorded explicitly, without an end-effector fallback. See the [instrumentation audit](INSTRUMENTATION_AUDIT.md) for the geometry, event, and action-recognition definitions.
+
+## Four-task paired pilot
+
+`scripts/atomic/generate_paired_suite.py --output-dir /path/to/suite` generates eight
+fresh full-task cases: native and explicitly geometrically conditioned prompts
+for general pickup, push T, pour balls, and plug in charger. A top-level
+`geometric_instruction` appends constraints to the native object-resolved task
+instruction. Scoring targets are identical within each pair. Results retain
+`policy_prompt_history`, contact instrumentation health, raw geometric evidence,
+atomic success, and native full-task success.
 
 ## End-to-end single-task suite
 
@@ -123,7 +133,7 @@ The cluster has a 112 GB simulated RoboDojo LeRobot dataset at `/lustre/fsw/port
 
 - The map is complete as an inventory, but only the five listed programs are executable. Each remaining task needs grounded labels, independent stage predicates, and action-boundary annotations. Some tasks require auxiliary states, such as an opponent move or a held stabilizing object.
 - Recorded action prefixes are replayed through the simulator. Determinism and state fidelity, especially for garments and fluids, must be checked in Isaac Sim. This workspace has no Isaac Sim, NVIDIA driver, or `Assets`, so only schema, math, and mock session tests run here.
-- Exact grasp and tool-contact geometry requires simulator contact points; the current end-effector link estimate is a named proxy in each result (`ee_contact_proxy: true`).
+- Direct grasp/push geometry uses PhysX manifold contacts. Tool contact and articulated-contact frame definitions need grounded body selectors before their taxonomy templates become executable. Historical results marked `ee_contact_proxy: true` retain their original interpretation.
 - Geometric variants must remain physically feasible. A final-pose variant that conflicts with a stage's fixed success predicate is invalid; choose a success predicate that represents the action independently of the changed geometry.
 
 Run the local tests with `python3 -m unittest discover -s tests -p 'test_atomic_benchmark.py' -v`.

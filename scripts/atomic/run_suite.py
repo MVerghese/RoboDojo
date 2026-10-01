@@ -19,15 +19,16 @@ from scripts.atomic.audit_scores import audit_report
 TERMINAL = {"Completed", "Succeeded", "Failed", "Stopped", "Cancelled", "Canceled"}
 
 
-def prepare_case(source, destination, name, client, ledger):
+def prepare_case(source, destination, name, client, ledger, task=None):
     old = source.name
+    old_task = json.loads((source / 'run_plan.json').read_text())['tasks'][0]
     def rename(value):
         if isinstance(value, str):
-            return value.replace(old, name)
+            return value.replace(old, name).replace(old_task, task or old_task)
         if isinstance(value, list):
             return [rename(v) for v in value]
         if isinstance(value, dict):
-            return {k: rename(v) for k, v in value.items()}
+            return {rename(k): rename(v) for k, v in value.items()}
         return value
     plan = rename(json.loads((source / "run_plan.json").read_text()))
     spec = rename(json.loads((source / f"{old}-000.job-spec.json").read_text()))
@@ -74,7 +75,8 @@ def summarize(manifest, root):
     for case in manifest["cases"]:
         run = root / "runs" / case["id"]
         row = {"case_id": case["id"], "conditioned_stage": case["stage"], "kind": case["kind"],
-               "run_dir": str(run), "status": "pending"}
+               "run_dir": str(run), "status": "pending", 'task': case.get('task', manifest['task']),
+               'prompt_mode': case.get('prompt_mode', 'legacy')}
         if (run / "run_plan.json").exists():
             plan = json.loads((run / "run_plan.json").read_text())
             row["job_id"] = plan["submitted"][0]["id"] if plan["submitted"] else None
@@ -84,7 +86,12 @@ def summarize(manifest, root):
             row["full_task_success"] = [d["success"] for n in report["native_results"]
                                         for d in (n.get("details", {}).values() if isinstance(n.get("details", {}), dict)
                                                   else n["details"])]
-            row["atomic_scores"] = audit_report(report)["atomic_episodes"]
+            audit_path = run / 'atomic-score-audit.json'
+            row["atomic_scores"] = (json.loads(audit_path.read_text()) if audit_path.exists() else audit_report(report))["atomic_episodes"]
+            row['policy_prompt_history'] = [d.get('policy_prompt_history', []) for n in report['native_results']
+                                            for d in (n.get('details', {}).values() if isinstance(n.get('details', {}), dict) else n['details'])]
+            row['contact_instrumentation'] = [d.get('contact_instrumentation') for n in report['native_results']
+                                              for d in (n.get('details', {}).values() if isinstance(n.get('details', {}), dict) else n['details'])]
             scored += sum(c["status"] == "reproduced" for a in row["atomic_scores"] for c in a["conditions"].values())
             mismatches += sum(c["status"] == "score_mismatch" for a in row["atomic_scores"]
                               for c in list(a["conditions"].values()) + list(a.get("closest_approach", {}).values()))
@@ -102,7 +109,7 @@ def summarize(manifest, root):
              f"Collected {result['completed_cases']} / {len(rows)} cases; reproduced {scored} event scores.", "",
              "Policy task/action failures are valid benchmark outcomes. Infrastructure failures and "
              "unobserved geometric events are reported explicitly; they do not count as geometric passes.", "",
-             "| Case | Conditioned action | Modifier | Pipeline | Full task success | Event scores |",
+             "| Case | Task | Prompt mode | Pipeline | Full task success | Event scores |",
              "| --- | --- | --- | --- | --- | --- |"]
     for row in rows:
         metrics = []
@@ -113,7 +120,7 @@ def summarize(manifest, root):
             for condition, score in stage.get("closest_approach", {}).items():
                 if score["status"] == "reproduced":
                     metrics.append(f"{stage['stage_id']}/{condition} closest (diagnostic): {score['recorded_result']['components']}")
-        lines.append(f"| {row['case_id']} | {row['conditioned_stage'] or 'baseline'} | {row['kind'] or 'baseline'} | {row['status']} | {row.get('full_task_success', 'pending')} | {'; '.join(metrics) or 'pending'} |")
+        lines.append(f"| {row['case_id']} | {row['task']} | {row['prompt_mode']} | {row['status']} | {row.get('full_task_success', 'pending')} | {'; '.join(metrics) or 'pending'} |")
     (root / "benchmark_results.md").write_text("\n".join(lines) + "\n")
     return result
 
@@ -138,8 +145,10 @@ def main():
         run = root / "runs" / case["id"]
         if (run / "run_plan.json").exists() and json.loads((run / "run_plan.json").read_text())["submitted"]:
             continue
-        prepare_case(args.base_run, run, f"{args.name}-{index:02d}", client, args.gpu_memory_ledger)
+        case_task = case.get('task', manifest['task'])
+        prepare_case(args.base_run, run, f"{args.name}-{index:02d}", client, args.gpu_memory_ledger, task=case_task)
         subprocess.run([sys.executable, "scripts/atomic/submit_trace.py", "--run-dir", str(run),
+                        '--task', case_task,
                         "--program", case["program"], "--max-initial-gpu-memory-mib", "512", "--dry-run"],
                        cwd=REPO, check=True, stdout=subprocess.DEVNULL)
     summarize(manifest, root)
@@ -187,6 +196,7 @@ def main():
         for case in pending[:max(0, args.max_concurrent - active)]:
             run = root / "runs" / case["id"]
             subprocess.run([sys.executable, "scripts/atomic/submit_trace.py", "--run-dir", str(run),
+                            '--task', case.get('task', manifest['task']),
                             "--program", case["program"], "--max-initial-gpu-memory-mib", "512",
                             "--credentials-file", str(args.credentials_file)], cwd=REPO, check=True)
             print(f"Submitted full-task case {case['id']}", flush=True)

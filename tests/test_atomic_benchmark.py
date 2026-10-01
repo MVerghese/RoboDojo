@@ -379,6 +379,12 @@ class _FakeRobotManager:
         return {0: [0.02, 0.0, 0.04, 1, 0, 0, 0]}
 
 
+class _FakeContacts:
+    def resolve(self, selector, env_idx):
+        return {'position': [0.02, 0, 0.04], 'points': [[0.02, 0, 0.04]]}, {
+            'kind': 'contact_points', 'resolved_arm': 'left_arm', 'finger_bodies': ['finger1', 'finger2']}
+
+
 class SessionTests(unittest.TestCase):
     def test_full_task_sequence_scores_stages_without_ending_native_episode(self):
         layout = _FakeLayout()
@@ -416,14 +422,14 @@ class SessionTests(unittest.TestCase):
         layout = _FakeLayout()
         scene = type("Scene", (), {"layout_manager": layout})()
         env = type("Env", (), {"scene_manager": scene, "robot_manager": _FakeRobotManager(),
-                                 "reward_manager": _FakeReward(layout)})()
+                                 "reward_manager": _FakeReward(layout), '_atomic_contacts': _FakeContacts()})()
         stage = AtomicStage.from_dict({
             "id": "pick", "family": "pick", "instruction": "Pick target",
             "success_checks": [{"name": "is_lift", "args": {"z_threshold": 0.1}}],
             "geometry": [{
                 "id": "grasp", "slot": "grasp_region", "kind": "relative_displacement",
                 "expected": [0.02, 0, 0], "tolerance": 0.001,
-                "measurement": {"kind": "robot_ee_pose", "arm": "left_arm"},
+                "measurement": {"kind": "contact_points", "label": "target", "arm": "left_arm"},
                 "reference": {"kind": "object_pose", "label": "target"},
                 "event": {"kind": "first_lift", "label": "target", "threshold": 0.025},
             }],
@@ -437,10 +443,11 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(session.summary()["geometry_observed"], 1)
         self.assertEqual(session.summary()["geometry_coverage"], 1.0)
         saved = session.summary()["geometry"]["grasp"]
-        self.assertEqual(saved["measured_state"], [0.02, 0, 0.04, 1, 0, 0, 0])
+        self.assertEqual(saved["measured_state"], {'position': [0.02, 0, 0.04], 'points': [[0.02, 0, 0.04]]})
         self.assertEqual(saved["reference_state"], [0, 0, 0.04, 1, 0, 0, 0])
         self.assertEqual(saved["measurement_source"]["resolved_arm"], "left_arm")
-        self.assertEqual(saved["measurement_source"]["ee_link_name"], "gripper_origin")
+        self.assertEqual(saved["measurement_source"]["finger_bodies"], ['finger1', 'finger2'])
+        self.assertFalse(saved['ee_contact_proxy'])
         own = audit_atomic(session.summary())["conditions"]["grasp"]
         self.assertEqual(own["status"], "reproduced")
         self.assertTrue(own["rescored_result"]["passed"])

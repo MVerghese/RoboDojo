@@ -50,4 +50,5 @@ class AtomicSequence:
                        "geometry": {}, "start_action": None, "end_action": None}
             rows.append(deepcopy(row))
         return {"task_name": self.program.task_name, "instruction": self.program.instruction,
+                'geometric_instruction': self.program.geometric_instruction,
                 "stage_starts": deepcopy(self.stage_starts), "stages": rows}

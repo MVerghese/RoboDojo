@@ -15,7 +15,7 @@ GEOMETRY_KINDS = frozenset(
     {"point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"}
 )
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate"})
-MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "robot_ee_pose", "functional_point"})
+MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "contact_points"})
 
 
 def _read_json(path):
@@ -33,6 +33,11 @@ def _validate_selector(selector, name):
             raise ValueError(f"{name}.label is required when arm is nearest")
     elif not selector.get("label"):
         raise ValueError(f"{name}.label is required for {selector['kind']}")
+    if selector['kind'] in ('functional_point', 'support_point'):
+        if not selector.get('tag') or selector.get('type', 'active') not in ('active', 'passive'):
+            raise ValueError('functional_point requires a tag and active/passive type')
+        if not isinstance(selector.get('index', 0), int) or selector.get('index', 0) < 0:
+            raise ValueError('functional_point index must be nonnegative')
 
 
 def _validate_condition(condition):
@@ -43,6 +48,17 @@ def _validate_condition(condition):
     if "expected" not in condition or "tolerance" not in condition:
         raise ValueError(f"condition {condition['id']} needs expected and tolerance")
     _validate_selector(condition.get("measurement"), f"condition {condition['id']}.measurement")
+    measurement = condition['measurement']
+    if measurement['kind'] == 'contact_points' and condition['kind'] in ('pose', 'relative_orientation'):
+        raise ValueError('contact points have no orientation; name a real orientation landmark separately')
+    if condition['slot'] in ('grasp_region', 'contact') and measurement['kind'] == 'robot_ee_pose':
+        if not condition.get('legacy_ee_proxy', False):
+            raise ValueError('grasp/contact position must use actual contact_points, not an end-effector origin')
+    if condition['kind'] == 'spatial_relation' and measurement['kind'].startswith('object_'):
+        if condition.get('relation_scope') != 'objects':
+            raise ValueError('object spatial relations must explicitly use geometry-aware objects scope')
+        if condition.get('expected') == 'near':
+            raise ValueError('object surface near is not implemented; centre distance is not accepted')
     if condition.get("reference") is not None:
         _validate_selector(condition["reference"], f"condition {condition['id']}.reference")
     event = condition.get("event", {"kind": "stage_success"})
@@ -125,6 +141,7 @@ class AtomicProgram:
     task_name: str
     stages: tuple[AtomicStage, ...]
     instruction: str | None = None
+    geometric_instruction: str | None = None
 
     @classmethod
     def load(cls, path):
@@ -137,7 +154,10 @@ class AtomicProgram:
         instruction = data.get("instruction")
         if instruction is not None and (not isinstance(instruction, str) or not instruction.strip()):
             raise ValueError("program instruction must be a nonempty string")
-        return cls(data["task_name"], stages, instruction)
+        geometric_instruction = data.get('geometric_instruction')
+        if geometric_instruction is not None and (not isinstance(geometric_instruction, str) or not geometric_instruction.strip()):
+            raise ValueError('geometric_instruction must be nonempty text')
+        return cls(data["task_name"], stages, instruction, geometric_instruction)
 
     def stage(self, stage_id):
         for stage in self.stages:
