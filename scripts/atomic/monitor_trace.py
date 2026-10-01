@@ -25,6 +25,8 @@ def main() -> int:
     parser.add_argument("--max-hours", type=float, default=24)
     parser.add_argument("--gpu-memory-ledger", type=Path,
                         help="Persistent initial GPU memory log; default: run directory's parent")
+    parser.add_argument("--counterfactual-variant", type=Path,
+                        help="After collection, rescore saved states against this alternate target")
     args = parser.parse_args()
 
     plan = json.loads((args.run_dir / "run_plan.json").read_text())
@@ -140,6 +142,18 @@ def main() -> int:
             )
             if result.returncode == 0:
                 record({"event": "collected", "job_state": state, "output": result.stdout.strip()})
+                if args.counterfactual_variant:
+                    audit = subprocess.run(
+                        [sys.executable, "scripts/atomic/audit_scores.py",
+                         "--report", str(args.run_dir / "eval_report.json"),
+                         "--variant", str(args.counterfactual_variant),
+                         "--output", str(args.run_dir / "opposite-target-scores.json")],
+                        cwd=REPO, capture_output=True, text=True,
+                    )
+                    record({"event": "counterfactual_audit", "exit_code": audit.returncode,
+                            "output": audit.stdout.strip(), "error": audit.stderr.strip()})
+                    if audit.returncode:
+                        return audit.returncode
                 return 0 if state in {"Completed", "Succeeded"} else 1
             if result.returncode == 2:
                 record({"event": "no_trace", "job_state": state, "output": result.stdout.strip(),

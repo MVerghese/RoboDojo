@@ -35,6 +35,8 @@ python scripts/atomic/audit_scores.py \
 
 Rescoring an outcome does not test policy response to the new instruction; that requires the second simulator trial. Offline rescoring permits only target/tolerance changes. Changing the measurement, landmark, or event requires a fresh run.
 
+For automatic opposite-target scoring after a Lepton trial, pass the opposite variant path to the monitor's `--counterfactual-variant` flag. It writes `opposite-target-scores.json` after the regular trace and score audit are collected.
+
 ## Record, annotate, run
 
 Run a normal RoboDojo evaluation with the usual policy server and append `--atomic_record_dir /path/to/traces --atomic_record_spec task/atomic/programs/deposit_coin.json` to `scripts/eval_policy.sh`. This writes one JSON trace per episode, marking stage starts when each predicate first succeeds at a policy action boundary. For a task without an executable program, use `--atomic_record_dir` alone and annotate a successful trace manually; for `deposit_coin`, for example:
