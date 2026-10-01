@@ -100,7 +100,10 @@ def save_node_neighbors(path, snapshot):
              "Owners and privileged flags come from Lepton job metadata. These are scheduler "
              "neighbors, not confirmed owners of the unexpected memory. GPU UUID assignments "
              "and process-to-job mappings are unavailable through these APIs. Missing GPU scope "
-             "environment variables in a job spec do not prove missing runtime isolation.", ""]
+             "environment variables in a job spec do not prove missing runtime isolation. "
+             "Historical entries reconstruct overlap from retained replica metadata/events; "
+             "they are not contemporaneous node snapshots. Missing historical neighbors "
+             "means records could not be recovered, not that the node was otherwise empty.", ""]
     def cell(value):
         return str(value if value is not None else "unknown").replace("|", "\\|").replace("\n", " ")
     for record in records:
@@ -110,17 +113,23 @@ def save_node_neighbors(path, snapshot):
                       f"Mode: {record['collection_mode']}. Delay: "
                       f"{record['incident_to_snapshot_seconds']:.1f} seconds.", "",
                       "Affected GPU UUID(s): " + ", ".join(record["gpu_uuids"]) + ".", "",
-                      "| Neighbor job | Owner / creator | Replica | GPUs | Privileged requested | Declared GPU scope |",
-                      "| --- | --- | --- | ---: | --- | --- |"])
+                      "| Neighbor job | Owner / creator | Replica | GPU count | Privileged requested | Declared GPU scope | Placement evidence |",
+                      "| --- | --- | --- | ---: | --- | --- | --- |"])
         for workload in record["workloads"]:
             if workload.get("is_our_job") or workload.get("type") != "job":
                 continue
             scope = workload.get("gpu_scope_envs_in_job_spec")
             scope_text = "not retrieved" if scope is None else (json.dumps(scope) if scope else "none declared")
+            count = workload.get("gpu_count")
+            if workload.get("gpu_count_source") == "resource_shape":
+                count = f"{count} (job shape)"
             values = [workload["id"], workload.get("owner") or workload.get("created_by"),
-                      workload.get("replica_id"), workload.get("gpu_count"),
-                      workload.get("privileged"), scope_text]
+                      workload.get("replica_id"), count,
+                      workload.get("privileged"), scope_text,
+                      workload.get("overlap_evidence", "node workload snapshot")]
             lines.append("| " + " | ".join(cell(v) for v in values) + " |")
+        if record.get("history_evidence"):
+            lines.extend(["", "Historical evidence: " + record["history_evidence"]])
         if record["errors"]:
             lines.extend(["", "Collection errors: " + json.dumps(record["errors"])])
         lines.append("")
