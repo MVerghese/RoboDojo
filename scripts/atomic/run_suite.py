@@ -34,9 +34,9 @@ def prepare_case(source, destination, name, client, ledger):
     group = spec["spec"]["affinity"]["allowed_dedicated_node_groups"][0]
     response = client._get(f"/dedicated-node-groups/{group}/nodes")
     response.raise_for_status()
+    # Historical memory use is workload evidence, not a permanent node fault.
+    # The live admission guard decides whether the allocated GPU is idle.
     excluded = set()
-    if ledger.exists():
-        excluded = {r.get("node") for r in map(json.loads, ledger.read_text().splitlines()) if r["existing_allocation"]}
     eligible = []
     for node in response.json():
         status, config = node["status"], node["spec"]
@@ -49,8 +49,9 @@ def prepare_case(source, destination, name, client, ledger):
             eligible.append(node["metadata"]["id"])
     if not eligible:
         raise RuntimeError("no healthy eligible L40S nodes in the reservation")
-    destination.mkdir(parents=True)
-    os.link(source / "code.tar.gz", destination / "code.tar.gz")
+    destination.mkdir(parents=True, exist_ok=True)
+    if not (destination / "code.tar.gz").exists():
+        os.link(source / "code.tar.gz", destination / "code.tar.gz")
     shutil.copyfile(source / "source_manifest.json", destination / "source_manifest.json")
     plan.update(submitted=[], staged=False, jobs=[name + "-000"], node_ids=eligible)
     for resource in plan.get("resources_by_task", {}).values():
@@ -135,8 +136,9 @@ def main():
     client = APIClient()
     for index, case in enumerate(manifest["cases"]):
         run = root / "runs" / case["id"]
-        if not (run / "run_plan.json").exists():
-            prepare_case(args.base_run, run, f"{args.name}-{index:02d}", client, args.gpu_memory_ledger)
+        if (run / "run_plan.json").exists() and json.loads((run / "run_plan.json").read_text())["submitted"]:
+            continue
+        prepare_case(args.base_run, run, f"{args.name}-{index:02d}", client, args.gpu_memory_ledger)
         subprocess.run([sys.executable, "scripts/atomic/submit_trace.py", "--run-dir", str(run),
                         "--program", case["program"], "--max-initial-gpu-memory-mib", "512", "--dry-run"],
                        cwd=REPO, check=True, stdout=subprocess.DEVNULL)
