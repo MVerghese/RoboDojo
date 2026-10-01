@@ -45,6 +45,14 @@ def write_report(manifest, result, root):
         lines.append(f"| {row['task']} | {row['prompt_mode']} | {row['status']} | {native_text} | "
                      f"{'; '.join(actions) or 'pending'} | {'; '.join(geometry) or 'pending'} |")
     lines += ['', '## Pair controls and captured prompts', '']
+    controls_path = root / 'pair-controls.json'
+    if controls_path.exists():
+        controls = json.loads(controls_path.read_text())
+        lines += [f"Immutable runtime identical across all eight bundles: **{controls['runtime_identical_all_eight']}**. "
+                  f"Checkpoint/seeds identical: **{controls['checkpoint_and_seeds_identical']}**. "
+                  f"Packaged programs match manifest: **{controls['all_programs_match_manifest']}**.", '',
+                  f"Policy adapter mapping: `{controls['adapter_mapping']}` "
+                  f"at `{controls['adapter_source']}`.", '']
     by_id = {r['case_id']: r for r in result['cases']}
     for base, conditioned in zip(manifest['cases'][::2], manifest['cases'][1::2]):
         lines += [f"### {base['task']}", '', '**Geometric append:**', '', conditioned['geometric_prompt_append'], '']
@@ -85,4 +93,12 @@ def write_report(manifest, result, root):
               f"- Manifest: `{root / 'suite.json'}`",
               f"- Full results: `{root / 'benchmark_results.json'}`",
               '- Per-run directories contain eval_report.json, atomic-score-audit.json, gpu_admission.json and layout-linked action traces.', '']
+    restart_path = root / 'live-audit-restart.json'
+    if restart_path.exists():
+        restart = json.loads(restart_path.read_text())
+        lines += ['## Excluded initial instrumentation attempts', '',
+                  restart['reason'], '',
+                  'All initial attempts are excluded from the eight-episode comparison and retained in '
+                  f"`{root / 'invalid-instrumentation-attempts'}`. Corrected runtime commit: "
+                  f"`{restart['new_git_commit']}`.", '']
     (root / 'REPORT.md').write_text('\n'.join(lines))
