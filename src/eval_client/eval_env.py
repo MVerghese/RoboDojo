@@ -77,6 +77,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self._atomic_record_dir = self.eval_cfg.get("atomic_record_dir")
             self._atomic_recorded_actions = [[] for _ in range(self.num_envs)]
             self._atomic_record_program = None
+            self._atomic_sequences = {}
             self._atomic_record_sessions = {}
             self._atomic_record_stage_indices = {}
             self._atomic_record_stage_starts = [{} for _ in range(self.num_envs)]
@@ -300,6 +301,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
 
             self._atomic_sessions = {}
             self._atomic_recorded_actions = [[] for _ in range(self.num_envs)]
+            self._atomic_sequences = {}
             self._atomic_record_sessions = {}
             self._atomic_record_stage_indices = {}
             self._atomic_record_stage_starts = [{} for _ in range(self.num_envs)]
@@ -345,6 +347,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 env_data["env_idx"] = env_idx
                 if self.atomic_stage is not None:
                     env_data["instruction"] = self.atomic_stage.instruction
+                elif self._atomic_record_program is not None and self._atomic_record_program.instruction:
+                    env_data["instruction"] = self._atomic_record_program.instruction
                 data_list.append(env_data)
             return data_list
 
@@ -714,6 +718,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                         session = self._atomic_sessions.get(env_idx)
                         if session is not None and not self.end_flag[env_idx]:
                             session.observe_events()
+                for env_idx in env_idx_list:
+                    sequence = self._atomic_sequences.get(env_idx)
+                    if sequence is not None and not self.end_flag[env_idx]:
+                        sequence.observe_events()
 
         def _align_layout_success(self):
             for env_idx in range(self.num_envs):
@@ -877,6 +885,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             os.makedirs(self._atomic_record_dir, exist_ok=True)
             file_name = f"{self.task_name}_{self.run_id}_{episode_index:07d}.json"
             stage_starts = self._atomic_record_stage_starts[env_idx]
+            if env_idx in self._atomic_sequences:
+                stage_starts = self._atomic_sequences[env_idx].stage_starts
             if self.atomic_stage is not None:
                 stage_starts = {self.atomic_stage.id: 0}
             save_json(
@@ -891,23 +901,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             )
 
         def _advance_recorded_stages(self, env_idx_list):
-            from task.atomic.session import AtomicSession
-
-            stages = self._atomic_record_program.stages
             for env_idx in env_idx_list:
-                session = self._atomic_record_sessions.get(env_idx)
-                if session is None or not session.check_success_only():
-                    continue
-                next_index = self._atomic_record_stage_indices[env_idx] + 1
-                self._atomic_record_stage_indices[env_idx] = next_index
-                if next_index < len(stages):
-                    next_stage = stages[next_index]
-                    self._atomic_record_stage_starts[env_idx][next_stage.id] = len(
-                        self._atomic_recorded_actions[env_idx]
-                    )
-                    self._atomic_record_sessions[env_idx] = AtomicSession(self, next_stage, env_idx)
-                else:
-                    self._atomic_record_sessions.pop(env_idx, None)
+                sequence = self._atomic_sequences.get(env_idx)
+                if sequence is not None:
+                    sequence.step(len(self._atomic_recorded_actions[env_idx]))
 
         def run_eval(self):
             self.run_reward()
@@ -916,13 +913,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             if self.atomic_stage is not None:
                 self._start_atomic_stage()
             if self._atomic_record_program is not None:
-                from task.atomic.session import AtomicSession
+                from task.atomic.sequence import AtomicSequence
 
-                first_stage = self._atomic_record_program.stages[0]
                 for env_idx in self.get_running_env_idx_list():
-                    self._atomic_record_stage_indices[env_idx] = 0
-                    self._atomic_record_stage_starts[env_idx][first_stage.id] = 0
-                    self._atomic_record_sessions[env_idx] = AtomicSession(self, first_stage, env_idx)
+                    self._atomic_sequences[env_idx] = AtomicSequence(self, self._atomic_record_program, env_idx)
             exist_envs = self.get_running_env_idx_list()
             if getattr(self, "interact", False):
                 if hasattr(self, "query_support_arm_traj"):
@@ -971,6 +965,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 }
                 if self.atomic_stage is not None:
                     self.eval_result["details"][index]["atomic"] = self._atomic_sessions[env_idx].summary()
+                if env_idx in self._atomic_sequences:
+                    self.eval_result["details"][index]["atomic_sequence"] = self._atomic_sequences[env_idx].summary()
                 if self._atomic_record_dir:
                     self._save_atomic_trace(env_idx, index)
                 video_path = os.path.join(self.save_dir, f"episode_{index:07d}.mp4")

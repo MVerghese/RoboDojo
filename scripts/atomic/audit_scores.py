@@ -52,7 +52,7 @@ def audit_atomic(atomic, variant=None):
         }
     for condition_id in conditions.keys() - rows.keys():
         rows[condition_id] = {"status": "event_not_observed"}
-    return {
+    output = {
         "stage_id": atomic["stage_id"], "instruction": atomic.get("instruction"),
         "action_success": atomic["action_success"],
         "geometry_coverage": atomic["geometry_coverage"],
@@ -60,6 +60,10 @@ def audit_atomic(atomic, variant=None):
         "interpretation": "Rescoring a saved outcome changes the target, not the policy behavior.",
         "conditions": rows,
     }
+    if atomic.get("closest_approach"):
+        alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}
+        output["closest_approach"] = audit_atomic(alternate, variant)["conditions"]
+    return output
 
 
 def audit_report(report, variant=None):
@@ -70,6 +74,9 @@ def audit_report(report, variant=None):
             if "atomic" in detail:
                 rows.append({"episode": str(episode), "layout_id": detail["layout_id"],
                              **audit_atomic(detail["atomic"], variant)})
+            for atomic in detail.get("atomic_sequence", {}).get("stages", []):
+                rows.append({"episode": str(episode), "layout_id": detail["layout_id"],
+                             "reached": atomic["reached"], **audit_atomic(atomic, variant)})
     return {"atomic_episodes": rows}
 
 

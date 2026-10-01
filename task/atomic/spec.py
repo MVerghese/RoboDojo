@@ -124,6 +124,7 @@ class AtomicStage:
 class AtomicProgram:
     task_name: str
     stages: tuple[AtomicStage, ...]
+    instruction: str | None = None
 
     @classmethod
     def load(cls, path):
@@ -133,7 +134,10 @@ class AtomicProgram:
         stages = tuple(AtomicStage.from_dict(stage) for stage in data.get("stages", ()))
         if not stages or len({stage.id for stage in stages}) != len(stages):
             raise ValueError("atomic program needs unique, nonempty stages")
-        return cls(data["task_name"], stages)
+        instruction = data.get("instruction")
+        if instruction is not None and (not isinstance(instruction, str) or not instruction.strip()):
+            raise ValueError("program instruction must be a nonempty string")
+        return cls(data["task_name"], stages, instruction)
 
     def stage(self, stage_id):
         for stage in self.stages:

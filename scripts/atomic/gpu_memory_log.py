@@ -3,9 +3,18 @@
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import fcntl
 
 
 def append_observation(ledger, observation):
+    ledger = Path(ledger)
+    ledger.parent.mkdir(parents=True, exist_ok=True)
+    with ledger.with_suffix(".lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        return _append_observation_unlocked(ledger, observation)
+
+
+def _append_observation_unlocked(ledger, observation):
     ledger = Path(ledger)
     ledger.parent.mkdir(parents=True, exist_ok=True)
     records = [json.loads(line) for line in ledger.read_text().splitlines()] if ledger.exists() else []

@@ -15,9 +15,11 @@ import os
 from pathlib import Path
 import shlex
 import subprocess
+import sys
 import tarfile
 from urllib.parse import urlparse
 
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # Keep the evaluator and its dependencies from the same checkout. Replacing
 # only main.py/eval_env.py can leave newer imports absent in the baked image.
@@ -176,6 +178,8 @@ def main() -> None:
     parser.add_argument("--run-dir", type=Path, required=True)
     parser.add_argument("--fork", type=Path, default=Path(__file__).resolve().parents[2])
     parser.add_argument("--task", default="pour_balls_into_vase")
+    parser.add_argument("--program", type=Path,
+                        help="Full-task instruction and atomic scoring program to package")
     parser.add_argument("--reservation", help="Existing Lepton reservation ID for the capture job")
     parser.add_argument("--credentials-file", type=Path)
     parser.add_argument("--max-initial-gpu-memory-mib", type=int,
@@ -192,10 +196,21 @@ def main() -> None:
     spec_path = args.run_dir / f"{plan['jobs'][0]}.job-spec.json"
     spec = json.loads(spec_path.read_text())
     overlay = args.run_dir / "robodojo-overlay.tar.gz"
-    digest = build_overlay(args.fork, overlay)
+    inputs = {}
+    if args.program:
+        from task.atomic.spec import AtomicProgram
+        program = AtomicProgram.load(args.program)
+        if program.task_name != args.task:
+            raise ValueError("program task_name must match the capture task")
+        inputs["task/atomic/inputs/program.json"] = args.program
+    digest = build_overlay(args.fork, overlay, inputs)
     remote = f"{plan['results_s3']}/robodojo-overlay.tar.gz"
     patched = patch_spec(spec, remote, digest, args.task, args.reservation,
                          args.max_initial_gpu_memory_mib)
+    if args.program:
+        for env in patched["spec"]["envs"]:
+            if env["name"] == "ATOMIC_RECORD_SPEC":
+                env["value"] = "/workspace/RoboDojo/task/atomic/inputs/program.json"
     patched_path = args.run_dir / f"{plan['jobs'][0]}.atomic-job-spec.json"
     patched_path.write_text(json.dumps(patched, indent=2) + "\n")
     (args.run_dir / "overlay.sha256").write_text(digest + "  robodojo-overlay.tar.gz\n")
@@ -209,6 +224,8 @@ def main() -> None:
     if args.credentials_file is None:
         raise ValueError("--credentials-file is required to upload the source bundles")
     provenance = {"mode": "capture", "task": args.task}
+    if args.program:
+        provenance.update(mode="full_task_benchmark", program_sha256=hashlib.sha256(args.program.read_bytes()).hexdigest())
     if args.max_initial_gpu_memory_mib is not None:
         provenance["gpu_admission"] = {
             "max_used_mib": args.max_initial_gpu_memory_mib, "reject_compute_processes": True,

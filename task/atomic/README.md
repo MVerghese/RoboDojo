@@ -10,6 +10,7 @@ This branch adds a separate evaluation mode on top of RoboDojo's existing full-t
 - A `first_predicate` event can capture geometry when any or all read-only RoboDojo predicates first become true at a physics step. The `pour_balls_into_vase` program uses this to measure cup placement when the first ball enters the vase.
 - A normal evaluation can record policy action traces and automatically mark stage starts for an executable program. Atomic mode resets the original layout, replays the action prefix, verifies preceding stage predicates at the recorded boundaries, starts a fresh stage scoring window, and stops when the selected atomic success checks pass or its step limit expires.
 - A variant JSON changes expected geometry, tolerances, references, event, and instruction while keeping the same stage success checks. This permits paired counterfactual trials.
+- A recording program can include a top-level `instruction` for an uninterrupted full-task benchmark. The policy receives that task-wide instruction throughout the episode. `AtomicSequence` records stage boundaries and geometric events without terminating the episode or replacing RoboDojo's native reward/cleanup checks. Results are stored in `details[*].atomic_sequence`.
 - Each observed score saves its full condition, raw measurement and landmark state, resolved robot arm/link, and policy action index. Units and quaternion order are explicit in the atomic summary. The collector preserves `eval_report.json` and writes `atomic-score-audit.json`, which recomputes the scores from this raw evidence. Earlier runs without these fields are marked `missing_raw_evidence`.
 
 ## Program format
@@ -17,6 +18,31 @@ This branch adds a separate evaluation mode on top of RoboDojo's existing full-t
 See [`deposit_coin.json`](programs/deposit_coin.json) for a two-stage example. Each stage has an `id`, `family`, `instruction`, `success_checks`, and `geometry`. A geometry entry has an `id`, `slot`, one of the five `kind` values, an `expected` value, `tolerance`, `measurement`, optional `reference`, and an `event`. All poses are environment-local with scalar-first quaternions. `relative_displacement` is expressed in the reference object's frame. Spatial directional relations use x right, y forward, z up in that frame. Values must be selected from feasible geometry for the task and calibrated against the chosen object asset.
 
 The included grasp and push examples measure the **nearest robot end-effector link pose as a proxy** at first lift/motion. They do not claim to recover the exact finger-object contact patch. A benchmark cell requiring exact contact needs PhysX contact reporting and a contact-point resolver.
+
+## End-to-end single-task suite
+
+`scripts/atomic/generate_suite.py --output-dir /path/to/suite` generates 21 full-task cases for `pour_balls_into_vase`: a baseline plus two settings for each of five modifier types on each of `pick_cup` and `pour_balls`. Each conditioned case changes one action's geometric condition and appends the matching request to the task-wide policy instruction. The original seven-ball transfer, upright-cup, and arm-return criteria remain the full-task success condition. The captured layout-zero trace observed the pick boundary at action 45; it did not complete the full pour. The suite reruns the complete task from the beginning and does not replay that trace or infer an unobserved place action.
+
+All candidate targets and instructions are saved in `suite.json` and per-case program files. Position and pose values explicitly use the named cup/vase frame. Candidate targets require live feasibility calibration; a poor policy score does not invalidate the integration run. A case requesting an orientation still uses the same atomic success predicate as its baseline.
+
+In addition to adherence at the required event, each reached stage records `closest_approach` at policy action boundaries. This diagnostic remains available for failed pours or lifts. It is **not** substituted for event adherence or included in the event pass rate. Unreached stages and unobserved events remain explicit.
+
+Prepare/review the suite using an existing one-episode i4 source plan:
+
+```bash
+python scripts/atomic/run_suite.py \
+  --suite /path/to/suite/suite.json \
+  --base-run /path/to/existing-capture-run \
+  --credentials-file /path/to/credentials \
+  --name rb-pour-e2e \
+  --max-concurrent 4 \
+  --gpu-memory-ledger /path/to/gpu-memory-observations.jsonl \
+  --dry-run
+```
+
+Remove `--dry-run` to submit up to four independent one-GPU trials concurrently, collect each episode, verify raw-state score reproduction, and update `benchmark_results.json` / `.md`. The controller resumes submitted plans and stops further submissions after two collection/infrastructure failures so a broken simulator does not consume the whole matrix. Failed task/action predicates remain valid benchmark results. GPU admission and neighbor-owner evidence are collected for every affected placement; concurrent ledger writers use file locks.
+
+The standalone capture helper accepts `--program /path/to/full-task.program.json` for a single full-task case. Existing annotation programs without a task-wide instruction preserve the policy's original task instruction while now retaining atomic geometry scores.
 
 ## Steerability pilot
 

@@ -20,6 +20,8 @@ from scripts.atomic import gpu_admission
 from scripts.atomic.gpu_memory_log import record_admission
 from scripts.atomic.node_neighbors import collect_node_neighbors, save_node_neighbors, summarize_job
 from scripts.atomic.audit_scores import audit_atomic
+from scripts.atomic.generate_suite import generate_cases
+from task.atomic.sequence import AtomicSequence
 from src.eval_client.ws_compat import compatible_client_kwargs
 
 
@@ -83,6 +85,22 @@ class GeometryTests(unittest.TestCase):
 
 
 class SpecTests(unittest.TestCase):
+    def test_full_task_suite_varies_every_modifier_for_each_action(self):
+        base = json.loads((Path(__file__).resolve().parents[1] / "task/atomic/programs/pour_balls_into_vase.json").read_text())
+        cases = generate_cases(base)
+        self.assertEqual(len(cases), 21)
+        self.assertEqual(len({c["id"] for c in cases}), 21)
+        for stage in ("pick_cup", "pour_balls"):
+            for kind in ("point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"):
+                self.assertEqual(len([c for c in cases if c["stage"] == stage and c["kind"] == kind]), 2)
+        for case in cases:
+            program = case["program"]
+            self.assertIn("all seven balls", program["instruction"])
+            self.assertIn("cup upright", program["instruction"])
+            for original, changed in zip(base["stages"], program["stages"]):
+                self.assertEqual(original["success_checks"], changed["success_checks"])
+                AtomicStage.from_dict(changed)
+
     def test_programs_and_variant(self):
         root = Path(__file__).resolve().parents[1] / "task/atomic/programs"
         for path in root.glob("*.json"):
@@ -362,6 +380,38 @@ class _FakeRobotManager:
 
 
 class SessionTests(unittest.TestCase):
+    def test_full_task_sequence_scores_stages_without_ending_native_episode(self):
+        layout = _FakeLayout()
+        env = type("Env", (), {"scene_manager": type("Scene", (), {"layout_manager": layout})(),
+                                 "robot_manager": _FakeRobotManager(), "reward_manager": _FakeReward(layout),
+                                 "take_action_cnt": [0], "success": [False], "end_flag": [False]})()
+        def stage(name, height):
+            return AtomicStage.from_dict({"id": name, "family": "pick" if name == "pick" else "pour",
+                "instruction": name, "success_checks": [{"name": "is_lift", "args": {"z_threshold": height}}],
+                "geometry": [{"id": "height", "slot": "source", "kind": "point", "expected": [0, 0, height],
+                              "tolerance": 0.005, "measurement": {"kind": "object_position", "label": "cup"},
+                              "event": {"kind": "stage_success"}}]})
+        sequence = AtomicSequence(env, AtomicProgram("pour_test", (stage("pick", 0.05), stage("pour", 0.2)), "Full task"), 0)
+        sequence.step(1)
+        before = sequence.summary()
+        self.assertFalse(before["stages"][1]["reached"])
+        self.assertEqual(before["stages"][0]["geometry_coverage"], 0)
+        self.assertEqual(audit_atomic(before["stages"][0])["conditions"]["height"]["status"], "event_not_observed")
+        self.assertIn("closest_approach", audit_atomic(before["stages"][0]))
+        layout.position[2] = 0.05
+        env.take_action_cnt[0] = 45
+        sequence.step(45)
+        self.assertEqual(sequence.stage_starts, {"pick": 0, "pour": 45})
+        layout.position[2] = 0.2
+        env.take_action_cnt[0] = 90
+        sequence.step(90)
+        complete = sequence.summary()
+        self.assertTrue(all(s["action_success"] for s in complete["stages"]))
+        self.assertTrue(all(s["geometry_coverage"] == 1 for s in complete["stages"]))
+        self.assertEqual(env.end_flag, [False])
+        self.assertEqual(env.success, [False])
+        self.assertIsNone(sequence.session)
+
     def test_grasp_geometry_is_recorded_at_first_lift_not_final_state(self):
         layout = _FakeLayout()
         scene = type("Scene", (), {"layout_manager": layout})()

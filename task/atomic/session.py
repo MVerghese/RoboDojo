@@ -20,6 +20,7 @@ class AtomicSession:
         self.env_idx = env_idx
         self.success = False
         self.results = {}
+        self.closest_approach = {}
         self.sample_index = 0
         self.initial_positions = {}
         for condition in stage.geometry:
@@ -159,6 +160,21 @@ class AtomicSession:
         """Evaluate stage success after a policy action chunk."""
         success_now = self._check_success()
         self._sample(success_now)
+        # Diagnostic scores for failed attempts, separate from the required event.
+        for condition in self.stage.geometry:
+            measured, source = self._resolve_with_source(condition["measurement"])
+            reference = self._resolve(condition["reference"]) if condition.get("reference") else None
+            result = evaluate_geometry(condition, measured, reference).as_dict()
+            old = self.closest_approach.get(condition["id"])
+            if old is None or result["error"] < old["result"]["error"]:
+                self.closest_approach[condition["id"]] = {
+                    "condition": deepcopy(condition), "measured_state": measured.tolist(),
+                    "reference_state": reference.tolist() if reference is not None else None,
+                    "measurement_source": source, "result": result,
+                    "policy_action_index": int(self.env.take_action_cnt[self.env_idx]) if hasattr(self.env, "take_action_cnt") else None,
+                    "measurement_context": "closest approach at policy action boundaries; not required-event adherence",
+                    "ee_contact_proxy": condition["measurement"]["kind"] == "robot_ee_pose",
+                }
         self.success = self.success or success_now
         return self.success
 
@@ -186,4 +202,5 @@ class AtomicSession:
             "geometry_observed": observed,
             "geometry_total": total,
             "geometry": self.results,
+            "closest_approach": self.closest_approach,
         }

@@ -3,6 +3,7 @@
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import fcntl
 
 
 GPU_SCOPE_ENVS = {"CUDA_VISIBLE_DEVICES", "NVIDIA_VISIBLE_DEVICES", "CUDA_DEVICE_ORDER"}
@@ -87,6 +88,14 @@ def collect_node_neighbors(client, node_group_ids, node, job_id, replica_id, adm
 
 def save_node_neighbors(path, snapshot):
     """Deduplicate monitor restarts and write a contact report next to the JSONL."""
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.with_suffix(".lock").open("a") as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        _save_node_neighbors_unlocked(path, snapshot)
+
+
+def _save_node_neighbors_unlocked(path, snapshot):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     records = [json.loads(line) for line in path.read_text().splitlines()] if path.exists() else []
