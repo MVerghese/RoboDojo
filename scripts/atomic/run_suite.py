@@ -122,6 +122,9 @@ def summarize(manifest, root):
                     metrics.append(f"{stage['stage_id']}/{condition} closest (diagnostic): {score['recorded_result']['components']}")
         lines.append(f"| {row['case_id']} | {row['task']} | {row['prompt_mode']} | {row['status']} | {row.get('full_task_success', 'pending')} | {'; '.join(metrics) or 'pending'} |")
     (root / "benchmark_results.md").write_text("\n".join(lines) + "\n")
+    if manifest['mode'] == 'paired_native_and_geometrically_conditioned':
+        from scripts.atomic.report_paired_suite import write_report
+        write_report(manifest, result, root)
     return result
 
 
