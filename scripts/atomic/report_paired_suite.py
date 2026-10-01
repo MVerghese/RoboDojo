@@ -38,8 +38,11 @@ def write_report(manifest, result, root):
         native_text = ', '.join('yes' if x else 'no' for x in native) if native else 'pending'
         actions, geometry = [], []
         for stage in row.get('atomic_scores', []):
+            contact_missing = any(c.get('status') == 'contact_not_observed_at_event'
+                                  for c in stage['conditions'].values())
             actions.append(stage['stage_id'] + ': ' + ('yes' if stage['action_success'] else 'no') +
-                           (' (unreached)' if not stage.get('reached', True) else ''))
+                           (' (unreached)' if not stage.get('reached', True) else
+                            ' (interaction unverified)' if contact_missing and not stage['action_success'] else ''))
             for name, score in stage['conditions'].items():
                 geometry.append(name + ': ' + metrics(score))
         lines.append(f"| {row['task']} | {row['prompt_mode']} | {row['status']} | {native_text} | "
@@ -85,6 +88,7 @@ def write_report(manifest, result, root):
               '- Native task success, audited atomic recognition, and geometric adherence are separate outcomes.',
               '- Contact scores use actual PhysX finger/object manifold points, with no end-effector fallback.',
               '- Grasp success requires two finger bodies of the same arm plus the required lift.',
+              '- Pick/push recognition requires contact evidence at the declared lift/motion event. A missing contact leaves the interaction unverified, even when a goal-pose condition passes; it does not prove no push occurred.',
               '- Object “above” requires signed relative height and projected mesh-footprint overlap.',
               '- Pour recognition checks whole balls within finite vase bounds; insertion uses annotated connector/opening frames.',
               '- Missing/unreached events have no geometric pass. Callback or collection errors are infrastructure failures.',
