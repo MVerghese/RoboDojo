@@ -1,10 +1,12 @@
 import ast
 import json
 import math
+import os
 from pathlib import Path
 import tempfile
 import tarfile
 import unittest
+from unittest.mock import patch
 
 import numpy as np
 
@@ -13,7 +15,9 @@ from task.atomic.replay import replay_prefix
 from task.atomic.session import AtomicSession
 from task.atomic.spec import AtomicProgram, AtomicStage, AtomicTrace
 from scripts.atomic.submit_stage import validate_stage_inputs
-from scripts.atomic.submit_trace import build_overlay, patch_overlay_spec
+from scripts.atomic.submit_trace import build_overlay, patch_overlay_spec, patch_spec
+from scripts.atomic import gpu_admission
+from scripts.atomic.gpu_memory_log import record_admission
 from src.eval_client.ws_compat import compatible_client_kwargs
 
 
@@ -165,6 +169,63 @@ class SubmissionTests(unittest.TestCase):
         self.assertEqual(patched["spec"]["queue_config"], base["spec"]["queue_config"])
         self.assertEqual(patched["spec"]["reservation_config"]["reservation_id"], "reservation")
         self.assertTrue(patched["spec"]["container"]["command"][2].endswith("exec runner"))
+
+
+class GpuAdmissionTests(unittest.TestCase):
+    @staticmethod
+    def snapshot(used_mib, processes=()):
+        return {"observed_at": "2026-10-01T16:00:00Z",
+                "gpus": [{"index": 0, "uuid": "GPU-test", "used_mib": used_mib, "total_mib": 46068}],
+                "compute_processes": list(processes)}
+
+    def test_occupied_gpu_does_not_start_workload_and_persists_rejection(self):
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.dict(os.environ, {"EVAL_OUTPUT_DIR": directory, "RESULTS_S3": ""}), \
+                patch.object(gpu_admission, "read_snapshot", return_value=self.snapshot(6699)), \
+                patch.object(gpu_admission.os, "execvp") as execute:
+            self.assertEqual(gpu_admission.main(["--max-used-mib", "512", "--", "timeout", "2400", "capture"]), 78)
+            execute.assert_not_called()
+            report = json.loads((Path(directory) / "eval_report.json").read_text())
+            self.assertEqual(report["completed_episodes"], 0)
+            self.assertEqual(report["failure_kind"], "gpu_admission_rejected")
+            self.assertIn("6699 MiB", report["errors"][0])
+
+    def test_idle_gpu_starts_workload_after_two_samples(self):
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.dict(os.environ, {"EVAL_OUTPUT_DIR": directory, "RESULTS_S3": ""}), \
+                patch.object(gpu_admission, "read_snapshot", return_value=self.snapshot(1)) as sample, \
+                patch.object(gpu_admission.time, "sleep"), \
+                patch.object(gpu_admission.os, "execvp") as execute:
+            self.assertEqual(gpu_admission.main(["--max-used-mib", "512", "--", "timeout", "2400", "capture"]), 0)
+            self.assertEqual(sample.call_count, 2)
+            execute.assert_called_once_with("timeout", ["timeout", "2400", "capture"])
+            admission = json.loads((Path(directory) / "gpu_admission.json").read_text())
+            self.assertTrue(admission["admitted"])
+
+    def test_existing_process_is_rejected_even_below_memory_allowance(self):
+        sample = self.snapshot(225, [{"gpu_uuid": "GPU-test", "pid": "42", "used_mib": "225"}])
+        self.assertIn("compute process", gpu_admission.rejection_reason(sample, 512))
+
+    def test_admission_guard_wraps_native_timeout_without_changing_allocation(self):
+        base = {"spec": {"container": {"command": ["bash", "-lc",
+                "tar -xzf /tmp/robodojo-code.tar.gz -C /opt/imaginaire4\nexec timeout 10800 bash run.sh"]},
+                "envs": [], "resource_shape": "my.1xl40s"}}
+        guarded = patch_spec(base, "s3://bucket/overlay", "sha", "pour_balls_into_vase", None, 512)
+        self.assertEqual(guarded["spec"]["resource_shape"], "my.1xl40s")
+        self.assertIn("gpu_admission.py --max-used-mib 512 -- timeout 10800 bash run.sh",
+                      guarded["spec"]["container"]["command"][2])
+
+    def test_gpu_counts_deduplicate_monitor_restarts_and_distinguish_placements(self):
+        admission = {"max_used_mib": 512, "admitted": False, "samples": [self.snapshot(20404)]}
+        with tempfile.TemporaryDirectory() as directory:
+            ledger = Path(directory) / "gpu-memory.jsonl"
+            for _ in range(2):
+                summary = record_admission(ledger, "job-1", "replica-1", "node-a", admission, "source")
+            self.assertEqual(summary["affected_placements"], 1)
+            self.assertEqual(summary["affected_unique_gpus"], 1)
+            summary = record_admission(ledger, "job-2", "replica-2", "node-a", admission, "source")
+            self.assertEqual(summary["affected_placements"], 2)
+            self.assertEqual(summary["affected_unique_gpus"], 1)
 
 
 class ClientCompatibilityTests(unittest.TestCase):

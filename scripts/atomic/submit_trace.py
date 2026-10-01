@@ -106,12 +106,25 @@ def patch_overlay_spec(spec: dict, remote: str, digest: str, reservation: str | 
     return result
 
 
-def patch_spec(spec: dict, remote: str, digest: str, task: str, reservation: str | None) -> dict:
+def patch_spec(spec: dict, remote: str, digest: str, task: str, reservation: str | None,
+               max_initial_gpu_memory_mib: int | None = None) -> dict:
     result = patch_overlay_spec(spec, remote, digest, reservation)
     result["spec"]["envs"].extend((
         {"name": "ATOMIC_RECORD_DIR", "value": "/workspace/robodojo-eval-output/traces"},
         {"name": "ATOMIC_RECORD_SPEC", "value": f"/workspace/RoboDojo/task/atomic/programs/{task}.json"},
     ))
+    if max_initial_gpu_memory_mib is not None:
+        if max_initial_gpu_memory_mib < 0:
+            raise ValueError("initial GPU memory limit must be nonnegative")
+        bootstrap = result["spec"]["container"]["command"][2]
+        if bootstrap.count("\nexec ") != 1:
+            raise ValueError("unexpected bootstrap workload; cannot add GPU admission check")
+        guard = (
+            "/root/miniconda3/envs/RoboDojo/bin/python "
+            "/workspace/RoboDojo/scripts/atomic/gpu_admission.py "
+            f"--max-used-mib {max_initial_gpu_memory_mib} -- "
+        )
+        result["spec"]["container"]["command"][2] = bootstrap.replace("\nexec ", "\nexec " + guard)
     return result
 
 
@@ -160,6 +173,8 @@ def main() -> None:
     parser.add_argument("--task", default="pour_balls_into_vase")
     parser.add_argument("--reservation", help="Existing Lepton reservation ID for the capture job")
     parser.add_argument("--credentials-file", type=Path)
+    parser.add_argument("--max-initial-gpu-memory-mib", type=int,
+                        help="Require an idle GPU before policy loading; allow this much driver memory")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
 
@@ -174,7 +189,8 @@ def main() -> None:
     overlay = args.run_dir / "robodojo-overlay.tar.gz"
     digest = build_overlay(args.fork, overlay)
     remote = f"{plan['results_s3']}/robodojo-overlay.tar.gz"
-    patched = patch_spec(spec, remote, digest, args.task, args.reservation)
+    patched = patch_spec(spec, remote, digest, args.task, args.reservation,
+                         args.max_initial_gpu_memory_mib)
     patched_path = args.run_dir / f"{plan['jobs'][0]}.atomic-job-spec.json"
     patched_path.write_text(json.dumps(patched, indent=2) + "\n")
     (args.run_dir / "overlay.sha256").write_text(digest + "  robodojo-overlay.tar.gz\n")
@@ -187,8 +203,12 @@ def main() -> None:
         return
     if args.credentials_file is None:
         raise ValueError("--credentials-file is required to upload the source bundles")
-    submit_prepared(plan_path, patched, overlay, digest, args.credentials_file,
-                    {"mode": "capture", "task": args.task})
+    provenance = {"mode": "capture", "task": args.task}
+    if args.max_initial_gpu_memory_mib is not None:
+        provenance["gpu_admission"] = {
+            "max_used_mib": args.max_initial_gpu_memory_mib, "reject_compute_processes": True,
+        }
+    submit_prepared(plan_path, patched, overlay, digest, args.credentials_file, provenance)
 
 
 if __name__ == "__main__":

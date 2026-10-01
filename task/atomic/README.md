@@ -27,6 +27,10 @@ The overlay includes all Git-tracked first-party runtime files in `env`, `env_cf
 
 The startup check also validates the evaluator's WebSocket client options against the installed XPolicyLab constructor without connecting to a server. Images with older clients omit the two default keepalive options they do not accept. Custom keepalive values require a client that supports them and fail explicitly on older images.
 
+For a capture requiring an idle GPU, add `--max-initial-gpu-memory-mib 512` to both the dry-run and actual `submit_trace.py` invocation. Before policy loading, the job checks memory twice, rejects existing compute processes, and allows up to 512 MiB for driver/display overhead. It publishes `gpu_admission.json` immediately. A rejected placement exits with code 78 and publishes a failed evaluation report and diagnostic archive without loading the policy.
+
+The monitor saves admission measurements to `<run-dir>/gpu_admission.json` and appends each measured placement to `<run-dir-parent>/gpu-memory-observations.jsonl`. Adjacent `.summary.json` and `.md` files count affected placements and distinct GPU UUIDs. Use `--gpu-memory-ledger` to choose another persistent log. Repeated monitor observations are deduplicated by job, replica, and GPU UUID.
+
 After submission, `scripts/atomic/monitor_trace.py --run-dir <run-dir> --credentials-file <credentials>` polls the Lepton job every 30 seconds for up to 24 hours. It logs state changes to `<run-dir>/monitor.jsonl` and invokes the trace collector after termination. The monitor is a running process and must remain alive until collection finishes. Submission verifies that the configured checkpoint's `model/.metadata` is accessible before uploading or creating a GPU job.
 
 ```json
