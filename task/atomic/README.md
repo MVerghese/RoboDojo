@@ -103,7 +103,7 @@ The index `37` means replay actions `0..36`, then ask the policy to perform `ins
 --atomic_trace /path/to/annotated_trace.json
 ```
 
-To vary a geometric target, add `--atomic_variant /path/to/variant.json`. The example [`push_T_right_contact.json`](programs/variants/push_T_right_contact.json) changes the requested end-effector contact offset and atomic instruction. The launcher forwards these flags to `src/eval_client/main.py` and forces one environment and one trial in atomic mode.
+To vary a geometric target, add `--atomic_variant /path/to/variant.json`. The example [`push_T_right_contact.json`](programs/variants/push_T_right_contact.json) changes the requested finger-contact region and atomic instruction. The launcher forwards these flags to `src/eval_client/main.py` and forces one environment and one trial in atomic mode.
 
 For `scripts/robodojo.sh client`, use the corresponding `--atomic-spec`, `--atomic-stage`, `--atomic-trace`, and `--atomic-variant` flags. In a Lepton pod these can instead be set with `ATOMIC_SPEC`, `ATOMIC_STAGE`, `ATOMIC_TRACE`, and `ATOMIC_VARIANT`; all paths must exist inside the pod. Atomic settings require one `--task`. A full-task annotation program (`ATOMIC_RECORD_SPEC`) cannot be combined with atomic evaluation, but `ATOMIC_RECORD_DIR` alone can record the selected stage.
 
