@@ -14,7 +14,7 @@ from leptonai.api.v2.client import APIClient
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from scripts.atomic.gpu_memory_log import record_admission
-TERMINAL_STATES = {"Succeeded", "Failed", "Cancelled", "Canceled", "Stopped"}
+TERMINAL_STATES = {"Completed", "Succeeded", "Failed", "Cancelled", "Canceled", "Stopped"}
 
 
 def main() -> int:
@@ -113,7 +113,7 @@ def main() -> int:
             )
             if result.returncode == 0:
                 record({"event": "collected", "job_state": state, "output": result.stdout.strip()})
-                return 0 if state == "Succeeded" else 1
+                return 0 if state in {"Completed", "Succeeded"} else 1
             if result.returncode == 2:
                 record({"event": "no_trace", "job_state": state, "output": result.stdout.strip(),
                         "error": result.stderr.strip()})
