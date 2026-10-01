@@ -274,12 +274,22 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                        for s in program.stages for c in s.geometry):
                     from task.atomic.contacts import PhysXContacts
                     self._atomic_contacts = PhysXContacts(self)
+                sim.atomic_contact_buffer = self._atomic_contacts
+                sim.atomic_physics_observer = self._observe_atomic_physics
 
-        def sim_step(self, render=True):
-            contacts = getattr(self, '_atomic_contacts', None)
-            if contacts is not None:
-                contacts.begin_step()
-            super().sim_step(render=render)
+        def _observe_atomic_physics(self):
+            # Contact manifold and live poses now belong to the same substep.
+            if self._atomic_replaying:
+                return
+            for env_idx in getattr(self, '_atomic_stepping_envs', ()):
+                if self.end_flag[env_idx]:
+                    continue
+                session = self._atomic_sessions.get(env_idx)
+                if self.atomic_stage is not None and session is not None:
+                    session.observe_events()
+                sequence = self._atomic_sequences.get(env_idx)
+                if sequence is not None:
+                    sequence.observe_events()
 
         def reset(self, seed=None, options=None):
             seed = list(seed)
@@ -316,6 +326,11 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 self._atomic_surfaces.cache.clear()
             self.obs_manager.reset()  # Reset observation manager for the next episode
             self.setup_scene()
+            if self._atomic_contacts is not None:
+                health = self._atomic_contacts.summary()
+                print('[atomic contacts] settled-scene health:', health, flush=True)
+                if health['errors'] or health['reports'] == 0:
+                    raise RuntimeError('Atomic contact instrumentation failed its settled-scene health check')
             self.robot_manager.set_origin_endpose()
             self.robot_manager.set_robot_init_state()
             self.reward_manager.init_state()
@@ -740,18 +755,13 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
 
         def step(self, env_idx_list, decimation=1):
             meta_control_list = self.robot_manager.control_manager.pop(env_idx_list)
-            for _ in range(decimation):
-                super().step(meta_control_list=meta_control_list)
-                self.sim_step(render=False)
-                if self.atomic_stage is not None and not self._atomic_replaying:
-                    for env_idx in env_idx_list:
-                        session = self._atomic_sessions.get(env_idx)
-                        if session is not None and not self.end_flag[env_idx]:
-                            session.observe_events()
-                for env_idx in env_idx_list:
-                    sequence = self._atomic_sequences.get(env_idx)
-                    if sequence is not None and not self.end_flag[env_idx]:
-                        sequence.observe_events()
+            self._atomic_stepping_envs = tuple(env_idx_list)
+            try:
+                for _ in range(decimation):
+                    super().step(meta_control_list=meta_control_list)
+                    self.sim_step(render=False)
+            finally:
+                self._atomic_stepping_envs = ()
 
         def _align_layout_success(self):
             for env_idx in range(self.num_envs):

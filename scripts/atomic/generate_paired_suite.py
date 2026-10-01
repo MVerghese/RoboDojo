@@ -44,7 +44,8 @@ def audited_program(task):
             'measurement': {'kind': 'object_center_pose', 'label': 't'},
             'reference': {'kind': 'object_center_pose', 'label': 'target_t'},
             'event': {'kind': 'stage_success'}, 'track_closest': False,
-            'expected': {'position': [0, 0, 0], 'orientation': [1, 0, 0, 0]},
+            # Layout 0: block thickness 15 mm, planar target at table surface.
+            'expected': {'position': [0, 0, 0.0075], 'orientation': [1, 0, 0, 0]},
             'tolerance': 0.007, 'angle_tolerance_rad': math.radians(7),
         }]
     elif task == 'pour_balls_into_vase':
@@ -95,7 +96,7 @@ def audited_program(task):
 
 PROMPTS = {
     'general_pickup': 'At the first 2.5 cm lift, grasp the target so every force-bearing finger contact lies between 4 and 8 cm along its positive local z axis from the centre of its mesh bounds. Other contact coordinates are unrestricted.',
-    'push_T': 'At the first 1 cm motion of the T block, make finger contact on its negative local x side: every force-bearing finger contact must be 2 to 6 cm to the negative x side of the centre of its mesh bounds. Finish with the block centre within 7 mm of the pad centre and its orientation within 7 degrees of the pad.',
+    'push_T': 'At the first 1 cm motion of the T block, make finger contact on its negative local x side: every force-bearing finger contact must be 2 to 6 cm to the negative x side of the centre of its mesh bounds. Finish with the block centre within 7 mm of the point 7.5 mm above the pad centre along the pad local z axis and its orientation within 7 degrees of the pad.',
     'pour_balls_into_vase': 'At the first 2.5 cm lift, grasp the cup with every force-bearing finger contact 0.5 to 3.5 cm above the centre of its mesh bounds along its local z axis. When the first whole ball enters the vase, keep the cup centre at least 10 cm above the vase centre along the vase local z axis (1 cm tolerance), with at least 10 percent overlap of the smaller object footprint projected along that axis. At that moment, point the cup local z axis towards the vase negative local x axis, within 30 degrees.',
     'plug_in_charger': 'At the first 2.5 cm lift, grasp the charger body with every force-bearing finger contact between -0.5 and +2.5 cm along its local y axis from the centre of its mesh bounds. Insert into the middle outlet (socket/1). When the connector first crosses an outlet entry plane, put its insert landmark within 8 mm of the point 5 mm below the middle outlet entry landmark and align its insert frame within 20 degrees of the middle outlet frame, using its zero-degree orientation.',
 }

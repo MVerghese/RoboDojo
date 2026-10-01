@@ -6,6 +6,9 @@ class CustomDirectRLEnv(DirectRLEnv):
         is_rendering = self.sim.has_gui() or self.sim.has_rtx_sensors()
 
         for _ in range(self.cfg.decimation):
+            contacts = getattr(self, 'atomic_contact_buffer', None)
+            if contacts is not None:
+                contacts.begin_step()
             self._sim_step_counter += 1
             self.scene.write_data_to_sim()
             self.sim.step(render=False)
@@ -17,6 +20,9 @@ class CustomDirectRLEnv(DirectRLEnv):
             ):
                 self.sim.render()
             self.scene.update(dt=self.physics_dt)
+            observer = getattr(self, 'atomic_physics_observer', None)
+            if observer is not None:
+                observer()
 
         self.episode_length_buf += 1
         self.common_step_counter += 1

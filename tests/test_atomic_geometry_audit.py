@@ -22,6 +22,39 @@ def plate(x=0, y=0, z=0):
 
 
 class AuditRegressionTests(unittest.TestCase):
+    def test_actual_physics_loop_observes_each_substep_after_pose_update(self):
+        repo = Path(__file__).resolve().parents[1]
+        path = repo / 'env/environment/isaac/direct_rl_env.py'
+        tree = ast.parse(path.read_text())
+        method = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == 'sim_step')
+        namespace = {}
+        exec(compile(ast.fix_missing_locations(ast.Module(body=[method], type_ignores=[])), str(path), 'exec'), namespace)
+        backend = PhysXContacts.__new__(PhysXContacts)
+        backend.rows, backend.steps = [], 0
+        snapshots = []
+        live = SimpleNamespace(z=0)
+        def physics(**kwargs):
+            # Fingers touch on different frames; never fabricate a two-finger grasp.
+            self.assertEqual(backend.rows, [])
+            backend.rows.append('finger' + str(backend.steps % 2))
+        def update(**kwargs):
+            live.z = backend.steps * .02
+        env = SimpleNamespace(cfg=SimpleNamespace(decimation=3, sim=SimpleNamespace(render_interval=1), events=None),
+                              sim=SimpleNamespace(has_gui=lambda: False, has_rtx_sensors=lambda: False, step=physics),
+                              scene=SimpleNamespace(write_data_to_sim=lambda: None, update=update),
+                              atomic_contact_buffer=backend,
+                              atomic_physics_observer=lambda: snapshots.append((backend.steps, live.z, list(backend.rows))),
+                              _sim_step_counter=0, physics_dt=1/60, episode_length_buf=0, common_step_counter=0, extras={})
+        namespace['sim_step'](env, render=False)
+        self.assertEqual(snapshots, [(1, .02, ['finger1']), (2, .04, ['finger0']), (3, .06, ['finger1'])])
+        self.assertEqual(next(step for step, z, _ in snapshots if z >= .025), 2)
+
+    def test_t_goal_accounts_for_block_height_above_planar_pad(self):
+        from scripts.atomic.generate_paired_suite import audited_program
+        goal = audited_program('push_T')['stages'][0]['geometry'][1]
+        reference = [0, 0, .765, 1, 0, 0, 0]
+        self.assertTrue(evaluate_geometry(goal, [0, 0, .7725, 1, 0, 0, 0], reference).passed)
+
     def test_above_fails_for_correct_height_with_disjoint_footprints(self):
         condition = {'kind': 'spatial_relation', 'relation_scope': 'objects', 'expected': 'above',
                      'margin': .1, 'tolerance': .01, 'min_overlap_fraction': .1}

@@ -12,10 +12,14 @@ class ContactUnavailable(RuntimeError):
 
 class PhysXContacts:
     def __init__(self, env):
+        import carb
         import omni.usd
         from omni.physx import get_physx_simulation_interface
         from pxr import PhysxSchema, PhysicsSchemaTools, Usd, UsdPhysics
         self.env = env
+        # SimulationContext disables this by default. Contact sensors explicitly
+        # re-enable it too; subscribing alone otherwise produces zero reports.
+        carb.settings.get_settings().set_bool('/physics/disableContactProcessing', False)
         self._decode = PhysicsSchemaTools.intToSdfPath
         self.rows = []
         self.steps = 0

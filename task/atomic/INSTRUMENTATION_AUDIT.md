@@ -74,3 +74,11 @@ between projected triangles, contact-centroid cancellation, finger/object/env
 scoping, symmetric-axis orientation, invalid tolerances, and identical scoring
 programs across prompt pairs. Live simulation verification and eight-run results
 are recorded in the run directory; local tests alone do not establish them.
+
+## Corrections from the first live audit trial
+
+The first trial returned zero PhysX contact reports: IsaacLab defaults `/physics/disableContactProcessing` to true. The contact backend now explicitly enables processing, and reset refuses to start a policy episode unless the settled scene produces contact reports without callback errors. Those initial attempts are archived and excluded from the paired comparison.
+
+Contact buffers now clear before every actual physics substep, and event observers run after that substep updates live rigid-body poses. This prevents pooling non-simultaneous finger contacts or combining old contact positions with a newer object frame.
+
+The layout-0 T block is 15 mm thick while the gray target is planar. Its goal centre is therefore 7.5 mm above the pad centre, rather than coincident in 3D; the prompt and scoring target agree. This is grounded in the asset metadata and saved layout poses (0.7725 m and 0.765 m).
