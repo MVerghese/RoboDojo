@@ -10,6 +10,22 @@
 
 https://private-user-images.githubusercontent.com/88101805/619409345-cc074c5d-4567-4418-8a29-1385aaba9d5b.mp4
 
+## Atomic geometry benchmark fork
+
+This branch (`benchmark/atomic-geometry`) adds atomic action observations,
+geometric conditioning and controlled policy A/B experiments.
+
+- [Conditioning and A/B run instructions](task/atomic/CONDITIONING_AB.md)
+- [Taxonomy and per-slot geometric modifiers](task/atomic/TAXONOMY.md)
+- [Audit of all 11 action families](task/atomic/ACTION_AUDIT.md)
+- [Source-backed examples across all 54 task modules](task/atomic/TASK_MAP.md)
+- [Completed eight-run pilot](task/atomic/PILOT_RESULTS.md)
+- [Agent workflow skills](.agents/skills/README.md)
+
+The live pilot validates prompt delivery and score reproduction for four tasks.
+The expanded source audit identifies the adapters still needed for other action
+families; it does not claim complete live recognition coverage.
+
 ## News
 
 - **September 16–17, 2026**

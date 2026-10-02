@@ -1,5 +1,13 @@
 # Instrumentation audit and four-task paired pilot
 
+## Scope
+
+This page records the implemented checker corrections for the four-task pilot.
+The [all-family audit](ACTION_AUDIT.md) extends the review to all eleven action
+families, and the [source-backed task catalogue](TASK_MAP.md) supplies concrete
+examples and gaps for every task module. See [conditioning/A/B instructions](CONDITIONING_AB.md)
+and [collected pilot results](PILOT_RESULTS.md) for execution and evidence.
+
 ## Experiment
 
 Run eight fresh, uninterrupted full-task episodes: `general_pickup`, `push_T`,

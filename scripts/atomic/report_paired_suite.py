@@ -1,4 +1,4 @@
-"""Human-readable eight-run report, generated from collected evidence only."""
+"""Human-readable paired report, generated from collected evidence only."""
 import json
 import math
 from pathlib import Path
@@ -24,12 +24,18 @@ def metrics(score):
 
 
 def write_report(manifest, result, root):
+    total = len(manifest['cases'])
+    if total % 2:
+        raise ValueError('paired report requires baseline/conditioned pairs')
+    for base, conditioned in zip(manifest['cases'][::2], manifest['cases'][1::2]):
+        if (base['prompt_mode'], conditioned['prompt_mode']) != ('baseline', 'conditioned') or base['task'] != conditioned['task']:
+            raise ValueError('paired report requires adjacent same-task baseline/conditioned cases')
     completed_episodes = sum(r.get('completed_episodes', 0) for r in result['cases'])
     rejected = list((root / 'runs').glob('*/attempts/attempt-*/eval_report.json'))
-    lines = ['# Four-task paired geometric benchmark', '',
-             f"Completed policy episodes: **{completed_episodes} / 8**. Collected case results: **{result['completed_cases']} / 8**. "
+    lines = ['# Paired geometric benchmark', '',
+             f"Completed policy episodes: **{completed_episodes} / {total}**. Collected case results: **{result['completed_cases']} / {total}**. "
              f"Score mismatches: **{result['score_mismatches']}**. Archived infrastructure attempts: **{len(rejected)}**.", '',
-             'Each baseline receives the native full-task instruction. Its conditioned partner receives '
+             'Each baseline receives the baseline full-task instruction (native unless explicitly overridden). Its conditioned partner receives '
              'the same instruction plus the geometric text below. Both are evaluated against the same '
              'geometric targets. Atomic stages are observers; they do not switch the policy prompt.', '',
              '| Task | Prompt | Pipeline | Native task success | Atomic action recognition | Geometric event scores |',
@@ -83,8 +89,9 @@ def write_report(manifest, result, root):
         b = by_id[conditioned['id']].get('atomic_scores', [])
         if a and b:
             layouts_a, layouts_b = {x['layout_id'] for x in a}, {x['layout_id'] for x in b}
+            planned = {base['layout_id']}
             lines += [f"**Actual layout IDs:** baseline {sorted(layouts_a)}, conditioned {sorted(layouts_b)}; "
-                      f"matched planned layout 0: {layouts_a == layouts_b == {0}}.", '']
+                      f"matched planned layout {base['layout_id']}: {layouts_a == layouts_b == planned and conditioned['layout_id'] == base['layout_id']}.", '']
     lines += ['## Interpretation', '',
               '- Native task success, audited atomic recognition, and geometric adherence are separate outcomes.',
               '- Contact scores use actual PhysX finger/object manifold points, with no end-effector fallback.',
@@ -93,7 +100,7 @@ def write_report(manifest, result, root):
               '- Object “above” requires signed relative height and projected mesh-footprint overlap.',
               '- Pour recognition checks whole balls within finite vase bounds; insertion uses annotated connector/opening frames.',
               '- Missing/unreached events have no geometric pass. Callback or collection errors are infrastructure failures.',
-              '- These eight episodes establish an integration pilot; one episode per prompt does not establish a statistical steering effect.',
+              '- One episode per prompt establishes an integration pilot, not a statistical steering effect.',
               '', '## Evidence', '',
               f"- Manifest: `{root / 'suite.json'}`",
               f"- Full results: `{root / 'benchmark_results.json'}`",
@@ -103,7 +110,7 @@ def write_report(manifest, result, root):
         restart = json.loads(restart_path.read_text())
         lines += ['## Excluded initial instrumentation attempts', '',
                   restart['reason'], '',
-                  'All initial attempts are excluded from the eight-episode comparison and retained in '
+                  'All initial attempts are excluded from the paired comparison and retained in '
                   f"`{root / 'invalid-instrumentation-attempts'}`. Corrected runtime commit: "
                   f"`{restart['new_git_commit']}`.", '']
     atomic_write_text(root / 'REPORT.md', '\n'.join(lines))

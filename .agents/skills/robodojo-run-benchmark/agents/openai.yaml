@@ -1,0 +1,4 @@
+interface:
+  display_name: "RoboDojo Benchmark Runner"
+  short_description: "Run, resume and report atomic geometry suites"
+  default_prompt: "Use $robodojo-run-benchmark to prepare and report an authorized RoboDojo benchmark suite."

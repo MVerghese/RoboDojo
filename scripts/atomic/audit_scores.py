@@ -22,8 +22,12 @@ def audit_atomic(atomic, variant=None):
     conditions = {c["id"]: c for c in atomic.get("conditions", [])}
     if conditions and set(overrides) - set(conditions):
         raise ValueError("counterfactual variant refers to unknown conditions")
-    for override in overrides.values():
-        if set(override) - TARGET_FIELDS:
+    for condition_id, override in overrides.items():
+        # A reusable live-run variant may repeat immutable selector/axis fields.
+        # Repetition is safe only if it equals the recorded definition exactly.
+        original = conditions.get(condition_id, {})
+        if any(key not in TARGET_FIELDS and (key not in original or value != original[key])
+               for key, value in override.items()):
             raise ValueError("changing measurements, landmarks, or events requires a new simulator run")
     rows = {}
     for condition_id, item in atomic.get("geometry", {}).items():

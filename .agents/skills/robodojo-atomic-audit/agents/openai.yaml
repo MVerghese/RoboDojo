@@ -1,0 +1,4 @@
+interface:
+  display_name: "RoboDojo Atomic Audit"
+  short_description: "Audit action recognition against simulator evidence"
+  default_prompt: "Use $robodojo-atomic-audit to audit RoboDojo action recognition and geometric measurements."

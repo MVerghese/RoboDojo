@@ -1,0 +1,4 @@
+interface:
+  display_name: "RoboDojo Conditioning A/B"
+  short_description: "Design matched geometric prompt experiments"
+  default_prompt: "Use $robodojo-condition-ab to design matched RoboDojo geometric conditioning A/B trials."

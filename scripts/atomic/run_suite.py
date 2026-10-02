@@ -2,6 +2,7 @@
 """Submit and collect a generated full-task suite with bounded GPU concurrency."""
 
 import argparse
+import errno
 from datetime import datetime, timezone
 import json
 import os
@@ -16,8 +17,44 @@ REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from scripts.atomic.audit_scores import audit_report
 from scripts.atomic.storage import atomic_write_json, atomic_write_text
+from task.atomic.spec import AtomicProgram
 
 TERMINAL = {"Completed", "Succeeded", "Failed", "Stopped", "Cancelled", "Canceled"}
+# Existing i4 workflow routes these variants to H200, not this L40S controller.
+H200_TASKS = {'fold_clothes_random', 'hang_mugs_random',
+              'arrange_largest_number_random', 'stack_blocks_random'}
+
+
+def validate_suite(manifest):
+    """Reject mislabeled A/B controls before reading the scheduler or submitting."""
+    cases = manifest['cases']
+    ids = [case['id'] for case in cases]
+    if not ids or len(set(ids)) != len(ids) or any(not re.fullmatch(r'[a-zA-Z0-9_-]+', name) for name in ids):
+        raise ValueError('case IDs must be nonempty, unique directory-safe names')
+    programs = []
+    for case in cases:
+        path = Path(case['program'])
+        program = AtomicProgram.load(path)
+        if program.task_name != case.get('task', manifest['task']):
+            raise ValueError('program task_name does not match case task')
+        if program.task_name in H200_TASKS:
+            raise ValueError(f'{program.task_name} requires the H200 workflow, not this L40S suite runner')
+        if case.get('layout_id', manifest.get('layout_id', 0)) != 0:
+            raise ValueError('suite runner supports layout 0 only')
+        programs.append(json.loads(path.read_text()))
+    if manifest['mode'] == 'paired_native_and_geometrically_conditioned':
+        if len(cases) % 2:
+            raise ValueError('A/B suite requires adjacent baseline/conditioned pairs')
+        for index in range(0, len(cases), 2):
+            a, b = cases[index:index + 2]
+            baseline, conditioned = programs[index:index + 2]
+            append = conditioned.pop('geometric_instruction', None)
+            if (a.get('prompt_mode'), b.get('prompt_mode')) != ('baseline', 'conditioned') or a.get('task') != b.get('task'):
+                raise ValueError('A/B pair must have the same task and baseline/conditioned order')
+            if not append or append != b.get('geometric_prompt_append') or a.get('geometric_prompt_append'):
+                raise ValueError('manifest geometric append does not match the program')
+            if baseline.get('geometric_instruction') or baseline != conditioned:
+                raise ValueError('A/B programs must differ only in geometric_instruction')
 
 
 def prepare_case(source, destination, name, client, ledger, task=None):
@@ -53,7 +90,15 @@ def prepare_case(source, destination, name, client, ledger, task=None):
         raise RuntimeError("no healthy eligible L40S nodes in the reservation")
     destination.mkdir(parents=True, exist_ok=True)
     if not (destination / "code.tar.gz").exists():
-        os.link(source / "code.tar.gz", destination / "code.tar.gz")
+        # Source bundles can live on Lustre while review metadata lives in home.
+        # Resolve existing symlinks and reuse the immutable archive when possible.
+        bundle = (source / "code.tar.gz").resolve(strict=True)
+        try:
+            os.link(bundle, destination / "code.tar.gz")
+        except OSError as error:
+            if error.errno != errno.EXDEV:
+                raise
+            (destination / "code.tar.gz").symlink_to(bundle)
     shutil.copyfile(source / "source_manifest.json", destination / "source_manifest.json")
     plan.update(submitted=[], staged=False, jobs=[name + "-000"], node_ids=eligible)
     for resource in plan.get("resources_by_task", {}).values():
@@ -143,6 +188,12 @@ def main():
     if not re.fullmatch(r"[a-z0-9-]+", args.name) or not 1 <= args.max_concurrent <= 8:
         parser.error("use a job-name slug and concurrency between one and eight")
     manifest = json.loads(args.suite.read_text())
+    validate_suite(manifest)
+    base_plan = json.loads((args.base_run / 'run_plan.json').read_text())
+    if base_plan.get('seeds') != [0] or base_plan.get('eval_num') != '1':
+        parser.error('suite runner currently requires a one-episode seed-0 base plan')
+    if any(case.get('layout_id', manifest.get('layout_id', 0)) != 0 for case in manifest['cases']):
+        parser.error('suite runner currently supports layout 0 only; metadata cannot select another layout')
     root = args.suite.parent
     client = APIClient()
     for index, case in enumerate(manifest["cases"]):
