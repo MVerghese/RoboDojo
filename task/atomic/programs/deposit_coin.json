@@ -46,7 +46,14 @@
             2
           ]
         }
-      ]
+      ],
+      "recognition": {
+        "kind": "finger_contact_motion",
+        "label": "coin0",
+        "arm": "any",
+        "motion_threshold_m": 0.025,
+        "min_contact_steps": 2
+      }
     },
     {
       "id": "insert_coin",

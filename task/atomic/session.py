@@ -1,6 +1,7 @@
 """Live, event-based evaluation of a single atomic stage in RoboDojo."""
 
 from copy import deepcopy
+import json
 
 import numpy as np
 
@@ -28,13 +29,46 @@ class AtomicSession:
         self.closest_approach = {}
         self.measurement_failures = {}
         self.interaction_observed = False
+        self.interaction_evidence = None
+        self.goal_success = False
+        self.current_hold_observed = False
+        self._recognition_last_step = None
+        self._recognition_arm = None
+        self._recognition_anchor = None
+        self._recognition_contact_steps = 0
+        self._recognition_current_displacement = np.zeros(3)
+        self._held_lift_required = max([float(check['args']['z_threshold']) for check in stage.success_checks
+                                       if stage.family == 'pick' and check['name'] == 'is_lift']
+                                      + ([stage.recognition['motion_threshold_m']] if stage.recognition else [0.]))
+        self._frozen_references = {}
+        self._event_evidence = {}
         self.sample_index = 0
         self.initial_positions = {}
+        if stage.recognition is not None:
+            label = stage.recognition['label']
+            self.initial_positions[label] = self._object_pose(label)[:3].copy()
         for condition in stage.geometry:
             event = condition.get("event", {"kind": "stage_success"})
             if event["kind"] in ("first_lift", "first_motion"):
                 label = event["label"]
                 self.initial_positions[label] = self._object_pose(label)[:3].copy()
+            reference = condition.get('reference')
+            if reference and reference.get('time') == 'stage_start':
+                key = self._selector_key(reference)
+                if key not in self._frozen_references:
+                    live_selector = {**reference, 'time': 'live'}
+                    value, source = self._resolve_with_source(live_selector)
+                    source.update(time='stage_start', captured_policy_action_index=self._action_index())
+                    root_pose = (self._object_pose(reference['label']).copy()
+                                 if reference['kind'] in ('object_pose', 'object_center_pose') else None)
+                    self._frozen_references[key] = (deepcopy(value), deepcopy(source), root_pose)
+
+    def _action_index(self):
+        return int(self.env.take_action_cnt[self.env_idx]) if hasattr(self.env, 'take_action_cnt') else None
+
+    @staticmethod
+    def _selector_key(selector):
+        return json.dumps(selector, sort_keys=True, separators=(',', ':'))
 
     def _object_pose(self, label):
         position, orientation = self.env.scene_manager.layout_manager.get_instance_pose(
@@ -48,6 +82,9 @@ class AtomicSession:
         return self._resolve_with_source(selector)[0]
 
     def _resolve_with_source(self, selector):
+        if selector.get('time') == 'stage_start':
+            value, source, _ = self._frozen_references[self._selector_key(selector)]
+            return deepcopy(value), deepcopy(source)
         source = {**selector, "frame": "environment_local_world"}
         kind = selector["kind"]
         if kind in ("object_pose", "object_position"):
@@ -64,6 +101,11 @@ class AtomicSession:
             if contacts is None:
                 raise RuntimeError('PhysX contacts were not initialized')
             return contacts.resolve(selector, self.env_idx)
+        if kind == 'object_contact_points':
+            contacts = getattr(self.env, '_atomic_contacts', None)
+            if contacts is None:
+                raise RuntimeError('PhysX contacts were not initialized')
+            return contacts.resolve_object_pair(selector, self.env_idx)
         if kind == "robot_ee_pose":
             if selector["arm"] == "nearest":
                 target = self._object_pose(selector["label"])[:3]
@@ -112,6 +154,65 @@ class AtomicSession:
                 return False
         return True
 
+    def _observe_interaction(self):
+        """Track a contact-held motion interval independently of geometry.
+
+        Repeated action-boundary calls cannot count the same physics sample
+        twice. Contact loss/arm changes reset the interval. Contacts acquired
+        after ballistic motion cannot take credit for that earlier motion.
+        """
+        recognition = self.stage.recognition
+        if recognition is None:
+            return
+        contacts = getattr(self.env, '_atomic_contacts', None)
+        if contacts is None:
+            raise RuntimeError('physical action recognition requires initialized PhysX contacts')
+        physics_step = contacts.steps
+        if physics_step == self._recognition_last_step:
+            return
+        contiguous = self._recognition_last_step is not None and physics_step == self._recognition_last_step + 1
+        self._recognition_last_step = physics_step
+        selector = {'kind': 'contact_points', 'label': recognition['label'], 'arm': recognition['arm'],
+                    'min_finger_bodies': 2 if self.stage.family == 'pick' else 1}
+        try:
+            measured, source = contacts.resolve(selector, self.env_idx)
+            support = (contacts.support_evidence(recognition['label'], recognition['support_labels'], self.env_idx)
+                       if self.stage.family == 'push' else None)
+            if self.stage.family == 'push' and not support['contacts']:
+                raise ContactUnavailable('push has no upward force-bearing named support at this physics step')
+        except ContactUnavailable:
+            self.current_hold_observed = False
+            self._recognition_arm = self._recognition_anchor = None
+            self._recognition_contact_steps = 0
+            self._recognition_current_displacement = np.zeros(3)
+            return
+        current = self._object_pose(recognition['label'])[:3].copy()
+        arm = source['resolved_arm']
+        if not contiguous or arm != self._recognition_arm:
+            self._recognition_anchor = current.copy()
+            self._recognition_contact_steps = 1
+            self._recognition_start_source = deepcopy(source)
+        else:
+            self._recognition_contact_steps += 1
+        self._recognition_arm = arm
+        self.current_hold_observed = self._recognition_contact_steps >= recognition['min_contact_steps']
+        displacement = current - self._recognition_anchor
+        self._recognition_current_displacement = displacement.copy()
+        motion = float(displacement[2] if self.stage.family == 'pick' else np.linalg.norm(displacement[:2]))
+        if self.current_hold_observed and motion >= recognition['motion_threshold_m']:
+            self.interaction_observed = True
+            self.interaction_evidence = {
+                'kind': recognition['kind'], 'object': recognition['label'], 'arm': arm,
+                'contact_start_position': self._recognition_anchor.tolist(), 'position': current.tolist(),
+                'displacement_m': displacement.tolist(), 'motion_m': motion,
+                'consecutive_contact_steps': self._recognition_contact_steps,
+                'required_held_lift_m': self._held_lift_required if self.stage.family == 'pick' else None,
+                'support_evidence': deepcopy(support),
+                'first_contact_source': deepcopy(self._recognition_start_source),
+                'contact_source': deepcopy(source), 'measured_contacts': deepcopy(measured),
+                'physics_step': physics_step, 'policy_action_index': self._action_index(),
+            }
+
     def _predicate(self, check):
         if check['name'] in ('is_atomic_entry', 'is_atomic_inserted'):
             from task.atomic.geometry import _rotation
@@ -145,6 +246,14 @@ class AtomicSession:
                 for check in event["checks"]
             )
             return all(values) if event.get("mode", "any") == "all" else any(values)
+        if kind == 'first_contact':
+            try:
+                measured, source = self._resolve_with_source(event['measurement'])
+            except ContactUnavailable:
+                return False
+            self._event_evidence[self._selector_key(event)] = {
+                'measured_contacts': _state(measured), 'contact_source': deepcopy(source)}
+            return True
         label = event["label"]
         current = self._object_pose(label)[:3]
         initial = self.initial_positions[label]
@@ -171,17 +280,17 @@ class AtomicSession:
             except ContactUnavailable as error:
                 self.measurement_failures[condition_id] = {
                     'event': deepcopy(event), 'event_observed': True,
+                    'event_evidence': deepcopy(self._event_evidence.get(self._selector_key(event))),
                     'status': 'contact_not_observed_at_event', 'reason': str(error),
-                    'policy_action_index': int(self.env.take_action_cnt[self.env_idx]),
+                    'policy_action_index': self._action_index(),
                 }
                 continue
             result = evaluate_geometry(condition, measured, reference)
-            if condition['measurement']['kind'] == 'contact_points':
-                self.interaction_observed = True
             self.results[condition_id] = {
                 "slot": condition["slot"],
                 "kind": condition["kind"],
                 "event": event,
+                'event_evidence': deepcopy(self._event_evidence.get(self._selector_key(event))),
                 "sample_index": self.sample_index,
                 "policy_action_index": (
                     int(self.env.take_action_cnt[self.env_idx])
@@ -211,8 +320,10 @@ class AtomicSession:
             measured = {**surfaces.resolve(condition['measurement']['label'], self.env_idx,
                                            self._object_pose(condition['measurement']['label'])),
                         'position': measured_pose[:3].tolist(), 'orientation': measured_pose[3:].tolist()}
-            reference = {**surfaces.resolve(condition['reference']['label'], self.env_idx,
-                                            self._object_pose(condition['reference']['label'])),
+            reference_root = (self._frozen_references[self._selector_key(condition['reference'])][2]
+                              if condition['reference'].get('time') == 'stage_start'
+                              else self._object_pose(condition['reference']['label']))
+            reference = {**surfaces.resolve(condition['reference']['label'], self.env_idx, reference_root),
                          'position': reference_pose[:3].tolist(), 'orientation': reference_pose[3:].tolist()}
             source['geometry_representation'] = measured['geometry_representation']
             reference_source['geometry_representation'] = reference['geometry_representation']
@@ -225,11 +336,14 @@ class AtomicSession:
 
     def observe_events(self):
         """Capture first-lift/motion geometry at physics-step resolution."""
+        self._observe_interaction()
         self._sample(success_now=False)
 
     def step(self):
         """Evaluate stage success after a policy action chunk."""
+        self._observe_interaction()
         success_now = self._check_success()
+        self.goal_success = success_now
         self._sample(success_now)
         # Diagnostic scores for failed attempts, separate from the required event.
         for condition in self.stage.geometry:
@@ -250,8 +364,11 @@ class AtomicSession:
                     "measurement_context": "closest approach at policy action boundaries; not required-event adherence",
                     "ee_contact_proxy": condition["measurement"]["kind"] == "robot_ee_pose",
                 }
-        if any(c['measurement']['kind'] == 'contact_points' for c in self.stage.geometry):
+        if self.stage.recognition is not None:
             success_now = success_now and self.interaction_observed
+            if self.stage.family == 'pick':
+                success_now = (success_now and self.current_hold_observed
+                               and self._recognition_current_displacement[2] >= self._held_lift_required)
         self.success = self.success or success_now
         return self.success
 
@@ -282,6 +399,12 @@ class AtomicSession:
             "closest_approach": self.closest_approach,
             'measurement_failures': deepcopy(self.measurement_failures),
             'interaction_observed': self.interaction_observed,
+            'recognition': deepcopy(self.stage.recognition),
+            'recognition_status': ('physical_contact_motion' if self.stage.recognition is not None
+                                   else 'endpoint_checks_only'),
+            'interaction_evidence': deepcopy(self.interaction_evidence),
+            'current_hold_observed': self.current_hold_observed,
+            'goal_success': self.goal_success,
             'recognition_checks': deepcopy(list(self.stage.success_checks)),
             'initial_object_positions': {k: v.tolist() for k, v in self.initial_positions.items()},
         }

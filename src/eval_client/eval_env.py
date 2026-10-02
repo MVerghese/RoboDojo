@@ -266,12 +266,16 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
         def _post_setup_scene(self, sim):
             super()._post_setup_scene(sim)
             self.obs_manager.initialize(self)
-            program = self._atomic_record_program or self.atomic_program
-            if program is not None:
+            programs = [program for program in (self._atomic_record_program, self.atomic_program)
+                        if program is not None]
+            if programs:
                 from task.atomic.surfaces import ObjectSurfaces
                 self._atomic_surfaces = ObjectSurfaces(self)
-                if any(c['measurement']['kind'] == 'contact_points' or c.get('expected') == 'on_top'
-                       for s in program.stages for c in s.geometry):
+                if (any(s.recognition is not None for program in programs for s in program.stages)
+                        or any(c['measurement']['kind'] in ('contact_points', 'object_contact_points')
+                               or c.get('expected') == 'on_top'
+                               or c.get('event', {}).get('kind') == 'first_contact'
+                               for program in programs for s in program.stages for c in s.geometry)):
                     from task.atomic.contacts import PhysXContacts
                     self._atomic_contacts = PhysXContacts(self)
                 sim.atomic_contact_buffer = self._atomic_contacts

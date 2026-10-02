@@ -17,6 +17,24 @@ observed trace labels. Inspect one with
 ## What runs today
 
 - A program JSON defines named atomic stages, an instruction, existing RoboDojo success predicates, and geometric conditions on typed slots.
+- Pick/push stages now also require an explicit `recognition` definition, separate
+  from geometry. Contact-held motion must span distinct consecutive physics
+  steps; a pick must achieve the full native lift within that held interval
+  and still be held when its endpoint goal is satisfied. Push requires named
+  upward force-bearing support and planar motion.
+  Removing geometry cannot remove this requirement. The updated programs use
+  two contact steps and a 2.5 cm pick / 1 cm push motion threshold. These new
+  rules have local regression coverage; the published pilot used the earlier
+  event-contact rule and is not live validation of the update.
+- A reference selector can specify `"time": "stage_start"` to freeze its actual
+  pose (and rigid footprint for object relations). This supports lift/goal
+  offsets without a moving self-reference. `on_top` requires live support;
+  snapshots do not implement initial object selection or full simulator restore.
+- `object_contact_points` with `label` and `other_label` measures actual
+  force-bearing tool/object pairs. A `first_contact` event accepts a contact
+  `measurement` selector and records the physical event evidence, even when
+  the scored measurement is a separate object pose. Held-tool, sweep and
+  impact/rebound recognition remain separate missing adapters.
 - Geometry conditions report continuous error and pass/fail for a point, SE(3) pose, landmark-relative displacement, landmark-relative orientation, or spatial relation.
 - `AtomicSession` measures first object lift/motion at physics-step resolution and stage success after each policy action chunk. The result keeps **action success** and **geometry adherence** separate in `eval_result.details[*].atomic`. `geometry_pass_rate` is null until a condition is observed; `geometry_coverage` reports how many conditions fired.
 - A `first_predicate` event can capture geometry when any or all read-only RoboDojo predicates first become true at a physics step. The `pour_balls_into_vase` program uses this to measure cup placement when the first ball enters the vase.

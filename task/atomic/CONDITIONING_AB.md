@@ -83,6 +83,40 @@ prompt. Calibrate candidate targets against actual layout/asset geometry. Keep
 success checks independent of geometric targets. A target conflicting with the
 fixed action predicate is not a useful steering experiment.
 
+Pick/push programs must include a geometry-independent physical recognizer:
+
+```json
+"recognition": {
+  "kind": "finger_contact_motion",
+  "label": "cup",
+  "arm": "any",
+  "motion_threshold_m": 0.025,
+  "min_contact_steps": 2
+}
+```
+
+Keep this block identical across the pair. Pick requires two distinct fingers
+of one arm; push requires one. Contact loss, an arm change or skipped physics
+steps reset the held-motion interval. A pick must remain held at endpoint
+completion. The current held interval must achieve the full native `is_lift`
+threshold; an earlier short grasp or later catch cannot borrow ballistic lift.
+Push recognition additionally requires `support_labels`, e.g. `["@table",
+"target_t"]` for push_T. `@table` resolves the actual scene table; other values
+are loaded object labels. Push measures planar motion while an upward
+force-bearing named support contact persists. Older pick/push programs lacking
+this block now fail loading; update
+them explicitly rather than deriving recognition from their geometry.
+Goal-pose geometry can still be reported when native endpoint checks pass but
+physical recognition fails; `goal_success` and `interaction_evidence` make that
+distinction explicit. Other families currently report `endpoint_checks_only`
+until their independent recognizers are implemented.
+
+For displacement from an object's initial stage pose, put
+`"time": "stage_start"` on its **reference** selector. The saved pose and rigid
+footprint stay fixed as the object moves. Live references remain the default.
+Frozen references are not initial referent selection or full scene restoration;
+supported-on checks must use live references and physical support contact.
+
 ## 3. Generate controlled pairs locally
 
 From this checkout, with Python providing NumPy and Shapely:

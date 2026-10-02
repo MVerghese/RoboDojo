@@ -12,6 +12,11 @@ applicability. Inspect only the task catalogue entries and source methods needed
 for the requested audit; importing task classes requires Isaac Sim.
 For conditioning coverage, read `CONDITIONING_AUDIT.md`: each slot/factor cell
 distinguishes generic checker support, missing adapters and specific live evidence.
+Read `FIX_STATUS.md` to distinguish applied fixes from planned adapters. Pick/push
+recognition is now a required stage field independent of geometric conditions;
+keep it identical across variants/pairs. Frozen start references and physical
+object-pair contacts have offline coverage; they do not establish live family
+recognition, initial object selection or faithful full-state restarts.
 
 ## Ground the decomposition
 

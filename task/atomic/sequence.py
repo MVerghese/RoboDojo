@@ -44,6 +44,7 @@ class AtomicSequence:
             else:
                 row = {"stage_id": stage.id, "family": stage.family, "instruction": stage.instruction,
                        "conditions": deepcopy(list(stage.geometry)), "reached": False,
+                       'recognition': deepcopy(stage.recognition), 'recognition_status': 'not_started',
                        "action_success": False, "geometry_pass_rate": None,
                        "geometry_coverage": 0.0 if stage.geometry else None,
                        "geometry_observed": 0, "geometry_total": len(stage.geometry),

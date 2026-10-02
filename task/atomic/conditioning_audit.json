@@ -3,11 +3,11 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
-    "task/atomic/spec.py": "60f41aff0108a83f7f06ee2c7081fd1fbdf3e44cadba1fa67ab4659fc4a0adb3",
+    "task/atomic/spec.py": "30412fb8877f98ebf389f3ac60d41abfb466a91ebba66f2065b1f3bac2345f63",
     "task/atomic/geometry.py": "e9342ef0ec2b93566310d484aa06ff189ce490839a380eb920fb1bdabce982ec",
-    "task/atomic/session.py": "369b9bba5d30d55318168de57bd47b0b5c2de2b8e5548c4319f78901262afb2f",
+    "task/atomic/session.py": "01da2bb8e78b0986a2b93b96a05e8ab36dc679858af1cd32bd055126733d991c",
     "task/atomic/surfaces.py": "aba37aa0e295d8eb8286920c5e573e5d527fa2103a6c825fd3cdc9c51f5e7f2a",
-    "task/atomic/contacts.py": "727e5392cf33220d70e93a30d61e96783e75c4f211f5665527551cadc628d00f"
+    "task/atomic/contacts.py": "8bacf65a1aa04503547c4559248c4e31693818de483336777ca79331ab154655"
   },
   "families": 11,
   "slots": 54,
@@ -15,10 +15,10 @@
   "status_counts": {
     "L": 5,
     "C": 4,
-    "G": 45,
+    "G": 52,
     "F": 4,
     "S": 75,
-    "M": 109,
+    "M": 102,
     "NA": 28
   },
   "rows": [
@@ -128,8 +128,8 @@
         "D": {
           "kind": "relative_displacement",
           "concept": "Lift by vector from initial object pose.",
-          "status": "M",
-          "audit": "Needs a frozen initial-object reference selector. Current object reference poses move with the object; self-relative displacement cannot measure lift.",
+          "status": "G",
+          "audit": "Reference time=stage_start freezes the actual landmark frame for lift displacement; root/centre pose and historical rigid footprints remain fixed. Local regression tested; no new live snapshot evidence. This is not a referent-selection adapter.",
           "live_evidence": null
         },
         "O": {
@@ -465,7 +465,7 @@
           "kind": "relative_displacement",
           "concept": "Translate object relative to initial pose/landmark.",
           "status": "G",
-          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate. Current landmark references work; episode/stage-start object offsets require a frozen reference adapter.",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate. Stage-start offsets use reference time=stage_start; episode-start state across later stages still requires a separately retained snapshot.",
           "live_evidence": null
         },
         "O": {
@@ -618,8 +618,8 @@
         "P": {
           "kind": "point",
           "concept": "First tool-object contact at P.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
           "live_evidence": null
         },
         "T": {
@@ -632,8 +632,8 @@
         "D": {
           "kind": "relative_displacement",
           "concept": "Start at offset from object center.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
           "live_evidence": null
         },
         "O": {
@@ -646,8 +646,8 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Start behind/in front of objects.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
           "live_evidence": null
         }
       }
@@ -1668,8 +1668,8 @@
         "P": {
           "kind": "point",
           "concept": "Strike surface point P.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
           "live_evidence": null
         },
         "T": {
@@ -1682,8 +1682,8 @@
         "D": {
           "kind": "relative_displacement",
           "concept": "Strike offset from target center.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
           "live_evidence": null
         },
         "O": {
@@ -1696,8 +1696,8 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Strike center/left side of target.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
           "live_evidence": null
         }
       }

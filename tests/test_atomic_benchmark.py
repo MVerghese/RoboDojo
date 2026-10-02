@@ -380,9 +380,13 @@ class _FakeRobotManager:
 
 
 class _FakeContacts:
+    def __init__(self):
+        self.steps = 0
+
     def resolve(self, selector, env_idx):
         return {'position': [0.02, 0, 0.04], 'points': [[0.02, 0, 0.04]]}, {
-            'kind': 'contact_points', 'resolved_arm': 'left_arm', 'finger_bodies': ['finger1', 'finger2']}
+            'kind': 'contact_points', 'resolved_arm': 'left_arm', 'finger_bodies': ['finger1', 'finger2'],
+            'physics_step': self.steps}
 
 
 class SessionTests(unittest.TestCase):
@@ -390,10 +394,13 @@ class SessionTests(unittest.TestCase):
         layout = _FakeLayout()
         env = type("Env", (), {"scene_manager": type("Scene", (), {"layout_manager": layout})(),
                                  "robot_manager": _FakeRobotManager(), "reward_manager": _FakeReward(layout),
-                                 "take_action_cnt": [0], "success": [False], "end_flag": [False]})()
+                                 "take_action_cnt": [0], "success": [False], "end_flag": [False],
+                                 '_atomic_contacts': _FakeContacts()})()
         def stage(name, height):
             return AtomicStage.from_dict({"id": name, "family": "pick" if name == "pick" else "pour",
                 "instruction": name, "success_checks": [{"name": "is_lift", "args": {"z_threshold": height}}],
+                'recognition': ({'kind': 'finger_contact_motion', 'label': 'cup', 'arm': 'any',
+                                 'motion_threshold_m': .025, 'min_contact_steps': 2} if name == 'pick' else None),
                 "geometry": [{"id": "height", "slot": "source", "kind": "point", "expected": [0, 0, height],
                               "tolerance": 0.005, "measurement": {"kind": "object_position", "label": "cup"},
                               "event": {"kind": "stage_success"}}]})
@@ -405,6 +412,7 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(audit_atomic(before["stages"][0])["conditions"]["height"]["status"], "event_not_observed")
         self.assertIn("closest_approach", audit_atomic(before["stages"][0]))
         layout.position[2] = 0.05
+        env._atomic_contacts.steps += 1
         env.take_action_cnt[0] = 45
         sequence.step(45)
         self.assertEqual(sequence.stage_starts, {"pick": 0, "pour": 45})
@@ -425,6 +433,8 @@ class SessionTests(unittest.TestCase):
                                  "reward_manager": _FakeReward(layout), '_atomic_contacts': _FakeContacts()})()
         stage = AtomicStage.from_dict({
             "id": "pick", "family": "pick", "instruction": "Pick target",
+            'recognition': {'kind': 'finger_contact_motion', 'label': 'target', 'arm': 'any',
+                            'motion_threshold_m': .025, 'min_contact_steps': 2},
             "success_checks": [{"name": "is_lift", "args": {"z_threshold": 0.1}}],
             "geometry": [{
                 "id": "grasp", "slot": "grasp_region", "kind": "relative_displacement",
@@ -439,6 +449,7 @@ class SessionTests(unittest.TestCase):
         self.assertIsNone(session.summary()["geometry_pass_rate"])
         self.assertEqual(session.summary()["geometry_coverage"], 0.0)
         layout.position[2] = 0.04
+        env._atomic_contacts.steps += 1
         session.observe_events()  # physics step before the policy chunk ends
         self.assertEqual(session.summary()["geometry_observed"], 1)
         self.assertEqual(session.summary()["geometry_coverage"], 1.0)
@@ -461,6 +472,7 @@ class SessionTests(unittest.TestCase):
         self.assertFalse(session.step())
         self.assertEqual(session.summary()["geometry_observed"], 1)
         layout.position[2] = 0.11
+        env._atomic_contacts.steps += 1
         self.assertTrue(session.step())
         self.assertEqual(session.summary()["geometry_observed"], 1)
 

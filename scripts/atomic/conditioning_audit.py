@@ -90,9 +90,11 @@ def build():
             if status == 'C' and factor in 'TO':
                 status = 'F'
             if family == 'pick' and slot == 'lift goal' and factor == 'D':
-                status, detail = 'M', 'Needs a frozen initial-object reference selector. Current object reference poses move with the object; self-relative displacement cannot measure lift.'
+                status, detail = 'G', 'Reference time=stage_start freezes the actual landmark frame for lift displacement; root/centre pose and historical rigid footprints remain fixed. Local regression tested; no new live snapshot evidence. This is not a referent-selection adapter.'
             if family == 'push' and slot == 'goal' and factor == 'D':
-                detail += ' Current landmark references work; episode/stage-start object offsets require a frozen reference adapter.'
+                detail += ' Stage-start offsets use reference time=stage_start; episode-start state across later stages still requires a separately retained snapshot.'
+            if profile == 'tool' and slot in ('start contact', 'contact') and factor in 'PDR' and concept != '—':
+                status, detail = 'G', 'Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.'
             if family == 'insert' and slot in ('opening', 'alignment', 'goal') and factor == 'R' and concept != '—':
                 status, detail = 'M', 'Through/centred/seated/flush are not generic relation names. Define opening crossing/fit/depth; finite convex inside_box only covers its explicit box semantics.'
             if family == 'pour' and slot == 'tilt' and concept != '—':

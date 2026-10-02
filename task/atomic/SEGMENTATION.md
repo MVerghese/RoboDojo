@@ -29,15 +29,15 @@ A single rigid-object pilot is insufficient to establish later-stage restarts fo
 
 | Family | Required physical evidence/boundaries | Current support |
 | --- | --- | --- |
-| `pick` | Force-bearing finger/object grasp followed by supported lift; bind arm/contact region. Boundaries: contact onset, secure hold, lift onset. | Finger/contact and first-lift sampling exist for pilot objects; independent recognition and hold stability still need an adapter. |
+| `pick` | Force-bearing finger/object grasp followed by supported lift; bind arm/contact region. Boundaries: contact onset, secure hold, lift onset. | Explicit geometry-independent same-arm two-finger contact-held motion interval, full native lift within the current held interval and current hold at endpoint implemented for rigid pick. Offline regression coverage; new live verification, broader force closure and grasp-stability calibration still needed. |
 | `place` | Held object approaches target, is released, settles with intended containment/support. Boundaries: approach, gripper release, stable support. | Native endpoint predicates exist; release/support/stability recognizer missing. |
-| `push` | Robot/object contact co-occurs with object motion while intended table support persists. Boundaries: contact onset, motion interval, contact loss. | Pilot finger/first-motion sampler exists; independent stroke recognizer missing. |
-| `push_with_tool` | Held tool active surface contacts selected objects and causes displacement. Boundaries: tool grasp, tool/object contact, stroke interval. | Tool/object body-pair sampler and stroke recognizer missing. |
+| `push` | Robot/object contact co-occurs with object motion while intended table support persists. Boundaries: contact onset, motion interval, contact loss. | Explicit geometry-independent finger/contact-held planar motion with named upward force-bearing scene-table/object support each sampled step implemented. Offline regression coverage; new live verification, independent stroke segmentation and palm contacts still needed. |
+| `push_with_tool` | Held tool active surface contacts selected objects and causes displacement. Boundaries: tool grasp, tool/object contact, stroke interval. | Explicit tool/target body-pair sampler and first_contact event implemented with offline coverage. Held-tool, calibrated active-edge and contact-coupled stroke recognizer still missing. |
 | `pour` | Selected material exits source and enters target with residue/spill accounting. Boundaries: source exit, first target entry, transfer interval. | Ball target-entry sampler exists; source-exit provenance and generic fluid adapter missing. |
 | `actuate` | Robot contacts moving mechanism link and causes calibrated joint transition. Boundaries: link contact, joint transition, release/debounce. | Moving-link contact and contact-coupled joint recognizer missing. |
 | `twist` | Gripped part rotates about intended constrained axis with engagement maintained. Boundaries: engagement, unwrapped signed rotation, constraint continuity. | Temporal rotation, pivot/axis and thread-progress adapter missing. |
 | `insert` | Tip/hole crosses opening/peg with fit, axis alignment and bounded signed depth. Boundaries: entry crossing, fit/depth interval, seated state. | Charger-specific tip/depth checks exist; general opening/peg adapter missing. |
-| `touch_with_tool` | Held tool tip physically impacts intended target then separates for next strike. Boundaries: impact impulse, target identity, rebound/debounce. | Tool/key physical contact, impulse and strike recognizer missing. |
+| `touch_with_tool` | Held tool tip physically impacts intended target then separates for next strike. Boundaries: impact impulse, target identity, rebound/debounce. | Explicit tool/target body-pair contact points/impulses and first_contact event implemented with offline coverage. Held-tool, calibrated tip, impact velocity and strike/rebound recognizer still missing. |
 | `handover` | Giver hold precedes receiver hold, giver release and continued receiver support. Boundaries: giver hold, dual hold, giver release, receiver support. | Arm-resolved contacts exist; transfer state machine missing. |
 | `fold` | Grasped material region moves across crease; layers align and remain after release. Boundaries: material grasp, crease crossing, layer overlap, stable release. | Live deformable material/contact/layer adapter missing. |
 
@@ -131,7 +131,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - One stroke may move several blocks; do not create one action per block just from final alignment.
-- Row alignment and no lifting do not prove set-square contact; add tool body/edge selectors and contact-coupled block motion. Tool reset placement is a proposed cleanup, not a native stage.
+- Body-pair contact sampling exists, but row alignment and no lifting do not prove a held set-square stroke. Add calibrated active-edge and contact-coupled block-motion recognition. Tool reset placement is proposed cleanup, not a native stage.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 1 tool pick + one or more tool pushes.
 
@@ -483,6 +483,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Native 10 cm root lift does not prove grasp. The pilot samples force-bearing same-arm finger contacts at first 2.5 cm lift and retains native full-task success separately; future cases must calibrate feasible contact regions.
+- Current runtime separates an explicit same-arm contact-held lift interval from geometry and requires continued hold at endpoint. New rules have offline regression coverage; previous pilot is not live validation of them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 1 pick.
 
@@ -849,7 +850,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 **Ordering, recognition and restart gaps:**
 
-- Beat-point bbox and height events can trigger without physical impact. Add mallet/key collision-body contact, normal impulse and approach velocity; retain key order and lift between hits.
+- Beat-point bbox and height events can trigger without impact. Explicit mallet/key body-pair contact sampling and first_contact exist; add active-tip identity, held-tool, approach velocity and strike/rebound debounce. Retain key order and lift between hits. New sampling has offline coverage only.
 - Additional restart state: Current key index, impact debounce and prior contact/lift state.
 - Canonical count: 9.
 
@@ -1490,7 +1491,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Stabilization is a maintained precondition, not an invented dustpan lift. One stroke may move multiple objects.
-- Native dustpan location/orientation and cube containment do not prove broom contact or handover. Add tool-target contact and active broom-head frame; ensure continued dustpan stabilization.
+- Native dustpan location/orientation and cube containment do not prove broom contact or handover. Explicit tool-target contact sampling exists; add calibrated active broom-head, held-tool stroke and handover recognizers; ensure continued dustpan stabilization.
 - Additional restart state: Broom hand identity, dustpan support/contact and object containment.
 - Canonical count: 1 pick + 1 handover + one or more sweep strokes.
 
@@ -1517,7 +1518,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Stabilization is a maintained precondition, not an invented dustpan lift. One stroke may move multiple objects.
-- Native dustpan location/orientation and cube containment do not prove broom contact or handover. Add tool-target contact and active broom-head frame; ensure continued dustpan stabilization. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Native dustpan location/orientation and cube containment do not prove broom contact or handover. Explicit tool-target contact sampling exists; add calibrated active broom-head, held-tool stroke and handover recognizers; ensure continued dustpan stabilization. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
 - Additional restart state: Broom hand identity, dustpan support/contact and object containment.
 - Canonical count: 1 pick + 1 handover + one or more sweep strokes.
 

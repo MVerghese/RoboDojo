@@ -2,7 +2,6 @@
 
 No nearest-link fallback is used. A missing contact is missing evidence.
 """
-from collections import Counter
 import numpy as np
 
 
@@ -65,10 +64,16 @@ class PhysXContacts:
                 c1 = str(self._decode(header.collider1))
                 for contact in data[header.contact_data_offset:header.contact_data_offset + header.num_contact_data]:
                     impulse = np.asarray(contact.impulse, dtype=float)
-                    if not np.isfinite(impulse).all() or np.linalg.norm(impulse) <= 1e-9:
+                    position = np.asarray(contact.position, dtype=float)
+                    normal = np.asarray(contact.normal, dtype=float)
+                    if any(value.shape != (3,) or not np.isfinite(value).all() for value in (impulse, position, normal)):
+                        raise ValueError('contact position, normal and impulse must be finite 3-vectors')
+                    if np.linalg.norm(impulse) <= 1e-9:
                         continue
+                    if not np.isclose(np.linalg.norm(normal), 1., atol=1e-3):
+                        raise ValueError('force-bearing contact normal must be a unit vector')
                     self.rows.append({'actor0': a, 'actor1': b, 'collider0': c0, 'collider1': c1,
-                                      'position_world': list(contact.position), 'normal_world': list(contact.normal),
+                                      'position_world': position.tolist(), 'normal_world': normal.tolist(),
                                       'impulse': impulse.tolist()})
         except Exception as error:
             self.errors.append(f'{type(error).__name__}: {error}')
@@ -97,13 +102,16 @@ class PhysXContacts:
                     selected.append({**row, 'finger_body': body, 'arm': finger[1]})
         if not selected:
             raise ContactUnavailable('no force-bearing finger/object contacts at this physics step')
-        counts = Counter(row['arm'] for row in selected)
-        # Choose the contacting arm, then require both fingers for a grasp.
-        arm = max(counts, key=counts.get)
+        # Choose among qualifying arms first. Many points from one finger must
+        # not hide a valid two-finger grasp by the other arm.
+        arms = {row['arm'] for row in selected}
+        eligible = [arm for arm in arms if len({row['finger_body'] for row in selected if row['arm'] == arm})
+                    >= selector.get('min_finger_bodies', 1)]
+        if not eligible:
+            raise ContactUnavailable('insufficient distinct contacting finger bodies')
+        arm = max(sorted(eligible), key=lambda arm: sum(row['arm'] == arm for row in selected))
         selected = [row for row in selected if row['arm'] == arm]
         fingers = set(row['finger_body'] for row in selected)
-        if len(fingers) < selector.get('min_finger_bodies', 1):
-            raise ContactUnavailable('insufficient distinct contacting finger bodies')
         origin = self.env.sim.scene.env_origins[env_idx]
         if hasattr(origin, 'detach'):
             origin = origin.detach().cpu().numpy()
@@ -119,18 +127,92 @@ class PhysXContacts:
         return {'backend': 'PhysX contact reports', 'steps': self.steps, 'reports': self.reports,
                 'resolved_finger_bodies': self.fingers, 'errors': self.errors}
 
-    def has_support_contact(self, label_a, label_b, env_idx, normal_axis=(0, 0, 1)):
+    def resolve_object_pair(self, selector, env_idx):
+        """Force-bearing points between two named physical object subtrees.
+
+        Tool/target contact is a different pair from finger/tool grasp. Retain
+        actors and colliders so an adapter can identify the actual touched part.
+        This sampler alone does not establish a held tool or a strike/sweep.
+        """
+        if self.errors:
+            raise RuntimeError('PhysX contact reporting failed: ' + self.errors[-1])
         lm = self.env.scene_manager.layout_manager
         roots = []
-        for label in (label_a, label_b):
-            obj = lm.get_scene_object(env_idx, lm.get_instance_name(env_idx, label))
-            roots.append(getattr(obj, 'usd_prim_path', None) or getattr(obj, 'prim_path', None))
+        for label in (selector['label'], selector['other_label']):
+            name = lm.get_instance_name(env_idx, label)
+            if name is None:
+                raise ValueError(f'unknown contact object {label!r}')
+            obj = lm.get_scene_object(env_idx, name)
+            root = getattr(obj, 'usd_prim_path', None) or getattr(obj, 'prim_path', None)
+            if not root:
+                raise RuntimeError(f'no physical prim path for {label}')
+            roots.append(root)
+        if roots[0] == roots[1]:
+            raise ValueError('object contact requires distinct physical object roots')
+        def matches(row, index, root):
+            return any(path == root or path.startswith(root + '/') for path in
+                       (row[f'actor{index}'], row[f'collider{index}']))
+        selected = [row for row in self.rows if
+                    (matches(row, 0, roots[0]) and matches(row, 1, roots[1])) or
+                    (matches(row, 1, roots[0]) and matches(row, 0, roots[1]))]
+        if not selected:
+            raise ContactUnavailable('no force-bearing object/object contacts at this physics step')
+        origin = self.env.sim.scene.env_origins[env_idx]
+        if hasattr(origin, 'detach'):
+            origin = origin.detach().cpu().numpy()
+        points = np.asarray([row['position_world'] for row in selected], dtype=float) - np.asarray(origin)
+        return {'position': points.mean(axis=0).tolist(), 'points': points.tolist()}, {
+            **selector, 'frame': 'environment_local_world', 'object_roots': roots,
+            'contacts': selected, 'physics_step': self.steps, 'contact_reports': self.reports,
+            'aggregation': 'maximum per-contact error; centroid is diagnostic only',
+        }
+
+    def has_support_contact(self, label_a, label_b, env_idx, normal_axis=(0, 0, 1)):
+        return bool(self.support_evidence(label_a, [label_b], env_idx, normal_axis)['contacts'])
+
+    def support_evidence(self, label, support_labels, env_idx, normal_axis=(0, 0, 1)):
+        """Signed force-bearing contacts with named supports, including scene table.
+
+        PxContactPairPoint.normal points from shape 1 toward shape 0. Flip it
+        when the supported object is actor/collider 1; abs(dot) accepts downward
+        forces and is not evidence of load-bearing support.
+        """
+        if self.errors:
+            raise RuntimeError('PhysX contact reporting failed: ' + self.errors[-1])
+        lm = self.env.scene_manager.layout_manager
+        obj = lm.get_scene_object(env_idx, lm.get_instance_name(env_idx, label))
+        root = getattr(obj, 'usd_prim_path', None) or getattr(obj, 'prim_path', None)
+        supports = {}
+        for support_label in support_labels:
+            if support_label == '@table':
+                obj = self.env.scene_manager._tables[env_idx]
+            else:
+                obj = lm.get_scene_object(env_idx, lm.get_instance_name(env_idx, support_label))
+            supports[support_label] = getattr(obj, 'usd_prim_path', None) or getattr(obj, 'prim_path', None)
+        if not root or any(not value for value in supports.values()):
+            raise RuntimeError('support contact requires resolved object prim paths')
+        axis = np.asarray(normal_axis, dtype=float)
+        if axis.shape != (3,) or not np.isfinite(axis).all() or np.linalg.norm(axis) == 0:
+            raise ValueError('support axis must be a finite nonzero 3-vector')
+        axis /= np.linalg.norm(axis)
         def matches(row, index, root):
             return any(p == root or p.startswith(root + '/') for p in
                        (row[f'actor{index}'], row[f'collider{index}']))
-        return any(abs(np.asarray(row['normal_world']) @ np.asarray(normal_axis)) > 0.5 and
-                   ((matches(row, 0, roots[0]) and matches(row, 1, roots[1])) or
-                    (matches(row, 1, roots[0]) and matches(row, 0, roots[1]))) for row in self.rows)
+        selected = []
+        for row in self.rows:
+            for index, other in ((0, 1), (1, 0)):
+                if not matches(row, index, root):
+                    continue
+                normal = np.asarray(row['normal_world']) * (1 if index == 0 else -1)
+                impulse = np.asarray(row['impulse']) * (1 if index == 0 else -1)
+                for support_label, support_root in supports.items():
+                    if matches(row, other, support_root) and normal @ axis > .5 and impulse @ axis > 1e-9:
+                        selected.append({**row, 'support_label': support_label,
+                                         'normal_on_object_world': normal.tolist(),
+                                         'impulse_on_object_world': impulse.tolist()})
+        return {'object': label, 'object_root': root, 'support_roots': supports,
+                'normal_axis_world': axis.tolist(), 'physics_step': self.steps, 'contacts': selected,
+                'normal_convention': 'shape1 to shape0, reversed for supported object in slot1'}
 
     def close(self):
         self.subscription = None

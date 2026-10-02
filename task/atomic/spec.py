@@ -1,6 +1,7 @@
 """Validated, JSON-serializable definitions of atomic RoboDojo trials."""
 
 from dataclasses import dataclass
+from copy import deepcopy
 import json
 import math
 from pathlib import Path
@@ -15,9 +16,10 @@ FAMILIES = frozenset(
 GEOMETRY_KINDS = frozenset(
     {"point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"}
 )
-EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate"})
-MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "contact_points"})
-FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position', 'contact_points'}
+EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact"})
+CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
+MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point"}) | CONTACT_KINDS
+FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position'} - CONTACT_KINDS
 OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
                                'near', 'inside_box', 'on_top'})
@@ -51,6 +53,18 @@ def _read_json(path):
 def _validate_selector(selector, name):
     if not isinstance(selector, dict) or selector.get("kind") not in MEASUREMENT_KINDS:
         raise ValueError(f"{name} must have kind in {sorted(MEASUREMENT_KINDS)}")
+    common = {'kind', 'time'}
+    fields = {'robot_ee_pose': {'arm', 'label'},
+              'functional_point': {'label', 'tag', 'type', 'index'},
+              'support_point': {'label', 'tag', 'type', 'index'},
+              'contact_points': {'label', 'arm', 'min_finger_bodies'},
+              'object_contact_points': {'label', 'other_label'}}.get(selector['kind'], {'label'})
+    if set(selector) - common - fields:
+        raise ValueError(f'{name} has unsupported selector fields: {set(selector) - common - fields}')
+    if selector.get('time', 'live') not in ('live', 'stage_start'):
+        raise ValueError(f'{name}.time must be live or stage_start')
+    if selector.get('time') == 'stage_start' and selector['kind'] not in FRAME_KINDS:
+        raise ValueError('a frozen reference requires an actual landmark frame')
     if selector["kind"] == "robot_ee_pose":
         if not selector.get("arm"):
             raise ValueError(f"{name}.arm is required for robot_ee_pose")
@@ -61,8 +75,19 @@ def _validate_selector(selector, name):
     if selector['kind'] in ('functional_point', 'support_point'):
         if not selector.get('tag') or selector.get('type', 'active') not in ('active', 'passive'):
             raise ValueError('functional_point requires a tag and active/passive type')
-        if not isinstance(selector.get('index', 0), int) or selector.get('index', 0) < 0:
+        if type(selector.get('index', 0)) is not int or selector.get('index', 0) < 0:
             raise ValueError('functional_point index must be nonnegative')
+    if selector['kind'] == 'contact_points':
+        if not isinstance(selector.get('arm', 'any'), str) or not selector.get('arm', 'any'):
+            raise ValueError('contact arm must be a nonempty name or any')
+        count = selector.get('min_finger_bodies', 1)
+        if type(count) is not int or count < 1:
+            raise ValueError('min_finger_bodies must be a positive integer')
+    if selector['kind'] == 'object_contact_points':
+        if not isinstance(selector.get('other_label'), str) or not selector['other_label']:
+            raise ValueError('object_contact_points requires the other object label')
+        if selector['other_label'] == selector['label']:
+            raise ValueError('object contact requires two distinct labels')
 
 
 def _validate_condition(condition):
@@ -105,6 +130,8 @@ def _validate_condition(condition):
             raise ValueError(f'{field} only applies to spatial_relation')
     _validate_selector(condition.get("measurement"), f"condition {condition['id']}.measurement")
     measurement = condition['measurement']
+    if measurement.get('time', 'live') != 'live':
+        raise ValueError('measurements must be live; stage_start is a reference snapshot, not a referent-selection adapter')
     if kind in ('pose', 'relative_orientation') and measurement['kind'] not in FRAME_KINDS:
         raise ValueError('orientation requires an actual frame selector, not a point')
     if measurement['kind'] == 'contact_points' and condition['kind'] in ('pose', 'relative_orientation'):
@@ -134,6 +161,8 @@ def _validate_condition(condition):
                                    condition['reference']['kind'] not in OBJECT_FRAME_KINDS):
             raise ValueError('objects scope needs object frame selectors; it cannot replace functional landmarks')
         relation = condition['expected']
+        if relation == 'on_top' and condition['reference'].get('time') == 'stage_start':
+            raise ValueError('supported-on requires a live support frame and contact, not historical geometry')
         if 'margin' in condition and relation in ('near', 'inside_box', 'on_top'):
             raise ValueError('margin only applies to directional separation relations')
         if 'half_extents' in condition and not (relation == 'inside_box' or (scope == 'points' and relation == 'on_top')):
@@ -163,6 +192,12 @@ def _validate_condition(condition):
             raise ValueError(f"condition {condition['id']} first_predicate needs checks and any/all mode")
         for check in checks:
             _validate_check(check)
+    if event['kind'] == 'first_contact':
+        _validate_selector(event.get('measurement'), 'first_contact.measurement')
+        if event['measurement']['kind'] not in CONTACT_KINDS:
+            raise ValueError('first_contact requires physical contact measurement')
+        if event['measurement'].get('time', 'live') != 'live':
+            raise ValueError('first_contact requires live contacts')
 
 
 def _validate_check(check):
@@ -174,6 +209,33 @@ def _validate_check(check):
         raise ValueError("atomic success checks must not update parser state")
 
 
+def _validate_recognition(recognition, family):
+    if recognition is None:
+        if family in ('pick', 'push'):
+            raise ValueError(f'{family} requires explicit recognition independent of geometry')
+        return
+    allowed = {'kind', 'label', 'arm', 'motion_threshold_m', 'min_contact_steps'}
+    if family == 'push':
+        allowed.add('support_labels')
+    if not isinstance(recognition, dict) or set(recognition) != allowed:
+        raise ValueError(f'{family} recognition needs exactly {sorted(allowed)}')
+    if family not in ('pick', 'push') or recognition['kind'] != 'finger_contact_motion':
+        raise ValueError('only pick/push finger_contact_motion recognition is implemented')
+    if not isinstance(recognition['label'], str) or not recognition['label']:
+        raise ValueError('recognition needs an object label')
+    if not isinstance(recognition['arm'], str) or not recognition['arm']:
+        raise ValueError('recognition arm must be a nonempty name or any')
+    _finite_number(recognition['motion_threshold_m'], 'recognition motion threshold', positive=True)
+    if type(recognition['min_contact_steps']) is not int or recognition['min_contact_steps'] < 2:
+        raise ValueError('recognition needs at least two distinct consecutive contact physics steps')
+    if family == 'push':
+        supports = recognition['support_labels']
+        if (not isinstance(supports, list) or not supports
+                or any(not isinstance(s, str) or not s for s in supports)
+                or len(supports) != len(set(supports)) or recognition['label'] in supports):
+            raise ValueError('push recognition needs distinct named support_labels; @table names the scene table')
+
+
 @dataclass(frozen=True)
 class AtomicStage:
     id: str
@@ -182,6 +244,7 @@ class AtomicStage:
     success_checks: tuple[dict, ...]
     geometry: tuple[dict, ...]
     step_limit: int | None = None
+    recognition: dict | None = None
 
     @classmethod
     def from_dict(cls, data):
@@ -192,6 +255,14 @@ class AtomicStage:
             raise ValueError(f"stage {data['id']} needs at least one success check")
         for check in checks:
             _validate_check(check)
+        recognition = deepcopy(data.get('recognition'))
+        _validate_recognition(recognition, data['family'])
+        if recognition is not None and data['family'] == 'pick':
+            for check in checks:
+                if check['name'] == 'is_lift' and check['args'].get('label', recognition['label']) != recognition['label']:
+                    raise ValueError('pick lift goal and physical recognition must name the same object')
+                if check['name'] == 'is_lift':
+                    _finite_number(check['args'].get('z_threshold'), 'pick lift threshold', positive=True)
         geometry = tuple(data.get("geometry", ()))
         for condition in geometry:
             _validate_condition(condition)
@@ -201,7 +272,7 @@ class AtomicStage:
         step_limit = data.get("step_limit")
         if step_limit is not None and (not isinstance(step_limit, int) or step_limit <= 0):
             raise ValueError("step_limit must be a positive integer")
-        return cls(data["id"], data["family"], data["instruction"], checks, geometry, step_limit)
+        return cls(data["id"], data["family"], data["instruction"], checks, geometry, step_limit, recognition)
 
     def with_variant(self, variant):
         """Overlay instruction and expected geometry without changing the task.
@@ -223,7 +294,7 @@ class AtomicStage:
             conditions.append(changed)
         return AtomicStage(
             self.id, self.family, variant.get("instruction", self.instruction),
-            self.success_checks, tuple(conditions), self.step_limit,
+            self.success_checks, tuple(conditions), self.step_limit, deepcopy(self.recognition),
         )
 
 

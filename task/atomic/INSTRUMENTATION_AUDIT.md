@@ -93,3 +93,23 @@ The first trial returned zero PhysX contact reports: IsaacLab defaults `/physics
 Contact buffers now clear before every actual physics substep, and event observers run after that substep updates live rigid-body poses. This prevents pooling non-simultaneous finger contacts or combining old contact positions with a newer object frame.
 
 The layout-0 T block is 15 mm thick while the gray target is planar. Its goal centre is therefore 7.5 mm above the pad centre, rather than coincident in 3D; the prompt and scoring target agree. This is grounded in the asset metadata and saved layout poses (0.7725 m and 0.765 m).
+
+## Audit fixes added on 2026-10-02
+
+[FIX_STATUS.md](FIX_STATUS.md) records the changes implemented after the expanded
+audit. Pick/push recognition now uses an explicit geometry-independent
+contact-held motion interval and initializes contacts even with no geometric
+conditions. A pick must remain held at endpoint completion; contact loss, an
+arm change or skipped physics steps reset its interval. The current held interval
+must achieve the full native pick lift. Push uses planar motion with named
+upward force-bearing support. Signed object-side normals and impulses reject
+downward/tangential contacts as support. Geometry at the native
+goal remains diagnostic if recognition fails. Other families without their
+physical adapter report `endpoint_checks_only`.
+
+References can freeze the stage-start pose/rigid footprint. Tool/object contact
+pairs and first-contact event evidence now exist. Arm selection filters by
+distinct-finger eligibility, and support/pair sampling rejects backend failures.
+Nonfinite contact vectors fail instrumentation. These changes have offline
+regression coverage; the eight-run pilot above used earlier recognition rules
+and does not validate these additions in the simulator.

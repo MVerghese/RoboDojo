@@ -9,7 +9,7 @@
         "secure hold",
         "lift onset"
       ],
-      "current_support": "Finger/contact and first-lift sampling exist for pilot objects; independent recognition and hold stability still need an adapter.",
+      "current_support": "Explicit geometry-independent same-arm two-finger contact-held motion interval, full native lift within the current held interval and current hold at endpoint implemented for rigid pick. Offline regression coverage; new live verification, broader force closure and grasp-stability calibration still needed.",
       "requires_independent_of_geometry": true
     },
     "place": {
@@ -29,7 +29,7 @@
         "motion interval",
         "contact loss"
       ],
-      "current_support": "Pilot finger/first-motion sampler exists; independent stroke recognizer missing.",
+      "current_support": "Explicit geometry-independent finger/contact-held planar motion with named upward force-bearing scene-table/object support each sampled step implemented. Offline regression coverage; new live verification, independent stroke segmentation and palm contacts still needed.",
       "requires_independent_of_geometry": true
     },
     "push_with_tool": {
@@ -39,7 +39,7 @@
         "tool/object contact",
         "stroke interval"
       ],
-      "current_support": "Tool/object body-pair sampler and stroke recognizer missing.",
+      "current_support": "Explicit tool/target body-pair sampler and first_contact event implemented with offline coverage. Held-tool, calibrated active-edge and contact-coupled stroke recognizer still missing.",
       "requires_independent_of_geometry": true
     },
     "pour": {
@@ -89,7 +89,7 @@
         "target identity",
         "rebound/debounce"
       ],
-      "current_support": "Tool/key physical contact, impulse and strike recognizer missing.",
+      "current_support": "Explicit tool/target body-pair contact points/impulses and first_contact event implemented with offline coverage. Held-tool, calibrated tip, impact velocity and strike/rebound recognizer still missing.",
       "requires_independent_of_geometry": true
     },
     "handover": {
@@ -7378,11 +7378,11 @@
     },
     {
       "path": "task/atomic/sequence.py",
-      "sha256": "144d11e0aa5af829624e7827df27b8d2de36297c5bbe5b7937f8a2855c6d9974"
+      "sha256": "3c0120d0eacd0928e60649b4244220f44447776a6bd43fbb26ad73f9b4d67eac"
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "369b9bba5d30d55318168de57bd47b0b5c2de2b8e5548c4319f78901262afb2f"
+      "sha256": "01da2bb8e78b0986a2b93b96a05e8ab36dc679858af1cd32bd055126733d991c"
     },
     {
       "path": "task/atomic/replay.py",
@@ -7390,7 +7390,7 @@
     },
     {
       "path": "src/eval_client/eval_env.py",
-      "sha256": "aeab745206b3f682c89885788db293e9b1fe64c19d534e7bca81c0788724163e"
+      "sha256": "3647a049779e07215b0ffaca4146c336a76bd4d0caaea0de27b8c7b8d8b33029"
     }
   ]
 }

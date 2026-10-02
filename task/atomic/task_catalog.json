@@ -18,7 +18,7 @@
         }
       ],
       "audit_gaps": [
-        "Row alignment and no lifting do not prove set-square contact; add tool body/edge selectors and contact-coupled block motion. Tool reset placement is a proposed cleanup, not a native stage."
+        "Body-pair contact sampling exists, but row alignment and no lifting do not prove a held set-square stroke. Add calibrated active-edge and contact-coupled block-motion recognition. Tool reset placement is proposed cleanup, not a native stage."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/align_blocks.py",
@@ -1405,7 +1405,8 @@
         }
       ],
       "audit_gaps": [
-        "Native 10 cm root lift does not prove grasp. The pilot samples force-bearing same-arm finger contacts at first 2.5 cm lift and retains native full-task success separately; future cases must calibrate feasible contact regions."
+        "Native 10 cm root lift does not prove grasp. The pilot samples force-bearing same-arm finger contacts at first 2.5 cm lift and retains native full-task success separately; future cases must calibrate feasible contact regions.",
+        "Current runtime separates an explicit same-arm contact-held lift interval from geometry and requires continued hold at endpoint. New rules have offline regression coverage; previous pilot is not live validation of them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/general_pickup.py",
@@ -3012,7 +3013,7 @@
         }
       ],
       "audit_gaps": [
-        "Beat-point bbox and height events can trigger without physical impact. Add mallet/key collision-body contact, normal impulse and approach velocity; retain key order and lift between hits."
+        "Beat-point bbox and height events can trigger without impact. Explicit mallet/key body-pair contact sampling and first_contact exist; add active-tip identity, held-tool, approach velocity and strike/rebound debounce. Retain key order and lift between hits. New sampling has offline coverage only."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/play_Xylophone.py",
@@ -5178,7 +5179,7 @@
         }
       ],
       "audit_gaps": [
-        "Native dustpan location/orientation and cube containment do not prove broom contact or handover. Add tool-target contact and active broom-head frame; ensure continued dustpan stabilization."
+        "Native dustpan location/orientation and cube containment do not prove broom contact or handover. Explicit tool-target contact sampling exists; add calibrated active broom-head, held-tool stroke and handover recognizers; ensure continued dustpan stabilization."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/sweep_blocks.py",
@@ -5242,7 +5243,7 @@
         }
       ],
       "audit_gaps": [
-        "Native dustpan location/orientation and cube containment do not prove broom contact or handover. Add tool-target contact and active broom-head frame; ensure continued dustpan stabilization. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Native dustpan location/orientation and cube containment do not prove broom contact or handover. Explicit tool-target contact sampling exists; add calibrated active broom-head, held-tool stroke and handover recognizers; ensure continued dustpan stabilization. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/sweep_blocks_random.py",
