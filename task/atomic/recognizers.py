@@ -29,6 +29,10 @@ SCHEMAS = {
         'axis_tolerance_rad'}),
     'contact_joint_motion': ('actuate', {'label', 'arm', 'min_contact_steps', 'joint_name',
         'min_travel', 'direction'}),
+    'button_press_cycle': ('actuate', {'label', 'arm', 'min_contact_steps', 'joint_tag',
+        'pressed_ratio', 'released_ratio', 'initial_ratio'}),
+    'held_tool_landmark_contact': ('touch_with_tool', {'label', 'arm', 'min_contact_steps',
+        'target_label', 'tool_point', 'target_point', 'tool_radius_m', 'target_radius_m', 'min_impulse_ns'}),
     'contact_constrained_twist': ('twist', {'label', 'arm', 'min_contact_steps', 'target_label',
         'pivot', 'axis', 'direction', 'min_angle_rad', 'max_off_axis_rad', 'max_radius_m',
         'min_depth_m', 'max_depth_m'}),
@@ -43,11 +47,14 @@ TRANSITIONS = {
     'held_insertion': {'entry', 'inserted'}, 'contact_joint_motion': {'motion'},
     'contact_constrained_twist': {'rotation'},
     'rigid_material_transfer': {'source_exit', 'first_transfer', 'transfer_complete'},
+    'button_press_cycle': {'press', 'release', 'cycle'},
+    'held_tool_landmark_contact': {'contact'},
 }
 COMPLETION = {'supported_release': 'settled', 'held_tool_push': 'stroke', 'held_tool_contact': 'contact',
               'grip_transfer': 'receiver_only', 'held_insertion': 'inserted',
               'contact_joint_motion': 'motion', 'contact_constrained_twist': 'rotation'}
 COMPLETION['rigid_material_transfer'] = 'transfer_complete'
+COMPLETION.update(button_press_cycle='cycle', held_tool_landmark_contact='contact')
 
 
 def validate_recognition(config, family, validate_selector):
@@ -57,14 +64,14 @@ def validate_recognition(config, family, validate_selector):
     fields = SCHEMAS[kind][1] | {'kind'}
     if set(config) != fields:
         raise ValueError(f'{kind} requires exactly {sorted(fields)}')
-    for key in fields & {'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label', 'joint_name'}:
+    for key in fields & {'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label', 'joint_name', 'joint_tag'}:
         if not isinstance(config[key], str) or not config[key]:
             raise ValueError(f'{kind}.{key} must be a nonempty name')
     for key in fields & {'min_contact_steps', 'settle_steps', 'overlap_steps', 'receiver_steps'}:
         if type(config[key]) is not int or config[key] < 2:
             raise ValueError(f'{kind}.{key} must be at least two distinct physics steps')
     numeric = fields - {'kind', 'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label',
-        'joint_name', 'support_labels', 'tip', 'opening', 'pivot', 'axis', 'direction',
+        'joint_name', 'joint_tag', 'tool_point', 'target_point', 'support_labels', 'tip', 'opening', 'pivot', 'axis', 'direction',
         'tool_contact_suffix', 'target_contact_suffix', 'min_contact_steps', 'settle_steps',
         'overlap_steps', 'receiver_steps', 'source_frame', 'target_frame', 'source_half_extents_m',
         'target_half_extents_m', 'material_labels', 'required_count'}
@@ -85,13 +92,15 @@ def validate_recognition(config, family, validate_selector):
     if kind == 'grip_transfer':
         if config['giver_arm'] == config['receiver_arm'] or {config['giver_arm'], config['receiver_arm']} & {'any', 'nearest'}:
             raise ValueError('handover requires two distinct explicit arms')
-    for key in fields & {'tip', 'opening', 'pivot', 'source_frame', 'target_frame'}:
+    for key in fields & {'tip', 'opening', 'pivot', 'source_frame', 'target_frame', 'tool_point', 'target_point'}:
         validate_selector(config[key], key)
         if config[key]['kind'] not in ('functional_point', 'support_point', 'object_pose', 'object_center_pose') or config[key].get('time', 'live') != 'live':
             raise ValueError(f'{key} must select a live oriented object landmark')
-        expected_label = config['label'] if key in ('tip', 'source_frame') else config['target_label']
+        expected_label = config['label'] if key in ('tip', 'source_frame', 'tool_point') else config['target_label']
         if config[key]['label'] != expected_label:
             raise ValueError(f'{key} must belong to {expected_label}')
+    if kind == 'button_press_cycle' and not 0 < config['pressed_ratio'] < config['released_ratio'] <= config['initial_ratio'] <= 1:
+        raise ValueError('button ratios require 0 < pressed < released <= initial <= 1')
     if 'min_depth_m' in fields and config['max_depth_m'] <= config['min_depth_m']:
         raise ValueError('max_depth_m must exceed min_depth_m')
     if 'axis' in fields:
@@ -130,16 +139,16 @@ class PhysicalRecognizer:
         self.material = {}
         lm = session.env.scene_manager.layout_manager
         if hasattr(lm, 'instance_type_by_env'):
-            expected = 'Articulation' if self.kind == 'contact_joint_motion' else 'Rigid'
+            expected = 'Articulation' if self.kind in ('contact_joint_motion', 'button_press_cycle') else 'Rigid'
             name = lm.get_instance_name(env_idx=session.env_idx, label=self.c['label'])
             actual = lm.instance_type_by_env[session.env_idx].get(name)
-            if actual != expected:
+            if not isinstance(actual, str) or actual.lower() != expected.lower():
                 raise RuntimeError(f'{self.kind} expects a {expected} object; {self.c["label"]} is {actual}')
         if self.kind == 'rigid_material_transfer':
             if hasattr(lm, 'instance_type_by_env'):
                 for label in self.c['material_labels']:
                     name = lm.get_instance_name(env_idx=session.env_idx, label=label)
-                    if lm.instance_type_by_env[session.env_idx].get(name) != 'Rigid':
+                    if str(lm.instance_type_by_env[session.env_idx].get(name)).lower() != 'rigid':
                         raise RuntimeError('rigid material recognition cannot use fluid/cloth/cached articulated geometry')
             self.source_initial_rotation = _rotation(self.session._resolve(self.c['source_frame'])[3:])
             for label in self.c['material_labels']:
@@ -181,9 +190,9 @@ class PhysicalRecognizer:
 
     def _pair(self):
         try:
-            _, source = self.contacts.resolve_object_pair({'label': self.c['label'],
+            measured, source = self.contacts.resolve_object_pair({'label': self.c['label'],
                 'other_label': self.c['target_label']}, self.session.env_idx)
-            return source
+            return {**source, 'measured_contact_points': deepcopy(measured)}
         except ContactUnavailable:
             return None
 
@@ -303,6 +312,31 @@ class PhysicalRecognizer:
         if rows and impulse >= self.c['min_impulse_ns']:
             self._emit(held_contact=hold, tool_target_contacts=rows, total_impulse_ns=impulse)
 
+    def _held_tool_landmark_contact(self):
+        hold, pair = self._hold(self.c['label'], self.c['arm']), self._pair()
+        if not pair:
+            self.state['clear'] = True
+            return
+        clear = self.state.pop('clear', False)
+        if not clear or not hold:
+            return
+        tool = self.session._resolve(self.c['tool_point'])[:3]
+        target = self.session._resolve(self.c['target_point'])[:3]
+        points = np.asarray(pair['measured_contact_points'].get('points', []), dtype=float)
+        if points.shape != (len(pair['contacts']), 3) or not np.isfinite(points).all():
+            raise RuntimeError('landmark contact requires synchronized per-contact environment-local positions')
+        tool_distance = np.linalg.norm(points - tool, axis=1)
+        target_distance = np.linalg.norm(points - target, axis=1)
+        eligible = (tool_distance <= self.c['tool_radius_m']) & (target_distance <= self.c['target_radius_m'])
+        rows = [row for row, accept in zip(pair['contacts'], eligible) if accept]
+        impulse = sum(float(np.linalg.norm(row['impulse'])) for row in rows)
+        if rows and impulse >= self.c['min_impulse_ns']:
+            self._emit(held_contact=hold, tool_target_contacts=rows,
+                contact_points=points[eligible].tolist(), total_impulse_ns=impulse,
+                tool_landmark_position=tool.tolist(), target_landmark_position=target.tolist(),
+                tool_landmark_distances_m=tool_distance[eligible].tolist(),
+                target_landmark_distances_m=target_distance[eligible].tolist())
+
     def _grip_transfer(self):
         pose = self._pose()
         old = self.state.get('pose')
@@ -384,6 +418,41 @@ class PhysicalRecognizer:
         if hold and travel >= self.c['min_travel']:
             self._emit(moving_link_contact=hold, moving_body=body_path, joint_name=self.c['joint_name'],
                 initial_joint_position=self.state['initial'], joint_position=position, signed_travel=travel)
+
+    def _button_press_cycle(self):
+        from task.atomic.bindings import joint_from_tag
+        if not hasattr(self, '_button_joint'):
+            self._button_joint = joint_from_tag(self.session.env, self.c['label'], self.c['joint_tag'], self.session.env_idx)
+        adapter = getattr(self.session.env, '_atomic_joint_state', None)
+        info, body = (adapter(self.c['label'], self._button_joint, self.session.env_idx) if adapter else
+            live_joint_state(self.session.env, self.c['label'], self._button_joint, self.session.env_idx,
+                             getattr(self, '_joint_body_path', None)))
+        self._joint_body_path = body
+        position, lower, upper = (float(info[k]) for k in ('position', 'lower', 'upper'))
+        if not np.isfinite([position, lower, upper]).all() or upper <= lower:
+            raise RuntimeError('button cycle requires finite live position and ordered physical joint limits')
+        ratio = (position - lower) / (upper - lower)
+        hold = self._hold(self.c['label'], self.c['arm'], fingers=1, body_path=body)
+        raw = self._current_hold(fingers=1)
+        if self.state.get('phase') == 'pressed':
+            # Require complete robot release, not merely loss of the original finger.
+            if not self._touching() and ratio > self.c['released_ratio']:
+                self._event('release', joint_ratio=ratio, moving_body=body)
+                self._emit(press_contact=self.state['press'], joint_name=self._button_joint,
+                    moving_body=body, initial_ratio=self.state['initial'],
+                    pressed_ratio=self.state['pressed'], released_ratio=ratio)
+            return
+        if not raw:
+            self.state.clear()
+            return
+        if self.state.get('arm') != raw['resolved_arm']:
+            self.state.clear()
+        if ratio > self.c['initial_ratio']:
+            self.state.update(phase='armed', arm=raw['resolved_arm'], initial=ratio)
+        if hold and self.state.get('phase') == 'armed' and ratio < self.c['pressed_ratio']:
+            self.state.update(phase='pressed', press=deepcopy(hold), pressed=ratio)
+            self._event('press', moving_link_contact=hold, moving_body=body,
+                joint_name=self._button_joint, joint_ratio=ratio)
 
     def _contact_constrained_twist(self):
         hold, pair = self._hold(self.c['label'], self.c['arm']), self._pair()

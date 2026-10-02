@@ -76,6 +76,33 @@
             "kind": "recognition_event",
             "name": "settled"
           }
+        },
+        {
+          "id": "center_offset",
+          "slot": "object goal",
+          "kind": "relative_displacement",
+          "measurement": {
+            "kind": "object_center_pose",
+            "label": "block_1"
+          },
+          "reference": {
+            "kind": "object_center_pose",
+            "label": "block_0"
+          },
+          "expected": [
+            0.005,
+            0,
+            0
+          ],
+          "axes": [
+            0,
+            1
+          ],
+          "tolerance": 0.004,
+          "event": {
+            "kind": "recognition_event",
+            "name": "settled"
+          }
         }
       ]
     },
@@ -150,6 +177,33 @@
           "expected": "on_top",
           "tolerance": 0.003,
           "min_overlap_fraction": 0.5,
+          "event": {
+            "kind": "recognition_event",
+            "name": "settled"
+          }
+        },
+        {
+          "id": "center_offset",
+          "slot": "object goal",
+          "kind": "relative_displacement",
+          "measurement": {
+            "kind": "object_center_pose",
+            "label": "block_2"
+          },
+          "reference": {
+            "kind": "object_center_pose",
+            "label": "block_1"
+          },
+          "expected": [
+            0.005,
+            0,
+            0
+          ],
+          "axes": [
+            0,
+            1
+          ],
+          "tolerance": 0.004,
           "event": {
             "kind": "recognition_event",
             "name": "settled"

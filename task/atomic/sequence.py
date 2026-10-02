@@ -6,9 +6,11 @@ from task.atomic.session import AtomicSession
 
 class AtomicSequence:
     def __init__(self, env, program, env_idx):
+        program = program.bind(env, env_idx)
         self.env, self.program, self.env_idx = env, program, env_idx
         self.completed = {}
         self.sessions = {}
+        self.gate_sessions = {}
         self.stage_starts = {}  # Only whole-action, prefix-replayable boundaries.
         self.stage_boundaries = {}
         self._dependencies = program.dependencies()
@@ -41,6 +43,16 @@ class AtomicSequence:
             }
             if at_action_boundary:
                 self.stage_starts[stage.id] = action_count
+        for gate in self.program.gates:
+            if gate.id in self.completed or gate.id in self.gate_sessions:
+                continue
+            if not set(self._dependencies[gate.id]) <= self.completed.keys():
+                continue
+            # Reuse only the read-only predicate resolver. Gate rows are kept
+            # separate and never reported as robot atomic actions.
+            from task.atomic.spec import AtomicStage
+            definition = AtomicStage(gate.id, 'place', 'Observe scene event', gate.checks, ())
+            self.gate_sessions[gate.id] = AtomicSession(self.env, definition, self.env_idx)
 
     def _advance(self, action_count, at_action_boundary):
         done = []
@@ -59,6 +71,13 @@ class AtomicSequence:
             done.append(stage_id)
         for stage_id in done:
             del self.sessions[stage_id]
+        for gate_id, session in list(self.gate_sessions.items()):
+            if session._check_success():
+                self.completed[gate_id] = {'gate_id':gate_id, 'observed':True,
+                    'action_index':action_count, 'physics_step':self._physics_step(),
+                    'checks':deepcopy(list(session.stage.success_checks))}
+                del self.gate_sessions[gate_id]
+                done.append(gate_id)
         if done:
             self._activate(action_count, at_action_boundary)
 
@@ -95,5 +114,9 @@ class AtomicSequence:
                 'geometric_instruction': self.program.geometric_instruction,
                 'stage_dependencies': deepcopy(self._dependencies),
                 'active_stages': sorted(self.sessions),
+                'active_gates': sorted(self.gate_sessions),
+                'gates': [deepcopy(self.completed.get(g.id, {'gate_id':g.id,'observed':False}))
+                          for g in self.program.gates],
+                'binding_evidence': deepcopy(self.program.binding_evidence),
                 'stage_starts': deepcopy(self.stage_starts),
                 'stage_boundaries': deepcopy(self.stage_boundaries), 'stages': rows}

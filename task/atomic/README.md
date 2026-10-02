@@ -1,6 +1,6 @@
 # Atomic geometry benchmark prototype
 
-This branch adds a separate evaluation mode on top of RoboDojo's existing full-task eval. Its [taxonomy](TAXONOMY.md) defines 11 manipulation families and five geometric modifier types. The [source-backed task map](TASK_MAP.md) audits all 54 task modules with concrete action examples and native predicate evidence. Eight schema-loadable programs are included in `programs/`; four original programs were exercised by the live pilot. See [RUNTIME.md](RUNTIME.md) for the new dependency runtime and generic physical recognizers, which have offline coverage only. The deposit-coin insertion landmark remains a gap.
+This branch adds a separate evaluation mode on top of RoboDojo's existing full-task eval. Its [taxonomy](TAXONOMY.md) defines 11 manipulation families and five geometric modifier types. The [source-backed task map](TASK_MAP.md) audits all 54 task modules with concrete action examples and native predicate evidence. Ten schema-loadable programs are included in `programs/`; four original programs were exercised by the live pilot. See [RUNTIME.md](RUNTIME.md) for the new dependency runtime and generic physical recognizers, which have offline coverage only. The deposit-coin insertion landmark remains a gap.
 
 Start with [conditioning and A/B instructions](CONDITIONING_AB.md), [all-family audit](ACTION_AUDIT.md), [completed pilot results](PILOT_RESULTS.md), and [agent workflow skills](../../.agents/skills/README.md).
 

@@ -2,7 +2,7 @@
 
 Reviewed **54 modules**, including random variants separately. Every module has a candidate atomic plan, config-backed object bindings, ordering/selection rules, physical boundary requirements and restart state requirements. The [machine-readable plans](segmentation_plans.json) preserve these distinctions.
 
-**These are source-backed plans, not observed rollout segments or executable `AtomicProgram` files.** There are still five schema-loadable programs and four tasks exercised in the live pilot. No new GPU evaluations were run for this investigation.
+**These are source-backed plans, not observed rollout segments or executable `AtomicProgram` files.** There are 10 schema-loadable programs; four tasks were exercised in the historical pilot. No new GPU evaluations were run for this investigation.
 
 ## Control-flow semantics
 
@@ -19,7 +19,7 @@ Selection names and goal text are reviewed resolution contracts, **not executabl
 
 1. Bind labels/roles and live functional landmarks from each loaded layout. Preserve free choices and optional stages. Calibrate geometry against actual meshes and feasible trajectories.
 2. Add geometry-independent physical recognizers below. Emit contact/event intervals at physics-substep resolution with arm/object identities, provenance, confidence and missing-data status. An endpoint predicate alone does not establish the action that achieved it.
-3. Bind these plans to the new concurrent dependency runtime. `AtomicSequence` now samples all enabled stages each physics substep and permits overlapping independent branches; finite repetitions can be explicitly unrolled. Automatic layout/choice resolution, repeat expansion and scene-event gates remain missing. See [RUNTIME.md](RUNTIME.md); the prose plans are still not executable programs.
+3. Bind these plans to the new concurrent dependency runtime. `AtomicSequence` now samples all enabled stages each physics substep and permits overlapping independent branches; finite repetitions can be explicitly unrolled. Bounded numeric asset repeats and read-only scene gates are implemented; automatic choice resolution and task-specific game/conveyor bindings remain missing. See [RUNTIME.md](RUNTIME.md); the prose plans are still not executable programs.
 4. Capture verified start states at observed action boundaries. Save the common and task-specific state below. `replay_prefix` currently replays actions and checks preceding predicates; it is not a full simulator snapshot. `_start_atomic_stage` resets parser baselines and robot origin after replay, so memory/game/count/trigger tasks need explicit state restoration rather than treating that reset as equivalent to the original boundary.
 5. Validate replay/snapshot fidelity against original poses, joints, velocities, material/particle state and native phase; reject already-completed or unsupported starts. Then generate with/without-condition pairs using identical recognition/success checks and calibrated slot targets. Report recognition, task success, geometry error and coverage separately.
 

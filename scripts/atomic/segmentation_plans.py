@@ -27,6 +27,8 @@ DEPENDENCIES = (
     'task/atomic/session.py',
     'task/atomic/spec.py',
     'task/atomic/recognizers.py',
+    'task/atomic/bindings.py',
+    'task/atomic/landmarks.py',
     'task/atomic/contacts.py',
     'task/atomic/replay.py',
     'src/eval_client/eval_env.py',
@@ -209,7 +211,7 @@ def render(data):
              'physical boundary requirements and restart state requirements. '
              'The [machine-readable plans](segmentation_plans.json) preserve these distinctions.', '',
              '**These are source-backed plans, not observed rollout segments or executable `AtomicProgram` files.** '
-             'There are still five schema-loadable programs and four tasks exercised in the live pilot. '
+             f"There are {len(list((REPO / 'task/atomic/programs').glob('*.json')))} schema-loadable programs; four tasks were exercised in the historical pilot. "
              'No new GPU evaluations were run for this investigation.', '',
              '## Control-flow semantics', '',
              '- **sequence / →:** required order within this proposed route. Some orders are native/instruction requirements; '
@@ -235,7 +237,7 @@ def render(data):
              'An endpoint predicate alone does not establish the action that achieved it.',
              '3. Bind these plans to the new concurrent dependency runtime. `AtomicSequence` now samples all enabled '
              'stages each physics substep and permits overlapping independent branches; finite repetitions can be explicitly '
-             'unrolled. Automatic layout/choice resolution, repeat expansion and scene-event gates remain missing. '
+             'unrolled. Bounded numeric asset repeats and read-only scene gates are implemented; automatic choice resolution and task-specific game/conveyor bindings remain missing. '
              'See [RUNTIME.md](RUNTIME.md); the prose plans are still not executable programs.',
              '4. Capture verified start states at observed action boundaries. Save the common and task-specific state below. '
              '`replay_prefix` currently replays actions and checks preceding predicates; it is not a full simulator snapshot. '

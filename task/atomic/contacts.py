@@ -90,6 +90,11 @@ class PhysXContacts:
         if not root:
             raise RuntimeError(f'no rigid prim path for {selector["label"]}')
         body_path = selector.get('body_path')
+        if selector.get('joint_tag'):
+            from task.atomic.bindings import joint_from_tag
+            from task.atomic.recognizers import live_joint_state
+            joint = joint_from_tag(self.env, selector['label'], selector['joint_tag'], env_idx)
+            _, body_path = live_joint_state(self.env, selector['label'], joint, env_idx)
         if body_path and not (body_path == root or body_path.startswith(root + '/')):
             raise ValueError('moving contact body must belong to the selected object')
         def inside(path):

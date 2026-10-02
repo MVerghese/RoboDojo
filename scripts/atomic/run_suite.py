@@ -3,6 +3,7 @@
 
 import argparse
 import errno
+import hashlib
 from datetime import datetime, timezone
 import json
 import os
@@ -11,6 +12,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tarfile
 import time
 
 REPO = Path(__file__).resolve().parents[2]
@@ -23,6 +25,54 @@ TERMINAL = {"Completed", "Succeeded", "Failed", "Stopped", "Cancelled", "Cancele
 # Existing i4 workflow routes these variants to H200, not this L40S controller.
 H200_TASKS = {'fold_clothes_random', 'hang_mugs_random',
               'arrange_largest_number_random', 'stack_blocks_random'}
+
+
+def overlay_runtime_hash(path):
+    """Hash packaged runtime contents independently of each case's input."""
+    digest = hashlib.sha256()
+    with tarfile.open(path, 'r:gz') as archive:
+        for item in sorted(archive.getmembers(), key=lambda m: m.name):
+            if not item.isfile() or item.name == 'task/atomic/inputs/program.json':
+                continue
+            digest.update(item.name.encode() + b'\0')
+            digest.update(hashlib.sha256(archive.extractfile(item).read()).digest())
+    return digest.hexdigest()
+
+
+def freeze_case(run, program, task):
+    plan = json.loads((run / 'run_plan.json').read_text())
+    overlay = run / 'robodojo-overlay.tar.gz'
+    spec = run / f"{plan['jobs'][0]}.atomic-job-spec.json"
+    frozen = {'task': task, 'program_sha256': hashlib.sha256(Path(program).read_bytes()).hexdigest(),
+              'overlay_sha256': hashlib.sha256(overlay.read_bytes()).hexdigest(),
+              'spec_sha256': hashlib.sha256(spec.read_bytes()).hexdigest(),
+              'runtime_sha256': overlay_runtime_hash(overlay)}
+    atomic_write_json(run / 'prepared_case.json', frozen)
+    return frozen
+
+
+def read_frozen_case(run, program, task):
+    frozen = json.loads((run / 'prepared_case.json').read_text())
+    plan = json.loads((run / 'run_plan.json').read_text())
+    paths = {'program_sha256': Path(program), 'overlay_sha256': run / 'robodojo-overlay.tar.gz',
+             'spec_sha256': run / f"{plan['jobs'][0]}.atomic-job-spec.json"}
+    if frozen['task'] != task or any(hashlib.sha256(path.read_bytes()).hexdigest() != frozen[key]
+                                   for key, path in paths.items()):
+        raise ValueError('prepared case changed; create a fresh suite rather than rebuilding queued evidence')
+    return frozen
+
+
+def submit_frozen_case(run, program, task, credentials):
+    from scripts.atomic.submit_trace import submit_prepared
+    frozen = read_frozen_case(run, program, task)
+    plan_path = run / 'run_plan.json'
+    plan = json.loads(plan_path.read_text())
+    patched = json.loads((run / f"{plan['jobs'][0]}.atomic-job-spec.json").read_text())
+    provenance = {'mode':'full_task_benchmark', 'task':task,
+                  'program_sha256':frozen['program_sha256'], 'runtime_sha256':frozen['runtime_sha256'],
+                  'gpu_admission':{'max_used_mib':512, 'reject_compute_processes':True}}
+    return submit_prepared(plan_path, patched, run / 'robodojo-overlay.tar.gz',
+                           frozen['overlay_sha256'], credentials, provenance)
 
 
 def validate_suite(manifest):
@@ -196,16 +246,23 @@ def main():
         parser.error('suite runner currently supports layout 0 only; metadata cannot select another layout')
     root = args.suite.parent
     client = APIClient()
+    runtimes = set()
     for index, case in enumerate(manifest["cases"]):
         run = root / "runs" / case["id"]
-        if (run / "run_plan.json").exists() and json.loads((run / "run_plan.json").read_text())["submitted"]:
-            continue
         case_task = case.get('task', manifest['task'])
+        if (run / 'prepared_case.json').exists():
+            runtimes.add(read_frozen_case(run, case['program'], case_task)['runtime_sha256'])
+            continue
+        if (run / "run_plan.json").exists() and json.loads((run / "run_plan.json").read_text())["submitted"]:
+            raise ValueError('submitted legacy case has no frozen preparation; use its original controller version')
         prepare_case(args.base_run, run, f"{args.name}-{index:02d}", client, args.gpu_memory_ledger, task=case_task)
         subprocess.run([sys.executable, "scripts/atomic/submit_trace.py", "--run-dir", str(run),
                         '--task', case_task,
                         "--program", case["program"], "--max-initial-gpu-memory-mib", "512", "--dry-run"],
                        cwd=REPO, check=True, stdout=subprocess.DEVNULL)
+        runtimes.add(freeze_case(run, case['program'], case_task)['runtime_sha256'])
+    if len(runtimes) != 1:
+        raise ValueError('suite cases have different packaged runtimes; prepare a fresh suite')
     summarize(manifest, root)
     if args.dry_run:
         print(f"Prepared {len(manifest['cases'])} cases; maximum concurrent GPUs: {args.max_concurrent}")
@@ -250,10 +307,7 @@ def main():
             return
         for case in pending[:max(0, args.max_concurrent - active)]:
             run = root / "runs" / case["id"]
-            subprocess.run([sys.executable, "scripts/atomic/submit_trace.py", "--run-dir", str(run),
-                            '--task', case.get('task', manifest['task']),
-                            "--program", case["program"], "--max-initial-gpu-memory-mib", "512",
-                            "--credentials-file", str(args.credentials_file)], cwd=REPO, check=True)
+            submit_frozen_case(run, case['program'], case.get('task', manifest['task']), args.credentials_file)
             print(f"Submitted full-task case {case['id']}", flush=True)
         if not pending and not monitors and result["completed_cases"] == len(manifest["cases"]):
             print("Suite collected:", root / "benchmark_results.md", flush=True)

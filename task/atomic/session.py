@@ -54,6 +54,10 @@ class AtomicSession:
         if stage.recognition is not None:
             label = stage.recognition['label']
             self.initial_positions[label] = self._object_pose(label)[:3].copy()
+        for check in stage.success_checks:
+            if check['name'] == 'is_atomic_rise_since_activation':
+                label = check['args']['label']
+                self.initial_positions[label] = self._object_pose(label)[:3].copy()
         for condition in stage.geometry:
             event = condition.get("event", {"kind": "stage_success"})
             if event["kind"] in ("first_lift", "first_motion"):
@@ -94,6 +98,17 @@ class AtomicSession:
             return deepcopy(value), deepcopy(source)
         source = {**selector, "frame": "environment_local_world"}
         kind = selector["kind"]
+        if kind in ('articulated_link_pose', 'joint_link_pose'):
+            from task.atomic.landmarks import live_link_pose
+            link = selector.get('link')
+            if kind == 'joint_link_pose':
+                from task.atomic.bindings import joint_from_tag
+                from task.atomic.recognizers import live_joint_state
+                joint = joint_from_tag(self.env, selector['label'], selector['joint_tag'], self.env_idx)
+                _, path = live_joint_state(self.env, selector['label'], joint, self.env_idx)
+                link = path.rsplit('/', 1)[-1]
+            value, physical = live_link_pose(self.env, selector['label'], link, self.env_idx)
+            return value, {**source, **physical}
         if kind in ("object_pose", "object_position"):
             pose = self._object_pose(selector["label"])
             source['landmark'] = 'object root frame origin, not geometric centre'
@@ -140,6 +155,24 @@ class AtomicSession:
             inst_name = lm.get_instance_name(env_idx=self.env_idx, label=selector["label"])
             if inst_name is None:
                 raise ValueError(f"unknown object label {selector['label']!r}")
+            metadata = lm.get_instance_metadata(inst_name=inst_name, env_idx=self.env_idx)
+            category = 'functional' if kind == 'functional_point' else 'support'
+            item = metadata.get(selector.get('type', 'active'), {}).get(category, {}).get(selector['tag'], {})
+            if item.get('base_link'):
+                from task.atomic.landmarks import live_link_pose
+                from task.atomic.geometry import _rotation
+                link, link_source = live_link_pose(self.env, selector['label'], item['base_link'], self.env_idx)
+                points = item.get('frame' if kind == 'functional_point' else 'center', [])
+                index = selector.get('index', 0)
+                if not points or index >= len(points):
+                    raise ValueError(f'link landmark {selector["tag"]} is unavailable')
+                local = _array(points[index])
+                if local.shape != (7,) or not np.isfinite(local).all():
+                    raise RuntimeError('articulated landmark annotation must be a finite pose')
+                rotation = _rotation(link[3:]) @ _rotation(local[3:])
+                from task.atomic.landmarks import matrix_quaternion
+                value = np.concatenate((link[:3] + _rotation(link[3:]) @ local[:3], matrix_quaternion(rotation)))
+                return value, {**source, 'live_link':link_source}
             resolver = lm.get_functional_points if kind == 'functional_point' else lm.get_support_points
             points = resolver(
                 tag=selector["tag"], type=selector.get("type", "active"),
@@ -243,6 +276,9 @@ class AtomicSession:
             }
 
     def _predicate(self, check):
+        if check['name'] == 'is_atomic_rise_since_activation':
+            args = check['args']
+            return self._object_pose(args['label'])[2] - self.initial_positions[args['label']][2] >= args['threshold_m']
         if check['name'] == 'is_atomic_interaction':
             return bool(self._physical_recognizer and self._physical_recognizer.ready)
         if check['name'] in ('is_atomic_entry', 'is_atomic_inserted'):

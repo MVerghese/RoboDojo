@@ -33,7 +33,7 @@ PROFILES = {
     'path': ('M', 'Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.'),
     'spout': ('G', 'Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.'),
     'stream': ('M', 'Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.'),
-    'link': ('M', 'Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.'),
+    'link': ('G', 'PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.'),
     'twist': ('M', 'Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.'),
     'entry': ('G', 'Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.'),
     'handover': ('G', 'grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.'),
@@ -113,7 +113,7 @@ def build():
     fingerprints = {str(p): hashlib.sha256((REPO / p).read_bytes()).hexdigest() for p in (
         Path('task/atomic/TAXONOMY.md'), Path('task/atomic/spec.py'), Path('task/atomic/geometry.py'),
         Path('task/atomic/session.py'), Path('task/atomic/surfaces.py'), Path('task/atomic/contacts.py'),
-        Path('task/atomic/recognizers.py'))}
+        Path('task/atomic/recognizers.py'), Path('task/atomic/bindings.py'), Path('task/atomic/landmarks.py'))}
     counts = {code: sum(cell['status'] == code for row in rows for cell in row['factors'].values())
               for code in ('L', 'C', 'G', 'F', 'S', 'M', 'NA')}
     return {'schema_version': 1, 'scope': 'source/semantics audit, not universal live validation',

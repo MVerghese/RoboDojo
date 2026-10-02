@@ -328,3 +328,18 @@ layouts/seeds after extending the runner before making statistical claims.
 The completed [eight-run pilot](PILOT_RESULTS.md) proves text delivery and score
 reproduction end to end, with 0/8 native task successes. It does not establish
 general steerability or all-family coverage.
+
+## Immutable suite preparation
+
+The suite runner freezes every case's overlay, patched spec and input hash
+before submitting any case. `prepared_case.json` records these hashes and a
+runtime-content hash excluding the per-case prompt program; every case must
+have the same runtime hash. Pending cases submit those exact bundles, and
+resume checks them without rebuilding from a changed checkout. Changed input
+or bundle requires a fresh suite directory. Existing historical controllers
+without frozen preparations should retain their original runner version.
+
+See [RUNTIME.md](RUNTIME.md) for the new button-count and xylophone programs
+and their prototype calibration limits. Both arms must score the same contact
+or placement conditions; put numerical geometric guidance only in the
+conditioned program's `geometric_instruction`.

@@ -7378,31 +7378,39 @@
     },
     {
       "path": "task/atomic/sequence.py",
-      "sha256": "df4841fc93fd2217adba9f08828eb8f01a252c47515cface2b502619bd46c576"
+      "sha256": "5137d1df29757acf395c46c6440a3c6b2ac70b7ea42c845808d1cbb98b47fab3"
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "df4e8b58de21ebba0ad6d66502349f83c797e0fd18a0d19c832359feadfef1e9"
+      "sha256": "dc0777f15d53760941fad5c46aa60a5af9e3506238cdddeeca761c82dbb5c248"
     },
     {
       "path": "task/atomic/spec.py",
-      "sha256": "1b09f8bb94b577bac76f59be4f534fc1846c0a3ff0aa0d116f81aeffee37a63a"
+      "sha256": "346541b9e438ebf334b382992aa9383558d19baf0384740da5081fe0067944ab"
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "42476b93c076fec90142562f49685ea2b642c7cd4680203dbf1306836ee006e4"
+      "sha256": "86c540981bb4ebd2827d02ba4a90c382d0949e1c631fdb4ca171254458d74970"
+    },
+    {
+      "path": "task/atomic/bindings.py",
+      "sha256": "c9a0115355c8f232de611d7fc0e678af674f26cac1a8edef6eab3e18133c1224"
+    },
+    {
+      "path": "task/atomic/landmarks.py",
+      "sha256": "c092969fc43904958cac40ac0c3cc48e6a96e14f05c02c658c47bb20c0954a24"
     },
     {
       "path": "task/atomic/contacts.py",
-      "sha256": "74dc04ecf73e872c58e66ced05b25a8faf24603b3ee416ccfcf24e9a210461f2"
+      "sha256": "60ee607feb4b6a120a5666fa43a42e07e8f601d85d34f45f455ea24b897c5436"
     },
     {
       "path": "task/atomic/replay.py",
-      "sha256": "63a9bc5f671a412aa628c183b6fd8260c545c00225d90d693804777be8e649a6"
+      "sha256": "901d79eea37eaeccdbe63a2ea21a446d474809c4c08d67869b04d8ec4a89603b"
     },
     {
       "path": "src/eval_client/eval_env.py",
-      "sha256": "5fc87595dc2e614b99ab11a4a56ad19c65448cc2b07102b8a55096cf1a0d5de0"
+      "sha256": "fad5608c5633e86b5d7155ea8866afc674b305ed2fe09f2e0351b5596dbb1a63"
     }
   ]
 }

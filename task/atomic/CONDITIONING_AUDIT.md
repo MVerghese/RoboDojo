@@ -10,10 +10,10 @@ This is a complete **source/semantics coverage audit**, not a claim that every c
 | --- | --- | --- |
 | **L** | Specific pilot measurement observed and independently reproduced; not universal live validation. | 5 |
 | **C** | Finger contact location checker available; cell-specific live evidence absent. | 4 |
-| **G** | Generic rigid point/frame/relation math and selectors available; calibrated assets/events and family wiring still needed. | 64 |
+| **G** | Generic rigid point/frame/relation math and selectors available; calibrated assets/events and family wiring still needed. | 79 |
 | **F** | Contact point has no orientation: use a separate physical frame and independent contact evidence. | 4 |
 | **S** | Initial referent-selection snapshot/resolution adapter missing. | 75 |
-| **M** | Required measurement, event, trajectory, initial frame or relation adapter missing. | 90 |
+| **M** | Required measurement, event, trajectory, initial frame or relation adapter missing. | 75 |
 | **NA** | Modifier does not apply to this categorical/intrinsic slot. | 28 |
 
 **L/C/G refer to geometric measurement capability, not completed action recognition.** A native predicate can be true without the interaction. L applies only to the exact contact/event/asset described in its JSON evidence; the five L cells are not five universally validated slots.
@@ -50,9 +50,9 @@ P = 3D point; T = SE(3) pose; D = landmark-relative displacement; O = landmark-r
 | `pour` | `[source pour pose]` | G | G | G | L | L | Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate. Cup local-z direction relative to vase observed at first whole-ball entry in conditioned run. Cup/vase height and projected footprint overlap observed at first whole-ball entry in conditioned run. |
 | `actuate` | `[mechanism]` | S | S | S | S | S | Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection. |
 | `actuate` | `[control]` | S | S | S | S | S | Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection. |
-| `actuate` | `[contact]` | M | M | M | M | M | Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation. |
-| `actuate` | `[approach]` | M | M | M | M | M | Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation. |
-| `actuate` | `[state]` | M | M | M | M | M | Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation. |
+| `actuate` | `[contact]` | G | G | G | G | G | PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain. |
+| `actuate` | `[approach]` | G | G | G | G | G | PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain. |
+| `actuate` | `[state]` | G | G | G | G | G | PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain. |
 | `twist` | `[part]` | S | S | S | S | S | Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection. |
 | `twist` | `[axis/pivot]` | M | M | M | M | NA | Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist. |
 | `twist` | `[contact]` | M | M | M | M | M | Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist. |

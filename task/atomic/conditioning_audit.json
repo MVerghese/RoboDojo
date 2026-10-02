@@ -3,12 +3,14 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
-    "task/atomic/spec.py": "1b09f8bb94b577bac76f59be4f534fc1846c0a3ff0aa0d116f81aeffee37a63a",
+    "task/atomic/spec.py": "346541b9e438ebf334b382992aa9383558d19baf0384740da5081fe0067944ab",
     "task/atomic/geometry.py": "e9342ef0ec2b93566310d484aa06ff189ce490839a380eb920fb1bdabce982ec",
-    "task/atomic/session.py": "df4e8b58de21ebba0ad6d66502349f83c797e0fd18a0d19c832359feadfef1e9",
+    "task/atomic/session.py": "dc0777f15d53760941fad5c46aa60a5af9e3506238cdddeeca761c82dbb5c248",
     "task/atomic/surfaces.py": "aba37aa0e295d8eb8286920c5e573e5d527fa2103a6c825fd3cdc9c51f5e7f2a",
-    "task/atomic/contacts.py": "74dc04ecf73e872c58e66ced05b25a8faf24603b3ee416ccfcf24e9a210461f2",
-    "task/atomic/recognizers.py": "42476b93c076fec90142562f49685ea2b642c7cd4680203dbf1306836ee006e4"
+    "task/atomic/contacts.py": "60ee607feb4b6a120a5666fa43a42e07e8f601d85d34f45f455ea24b897c5436",
+    "task/atomic/recognizers.py": "86c540981bb4ebd2827d02ba4a90c382d0949e1c631fdb4ca171254458d74970",
+    "task/atomic/bindings.py": "c9a0115355c8f232de611d7fc0e678af674f26cac1a8edef6eab3e18133c1224",
+    "task/atomic/landmarks.py": "c092969fc43904958cac40ac0c3cc48e6a96e14f05c02c658c47bb20c0954a24"
   },
   "families": 11,
   "slots": 54,
@@ -16,10 +18,10 @@
   "status_counts": {
     "L": 5,
     "C": 4,
-    "G": 64,
+    "G": 79,
     "F": 4,
     "S": 75,
-    "M": 90,
+    "M": 75,
     "NA": 28
   },
   "rows": [
@@ -1123,36 +1125,36 @@
         "P": {
           "kind": "point",
           "concept": "Press/pull at point P on control.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Match hand contact pose T.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Contact offset from control center.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Hand orientation relative to control axis.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Contact above/below/at end of control.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         }
       }
@@ -1165,36 +1167,36 @@
         "P": {
           "kind": "point",
           "concept": "Pass through pre-contact point P.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Match pre-contact hand pose T.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Approach from offset from control.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Align hand with joint motion axis.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Approach from above/side of control.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         }
       }
@@ -1207,36 +1209,36 @@
         "P": {
           "kind": "point",
           "concept": "Control/link ends at point P.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Control/link ends at pose T.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Link endpoint displaced relative to frame.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Link orientation relative to mechanism base.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Lid against base; lever below stop.",
-          "status": "M",
-          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "status": "G",
+          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
           "live_evidence": null
         }
       }

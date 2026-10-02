@@ -46,7 +46,35 @@
           "args": {}
         }
       ],
-      "geometry": []
+      "geometry": [
+        {
+          "id": "contact_height",
+          "slot": "start contact",
+          "kind": "relative_displacement",
+          "measurement": {
+            "kind": "object_contact_points",
+            "label": "target",
+            "other_label": "cube0"
+          },
+          "reference": {
+            "kind": "object_center_pose",
+            "label": "cube0"
+          },
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            2
+          ],
+          "tolerance": 0.01,
+          "event": {
+            "kind": "recognition_event",
+            "name": "stroke"
+          }
+        }
+      ]
     },
     {
       "id": "tool_push_cube1",
@@ -71,7 +99,35 @@
           "args": {}
         }
       ],
-      "geometry": []
+      "geometry": [
+        {
+          "id": "contact_height",
+          "slot": "start contact",
+          "kind": "relative_displacement",
+          "measurement": {
+            "kind": "object_contact_points",
+            "label": "target",
+            "other_label": "cube1"
+          },
+          "reference": {
+            "kind": "object_center_pose",
+            "label": "cube1"
+          },
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            2
+          ],
+          "tolerance": 0.01,
+          "event": {
+            "kind": "recognition_event",
+            "name": "stroke"
+          }
+        }
+      ]
     },
     {
       "id": "tool_push_cube2",
@@ -96,7 +152,35 @@
           "args": {}
         }
       ],
-      "geometry": []
+      "geometry": [
+        {
+          "id": "contact_height",
+          "slot": "start contact",
+          "kind": "relative_displacement",
+          "measurement": {
+            "kind": "object_contact_points",
+            "label": "target",
+            "other_label": "cube2"
+          },
+          "reference": {
+            "kind": "object_center_pose",
+            "label": "cube2"
+          },
+          "expected": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            2
+          ],
+          "tolerance": 0.01,
+          "event": {
+            "kind": "recognition_event",
+            "name": "stroke"
+          }
+        }
+      ]
     }
   ],
   "stage_dependencies": {

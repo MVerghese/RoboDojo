@@ -18,7 +18,7 @@ GEOMETRY_KINDS = frozenset(
 )
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "recognition_event"})
 CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
-MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point"}) | CONTACT_KINDS
+MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "articulated_link_pose", "joint_link_pose"}) | CONTACT_KINDS
 FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position'} - CONTACT_KINDS
 OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
@@ -57,7 +57,9 @@ def _validate_selector(selector, name):
     fields = {'robot_ee_pose': {'arm', 'label'},
               'functional_point': {'label', 'tag', 'type', 'index'},
               'support_point': {'label', 'tag', 'type', 'index'},
-              'contact_points': {'label', 'arm', 'min_finger_bodies'},
+              'contact_points': {'label', 'arm', 'min_finger_bodies', 'joint_tag'},
+              'articulated_link_pose': {'label', 'link'},
+              'joint_link_pose': {'label', 'joint_tag'},
               'object_contact_points': {'label', 'other_label'}}.get(selector['kind'], {'label'})
     if set(selector) - common - fields:
         raise ValueError(f'{name} has unsupported selector fields: {set(selector) - common - fields}')
@@ -83,6 +85,10 @@ def _validate_selector(selector, name):
         count = selector.get('min_finger_bodies', 1)
         if type(count) is not int or count < 1:
             raise ValueError('min_finger_bodies must be a positive integer')
+    for field in ('joint_tag', 'link'):
+        if field in fields and (selector['kind'] != 'contact_points' or field in selector):
+            if not isinstance(selector.get(field), str) or not selector[field]:
+                raise ValueError(f'{name}.{field} must name an actual link or annotated joint tag')
     if selector['kind'] == 'object_contact_points':
         if not isinstance(selector.get('other_label'), str) or not selector['other_label']:
             raise ValueError('object_contact_points requires the other object label')
@@ -209,6 +215,11 @@ def _validate_check(check):
         raise ValueError("atomic success checks must be read-only is_* predicates")
     if check["args"].get("update"):
         raise ValueError("atomic success checks must not update parser state")
+    if check['name'] == 'is_atomic_rise_since_activation':
+        args = check['args']
+        if set(args) != {'label', 'threshold_m'} or not isinstance(args['label'], str) or not args['label']:
+            raise ValueError('private rise check needs label and threshold_m')
+        _finite_number(args['threshold_m'], 'rise threshold', positive=True)
     if check['name'] in ('is_joint_position_ratio_change_from_above_to_below', 'is_joint_position_change',
                          'is_functional_point_moved', 'is_functional_point_not_moved'):
         raise ValueError('stateful native predicates are forbidden in observers; use a private physical recognizer')
@@ -330,11 +341,31 @@ class AtomicProgram:
     instruction: str | None = None
     geometric_instruction: str | None = None
     stage_dependencies: dict | None = None
+    repeat_counts: dict | None = None
+    gates: tuple = ()
+    binding_evidence: dict | None = None
 
     def __post_init__(self):
+        stage_ids = {s.id for s in self.stages}
+        if not self.stages or len(stage_ids) != len(self.stages):
+            raise ValueError('atomic program needs unique, nonempty stages')
+        gate_ids = {g.id for g in self.gates}
+        if len(gate_ids) != len(self.gates) or stage_ids & gate_ids:
+            raise ValueError('gates require unique IDs distinct from action stages')
+        if self.repeat_counts is not None:
+            if not isinstance(self.repeat_counts, dict) or set(self.repeat_counts) - stage_ids:
+                raise ValueError('repeat_counts must reference existing action stages')
+            for binding in self.repeat_counts.values():
+                if (not isinstance(binding, dict) or set(binding) != {'label','min','max'}
+                        or not isinstance(binding['label'], str) or not binding['label']
+                        or type(binding['min']) is not int or type(binding['max']) is not int
+                        or not 1 <= binding['min'] <= binding['max'] <= 100):
+                    raise ValueError('repeat counts require label and finite integer bounds 1 <= min <= max <= 100')
         if self.stage_dependencies is None:
+            if self.gates:
+                raise ValueError('programs with scene gates require explicit stage_dependencies')
             return
-        ids = {s.id for s in self.stages}
+        ids = stage_ids | gate_ids
         deps = self.stage_dependencies
         if not isinstance(deps, dict) or set(deps) != ids:
             raise ValueError('stage_dependencies must define every stage exactly once')
@@ -356,6 +387,10 @@ class AtomicProgram:
         return {s.id: ([] if i == 0 else [self.stages[i - 1].id])
                 for i, s in enumerate(self.stages)}
 
+    def bind(self, env, env_idx):
+        from task.atomic.bindings import expand_repeats
+        return expand_repeats(self, env, env_idx)
+
     @classmethod
     def load(cls, path):
         data = _read_json(path)
@@ -370,14 +405,32 @@ class AtomicProgram:
         geometric_instruction = data.get('geometric_instruction')
         if geometric_instruction is not None and (not isinstance(geometric_instruction, str) or not geometric_instruction.strip()):
             raise ValueError('geometric_instruction must be nonempty text')
+        gates = tuple(AtomicGate.from_dict(g) for g in data.get('gates', ()))
         return cls(data["task_name"], stages, instruction, geometric_instruction,
-                   deepcopy(data.get('stage_dependencies')))
+                   deepcopy(data.get('stage_dependencies')), deepcopy(data.get('repeat_counts')), gates)
 
     def stage(self, stage_id):
         for stage in self.stages:
             if stage.id == stage_id:
                 return stage
         raise ValueError(f"unknown atomic stage {stage_id!r} for {self.task_name}")
+
+
+@dataclass(frozen=True)
+class AtomicGate:
+    id: str
+    checks: tuple
+
+    @classmethod
+    def from_dict(cls, data):
+        if not isinstance(data, dict) or set(data) != {'id','checks'} or not isinstance(data['id'], str) or not data['id']:
+            raise ValueError('gate requires id and read-only checks')
+        checks = tuple(deepcopy(data['checks']))
+        if not checks:
+            raise ValueError('gate requires at least one read-only check')
+        for check in checks:
+            _validate_check(check)
+        return cls(data['id'], checks)
 
 
 @dataclass(frozen=True)

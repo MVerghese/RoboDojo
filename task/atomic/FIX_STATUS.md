@@ -51,11 +51,27 @@ See [RUNTIME.md](RUNTIME.md) for the complete schema, semantics and limits.
   prefix replay. Nonlinear prefix replay fails explicitly.
 - New prototype programs: align_blocks, stack_blocks_by_language, push_T_random.
 
-Verification: **86 offline atomic tests pass**, including 22 new temporal/runtime
+Verification: **98 offline atomic tests pass**, including additional dynamic/runtime
 counterexamples; the updated audit skill validates. No new live results are
 claimed. Earlier table entries describe their original implementation boundary;
 held-tool, placement and handover additions supersede the missing-recognizer
 parts of those entries.
+
+## Next implementation batch (October 2)
+
+- Fixed live layout object-type matching: RoboDojo stores lowercase categories.
+- Added numeric asset repeat binding, explicit read-only scene gates and private
+  rise baselines. Gates are kept separate from atomic robot actions.
+- Added real press/release cycle recognition and actual moving-body contacts.
+- Added held-tool contacts bound to annotated tip/target neighborhoods.
+- Added live PhysX link landmarks, including moving functional/support frames.
+- Added press_by_number and play_Xylophone prototype programs; ten total.
+- Frozen suite archives/specs/inputs before submission; all cases must share the
+  same packaged runtime hash, and resumes reject changed evidence.
+
+New matched comparisons: align_blocks, stack_blocks_by_language,
+press_by_number, play_Xylophone. Fresh live evidence is pending; offline tests
+are not successful simulator recognition or demonstrated steerability.
 
 ## Remaining implementation/calibration
 
@@ -64,13 +80,14 @@ parts of those entries.
 - Task-specific binding/calibration/live verification of generic rigid adapters:
   openings/tips, actual tool/control parts, pivots, constraints and thresholds.
 - Tool strike approach velocity, rebound and musical timing; swept path scoring.
-- Live articulated child-link geometry selectors; thread engagement/progress
+- Live moving-link mesh geometry and per-asset validation of PhysX link landmarks; thread engagement/progress
   and feasibility of the screw assets.
 - Liquid particle transfer, raw residue/spill mass and material conservation.
 - Cloth material IDs/vertices, particle/finger contact, grasp correspondence,
   crease and layer order.
-- Automatic source-plan compilation with layout-dependent choices, repeats,
-  memory/game/conveyor scene-event gates and constraint bindings.
+- Automatic source-plan compilation with layout-dependent choices, general
+  role/count resolution, memory/game/conveyor event adapters and constraint bindings.
+  Bounded numeric asset repeats and explicit read-only scene gates are implemented.
 - Faithful full-state restoration and partial-action replay for graph or
   mid-chunk starts. Whole-action prefix replay remains limited to linear starts.
 - Throw taxonomy and release/flight/landing recognition.

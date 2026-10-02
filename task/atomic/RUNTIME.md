@@ -17,8 +17,9 @@ sample cannot complete successive stages by reusing the same motion.
 
 The runtime is an observer; it does not schedule the policy or move either arm.
 It handles the actions declared in the program, not arbitrary undeclared actions.
-Automatic role/choice resolution, scene-event gates, repeat expansion and general
-compilation of the 54 prose source plans remain to implement.
+Bounded numeric asset repeats and explicit read-only scene gates now bind at
+layout setup. Automatic role/choice resolution, task-specific game/conveyor
+gates and compilation of the 54 prose source plans remain to implement.
 
 Each stage's `recognition` is independent of its geometric conditions and is
 preserved across variants. A geometric target cannot relax a contact, motion,
@@ -33,6 +34,8 @@ provenance or support requirement. Native endpoint checks remain separate.
 | touch_with_tool | `held_tool_contact` | Sustained tool hold, separation followed by a new force-bearing encounter, explicit tool and target body/collider suffixes, minimum impulse |
 | handover | `grip_transfer` | Giver-only hold, sustained dual-arm overlap, actual giver release, continued receiver-only hold, bounded per-step object translation |
 | insert | `held_insertion` | Held tip approaches from outside a live opening, aligned lateral/axis path, inward signed depth, receptacle contact; an already inserted object cannot count |
+| actuate | `button_press_cycle` | Annotated moving joint, force-bearing finger contact while crossing from above 0.95 to below 0.5, all-finger release and spring return above 0.9; a held-down button cannot complete another cycle |
+| touch_with_tool | `held_tool_landmark_contact` | New force-bearing encounter while tool is held; actual contact points must lie near both annotated active tip and target landmarks, with impulse and per-key bbox identity |
 | actuate | `contact_joint_motion` | Contact on the joint's actual USD body1 moving rigid body and directed live DOF travel during the same-arm contact interval |
 | twist | `contact_constrained_twist` | Held part/receptacle contact, calibrated pivot depth/radius, signed rotation accumulated over substeps in the live target frame, bounded off-axis rotation |
 | pour | `rigid_material_transfer` | Initially selected source contents, held/tilted source at observed exit, whole rigid-object entry into calibrated target interior, consecutive containment, raw residue/target/outside counts |
@@ -68,7 +71,7 @@ The event must be emitted by that stage's recognizer. Available transitions:
 - Tool push: `stroke`; tool touch: `contact`.
 - Handover: `giver_hold`, `overlap`, `receiver_only`.
 - Insertion: `entry`, `inserted`.
-- Actuation: `motion`; twist: `rotation`.
+- Actuation: `motion`; button cycle: `press`, `release`, `cycle`; twist: `rotation`.
 - Rigid pour: `source_exit`, `first_transfer`, `transfer_complete`.
 
 Raw first-event evidence is in `physical_events`. Current count diagnostics are
@@ -94,7 +97,7 @@ predicates instead; annotation must not consume events from native rewards.
 
 ## Programs and calibration
 
-Eight programs now load. Three additions:
+Ten programs now load. Five additions:
 
 - `align_blocks`: tool pick, then independently enabled tool pushes for each of
   the three blocks. A single stroke may complete several branches. These stages
@@ -107,6 +110,16 @@ Eight programs now load. Three additions:
 - `push_T_random`: the existing physical T-push program with matching random-task
   identity and the same source-verified labels/native endpoint thresholds.
 
+- `press_by_number`: red0 cycles, blue confirmation, red1 cycles, blue
+  confirmation. Repeated red stages bind counts from actual number-card
+  `model_id` metadata (1–9); expanded IDs and binding evidence are recorded.
+  Geometry scores moving-cap finger contact relative to its annotated press frame.
+- `play_Xylophone`: mallet pick and eight ordered contact strokes, separated by
+  seven private 2.5 cm rise gates. Contact neighborhoods are prototype 4 cm
+  radii; key identity also requires the native per-key functional bbox. Native
+  reward's height-only checkpoint remains an independent outcome. No strike
+  velocity, natural rebound or musical timing claim is made.
+
 New thresholds are prototype recognition parameters. Contact dropout, dt,
 asset geometry, reachability and event timing need live calibration. These
 programs do not claim successful policy episodes or full-task restart coverage.
@@ -118,6 +131,28 @@ unknown or omitted fields fail. See the new programs for supported placement
 and held-tool push examples. Contact suffixes are paths relative to the selected
 physical object's prim root and must identify the actual active part.
 
+## Layout bindings and live articulated frames
+
+`repeat_counts` maps a stage template ID to `{"label":"num0","min":1,"max":9}`.
+The loaded asset's numeric `model_id` determines repetition; label suffixes do
+not. Instances receive unique IDs and form a serial chain; dependencies on
+the template target its last instance. Invalid metadata or ID collisions fail.
+
+`gates` contains `{"id":"ready","checks":[...]}` definitions, with every gate
+in `stage_dependencies`. Gates are physical scene observations, reported
+separately from robot action stages. Checks must be read-only. The private
+`is_atomic_rise_since_activation` check uses its own activation pose and does
+not consume/reset native reward baselines. Game/opponent/memory predicates
+require further task-specific binding.
+
+`articulated_link_pose` selects an explicit link; `joint_link_pose` resolves
+a joint's moving body from an annotated `joint_tag`. Functional/support
+landmarks with `base_link` use initialized PhysX articulation link transforms,
+converted xyzw→wxyz and translated into the environment-local frame. They
+never fall back to stale USD/Fabric xforms. `contact_points.joint_tag` filters
+to the actual moving joint body. Generic moving-link mesh geometry remains
+unimplemented; root-anchored meshes must not represent an articulated cap.
+
 ## Boundaries and starting stages
 
 `stage_boundaries` saves action index, physics step and whether activation
@@ -128,7 +163,7 @@ can be represented by whole-action prefix replay. Mid-chunk starts are marked
 A program root (no prerequisites) may be selected from a fresh episode. Prefix
 replay currently accepts only linear programs with available whole-action
 boundaries. Graph starts and mid-chunk starts require faithful state restoration
-or verified partial-action replay. Neither is implemented; no boundary is
+or verified partial-action replay. Templates with repeats or gates must first be concretely resolved for selected-stage execution. Neither restoration nor partial replay is implemented; no boundary is
 silently rounded to the end of an action chunk.
 
 ## Verification
