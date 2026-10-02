@@ -4,6 +4,9 @@ This branch adds a separate evaluation mode on top of RoboDojo's existing full-t
 
 Start with [conditioning and A/B instructions](CONDITIONING_AB.md), [all-family audit](ACTION_AUDIT.md), [completed pilot results](PILOT_RESULTS.md), and [agent workflow skills](../../.agents/skills/README.md).
 
+The [conditioning coverage matrix](CONDITIONING_AUDIT.md) audits every action slot
+against all five factors, with implementation gaps and exact live evidence.
+
 ## What runs today
 
 - A program JSON defines named atomic stages, an instruction, existing RoboDojo success predicates, and geometric conditions on typed slots.

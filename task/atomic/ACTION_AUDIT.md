@@ -6,6 +6,10 @@ contains examples and source evidence for **every one of the 54 task modules**.
 An action occurs only in the tasks that require it; not every task contains every
 action. Examples below describe requirements, not observed successful rollouts.
 
+The [exhaustive conditioning audit](CONDITIONING_AUDIT.md) records implementation
+and live-evidence status for every slot × factor cell, plus every implemented
+spatial-relation subtype. This family table alone is not that exhaustive matrix.
+
 ## Current instrumentation boundary
 
 The schema accepts all eleven family names. That does **not** install eleven

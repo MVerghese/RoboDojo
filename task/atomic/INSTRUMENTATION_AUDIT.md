@@ -7,6 +7,9 @@ The [all-family audit](ACTION_AUDIT.md) extends the review to all eleven action
 families, and the [source-backed task catalogue](TASK_MAP.md) supplies concrete
 examples and gaps for every task module. See [conditioning/A/B instructions](CONDITIONING_AB.md)
 and [collected pilot results](PILOT_RESULTS.md) for execution and evidence.
+The [conditioning coverage audit](CONDITIONING_AUDIT.md) extends the source review
+to every taxonomy slot and all five modifiers; missing adapters and live coverage
+remain explicit.
 
 ## Experiment
 
@@ -32,7 +35,7 @@ full task instruction during execution.
 | SE(3) pose | A finger point alone has no orientation; position and angle have different units. | Use an object or annotated functional frame. Report translation in metres and rotation in radians separately, with separate tolerances. Contact point clouds cannot be passed off as poses. |
 | Relative displacement | Root and centre were conflated; grasp centroid error could cancel. | Named live landmark frame, explicit axes, and per-contact maximum deviation for a contact region. |
 | Relative orientation | Full quaternion matching can constrain an irrelevant spin axis for a symmetric object. | Normalized scalar-first quaternions with sign-invariant angular error. Full-frame matching by default; explicitly selected direction axes for symmetric objects. The cup pour check constrains its local z direction, without imposing spin about that direction. |
-| Above/below/left/right/front/behind between objects | Centre ordering passed objects that did not overlap along the viewing axis. | Signed centre separation in the named reference frame plus projected mesh-footprint overlap perpendicular to the relation axis. Projected triangles are unioned, preserving gaps that bounding-box or convex-hull tests could fill. Report separation, overlap area, overlap fraction, and footprint gap separately. The pilot requires 10% overlap of the smaller footprint. |
+| Above/below/left/right/front/behind between objects | Centre ordering passed objects that did not overlap along the viewing axis. | Signed separation of explicitly selected landmarks (mesh centres in the pilot) in the named reference frame plus projected mesh-footprint overlap perpendicular to the relation axis. Attaching meshes preserves a named root frame; functional landmarks cannot be silently replaced by object geometry. Projected triangles are unioned, preserving gaps that bounding-box or convex-hull tests could fill. Report separation, overlap area, overlap fraction, and footprint gap separately. The pilot requires 10% overlap of the smaller footprint. |
 | Inside a box | Centre inclusion does not imply whole-object inclusion. | For object scope, all mesh vertices must lie inside the specified convex box. Point scope remains explicitly a point test. |
 | On top | Height and overlap alone do not establish support. | Geometry-aware separation/overlap plus force-bearing object/object contact whose normal aligns with the reference support axis. No support contact is a failure. |
 | Near | Root distance is not an object surface distance. | Point-distance semantics are supported. Object-surface `near` is not implemented and must not be claimed from centre distance. |

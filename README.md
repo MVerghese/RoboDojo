@@ -18,6 +18,7 @@ geometric conditioning and controlled policy A/B experiments.
 - [Conditioning and A/B run instructions](task/atomic/CONDITIONING_AB.md)
 - [Taxonomy and per-slot geometric modifiers](task/atomic/TAXONOMY.md)
 - [Audit of all 11 action families](task/atomic/ACTION_AUDIT.md)
+- [Every slot × conditioning factor: implementation and evidence](task/atomic/CONDITIONING_AUDIT.md)
 - [Source-backed examples across all 54 task modules](task/atomic/TASK_MAP.md)
 - [Completed eight-run pilot](task/atomic/PILOT_RESULTS.md)
 - [Agent workflow skills](.agents/skills/README.md)

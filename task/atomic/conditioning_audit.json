@@ -1,0 +1,2294 @@
+{
+  "schema_version": 1,
+  "scope": "source/semantics audit, not universal live validation",
+  "source_sha256": {
+    "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
+    "task/atomic/spec.py": "60f41aff0108a83f7f06ee2c7081fd1fbdf3e44cadba1fa67ab4659fc4a0adb3",
+    "task/atomic/geometry.py": "e9342ef0ec2b93566310d484aa06ff189ce490839a380eb920fb1bdabce982ec",
+    "task/atomic/session.py": "369b9bba5d30d55318168de57bd47b0b5c2de2b8e5548c4319f78901262afb2f",
+    "task/atomic/surfaces.py": "aba37aa0e295d8eb8286920c5e573e5d527fa2103a6c825fd3cdc9c51f5e7f2a",
+    "task/atomic/contacts.py": "727e5392cf33220d70e93a30d61e96783e75c4f211f5665527551cadc628d00f"
+  },
+  "families": 11,
+  "slots": 54,
+  "factor_cells": 270,
+  "status_counts": {
+    "L": 5,
+    "C": 4,
+    "G": 45,
+    "F": 4,
+    "S": 75,
+    "M": 109,
+    "NA": 28
+  },
+  "rows": [
+    {
+      "family": "pick",
+      "slot": "object",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select object whose initial center is at P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select object offset from a named landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select object rotated relative to a landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select object left of/inside another object.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "pick",
+      "slot": "grasp region",
+      "profile": "contact",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Grasp at a surface point.",
+          "status": "C",
+          "audit": "Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Match gripper contact pose.",
+          "status": "F",
+          "audit": "Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Grasp at offset from handle/center.",
+          "status": "L",
+          "audit": "Cup and charger grasp-band scores observed; scissors lift event unobserved. Applies to these finger contacts, not every pick/asset.",
+          "live_evidence": "task/atomic/PILOT_RESULTS.md"
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Align gripper with handle orientation.",
+          "status": "F",
+          "audit": "Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Grasp above/below/around a named feature.",
+          "status": "C",
+          "audit": "Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "pick",
+      "slot": "lift goal",
+      "profile": "goal",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Bring object center to P.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Bring held object to T.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Lift by vector from initial object pose.",
+          "status": "M",
+          "audit": "Needs a frozen initial-object reference selector. Current object reference poses move with the object; self-relative displacement cannot measure lift.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Maintain object orientation relative to a landmark.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Hold object above a named surface.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "place",
+      "slot": "object",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select by initial center P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select by offset from a landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select by orientation relative to a landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select the object behind/on/inside another.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "place",
+      "slot": "target",
+      "profile": "goal",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Place at target point.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Match target pose.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Place at offset from target landmark.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Orient placed object relative to target axis.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Place on/in/next to/behind target.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "place",
+      "slot": "object goal",
+      "profile": "goal",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Set final object center to P.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Set final object pose to T.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Set final center relative to target.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Align final object orientation to target.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Require final object on/in/covering target.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "place",
+      "slot": "release point",
+      "profile": "release",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Release when object/gripper is at P.",
+          "status": "M",
+          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Release at specified object/gripper pose.",
+          "status": "M",
+          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Release at offset from target.",
+          "status": "M",
+          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Release with object aligned to target.",
+          "status": "M",
+          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Release above/inside target region.",
+          "status": "M",
+          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push",
+      "slot": "object",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select by initial center P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select by offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select by relative orientation.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select object beside/in front of landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push",
+      "slot": "contact",
+      "profile": "contact",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "First effective contact at surface point P.",
+          "status": "C",
+          "audit": "Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Match hand contact pose T.",
+          "status": "F",
+          "audit": "Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Contact at offset from object center/feature.",
+          "status": "L",
+          "audit": "Baseline T first-motion finger-contact score observed; conditioned run lacked finger evidence at that event.",
+          "live_evidence": "task/atomic/PILOT_RESULTS.md"
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Hand orientation relative to object face.",
+          "status": "F",
+          "audit": "Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Contact on left/right/back side of object.",
+          "status": "C",
+          "audit": "Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push",
+      "slot": "hand approach",
+      "profile": "approach",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Pass through pre-contact point P.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Match pre-contact pose T.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Approach from offset from contact/center.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Align hand heading to object axis.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Approach from behind/above object.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push",
+      "slot": "goal",
+      "profile": "goal",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Final object center at P.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Final object pose T.",
+          "status": "L",
+          "audit": "Conditioned T goal pose scored; push interaction remained unverified. Goal geometry is not action recognition.",
+          "live_evidence": "task/atomic/PILOT_RESULTS.md"
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Translate object relative to initial pose/landmark.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate. Current landmark references work; episode/stage-start object offsets require a frozen reference adapter.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Final orientation relative to pad.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "End on/behind/next to goal region.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push_with_tool",
+      "slot": "tool",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select tool by initial center P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select tool by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select tool by offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select tool by orientation relative to landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select tool on/next to rack.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push_with_tool",
+      "slot": "object(s)",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select objects at points/within point regions.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select rigid objects by initial poses.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select objects offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select oriented rigid objects.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select objects left of/inside region.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push_with_tool",
+      "slot": "tool tip",
+      "profile": "tool",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Specify contact point on tool.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Specify tool-tip contact pose.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Specify tip offset from tool handle.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Align tip orientation to target surface.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Keep tip below/behind object center.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push_with_tool",
+      "slot": "start contact",
+      "profile": "tool",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "First tool-object contact at P.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "First tool-object contact pose T.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Start at offset from object center.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Tool heading relative to object/edge.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Start behind/in front of objects.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push_with_tool",
+      "slot": "sweep segment",
+      "profile": "path",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Two P values define start and end.",
+          "status": "M",
+          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Start/end tool poses define segment.",
+          "status": "M",
+          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Start/end offsets from landmarks.",
+          "status": "M",
+          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Tool orientation along segment relative to target axis.",
+          "status": "M",
+          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Segment goes through/along/around region.",
+          "status": "M",
+          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "push_with_tool",
+      "slot": "goal",
+      "profile": "goal",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Final object center(s) at P/points.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Final rigid object pose(s) T.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Final offset from target landmark.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Final rigid object orientation relative to target.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Objects end inside dustpan/on target.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "pour",
+      "slot": "contents",
+      "profile": "categorical",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "pour",
+      "slot": "source",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select vessel at P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select vessel at initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select vessel offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select vessel oriented relative to landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select vessel left of/on landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "pour",
+      "slot": "destination",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select vessel at P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select vessel at initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select vessel offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select vessel oriented relative to landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select vessel behind/on landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "pour",
+      "slot": "spout",
+      "profile": "spout",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Spout exit at P during flow.",
+          "status": "G",
+          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Spout exit pose T during flow.",
+          "status": "G",
+          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Spout offset from destination opening.",
+          "status": "G",
+          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Spout axis relative to opening axis.",
+          "status": "G",
+          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Spout above/inside opening.",
+          "status": "G",
+          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "pour",
+      "slot": "opening",
+      "profile": "stream",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Aim stream at opening point P.",
+          "status": "M",
+          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Match opening pose T.",
+          "status": "M",
+          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Aim at offset within opening.",
+          "status": "M",
+          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Stream direction relative to opening normal.",
+          "status": "M",
+          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Stream enters interior of destination.",
+          "status": "M",
+          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "pour",
+      "slot": "tilt",
+      "profile": "spout",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Source pose at pour event T.",
+          "status": "G",
+          "audit": "Use source vessel orientation for T/O and a verified spout point for R. Generic rigid math exists; no spout or stream measurement was observed live.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Source rotation relative to destination/vertical.",
+          "status": "G",
+          "audit": "Use source vessel orientation for T/O and a verified spout point for R. Generic rigid math exists; no spout or stream measurement was observed live.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Spout above destination during tilt.",
+          "status": "G",
+          "audit": "Use source vessel orientation for T/O and a verified spout point for R. Generic rigid math exists; no spout or stream measurement was observed live.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "pour",
+      "slot": "source pour pose",
+      "profile": "goal",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Source vessel centre at P during transfer.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Source vessel frame at T during transfer.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Vessel centre offset from destination landmark.",
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Vessel orientation relative to destination frame.",
+          "status": "L",
+          "audit": "Cup local-z direction relative to vase observed at first whole-ball entry in conditioned run.",
+          "live_evidence": "task/atomic/PILOT_RESULTS.md"
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Vessel above destination with projected footprint overlap.",
+          "status": "L",
+          "audit": "Cup/vase height and projected footprint overlap observed at first whole-ball entry in conditioned run.",
+          "live_evidence": "task/atomic/PILOT_RESULTS.md"
+        }
+      }
+    },
+    {
+      "family": "actuate",
+      "slot": "mechanism",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select mechanism by initial center P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select by offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select by orientation relative to landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select mechanism left of/inside assembly.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "actuate",
+      "slot": "control",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select button/lever at P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select control by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select control offset from mechanism center.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select control by relative orientation.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select top/left control of mechanism.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "actuate",
+      "slot": "contact",
+      "profile": "link",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Press/pull at point P on control.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Match hand contact pose T.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Contact offset from control center.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Hand orientation relative to control axis.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Contact above/below/at end of control.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "actuate",
+      "slot": "approach",
+      "profile": "link",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Pass through pre-contact point P.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Match pre-contact hand pose T.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Approach from offset from control.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Align hand with joint motion axis.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Approach from above/side of control.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "actuate",
+      "slot": "state",
+      "profile": "link",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Control/link ends at point P.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Control/link ends at pose T.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Link endpoint displaced relative to frame.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Link orientation relative to mechanism base.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Lid against base; lever below stop.",
+          "status": "M",
+          "audit": "Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "twist",
+      "slot": "part",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select part by center P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select part offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select by orientation relative to landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select part on/inside assembly.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "twist",
+      "slot": "axis/pivot",
+      "profile": "twist",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Pivot point P (a point alone does not define axis).",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Pose T defines pivot and directed axis.",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Pivot offset from part/landmark.",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Axis direction relative to landmark axis.",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "twist",
+      "slot": "contact",
+      "profile": "twist",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Grasp/contact point P.",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Hand contact pose T.",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Contact offset from pivot/handle.",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Hand orientation relative to twist axis.",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Grasp outside rim/at end of handle.",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "twist",
+      "slot": "orientation",
+      "profile": "twist",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Final part pose T.",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Final orientation relative to slot/base (e.g. mark facing front).",
+          "status": "M",
+          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "insert",
+      "slot": "object",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select by initial center P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select by offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select by orientation relative to landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select object beside/on landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "insert",
+      "slot": "receptacle",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select by center P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select by offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select by orientation relative to landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select receptacle on/behind assembly.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "insert",
+      "slot": "opening",
+      "profile": "entry",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Entry point P.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Entry pose T with approach axis.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Entry point offset from opening center.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Entry axis relative to receptacle axis.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Enter through named side/opening.",
+          "status": "M",
+          "audit": "Through/centred/seated/flush are not generic relation names. Define opening crossing/fit/depth; finite convex inside_box only covers its explicit box semantics.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "insert",
+      "slot": "alignment",
+      "profile": "entry",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Object entry pose T.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Object centerline offset from receptacle centerline.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Object axis aligned to receptacle axis.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Object centered in opening.",
+          "status": "M",
+          "audit": "Through/centred/seated/flush are not generic relation names. Define opening crossing/fit/depth; finite convex inside_box only covers its explicit box semantics.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "insert",
+      "slot": "goal",
+      "profile": "entry",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Final object feature at P.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Final object pose T.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Insertion depth/offset relative to rim or seat.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Final orientation relative to receptacle.",
+          "status": "G",
+          "audit": "Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Fully inside/seated/flush with receptacle.",
+          "status": "M",
+          "audit": "Through/centred/seated/flush are not generic relation names. Define opening crossing/fit/depth; finite convex inside_box only covers its explicit box semantics.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "touch_with_tool",
+      "slot": "target",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select target at P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select target offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select by relative orientation.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select third key/left of another target.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "touch_with_tool",
+      "slot": "contact",
+      "profile": "tool",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Strike surface point P.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Tool-target contact pose T.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Strike offset from target center.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Tool orientation relative to target normal.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Strike center/left side of target.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "touch_with_tool",
+      "slot": "tool",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select tool at P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select tool offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select by relative orientation.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select tool on rack.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "touch_with_tool",
+      "slot": "tool tip",
+      "profile": "tool",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Name impact point on tool.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Specify tip contact pose T.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Tip offset from tool handle/head center.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Tip orientation relative to target.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Tip above/inside target region at contact.",
+          "status": "M",
+          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "touch_with_tool",
+      "slot": "approach",
+      "profile": "approach",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Pass through pre-impact point P.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Match pre-impact tip pose T.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Approach from offset above contact.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Tool axis relative to target normal.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Approach from above/side.",
+          "status": "M",
+          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "handover",
+      "slot": "object",
+      "profile": "selection",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select by initial center P.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial pose T.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select by offset from landmark.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select by relative orientation.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select object left of/on table.",
+          "status": "S",
+          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "handover",
+      "slot": "giver",
+      "profile": "categorical",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "handover",
+      "slot": "receiver",
+      "profile": "categorical",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "handover",
+      "slot": "exchange",
+      "profile": "handover",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Object/gripper exchange at P.",
+          "status": "M",
+          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Exchange object pose T.",
+          "status": "M",
+          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Exchange offset from table/robot landmark.",
+          "status": "M",
+          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Object orientation relative to receiver gripper.",
+          "status": "M",
+          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Exchange above table/between arms.",
+          "status": "M",
+          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "handover",
+      "slot": "object orientation",
+      "profile": "handover",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Object pose at transfer T.",
+          "status": "M",
+          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Handle/graspable feature oriented toward receiver.",
+          "status": "M",
+          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "fold",
+      "slot": "deformable",
+      "profile": "deformable",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Select garment by initial landmark P.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Select by initial garment frame T if defined.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Select garment offset from landmark.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Select orientation of garment frame relative to table.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Select garment left of/on table.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "fold",
+      "slot": "crease",
+      "profile": "deformable",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Two P values define crease endpoints.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "T defines crease center and directed line.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Crease offset from seam/hem landmark.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Crease direction relative to garment axis.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Crease between named garment regions.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "fold",
+      "slot": "moving region",
+      "profile": "deformable",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Name garment point/patch at P.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Patch pose T if local frame exists.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Region offset from seam/landmark.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Patch orientation relative to garment frame.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Left sleeve/region above crease.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "fold",
+      "slot": "target region",
+      "profile": "deformable",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Moving landmark ends at P.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Patch goal pose T if frame exists.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Target offset from chest/shoulder landmark.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Final patch orientation relative to torso.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Sleeve over chest; hem near shoulder.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "fold",
+      "slot": "grasp point",
+      "profile": "deformable",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "Grasp garment point P.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Gripper contact pose T.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "Grasp offset from seam/corner.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Gripper orientation relative to garment edge.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "Grasp corner/edge of garment.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        }
+      }
+    },
+    {
+      "family": "fold",
+      "slot": "final orientation",
+      "profile": "deformable",
+      "factors": {
+        "P": {
+          "kind": "point",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        },
+        "T": {
+          "kind": "pose",
+          "concept": "Final patch/garment pose T if defined.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "D": {
+          "kind": "relative_displacement",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        },
+        "O": {
+          "kind": "relative_orientation",
+          "concept": "Folded edge aligned with shoulder line.",
+          "status": "M",
+          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "live_evidence": null
+        },
+        "R": {
+          "kind": "spatial_relation",
+          "concept": "\u2014",
+          "status": "NA",
+          "audit": "No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.",
+          "live_evidence": null
+        }
+      }
+    }
+  ]
+}

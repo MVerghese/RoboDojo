@@ -9,6 +9,9 @@ This fork's work is on `benchmark/atomic-geometry`.
   `python scripts/atomic/task_catalog.py --refresh` and `--check`.
 - Repository workflows are in `.agents/skills/`. Use the applicable skill for
   action audits, pair design or execution/collection.
+- `task/atomic/CONDITIONING_AUDIT.md` and `conditioning_audit.json` record every
+  taxonomy slot/factor cell. After reviewing changed conditioning source or
+  taxonomy, run `python scripts/atomic/conditioning_audit.py --refresh` and `--check`.
 - Simulator task imports require Isaac Sim. Host checks use AST source reads,
   program loading and `python -m unittest discover -s tests -p 'test_atomic*.py'`.
   Add new runtime files to Git before testing overlay completeness/packaging.

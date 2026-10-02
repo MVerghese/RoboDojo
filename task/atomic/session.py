@@ -205,10 +205,15 @@ class AtomicSession:
         reference, reference_source = self._resolve_with_source(condition['reference']) if condition.get('reference') else (None, None)
         if condition.get('relation_scope') == 'objects':
             surfaces = self.env._atomic_surfaces
-            measured = surfaces.resolve(condition['measurement']['label'], self.env_idx,
-                                        self._object_pose(condition['measurement']['label']))
-            reference = surfaces.resolve(condition['reference']['label'], self.env_idx,
-                                         self._object_pose(condition['reference']['label']))
+            # Attach surface evidence without changing the explicitly selected
+            # landmark. A root-frame reference must not become a bounds centre.
+            measured_pose, reference_pose = _array(measured), _array(reference)
+            measured = {**surfaces.resolve(condition['measurement']['label'], self.env_idx,
+                                           self._object_pose(condition['measurement']['label'])),
+                        'position': measured_pose[:3].tolist(), 'orientation': measured_pose[3:].tolist()}
+            reference = {**surfaces.resolve(condition['reference']['label'], self.env_idx,
+                                            self._object_pose(condition['reference']['label'])),
+                         'position': reference_pose[:3].tolist(), 'orientation': reference_pose[3:].tolist()}
             source['geometry_representation'] = measured['geometry_representation']
             reference_source['geometry_representation'] = reference['geometry_representation']
             if condition['expected'] == 'on_top':

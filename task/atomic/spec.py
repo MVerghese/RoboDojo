@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import json
+import math
 from pathlib import Path
 
 
@@ -16,6 +17,30 @@ GEOMETRY_KINDS = frozenset(
 )
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate"})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "contact_points"})
+FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position', 'contact_points'}
+OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose'}
+SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
+                               'near', 'inside_box', 'on_top'})
+
+
+def _finite_number(value, name, positive=False):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        raise ValueError(f'{name} must be finite numeric data')
+    if value < 0 or (positive and value == 0):
+        raise ValueError(f'{name} must be {"positive" if positive else "nonnegative"}')
+
+
+def _geometry_vector(value, size, name, quaternion=False):
+    if not isinstance(value, (list, tuple)) or len(value) != size or any(
+            isinstance(x, bool) or not isinstance(x, (int, float)) or not math.isfinite(x) for x in value):
+        raise ValueError(f'{name} must be a finite {size}-vector')
+    if quaternion and math.hypot(*value) == 0:
+        raise ValueError(f'{name} quaternion must be nonzero')
+
+
+def _geometry_axes(value, name):
+    if not isinstance(value, list) or not value or any(type(x) is not int or x not in (0, 1, 2) for x in value) or len(set(value)) != len(value):
+        raise ValueError(f'{name} must be a nonempty, unique subset of [0,1,2]')
 
 
 def _read_json(path):
@@ -47,25 +72,91 @@ def _validate_condition(condition):
         raise ValueError(f"unsupported geometry kind: {condition.get('kind')}")
     if "expected" not in condition or "tolerance" not in condition:
         raise ValueError(f"condition {condition['id']} needs expected and tolerance")
+    kind = condition['kind']
+    _finite_number(condition['tolerance'], 'tolerance')
+    if kind in ('point', 'relative_displacement'):
+        _geometry_vector(condition['expected'], 3, 'expected')
+    elif kind == 'pose':
+        expected = condition['expected']
+        if not isinstance(expected, dict) or not {'position', 'orientation'}.issubset(expected):
+            raise ValueError('pose expected needs position and orientation')
+        _geometry_vector(expected['position'], 3, 'expected.position')
+        _geometry_vector(expected['orientation'], 4, 'expected.orientation', quaternion=True)
+        if 'angle_tolerance_rad' not in condition:
+            raise ValueError('pose needs an explicit angle_tolerance_rad separate from position tolerance')
+    elif kind == 'relative_orientation':
+        _geometry_vector(condition['expected'], 4, 'expected', quaternion=True)
+    elif not isinstance(condition['expected'], str) or condition['expected'] not in SPATIAL_RELATIONS:
+        raise ValueError('unsupported spatial relation; add a measured relation adapter first')
+    if 'axes' in condition:
+        if kind not in ('point', 'relative_displacement'):
+            raise ValueError('axes only applies to point/displacement; other checkers would ignore it')
+        _geometry_axes(condition['axes'], 'axes')
+    if 'orientation_axes' in condition:
+        if kind != 'relative_orientation':
+            raise ValueError('orientation_axes only applies to relative_orientation')
+        _geometry_axes(condition['orientation_axes'], 'orientation_axes')
+    if 'angle_tolerance_rad' in condition:
+        if kind != 'pose':
+            raise ValueError('angle_tolerance_rad only applies to pose')
+        _finite_number(condition['angle_tolerance_rad'], 'angle_tolerance_rad')
+    for field in ('relation_scope', 'margin', 'half_extents', 'min_overlap_fraction'):
+        if field in condition and kind != 'spatial_relation':
+            raise ValueError(f'{field} only applies to spatial_relation')
     _validate_selector(condition.get("measurement"), f"condition {condition['id']}.measurement")
     measurement = condition['measurement']
+    if kind in ('pose', 'relative_orientation') and measurement['kind'] not in FRAME_KINDS:
+        raise ValueError('orientation requires an actual frame selector, not a point')
     if measurement['kind'] == 'contact_points' and condition['kind'] in ('pose', 'relative_orientation'):
         raise ValueError('contact points have no orientation; name a real orientation landmark separately')
     if condition['slot'] in ('grasp_region', 'contact') and measurement['kind'] == 'robot_ee_pose':
         if not condition.get('legacy_ee_proxy', False):
             raise ValueError('grasp/contact position must use actual contact_points, not an end-effector origin')
-    if condition['kind'] == 'spatial_relation' and measurement['kind'].startswith('object_'):
+    if condition['kind'] == 'spatial_relation' and measurement['kind'] in OBJECT_FRAME_KINDS:
         if condition.get('relation_scope') != 'objects':
             raise ValueError('object spatial relations must explicitly use geometry-aware objects scope')
         if condition.get('expected') == 'near':
             raise ValueError('object surface near is not implemented; centre distance is not accepted')
+    if kind == 'spatial_relation' and measurement['kind'] in ('object_position', 'object_center_position'):
+        if condition.get('relation_scope') != 'points':
+            raise ValueError('object position relations require explicit points scope; they do not measure whole objects')
     if condition.get("reference") is not None:
         _validate_selector(condition["reference"], f"condition {condition['id']}.reference")
+        if condition['reference']['kind'] not in FRAME_KINDS:
+            raise ValueError('reference must identify an oriented landmark frame')
+    elif kind in ('relative_displacement', 'relative_orientation', 'spatial_relation'):
+        raise ValueError('relative geometry needs an explicit reference landmark frame')
+    if kind == 'spatial_relation':
+        scope = condition.get('relation_scope', 'points')
+        if scope not in ('points', 'objects'):
+            raise ValueError('relation_scope must be points or objects')
+        if scope == 'objects' and (measurement['kind'] not in OBJECT_FRAME_KINDS or
+                                   condition['reference']['kind'] not in OBJECT_FRAME_KINDS):
+            raise ValueError('objects scope needs object frame selectors; it cannot replace functional landmarks')
+        relation = condition['expected']
+        if 'margin' in condition and relation in ('near', 'inside_box', 'on_top'):
+            raise ValueError('margin only applies to directional separation relations')
+        if 'half_extents' in condition and not (relation == 'inside_box' or (scope == 'points' and relation == 'on_top')):
+            raise ValueError('half_extents requires a box relation')
+        _finite_number(condition.get('margin', 0), 'margin')
+        if condition['expected'] in ('inside_box', 'on_top'):
+            if condition['expected'] == 'inside_box' or scope == 'points':
+                _geometry_vector(condition.get('half_extents'), 3, 'half_extents')
+                if any(x <= 0 for x in condition['half_extents']):
+                    raise ValueError('half_extents must be positive')
+        if 'min_overlap_fraction' in condition:
+            if scope != 'objects' or relation == 'inside_box':
+                raise ValueError('min_overlap_fraction only applies to projected object relations')
+            _finite_number(condition['min_overlap_fraction'], 'min_overlap_fraction', positive=True)
+            if condition['min_overlap_fraction'] > 1:
+                raise ValueError('min_overlap_fraction must be in (0,1]')
     event = condition.get("event", {"kind": "stage_success"})
     if not isinstance(event, dict) or event.get("kind") not in EVENT_KINDS:
         raise ValueError(f"condition {condition['id']} has unsupported event")
     if event["kind"] in ("first_lift", "first_motion") and not event.get("label"):
         raise ValueError(f"condition {condition['id']} event needs object label")
+    if event['kind'] in ('first_lift', 'first_motion'):
+        _finite_number(event.get('threshold', 0.01), 'event threshold', positive=True)
     if event["kind"] == "first_predicate":
         checks = event.get("checks")
         if not isinstance(checks, list) or not checks or event.get("mode", "any") not in ("any", "all"):

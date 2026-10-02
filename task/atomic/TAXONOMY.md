@@ -40,7 +40,9 @@ Bracketed terms are fillable slots. The “geometry on slots” column names *wh
 
 ### Exhaustive slot-by-modifier matrix
 
-Each row below is a slot in the compact template above or an **optional** slot that makes an implicit geometric instruction explicit. Each column gives the condition that modifier can express for that slot; `—` means that modifier is not a natural condition for that slot. Object, tool, mechanism, and target **identity slots** use geometry to *select a referent in the initial scene*. Interaction and goal slots use geometry to *constrain execution*. This distinction must be preserved in the benchmark record. A `T` condition may contain position and orientation, but do not give credit for an unrequested component. `O` is orientation **relative to a named orientation landmark**, not an absolute angle. Spatial relations `R` must name both the landmark and reference frame when relevant.
+Each row below is a slot in the compact template above or an **optional** slot that makes an implicit geometric instruction explicit. Each column gives the condition that modifier can express for that slot; `—` means that modifier is not a natural condition for that slot. Object, tool, mechanism, and target **identity slots** use geometry to *select a referent in the initial scene*. Interaction and goal slots use geometry to *constrain execution*. This distinction must be preserved in the benchmark record. A `T` condition contains position and orientation; use P/D for position-only constraints or O for orientation-only constraints. `O` is orientation **relative to a named orientation landmark**, not an absolute angle. Spatial relations `R` must name both the landmark and reference frame when relevant.
+
+These are conceptual slot capabilities. The [conditioning coverage audit](CONDITIONING_AUDIT.md) separately records the implementation and live evidence for **every slot × modifier cell**. T/O in a contact row requires a separately named physical gripper/tool frame plus independent contact evidence; a contact point itself has no orientation. Selection, release, continuous paths, articulated links and garment frames need the adapters specified in that audit.
 
 **Pick —** `Pick [object] at [grasp region]` (optional `[lift goal]`).
 
@@ -79,7 +81,7 @@ Each row below is a slot in the compact template above or an **optional** slot t
 | `[sweep segment]` *(optional)* | Two P values define start and end. | Start/end tool poses define segment. | Start/end offsets from landmarks. | Tool orientation along segment relative to target axis. | Segment goes through/along/around region. |
 | `[goal]` | Final object center(s) at P/points. | Final rigid object pose(s) T. | Final offset from target landmark. | Final rigid object orientation relative to target. | Objects end inside dustpan/on target. |
 
-**Pour —** `Pour [contents] from [source] into [destination]` (optional `[spout]`, `[opening]`, `[tilt]`).
+**Pour —** `Pour [contents] from [source] into [destination]` (optional `[spout]`, `[opening]`, `[tilt]`, `[source pour pose]`).
 
 | Slot | P | T | D | O | R |
 | --- | --- | --- | --- | --- | --- |
@@ -89,6 +91,9 @@ Each row below is a slot in the compact template above or an **optional** slot t
 | `[spout]` *(optional)* | Spout exit at P during flow. | Spout exit pose T during flow. | Spout offset from destination opening. | Spout axis relative to opening axis. | Spout above/inside opening. |
 | `[opening]` *(optional)* | Aim stream at opening point P. | Match opening pose T. | Aim at offset within opening. | Stream direction relative to opening normal. | Stream enters interior of destination. |
 | `[tilt]` *(optional)* | — | Source pose at pour event T. | — | Source rotation relative to destination/vertical. | Spout above destination during tilt. |
+| `[source pour pose]` *(optional)* | Source vessel centre at P during transfer. | Source vessel frame at T during transfer. | Vessel centre offset from destination landmark. | Vessel orientation relative to destination frame. | Vessel above destination with projected footprint overlap. |
+
+`[source pour pose]` names the vessel frame/mesh centre explicitly. It is distinct from the spout and stream. The current ball pilot measures this slot; it does not measure a spout position or stream impact point.
 
 `[contents]` denotes material identity (liquid, balls, etc.), not a rigid body with a single pose. Volume, count, flow rate, and amount are non-geometric parameters outside these five modifiers. Geometry of the contents **after** the action is specified through `[opening]` or the destination's `inside` relation.
 

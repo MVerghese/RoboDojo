@@ -37,10 +37,13 @@ def _vector(value, size, name):
 
 def _quaternion(value):
     q = _vector(value, 4, "quaternion")
-    norm = np.linalg.norm(q)
-    if norm < 1e-12:
+    scale = np.max(np.abs(q))
+    if scale == 0:
         raise ValueError("quaternion must have nonzero norm")
-    return q / norm
+    # Quaternion scale has no physical meaning. Normalize without overflowing
+    # or underflowing when finite nonzero data has an unusual magnitude.
+    q = q / scale
+    return q / np.linalg.norm(q)
 
 
 def _rotation(q):
@@ -246,7 +249,8 @@ def _object_relation(condition, measured, reference, ref_pos, ref_matrix, local_
     required_fraction = float(condition.get('min_overlap_fraction', 0.1))
     if not 0 < required_fraction <= 1:
         raise ValueError('min_overlap_fraction must be in (0,1]')
-    # Centre ordering is specified separately from footprint overlap. For on_top,
+    # Selected landmark ordering (mesh centre or explicitly named root) is
+    # separate from footprint overlap. For on_top,
     # use the surface-to-surface gap and require support contact supplied by sim.
     signed = sign * float(local_point[axis])
     error = max(0.0, float(condition.get('margin', 0)) - signed)

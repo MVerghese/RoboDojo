@@ -10,6 +10,8 @@ Find the checkout root with `git rev-parse --show-toplevel`. Read
 `INSTRUMENTATION_AUDIT.md` for implemented behavior and `TAXONOMY.md` for slot
 applicability. Inspect only the task catalogue entries and source methods needed
 for the requested audit; importing task classes requires Isaac Sim.
+For conditioning coverage, read `CONDITIONING_AUDIT.md`: each slot/factor cell
+distinguishes generic checker support, missing adapters and specific live evidence.
 
 ## Ground the decomposition
 
@@ -22,6 +24,8 @@ for the requested audit; importing task classes requires Isaac Sim.
   observed actions. Schema acceptance is not recognition support.
 - After source review, run `python scripts/atomic/task_catalog.py --refresh`.
   Run `--check` to reject missing tasks, stale evidence or lost family coverage.
+- After reviewing changed geometry source/taxonomy, refresh/check
+  `scripts/atomic/conditioning_audit.py` to keep every slot/factor status explicit.
 
 ## Audit a measurement or add a recognizer
 

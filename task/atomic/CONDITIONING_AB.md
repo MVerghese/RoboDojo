@@ -70,6 +70,11 @@ in that reference frame. `object_pose` is the root, `object_center_pose` the
 mesh-bounds centre, and `functional_point`/`support_point` annotated landmarks.
 Do not call any of these a centre of mass. A contact point has no SE(3)
 orientation: use a separate oriented frame for approach/orientation constraints.
+Pose conditions require an explicit `angle_tolerance_rad` in addition to the
+position `tolerance`; P/D/O express partial constraints. D/O/R require a named
+reference frame. Invalid numerical values, unused fields and unsupported
+relations now fail program loading. See the [complete conditioning audit](CONDITIONING_AUDIT.md)
+for every slot/factor and current spatial-relation subtype.
 Object `above` requires signed z separation **and projected mesh-footprint
 overlap**; `on_top` also requires support contact.
 
