@@ -167,6 +167,7 @@ def prepare_case(source, destination, name, client, ledger, task=None):
 def summarize(manifest, root):
     rows = []
     scored = 0
+    path_scored = selection_scored = 0
     mismatches = 0
     for case in manifest["cases"]:
         run = root / "runs" / case["id"]
@@ -191,15 +192,24 @@ def summarize(manifest, root):
             scored += sum(c["status"] == "reproduced" for a in row["atomic_scores"] for c in a["conditions"].values())
             mismatches += sum(c["status"] == "score_mismatch" for a in row["atomic_scores"]
                               for c in list(a["conditions"].values()) + list(a.get("closest_approach", {}).values()))
+            for atomic in row['atomic_scores']:
+                paths=atomic.get('trajectories',{}).values()
+                path_scored+=sum(p['status']=='reproduced' and p['recorded_result']['status']=='scored' for p in paths)
+                mismatches+=sum(p['status']=='score_mismatch' for p in atomic.get('trajectories',{}).values())
+                selection=atomic.get('selection')
+                if selection:
+                    selection_scored+=int(selection['status']=='reproduced' and selection['passed'] is not None)
+                    mismatches+=int(selection['status']=='score_mismatch')
         rows.append(row)
     result = {"updated_at": datetime.now(timezone.utc).isoformat(), "task": manifest["task"],
               "mode": manifest["mode"], "cases": rows, "reproduced_event_scores": scored,
               "completed_cases": sum(r["status"] != "pending" for r in rows),
               "score_mismatches": mismatches,
+              'reproduced_trajectory_scores':path_scored,'reproduced_selection_scores':selection_scored,
               "benchmark_proof": "pending" if any(r["status"] == "pending" for r in rows) else
                   ("score_audit_failed" if mismatches else "completed_with_infrastructure_failures"
                    if any(r["status"] != "passed" for r in rows) else
-                   "end_to_end_verified" if scored else "no_event_scores_observed")}
+                   "end_to_end_verified" if scored or path_scored or selection_scored else "no_event_scores_observed")}
     atomic_write_json(root / 'benchmark_results.json', result)
     lines = ["# Full-task atomic geometric benchmark", "", f"Task: `{manifest['task']}`. "
              f"Collected {result['completed_cases']} / {len(rows)} cases; reproduced {scored} event scores.", "",

@@ -51,7 +51,7 @@ See [RUNTIME.md](RUNTIME.md) for the complete schema, semantics and limits.
   prefix replay. Nonlinear prefix replay fails explicitly.
 - New prototype programs: align_blocks, stack_blocks_by_language, push_T_random.
 
-Verification: **98 offline atomic tests pass**, including additional dynamic/runtime
+Verification: **132 offline atomic tests pass**, including additional dynamic/runtime
 counterexamples; the updated audit skill validates. No new live results are
 claimed. Earlier table entries describe their original implementation boundary;
 held-tool, placement and handover additions supersede the missing-recognizer
@@ -73,23 +73,50 @@ New matched comparisons: align_blocks, stack_blocks_by_language,
 press_by_number, play_Xylophone. Fresh live evidence is pending; offline tests
 are not successful simulator recognition or demonstrated steerability.
 
+## Further implementation batch (October 2)
+
+- `before_contact` scores the last contiguous pre-contact point/frame and reference.
+- Physics-resolution polyline paths retain raw samples, max/RMS errors, ordered
+  waypoints, backtracking, endpoint errors and missing-coverage status.
+- Explicit initial object candidates are snapshotted and scored against first
+  sustained contact identity; ambiguous targets/contacts are never guessed.
+- Route/subset choices retain optional attempts, bind repeated branches and
+  report simultaneous excess completion as ambiguity.
+- `held_tool_strike` adds target-relative pre-impact speed, real impact and
+  continued held separation/retraction. Added a stricter xylophone alternative.
+- Live material vertex IDs and noncollinear cloth patch frames; no rigid-cache
+  or CPU/USD fallback for cloth. Cloth contact/fold recognition is still missing.
+- Persistent liquid particle IDs, scaled world coordinates and transfer provenance,
+  raw occupancy partitions and configured nominal mass without artifact filtering.
+- Articulated meshes follow actual live child poses, and frozen references retain
+  historical child geometry. Sheared/unsupported meshes and material-as-rigid
+  queries fail explicitly. Link support contacts are scoped to the selected physical
+  bodies, with signed vectors and both actor orderings tested.
+- Offline score reproduction/reporting includes paths, selection and optional routes.
+
+See [ADVANCED_RUNTIME.md](ADVANCED_RUNTIME.md) for schemas, examples and limits.
+The queued eight-run suite uses its earlier immutable runtime (`f8025e5`) and
+cannot establish live evidence for these further additions.
+
 ## Remaining implementation/calibration
 
-- Initial referent selection and ambiguity checks against a start-state candidate
-  snapshot; fixed labels alone do not score which object the robot selected.
-- Task-specific binding/calibration/live verification of generic rigid adapters:
-  openings/tips, actual tool/control parts, pivots, constraints and thresholds.
-- Tool strike approach velocity, rebound and musical timing; swept path scoring.
-- Live moving-link mesh geometry and per-asset validation of PhysX link landmarks; thread engagement/progress
-  and feasibility of the screw assets.
-- Liquid particle transfer, raw residue/spill mass and material conservation.
-- Cloth material IDs/vertices, particle/finger contact, grasp correspondence,
-  crease and layer order.
-- Automatic source-plan compilation with layout-dependent choices, general
-  role/count resolution, memory/game/conveyor event adapters and constraint bindings.
-  Bounded numeric asset repeats and explicit read-only scene gates are implemented.
-- Faithful full-state restoration and partial-action replay for graph or
-  mid-chunk starts. Whole-action prefix replay remains limited to linear starts.
+- Automatic candidate enumeration and categorical/task role resolution; selection
+  of arbitrary controls, tips and material landmarks beyond explicit object candidates.
+- Task-specific binding/calibration/live verification of recognizers, cavities,
+  tool/control parts, pivots, physical normals and thresholds.
+- Musical timing constraints, natural rebound and intermediate motion between
+  physics samples; physical sweep-tip/path feasibility.
+- Actual asset mesh/link/contact validation; thread engagement/progress, torque
+  and screw feasibility.
+- Liquid USD-copy freshness, interior/opening/stream geometry, whole-fluid volume,
+  measured density/mass and flight-versus-spill classification.
+- Cloth particle/finger contact and grip correspondence, crease/layer order,
+  stable fold recognition, self-intersection and CPU cloth state backend.
+- Automatic source-plan compilation, task-specific memory/game/conveyor event
+  adapters and constraint bindings. Explicit choices, bounded asset repeats and
+  read-only scene gates are implemented.
+- Faithful full-state restoration and partial-action replay for graph, choice,
+  template or mid-chunk starts. Whole-action prefix replay remains linear.
 - Throw taxonomy and release/flight/landing recognition.
 
 Original coin/charger insertion and ball-pour programs still have

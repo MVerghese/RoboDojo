@@ -179,10 +179,13 @@ class PhysXContacts:
             'aggregation': 'maximum per-contact error; centroid is diagnostic only',
         }
 
-    def has_support_contact(self, label_a, label_b, env_idx, normal_axis=(0, 0, 1)):
-        return bool(self.support_evidence(label_a, [label_b], env_idx, normal_axis)['contacts'])
+    def has_support_contact(self, label_a, label_b, env_idx, normal_axis=(0, 0, 1),
+                            object_body_path=None, support_body_paths=None):
+        return bool(self.support_evidence(label_a, [label_b], env_idx, normal_axis,
+                    object_body_path=object_body_path, support_body_paths=support_body_paths)['contacts'])
 
-    def support_evidence(self, label, support_labels, env_idx, normal_axis=(0, 0, 1)):
+    def support_evidence(self, label, support_labels, env_idx, normal_axis=(0, 0, 1),
+                         object_body_path=None, support_body_paths=None):
         """Signed force-bearing contacts with named supports, including scene table.
 
         PxContactPairPoint.normal points from shape 1 toward shape 0. Flip it
@@ -203,6 +206,18 @@ class PhysXContacts:
             supports[support_label] = getattr(obj, 'usd_prim_path', None) or getattr(obj, 'prim_path', None)
         if not root or any(not value for value in supports.values()):
             raise RuntimeError('support contact requires resolved object prim paths')
+        support_body_paths = support_body_paths or {}
+        if set(support_body_paths) - set(supports):
+            raise ValueError('support body scopes must name a selected support')
+        def scoped_path(parent, body):
+            if body is None:
+                return parent
+            if not isinstance(body, str) or not (body == parent or body.startswith(parent + '/')):
+                raise ValueError('support contact body must belong to its selected object')
+            return body
+        object_scope = scoped_path(root, object_body_path)
+        support_scopes = {name: scoped_path(path, support_body_paths.get(name))
+                          for name, path in supports.items()}
         axis = np.asarray(normal_axis, dtype=float)
         if axis.shape != (3,) or not np.isfinite(axis).all() or np.linalg.norm(axis) == 0:
             raise ValueError('support axis must be a finite nonzero 3-vector')
@@ -213,16 +228,17 @@ class PhysXContacts:
         selected = []
         for row in self.rows:
             for index, other in ((0, 1), (1, 0)):
-                if not matches(row, index, root):
+                if not matches(row, index, object_scope):
                     continue
                 normal = np.asarray(row['normal_world']) * (1 if index == 0 else -1)
                 impulse = np.asarray(row['impulse']) * (1 if index == 0 else -1)
-                for support_label, support_root in supports.items():
+                for support_label, support_root in support_scopes.items():
                     if matches(row, other, support_root) and normal @ axis > .5 and impulse @ axis > 1e-9:
                         selected.append({**row, 'support_label': support_label,
                                          'normal_on_object_world': normal.tolist(),
                                          'impulse_on_object_world': impulse.tolist()})
         return {'object': label, 'object_root': root, 'support_roots': supports,
+                'object_contact_scope': object_scope, 'support_contact_scopes': support_scopes,
                 'normal_axis_world': axis.tolist(), 'physics_step': self.steps, 'contacts': selected,
                 'normal_convention': 'shape1 to shape0, reversed for supported object in slot1'}
 

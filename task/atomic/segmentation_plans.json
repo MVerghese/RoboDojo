@@ -7378,39 +7378,59 @@
     },
     {
       "path": "task/atomic/sequence.py",
-      "sha256": "5137d1df29757acf395c46c6440a3c6b2ac70b7ea42c845808d1cbb98b47fab3"
+      "sha256": "05ee47074bb9ae1c968995f80ccba61f9828ece0c295b0b0cf38b306e6701f81"
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "dc0777f15d53760941fad5c46aa60a5af9e3506238cdddeeca761c82dbb5c248"
+      "sha256": "4699703ce72202a4a0e0f0063ab7a5088ea82795007f630b77b9145d1cb2615e"
     },
     {
       "path": "task/atomic/spec.py",
-      "sha256": "346541b9e438ebf334b382992aa9383558d19baf0384740da5081fe0067944ab"
+      "sha256": "61aebaade436639fb6a836db0054d45a1c1ed50b754e26a2b0f155fa6708522b"
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "86c540981bb4ebd2827d02ba4a90c382d0949e1c631fdb4ca171254458d74970"
+      "sha256": "df349d2f1d7d1e1897404ada257ccce5d54203504cfaf8837c3286182b347be5"
     },
     {
       "path": "task/atomic/bindings.py",
-      "sha256": "c9a0115355c8f232de611d7fc0e678af674f26cac1a8edef6eab3e18133c1224"
+      "sha256": "35e462a90c248761b4c095baada220698d99da7c6591df82636fa1e7ed68f8b9"
     },
     {
       "path": "task/atomic/landmarks.py",
-      "sha256": "c092969fc43904958cac40ac0c3cc48e6a96e14f05c02c658c47bb20c0954a24"
+      "sha256": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6"
+    },
+    {
+      "path": "task/atomic/materials.py",
+      "sha256": "14ffb59312ca3d2ed78ebb3c04fe150822018c5ffaf0c115fa977f01d30ffc6b"
+    },
+    {
+      "path": "task/atomic/selection.py",
+      "sha256": "5af24b1d06513a65a381802e969ae744c5dd12f0f96b80755bef2af232616f8d"
+    },
+    {
+      "path": "task/atomic/trajectory.py",
+      "sha256": "5a895753229a4d4736487df0f5877e41113801c18ffca7742b765d57a9c9f658"
+    },
+    {
+      "path": "env/scene_manager/objects/fluid.py",
+      "sha256": "7dd2cfe8b7b7e7fc0051d6b9d887f6151be31588a9abc1f1c88e8d83cabad712"
+    },
+    {
+      "path": "env/scene_manager/objects/garment.py",
+      "sha256": "7e55edc5f0fc77f556721316b96bc1aafedd6238f5faf4e38ab9966084ee182d"
     },
     {
       "path": "task/atomic/contacts.py",
-      "sha256": "60ee607feb4b6a120a5666fa43a42e07e8f601d85d34f45f455ea24b897c5436"
+      "sha256": "f4572be57a00540258fc5b540c037ed9e7f0431fafdbb200c57cd542375b251a"
     },
     {
       "path": "task/atomic/replay.py",
-      "sha256": "901d79eea37eaeccdbe63a2ea21a446d474809c4c08d67869b04d8ec4a89603b"
+      "sha256": "bd6c127bedf5f2f51d343e6eb26da588fc1e1301a61cc8f799f0428fa7823ddd"
     },
     {
       "path": "src/eval_client/eval_env.py",
-      "sha256": "fad5608c5633e86b5d7155ea8866afc674b305ed2fe09f2e0351b5596dbb1a63"
+      "sha256": "9679d8968d93fbad016e46ff10869206d575efb6901870b510152cac6cc04a7b"
     }
   ]
 }

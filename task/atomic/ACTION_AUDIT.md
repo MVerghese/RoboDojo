@@ -44,6 +44,17 @@ orientation on a contact point.
 | **handover**; `insert_key`, `sweep_blocks` | Object, giver/receiver arms, each grasp region/frame, transfer pose. All five types on object/arm frames, P/D/R on contact regions. | Giver holds, receiver establishes contact/hold, giver releases, receiver continues supporting; object never drops. Transfer pose error, each contact-region error, overlap duration and unsupported displacement. | grip_transfer now tracks giver-only hold, sustained overlap, actual giver release and continued receiver-only hold with bounded per-step displacement. Offline counterexamples; named task-arm bindings and live validation remain. |
 | **fold**; `fold_clothes` and `_random` | Material corner/edge grasp points, fold line (two material landmarks), moving/fixed garment regions, final landmark/layer relations. P/D/R on deforming material points; T/O only on defined local tangent frames. A line needs two points plus direction, not one point/pose. | Material patch is grasped and moved across a defined crease; intended layer overlap/order and stable release. Landmark distance, crease line error, material-region overlap, layer order and self-penetration. | Native sleeve/chest/hem/shoulder material-point ranges and line angle provide useful phases. Atomic selectors currently address rigid objects, not current deformable material topology. Add a garment adapter using live vertices/material IDs and contact correspondence. Mesh-bound centres cannot measure a fold. |
 
+## Further adapter implementation
+
+[ADVANCED_RUNTIME.md](ADVANCED_RUNTIME.md) documents initial candidate snapshots,
+pre-contact samples, physics-resolution paths, route/subset choices,
+`held_tool_strike`, cloth vertex/tangent frames, persistent liquid particle
+provenance/counts/nominal mass and live articulated child meshes. Earlier family
+rows describe their original boundary; these additions supersede the listed
+missing-adapter portions. Asset calibration and fresh simulator validation
+remain required. Full fold recognition still needs particle/finger contacts
+and material correspondence.
+
 ## Audit rules shared by every family
 
 1. **Declare semantics before scoring.** Record units, scalar-first quaternion

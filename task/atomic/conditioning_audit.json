@@ -3,14 +3,19 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
-    "task/atomic/spec.py": "346541b9e438ebf334b382992aa9383558d19baf0384740da5081fe0067944ab",
-    "task/atomic/geometry.py": "e9342ef0ec2b93566310d484aa06ff189ce490839a380eb920fb1bdabce982ec",
-    "task/atomic/session.py": "dc0777f15d53760941fad5c46aa60a5af9e3506238cdddeeca761c82dbb5c248",
-    "task/atomic/surfaces.py": "aba37aa0e295d8eb8286920c5e573e5d527fa2103a6c825fd3cdc9c51f5e7f2a",
-    "task/atomic/contacts.py": "60ee607feb4b6a120a5666fa43a42e07e8f601d85d34f45f455ea24b897c5436",
-    "task/atomic/recognizers.py": "86c540981bb4ebd2827d02ba4a90c382d0949e1c631fdb4ca171254458d74970",
-    "task/atomic/bindings.py": "c9a0115355c8f232de611d7fc0e678af674f26cac1a8edef6eab3e18133c1224",
-    "task/atomic/landmarks.py": "c092969fc43904958cac40ac0c3cc48e6a96e14f05c02c658c47bb20c0954a24"
+    "task/atomic/spec.py": "61aebaade436639fb6a836db0054d45a1c1ed50b754e26a2b0f155fa6708522b",
+    "task/atomic/geometry.py": "c8d311d66dc498834107b8eb8a84e9edf9ffbd9baac69c012087424d99bd08a6",
+    "task/atomic/session.py": "4699703ce72202a4a0e0f0063ab7a5088ea82795007f630b77b9145d1cb2615e",
+    "task/atomic/surfaces.py": "4b3f4a89c4d500914ac258953b6c074a72e3fc1c9bad1130ad89bf81173c6ca1",
+    "task/atomic/contacts.py": "f4572be57a00540258fc5b540c037ed9e7f0431fafdbb200c57cd542375b251a",
+    "task/atomic/recognizers.py": "df349d2f1d7d1e1897404ada257ccce5d54203504cfaf8837c3286182b347be5",
+    "task/atomic/bindings.py": "35e462a90c248761b4c095baada220698d99da7c6591df82636fa1e7ed68f8b9",
+    "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
+    "task/atomic/materials.py": "14ffb59312ca3d2ed78ebb3c04fe150822018c5ffaf0c115fa977f01d30ffc6b",
+    "task/atomic/selection.py": "5af24b1d06513a65a381802e969ae744c5dd12f0f96b80755bef2af232616f8d",
+    "task/atomic/trajectory.py": "5a895753229a4d4736487df0f5877e41113801c18ffca7742b765d57a9c9f658",
+    "env/scene_manager/objects/fluid.py": "7dd2cfe8b7b7e7fc0051d6b9d887f6151be31588a9abc1f1c88e8d83cabad712",
+    "env/scene_manager/objects/garment.py": "7e55edc5f0fc77f556721316b96bc1aafedd6238f5faf4e38ab9966084ee182d"
   },
   "families": 11,
   "slots": 54,
@@ -18,10 +23,10 @@
   "status_counts": {
     "L": 5,
     "C": 4,
-    "G": 79,
+    "G": 94,
     "F": 4,
     "S": 75,
-    "M": 75,
+    "M": 60,
     "NA": 28
   },
   "rows": [
@@ -34,35 +39,35 @@
           "kind": "point",
           "concept": "Select object whose initial center is at P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select object offset from a named landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select object rotated relative to a landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object left of/inside another object.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -160,35 +165,35 @@
           "kind": "point",
           "concept": "Select by initial center P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from a landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to a landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select the object behind/on/inside another.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -328,35 +333,35 @@
           "kind": "point",
           "concept": "Select by initial center P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by relative orientation.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object beside/in front of landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -411,36 +416,36 @@
         "P": {
           "kind": "point",
           "concept": "Pass through pre-contact point P.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Match pre-contact pose T.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Approach from offset from contact/center.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Align hand heading to object axis.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Approach from behind/above object.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         }
       }
@@ -496,35 +501,35 @@
           "kind": "point",
           "concept": "Select tool by initial center P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select tool by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select tool by offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select tool by orientation relative to landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select tool on/next to rack.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -538,35 +543,35 @@
           "kind": "point",
           "concept": "Select objects at points/within point regions.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select rigid objects by initial poses.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select objects offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select oriented rigid objects.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select objects left of/inside region.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -622,7 +627,7 @@
           "kind": "point",
           "concept": "First tool-object contact at P.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact provide held stroke/contact evidence offline. held_tool_strike adds pre-impact approach speed and held retraction after impact; active-part calibration, musical timing and live verification remain. Contacts have no orientation.",
           "live_evidence": null
         },
         "T": {
@@ -636,7 +641,7 @@
           "kind": "relative_displacement",
           "concept": "Start at offset from object center.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact provide held stroke/contact evidence offline. held_tool_strike adds pre-impact approach speed and held retraction after impact; active-part calibration, musical timing and live verification remain. Contacts have no orientation.",
           "live_evidence": null
         },
         "O": {
@@ -650,7 +655,7 @@
           "kind": "spatial_relation",
           "concept": "Start behind/in front of objects.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact provide held stroke/contact evidence offline. held_tool_strike adds pre-impact approach speed and held retraction after impact; active-part calibration, musical timing and live verification remain. Contacts have no orientation.",
           "live_evidence": null
         }
       }
@@ -663,36 +668,36 @@
         "P": {
           "kind": "point",
           "concept": "Two P values define start and end.",
-          "status": "M",
-          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "status": "G",
+          "audit": "TrajectoryObserver samples an explicit physical landmark each physics substep between declared events; records max/RMS polyline deviation, ordered waypoint witnesses, backtracking and coverage failures. Raw samples reproduce offline. Active sweep-tip calibration, feasibility and live validation remain; no inference between unsampled physics states.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Start/end tool poses define segment.",
-          "status": "M",
-          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "status": "G",
+          "audit": "TrajectoryObserver samples an explicit physical landmark each physics substep between declared events; records max/RMS polyline deviation, ordered waypoint witnesses, backtracking and coverage failures. Raw samples reproduce offline. Active sweep-tip calibration, feasibility and live validation remain; no inference between unsampled physics states.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Start/end offsets from landmarks.",
-          "status": "M",
-          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "status": "G",
+          "audit": "TrajectoryObserver samples an explicit physical landmark each physics substep between declared events; records max/RMS polyline deviation, ordered waypoint witnesses, backtracking and coverage failures. Raw samples reproduce offline. Active sweep-tip calibration, feasibility and live validation remain; no inference between unsampled physics states.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Tool orientation along segment relative to target axis.",
-          "status": "M",
-          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "status": "G",
+          "audit": "TrajectoryObserver samples an explicit physical landmark each physics substep between declared events; records max/RMS polyline deviation, ordered waypoint witnesses, backtracking and coverage failures. Raw samples reproduce offline. Active sweep-tip calibration, feasibility and live validation remain; no inference between unsampled physics states.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Segment goes through/along/around region.",
-          "status": "M",
-          "audit": "Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.",
+          "status": "G",
+          "audit": "TrajectoryObserver samples an explicit physical landmark each physics substep between declared events; records max/RMS polyline deviation, ordered waypoint witnesses, backtracking and coverage failures. Raw samples reproduce offline. Active sweep-tip calibration, feasibility and live validation remain; no inference between unsampled physics states.",
           "live_evidence": null
         }
       }
@@ -790,35 +795,35 @@
           "kind": "point",
           "concept": "Select vessel at P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select vessel at initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select vessel offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select vessel oriented relative to landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select vessel left of/on landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -832,35 +837,35 @@
           "kind": "point",
           "concept": "Select vessel at P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select vessel at initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select vessel offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select vessel oriented relative to landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select vessel behind/on landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -916,35 +921,35 @@
           "kind": "point",
           "concept": "Aim stream at opening point P.",
           "status": "M",
-          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Match opening pose T.",
           "status": "M",
-          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Aim at offset within opening.",
           "status": "M",
-          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Stream direction relative to opening normal.",
           "status": "M",
-          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Stream enters interior of destination.",
           "status": "M",
-          "audit": "Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.",
+          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
           "live_evidence": null
         }
       }
@@ -1042,35 +1047,35 @@
           "kind": "point",
           "concept": "Select mechanism by initial center P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select mechanism left of/inside assembly.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1084,35 +1089,35 @@
           "kind": "point",
           "concept": "Select button/lever at P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select control by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select control offset from mechanism center.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select control by relative orientation.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select top/left control of mechanism.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1126,35 +1131,35 @@
           "kind": "point",
           "concept": "Press/pull at point P on control.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Match hand contact pose T.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Contact offset from control center.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Hand orientation relative to control axis.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Contact above/below/at end of control.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         }
       }
@@ -1168,35 +1173,35 @@
           "kind": "point",
           "concept": "Pass through pre-contact point P.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Match pre-contact hand pose T.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Approach from offset from control.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Align hand with joint motion axis.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Approach from above/side of control.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         }
       }
@@ -1210,35 +1215,35 @@
           "kind": "point",
           "concept": "Control/link ends at point P.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Control/link ends at pose T.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Link endpoint displaced relative to frame.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Link orientation relative to mechanism base.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Lid against base; lever below stop.",
           "status": "G",
-          "audit": "PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.",
+          "audit": "PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.",
           "live_evidence": null
         }
       }
@@ -1252,35 +1257,35 @@
           "kind": "point",
           "concept": "Select part by center P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select part offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select part on/inside assembly.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1420,35 +1425,35 @@
           "kind": "point",
           "concept": "Select by initial center P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object beside/on landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1462,35 +1467,35 @@
           "kind": "point",
           "concept": "Select by center P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select receptacle on/behind assembly.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1630,35 +1635,35 @@
           "kind": "point",
           "concept": "Select target at P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select target offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by relative orientation.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select third key/left of another target.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1672,7 +1677,7 @@
           "kind": "point",
           "concept": "Strike surface point P.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact provide held stroke/contact evidence offline. held_tool_strike adds pre-impact approach speed and held retraction after impact; active-part calibration, musical timing and live verification remain. Contacts have no orientation.",
           "live_evidence": null
         },
         "T": {
@@ -1686,7 +1691,7 @@
           "kind": "relative_displacement",
           "concept": "Strike offset from target center.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact provide held stroke/contact evidence offline. held_tool_strike adds pre-impact approach speed and held retraction after impact; active-part calibration, musical timing and live verification remain. Contacts have no orientation.",
           "live_evidence": null
         },
         "O": {
@@ -1700,7 +1705,7 @@
           "kind": "spatial_relation",
           "concept": "Strike center/left side of target.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact provide held stroke/contact evidence offline. held_tool_strike adds pre-impact approach speed and held retraction after impact; active-part calibration, musical timing and live verification remain. Contacts have no orientation.",
           "live_evidence": null
         }
       }
@@ -1714,35 +1719,35 @@
           "kind": "point",
           "concept": "Select tool at P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select tool offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by relative orientation.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select tool on rack.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1797,36 +1802,36 @@
         "P": {
           "kind": "point",
           "concept": "Pass through pre-impact point P.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Match pre-impact tip pose T.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Approach from offset above contact.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Tool axis relative to target normal.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Approach from above/side.",
-          "status": "M",
-          "audit": "Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.",
+          "status": "G",
+          "audit": "before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.",
           "live_evidence": null
         }
       }
@@ -1840,35 +1845,35 @@
           "kind": "point",
           "concept": "Select by initial center P.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by relative orientation.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object left of/on table.",
           "status": "S",
-          "audit": "Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.",
+          "audit": "Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -2050,35 +2055,35 @@
           "kind": "point",
           "concept": "Select garment by initial landmark P.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial garment frame T if defined.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select garment offset from landmark.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select orientation of garment frame relative to table.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select garment left of/on table.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         }
       }
@@ -2092,35 +2097,35 @@
           "kind": "point",
           "concept": "Two P values define crease endpoints.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "T defines crease center and directed line.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Crease offset from seam/hem landmark.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Crease direction relative to garment axis.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Crease between named garment regions.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         }
       }
@@ -2134,35 +2139,35 @@
           "kind": "point",
           "concept": "Name garment point/patch at P.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Patch pose T if local frame exists.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Region offset from seam/landmark.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Patch orientation relative to garment frame.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Left sleeve/region above crease.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         }
       }
@@ -2176,35 +2181,35 @@
           "kind": "point",
           "concept": "Moving landmark ends at P.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Patch goal pose T if frame exists.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Target offset from chest/shoulder landmark.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Final patch orientation relative to torso.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Sleeve over chest; hem near shoulder.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         }
       }
@@ -2218,35 +2223,35 @@
           "kind": "point",
           "concept": "Grasp garment point P.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Gripper contact pose T.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Grasp offset from seam/corner.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Gripper orientation relative to garment edge.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Grasp corner/edge of garment.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         }
       }
@@ -2267,7 +2272,7 @@
           "kind": "pose",
           "concept": "Final patch/garment pose T if defined.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "D": {
@@ -2281,7 +2286,7 @@
           "kind": "relative_orientation",
           "concept": "Folded edge aligned with shoulder line.",
           "status": "M",
-          "audit": "Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.",
+          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
           "live_evidence": null
         },
         "R": {

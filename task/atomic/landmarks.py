@@ -17,6 +17,12 @@ def matrix_quaternion(rotation):
 
 
 def live_link_pose(env, label, link, env_idx):
+    poses,source=live_link_poses(env,label,[link],env_idx)
+    return poses[link],{**source,'kind':'articulated_link_pose','link':link}
+
+
+def live_link_poses(env, label, links, env_idx):
+    """Read multiple child poses from one synchronized PhysX tensor snapshot."""
     lm = env.scene_manager.layout_manager
     name = lm.get_instance_name(env_idx=env_idx, label=label)
     obj = lm.get_scene_object(env_idx=env_idx, inst_name=name)
@@ -25,22 +31,28 @@ def live_link_pose(env, label, link, env_idx):
     names = getattr(view, 'body_names', None)
     if physics is None or names is None or not hasattr(physics, 'get_link_transforms'):
         raise RuntimeError('articulated landmark requires initialized PhysX link transforms; USD xforms are not a live fallback')
-    matches = [i for i, name in enumerate(names) if name == link]
-    if len(matches) != 1:
-        raise ValueError(f'link {link!r} must resolve uniquely in {label} body_names')
+    indices={}
+    for link in links:
+        matches = [i for i, name in enumerate(names) if name == link]
+        if len(matches) != 1:
+            raise ValueError(f'link {link!r} must resolve uniquely in {label} body_names')
+        indices[link]=matches[0]
     values = physics.get_link_transforms()
     if hasattr(values, 'detach'):
         values = values.detach().cpu().numpy()
     values = np.asarray(values, dtype=float)
-    if values.ndim != 3 or values.shape[0] != 1 or values.shape[2] != 7:
+    if values.ndim != 3 or values.shape != (1,len(names),7):
         raise RuntimeError('expected a single-object PhysX articulation view [1, links, 7]')
-    row = values[0, matches[0]]
     origin = env.sim.scene.env_origins[env_idx]
     if hasattr(origin, 'detach'):
         origin = origin.detach().cpu().numpy()
-    pose = np.concatenate((row[:3] - np.asarray(origin), row[[6,3,4,5]]))
-    if not np.isfinite(pose).all() or np.linalg.norm(pose[3:]) == 0:
-        raise RuntimeError('invalid live PhysX articulated link pose')
-    return pose, {'kind':'articulated_link_pose', 'label':label, 'link':link,
+    poses={}
+    for link,index in indices.items():
+        row=values[0,index]
+        pose = np.concatenate((row[:3] - np.asarray(origin), row[[6,3,4,5]]))
+        if not np.isfinite(pose).all() or np.linalg.norm(pose[3:]) == 0:
+            raise RuntimeError('invalid live PhysX articulated link pose')
+        poses[link]=pose
+    return poses, {'kind':'articulated_link_poses', 'label':label, 'links':list(links),
                   'backend':'PhysX articulation link transforms', 'quaternion_conversion':'xyzw to wxyz',
                   'frame':'environment_local_world'}

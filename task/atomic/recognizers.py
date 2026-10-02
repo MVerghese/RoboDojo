@@ -33,12 +33,18 @@ SCHEMAS = {
         'pressed_ratio', 'released_ratio', 'initial_ratio'}),
     'held_tool_landmark_contact': ('touch_with_tool', {'label', 'arm', 'min_contact_steps',
         'target_label', 'tool_point', 'target_point', 'tool_radius_m', 'target_radius_m', 'min_impulse_ns'}),
+    'held_tool_strike': ('touch_with_tool', {'label', 'arm', 'min_contact_steps',
+        'target_label', 'tool_point', 'target_point', 'tool_radius_m', 'target_radius_m', 'min_impulse_ns',
+        'min_approach_speed_m_s', 'min_retraction_m', 'min_retraction_steps', 'max_retraction_steps'}),
     'contact_constrained_twist': ('twist', {'label', 'arm', 'min_contact_steps', 'target_label',
         'pivot', 'axis', 'direction', 'min_angle_rad', 'max_off_axis_rad', 'max_radius_m',
         'min_depth_m', 'max_depth_m'}),
     'rigid_material_transfer': ('pour', {'label', 'arm', 'min_contact_steps', 'target_label',
         'source_frame', 'target_frame', 'source_half_extents_m', 'target_half_extents_m',
         'material_labels', 'required_count', 'min_tilt_rad', 'settle_steps'}),
+    'fluid_material_transfer': ('pour', {'label', 'arm', 'min_contact_steps', 'target_label','fluid_label',
+        'source_frame','target_frame','source_half_extents_m','target_half_extents_m',
+        'required_count','min_tilt_rad','settle_steps'}),
 }
 
 TRANSITIONS = {
@@ -49,12 +55,16 @@ TRANSITIONS = {
     'rigid_material_transfer': {'source_exit', 'first_transfer', 'transfer_complete'},
     'button_press_cycle': {'press', 'release', 'cycle'},
     'held_tool_landmark_contact': {'contact'},
+    'held_tool_strike': {'impact', 'retracted', 'strike'},
+    'fluid_material_transfer': {'source_exit','first_transfer','transfer_complete'},
 }
 COMPLETION = {'supported_release': 'settled', 'held_tool_push': 'stroke', 'held_tool_contact': 'contact',
               'grip_transfer': 'receiver_only', 'held_insertion': 'inserted',
               'contact_joint_motion': 'motion', 'contact_constrained_twist': 'rotation'}
 COMPLETION['rigid_material_transfer'] = 'transfer_complete'
 COMPLETION.update(button_press_cycle='cycle', held_tool_landmark_contact='contact')
+COMPLETION['held_tool_strike'] = 'strike'
+COMPLETION['fluid_material_transfer'] = 'transfer_complete'
 
 
 def validate_recognition(config, family, validate_selector):
@@ -64,17 +74,17 @@ def validate_recognition(config, family, validate_selector):
     fields = SCHEMAS[kind][1] | {'kind'}
     if set(config) != fields:
         raise ValueError(f'{kind} requires exactly {sorted(fields)}')
-    for key in fields & {'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label', 'joint_name', 'joint_tag'}:
+    for key in fields & {'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label', 'joint_name', 'joint_tag','fluid_label'}:
         if not isinstance(config[key], str) or not config[key]:
             raise ValueError(f'{kind}.{key} must be a nonempty name')
-    for key in fields & {'min_contact_steps', 'settle_steps', 'overlap_steps', 'receiver_steps'}:
+    for key in fields & {'min_contact_steps', 'settle_steps', 'overlap_steps', 'receiver_steps', 'min_retraction_steps', 'max_retraction_steps'}:
         if type(config[key]) is not int or config[key] < 2:
             raise ValueError(f'{kind}.{key} must be at least two distinct physics steps')
     numeric = fields - {'kind', 'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label',
-        'joint_name', 'joint_tag', 'tool_point', 'target_point', 'support_labels', 'tip', 'opening', 'pivot', 'axis', 'direction',
+        'joint_name', 'joint_tag', 'fluid_label','tool_point', 'target_point', 'support_labels', 'tip', 'opening', 'pivot', 'axis', 'direction',
         'tool_contact_suffix', 'target_contact_suffix', 'min_contact_steps', 'settle_steps',
         'overlap_steps', 'receiver_steps', 'source_frame', 'target_frame', 'source_half_extents_m',
-        'target_half_extents_m', 'material_labels', 'required_count'}
+        'target_half_extents_m', 'material_labels', 'required_count', 'min_retraction_steps', 'max_retraction_steps'}
     for key in numeric:
         value = config[key]
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value <= 0:
@@ -101,6 +111,8 @@ def validate_recognition(config, family, validate_selector):
             raise ValueError(f'{key} must belong to {expected_label}')
     if kind == 'button_press_cycle' and not 0 < config['pressed_ratio'] < config['released_ratio'] <= config['initial_ratio'] <= 1:
         raise ValueError('button ratios require 0 < pressed < released <= initial <= 1')
+    if kind == 'held_tool_strike' and config['max_retraction_steps'] < config['min_retraction_steps']:
+        raise ValueError('strike retraction window must allow the minimum sample count')
     if 'min_depth_m' in fields and config['max_depth_m'] <= config['min_depth_m']:
         raise ValueError('max_depth_m must exceed min_depth_m')
     if 'axis' in fields:
@@ -119,6 +131,10 @@ def validate_recognition(config, family, validate_selector):
             raise ValueError('material_labels must name distinct rigid contents, excluding vessels')
         if type(config['required_count']) is not int or not 1 <= config['required_count'] <= len(labels):
             raise ValueError('required_count must be within the material population')
+    if kind=='fluid_material_transfer':
+        if config['fluid_label'] in (config['label'],config['target_label']) or type(config['required_count']) is not int or config['required_count']<1:
+            raise ValueError('fluid transfer needs a distinct fluid population and positive integer required_count')
+    if kind in ('rigid_material_transfer','fluid_material_transfer'):
         for key in ('source_half_extents_m', 'target_half_extents_m'):
             value = np.asarray(config[key], dtype=float)
             if value.shape != (3,) or not np.isfinite(value).all() or np.any(value <= 0):
@@ -137,6 +153,7 @@ class PhysicalRecognizer:
         self.current_contacts = {}
         self.events = {}
         self.material = {}
+        self.fluid = {}
         lm = session.env.scene_manager.layout_manager
         if hasattr(lm, 'instance_type_by_env'):
             expected = 'Articulation' if self.kind in ('contact_joint_motion', 'button_press_cycle') else 'Rigid'
@@ -157,6 +174,16 @@ class PhysicalRecognizer:
                 self.material[label] = {'initial_in_source': source, 'initial_in_target': target,
                     'eligible': source and not target, 'previous_in_source': source,
                     'exited_while_held_and_tilted': False, 'target_steps': 0}
+        if self.kind=='fluid_material_transfer':
+            fluid,source,target=self._fluid_state()
+            self.fluid_mass=fluid['nominal_mass_kg']
+            self.source_initial_rotation=_rotation(self.session._resolve(self.c['source_frame'])[3:])
+            self.fluid_initial={'ids':fluid['ids'].tolist(),'positions':fluid['positions'].tolist(),'source':fluid['source']}
+            for ident,s,t in zip(fluid['ids'],source,target):
+                self.fluid[int(ident)]={'eligible':bool(s and not t),'previous_in_source':bool(s),
+                    'exited_while_held_and_tilted':False,'target_steps':0}
+            if sum(m['eligible'] for m in self.fluid.values())<self.c['required_count']:
+                raise ValueError('fluid required_count exceeds the initial source-only cohort; calibrate interior volumes')
 
     def _hold(self, label, arm, fingers=2, body_path=None):
         selector = {'kind': 'contact_points', 'label': label, 'arm': arm, 'min_finger_bodies': fingers}
@@ -226,6 +253,10 @@ class PhysicalRecognizer:
             for label, m in self.material.items():
                 m.update(exited_while_held_and_tilted=False, target_steps=0,
                          previous_in_source=self._material_inside(label, 'source'))
+            if self.fluid:
+                fluid,source,_=self._fluid_state()
+                for ident,inside in zip(fluid['ids'],source):
+                    self.fluid[int(ident)].update(exited_while_held_and_tilted=False,target_steps=0,previous_in_source=bool(inside))
         self.last_step, self.ready = step, False
         getattr(self, '_' + self.kind)()
 
@@ -320,6 +351,11 @@ class PhysicalRecognizer:
         clear = self.state.pop('clear', False)
         if not clear or not hold:
             return
+        evidence = self._landmark_contact(pair)
+        if evidence['tool_target_contacts'] and evidence['total_impulse_ns'] >= self.c['min_impulse_ns']:
+            self._emit(held_contact=hold, **evidence)
+
+    def _landmark_contact(self, pair):
         tool = self.session._resolve(self.c['tool_point'])[:3]
         target = self.session._resolve(self.c['target_point'])[:3]
         points = np.asarray(pair['measured_contact_points'].get('points', []), dtype=float)
@@ -330,12 +366,61 @@ class PhysicalRecognizer:
         eligible = (tool_distance <= self.c['tool_radius_m']) & (target_distance <= self.c['target_radius_m'])
         rows = [row for row, accept in zip(pair['contacts'], eligible) if accept]
         impulse = sum(float(np.linalg.norm(row['impulse'])) for row in rows)
-        if rows and impulse >= self.c['min_impulse_ns']:
-            self._emit(held_contact=hold, tool_target_contacts=rows,
-                contact_points=points[eligible].tolist(), total_impulse_ns=impulse,
-                tool_landmark_position=tool.tolist(), target_landmark_position=target.tolist(),
-                tool_landmark_distances_m=tool_distance[eligible].tolist(),
-                target_landmark_distances_m=target_distance[eligible].tolist())
+        return {'tool_target_contacts':rows,'contact_points':points[eligible].tolist(),'total_impulse_ns':impulse,
+                'tool_landmark_position':tool.tolist(),'target_landmark_position':target.tolist(),
+                'tool_landmark_distances_m':tool_distance[eligible].tolist(),
+                'target_landmark_distances_m':target_distance[eligible].tolist()}
+
+    def _held_tool_strike(self):
+        if self.state.get('phase') == 'completed':
+            return
+        dt=float(getattr(self.session.env,'dt',float('nan')))
+        if not math.isfinite(dt) or dt<=0:
+            raise RuntimeError('strike recognition requires finite positive simulation dt')
+        hold=self._hold(self.c['label'],self.c['arm'])
+        raw=self._current_hold()
+        if not raw or self.state.get('arm',raw['resolved_arm'])!=raw['resolved_arm']:
+            self.state.clear()
+            return
+        self.state['arm']=raw['resolved_arm']
+        tool=self.session._resolve(self.c['tool_point'])
+        target=self.session._resolve(self.c['target_point'])
+        relative=tool[:3]-target[:3]; rotation=_rotation(target[3:])
+        pair=self._pair()
+        if self.state.get('phase')=='impact':
+            if self.contacts.steps-self.state['impact_step']>self.c['max_retraction_steps']:
+                self.state.clear()
+                return
+            self.state['clear_steps']=0 if pair else self.state['clear_steps']+1
+            rise=float((rotation.T@relative)[2]-self.state['impact_height'])
+            if hold and self.state['clear_steps']>=self.c['min_retraction_steps'] and rise>=self.c['min_retraction_m']:
+                self._event('retracted',rise_m=rise,separated_steps=self.state['clear_steps'])
+                self._emit(held_contact=hold,impact=deepcopy(self.state['impact']),rise_m=rise,
+                    separated_steps=self.state['clear_steps'],elapsed_physics_steps=self.contacts.steps-self.state['impact_step'])
+                self.state['phase']='completed'
+            return
+        history=self.state.setdefault('approach',[])
+        if not pair:
+            history.append({'physics_step':self.contacts.steps,'dt_s':dt,'tool_pose':tool.tolist(),
+                'target_pose':target.tolist(),'relative_position':relative.tolist()})
+            del history[:-2]
+            return
+        # Velocity comes from two separated pre-impact samples, not the pose
+        # already stopped by the collision solver or a policy action command.
+        previous=deepcopy(history); history.clear()
+        if not hold or len(previous)!=2 or previous[-1]['physics_step']!=self.contacts.steps-1 or any(p['dt_s']!=dt for p in previous):
+            return
+        velocity=(np.asarray(previous[1]['relative_position'])-previous[0]['relative_position'])/dt
+        normal=_rotation(previous[1]['target_pose'][3:])[:,2]
+        speed=-float(velocity@normal)
+        evidence=self._landmark_contact(pair)
+        if speed<self.c['min_approach_speed_m_s'] or not evidence['tool_target_contacts'] or evidence['total_impulse_ns']<self.c['min_impulse_ns']:
+            return
+        impact={'held_contact':hold,'approach_samples':previous,'relative_velocity_m_s':velocity.tolist(),
+                'toward_surface_speed_m_s':speed,**evidence}
+        self.state.update(phase='impact',impact=deepcopy(impact),impact_step=self.contacts.steps,
+                          impact_height=float((rotation.T@relative)[2]),clear_steps=0)
+        self._event('impact',**impact)
 
     def _grip_transfer(self):
         pose = self._pose()
@@ -487,6 +572,52 @@ class PhysicalRecognizer:
         if hold and self.c['direction'] * self.state['angle'] >= self.c['min_angle_rad']:
             self._emit(held_contact=hold, constraint_contact=pair, signed_angle_rad=self.state['angle'],
                 off_axis_rotation_rad=self.state['off_axis'], radius_m=radius, depth_m=depth)
+
+    def _fluid_state(self):
+        from task.atomic.materials import material_state
+        fluid=material_state(self.session.env,self.c['fluid_label'],'fluid',self.session.env_idx)
+        if self.fluid and (set(fluid['ids'].tolist())!=set(self.fluid) or fluid['nominal_mass_kg']!=self.fluid_mass):
+            raise RuntimeError('fluid particle identity/population or nominal mass changed during observation')
+        masks=[]
+        for which in ('source','target'):
+            frame=self.session._resolve(self.c[which+'_frame'])
+            local=(fluid['positions']-frame[:3])@_rotation(frame[3:])
+            masks.append(np.all(np.abs(local)<=np.asarray(self.c[which+'_half_extents_m']),axis=1))
+        return fluid,*masks
+
+    def _fluid_material_transfer(self):
+        hold=self._hold(self.c['label'],self.c['arm'])
+        frame=self.session._resolve(self.c['source_frame'])
+        tilt=float(np.arccos(np.clip(_rotation(frame[3:])[:,2]@self.source_initial_rotation[:,2],-1,1)))
+        fluid,source,target=self._fluid_state()
+        counts={'source_only':int(np.sum(source & ~target)), 'target_only':int(np.sum(target & ~source)),
+                'both_interiors':int(np.sum(source & target)), 'outside_both':int(np.sum(~source & ~target)),
+                'initially_eligible':sum(m['eligible'] for m in self.fluid.values()),'transferred':0}
+        transferred=[]
+        for ident,s,t,position in zip(fluid['ids'],source,target,fluid['positions']):
+            ident=int(ident);m=self.fluid[ident]
+            if s:
+                m.update(exited_while_held_and_tilted=False,target_steps=0)
+            elif m['eligible'] and not m['exited_while_held_and_tilted'] and m['previous_in_source'] and hold and tilt>=self.c['min_tilt_rad']:
+                m.update(exited_while_held_and_tilted=True,exit_physics_step=self.contacts.steps,
+                         exit_position=position.tolist(),exit_tilt_rad=tilt)
+                self._event('source_exit',particle_id=ident,held_contact=hold,tilt_rad=tilt,particle_position=position.tolist())
+            if m['eligible'] and m['exited_while_held_and_tilted'] and t and not s:
+                m['target_steps']+=1
+                self._event('first_transfer',particle_id=ident,position=position.tolist(),source_exit=deepcopy(m))
+            else:m['target_steps']=0
+            if m['target_steps']>=self.c['settle_steps']:transferred.append(ident)
+            m['previous_in_source']=bool(s)
+        counts['transferred']=len(transferred)
+        masses={key+'_nominal_mass_kg':value*self.fluid_mass for key,value in counts.items()}
+        total=counts['source_only']+counts['target_only']+counts['both_interiors']+counts['outside_both']
+        self.metrics={'counts':counts,**masses,'total_particle_count':len(self.fluid),
+            'partition_count_error':total-len(self.fluid), 'transferred_particle_ids':transferred,
+            'containment':'particle centers in explicitly calibrated interior boxes; not whole fluid volumes',
+            'outside_semantics':'includes in-flight particles; no connected-component artifact filtering or automatic spill label'}
+        if len(transferred)>=self.c['required_count']:
+            self._emit(metrics=self.metrics,particles=deepcopy(self.fluid),initial_state=self.fluid_initial,
+                       current_state={'ids':fluid['ids'].tolist(),'positions':fluid['positions'].tolist(),'source':fluid['source']})
 
     def _material_inside(self, label, which):
         frame = self.session._resolve(self.c[which + '_frame'])

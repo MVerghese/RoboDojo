@@ -48,10 +48,20 @@ def write_report(manifest, result, root):
             contact_missing = any(c.get('status') == 'contact_not_observed_at_event'
                                   for c in stage['conditions'].values())
             actions.append(stage['stage_id'] + ': ' + ('yes' if stage['action_success'] else 'no') +
-                           (' (unreached)' if not stage.get('reached', True) else
+                           (' (optional route not selected)' if not stage.get('required',True) else
+                            ' (unreached)' if not stage.get('reached', True) else
                             ' (interaction unverified)' if contact_missing and not stage['action_success'] else ''))
             for name, score in stage['conditions'].items():
                 geometry.append(name + ': ' + metrics(score))
+            for name,score in stage.get('trajectories',{}).items():
+                value=score.get('recorded_result',{})
+                geometry.append(name+' path: '+(f"{'PASS' if value['passed'] else 'FAIL'}, max deviation {value['max_deviation_m']*1000:.2f} mm, {value['visited_waypoints']}/{value['waypoint_count']} ordered waypoints" if value.get('status')=='scored' else value.get('status',score['status'])))
+            if stage.get('selection'):
+                selection=stage['selection']
+                unscored_status = (selection['target_status'] if selection['target_status'] != 'resolved' else
+                                   (selection.get('observed') or {}).get('status', 'contact_not_observed'))
+                geometry.append('selection: '+('PASS' if selection['passed'] else 'FAIL' if selection['passed'] is False else unscored_status)+
+                                (' (score mismatch)' if selection['status']=='score_mismatch' else ''))
         lines.append(f"| {row['task']} | {row['prompt_mode']} | {row['status']} | {native_text} | "
                      f"{'; '.join(actions) or 'pending'} | {'; '.join(geometry) or 'pending'} |")
     lines += ['', '## Pair controls and captured prompts', '']

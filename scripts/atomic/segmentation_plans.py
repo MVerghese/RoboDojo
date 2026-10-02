@@ -29,6 +29,11 @@ DEPENDENCIES = (
     'task/atomic/recognizers.py',
     'task/atomic/bindings.py',
     'task/atomic/landmarks.py',
+    'task/atomic/materials.py',
+    'task/atomic/selection.py',
+    'task/atomic/trajectory.py',
+    'env/scene_manager/objects/fluid.py',
+    'env/scene_manager/objects/garment.py',
     'task/atomic/contacts.py',
     'task/atomic/replay.py',
     'src/eval_client/eval_env.py',
@@ -237,7 +242,7 @@ def render(data):
              'An endpoint predicate alone does not establish the action that achieved it.',
              '3. Bind these plans to the new concurrent dependency runtime. `AtomicSequence` now samples all enabled '
              'stages each physics substep and permits overlapping independent branches; finite repetitions can be explicitly '
-             'unrolled. Bounded numeric asset repeats and read-only scene gates are implemented; automatic choice resolution and task-specific game/conveyor bindings remain missing. '
+             'unrolled. Bounded numeric asset repeats and read-only scene gates are implemented; explicit branch/subset choices are implemented; automatic role/route compilation and task-specific game/conveyor bindings remain missing. '
              'See [RUNTIME.md](RUNTIME.md); the prose plans are still not executable programs.',
              '4. Capture verified start states at observed action boundaries. Save the common and task-specific state below. '
              '`replay_prefix` currently replays actions and checks preceding predicates; it is not a full simulator snapshot. '

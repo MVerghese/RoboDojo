@@ -288,6 +288,20 @@ class GarmentObject(SingleClothPrim):
 
         return transformed_mesh_points, mesh_points, pos_world, ori_world
 
+    def get_atomic_vertex_state(self):
+        """Read material vertices from initialized cloth physics, never a mesh cache."""
+        view = getattr(self, '_cloth_prim_view', None)
+        if view is None or getattr(view, '_physics_view', None) is None:
+            raise RuntimeError('atomic cloth landmarks require initialized PhysX cloth tensors; CPU/USD fallback is unsupported')
+        points = view.get_world_positions()
+        if hasattr(points, 'detach'):
+            points = points.detach().cpu().numpy()
+        points = np.asarray(points, dtype=float)
+        if points.ndim != 3 or points.shape[0] != 1 or points.shape[2] != 3:
+            raise RuntimeError('expected one cloth tensor [1, material vertices, 3]')
+        return {'positions_world': points[0], 'ids': np.arange(points.shape[1]),
+                'backend': 'PhysX cloth world positions', 'identity': 'stable cloth material vertex indices'}
+
     def _apply_visual_material(self, material_path: str):
         """Apply a visual material to the garment mesh."""
         self.visual_material_path = find_unique_string_name(

@@ -15,6 +15,48 @@ from task.atomic.geometry import evaluate_geometry
 TARGET_FIELDS = {"expected", "tolerance", "angle_tolerance_rad", "margin", "half_extents", "min_overlap_fraction"}
 
 
+def _same_result(a,b):
+    if isinstance(a,dict) and isinstance(b,dict):
+        return a.keys()==b.keys() and all(_same_result(a[k],b[k]) for k in a)
+    if isinstance(a,list) and isinstance(b,list):
+        return len(a)==len(b) and all(_same_result(x,y) for x,y in zip(a,b))
+    if type(a) in (float,int) and type(b) in (float,int):
+        return bool(np.isclose(a,b,rtol=1e-7,atol=1e-9))
+    return a==b
+
+
+def audit_trajectories(rows):
+    from task.atomic.trajectory import aggregate_path
+    output={}
+    for ident,row in rows.items():
+        if not {'condition','samples','failures','complete','result'} <= row.keys():
+            output[ident]={'status':'missing_raw_evidence'};continue
+        result=aggregate_path(row['condition'],row['samples'],row['failures'],row['complete'])
+        output[ident]={'status':'reproduced' if _same_result(result,row['result']) else 'score_mismatch',
+                       'recorded_result':result,'condition':row['condition']}
+    return output
+
+
+def audit_selection(selection):
+    if not selection:return None
+    candidates={}
+    for label,rows in selection['snapshot'].items():
+        candidates[label]={}
+        for ident,row in rows.items():
+            result=evaluate_geometry(row['condition'],row['measured_state'],row.get('reference_state')).as_dict()
+            candidates[label][ident]={'status':'reproduced' if _same_result(result,row['result']) else 'score_mismatch',
+                                      'recorded_result':result}
+    eligible=[label for label,rows in candidates.items() if all(r['recorded_result']['passed'] for r in rows.values())]
+    target_status='resolved' if len(eligible)==1 else 'ambiguous_target' if eligible else 'no_matching_target'
+    observed=selection.get('observed');passed=None
+    if observed and len(observed['contacts'])==1 and target_status=='resolved':
+        passed=observed['contacts'][0]['label']==eligible[0]
+    matches=(eligible==selection['eligible_candidates'] and target_status==selection['target_status']
+             and passed==selection['passed'] and all(r['status']=='reproduced' for rows in candidates.values() for r in rows.values()))
+    return {'status':'reproduced' if matches else 'score_mismatch','candidates':candidates,
+            'eligible_candidates':eligible,'target_status':target_status,'passed':passed,'observed':observed}
+
+
 def audit_atomic(atomic, variant=None):
     if variant and variant.get("stage_id") != atomic["stage_id"]:
         raise ValueError("counterfactual variant must use the recorded stage")
@@ -64,6 +106,10 @@ def audit_atomic(atomic, variant=None):
         "counterfactual_instruction": variant.get("instruction") if variant else None,
         "interpretation": "Rescoring a saved outcome changes the target, not the policy behavior.",
         "conditions": rows,
+        'required':atomic.get('required',True),
+        'choice_status':atomic.get('choice_status'),
+        'trajectories': audit_trajectories(atomic.get('trajectories',{})),
+        'selection': audit_selection(atomic.get('selection')),
     }
     if atomic.get("closest_approach"):
         alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}

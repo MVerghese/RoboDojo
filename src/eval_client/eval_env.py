@@ -98,8 +98,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 if self.num_envs != 1:
                     raise ValueError("atomic stage evaluation currently requires num_envs=1")
                 self.atomic_program = AtomicProgram.load(self.eval_cfg["atomic_spec"])
-                if self.atomic_program.repeat_counts or self.atomic_program.gates:
-                    raise ValueError('atomic stage mode requires a concrete expanded program without scene gates')
+                if self.atomic_program.repeat_counts or self.atomic_program.gates or self.atomic_program.choices:
+                    raise ValueError('atomic stage mode requires a concrete expanded program without scene gates or choices')
                 if self.atomic_program.task_name != self.task_name:
                     raise ValueError("atomic program task_name does not match eval task")
                 stage_id = self.eval_cfg.get("atomic_stage")
@@ -273,10 +273,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             if programs:
                 from task.atomic.surfaces import ObjectSurfaces
                 self._atomic_surfaces = ObjectSurfaces(self)
-                if (any(s.recognition is not None or s.maintained_holds for program in programs for s in program.stages)
+                if (any(s.recognition is not None or s.maintained_holds or s.trajectories or s.selection for program in programs for s in program.stages)
                         or any(c['measurement']['kind'] in ('contact_points', 'object_contact_points')
                                or c.get('expected') == 'on_top'
-                               or c.get('event', {}).get('kind') == 'first_contact'
+                               or c.get('event', {}).get('kind') in ('first_contact','before_contact')
                                for program in programs for s in program.stages for c in s.geometry)):
                     from task.atomic.contacts import PhysXContacts
                     self._atomic_contacts = PhysXContacts(self)

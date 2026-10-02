@@ -18,8 +18,10 @@ sample cannot complete successive stages by reusing the same motion.
 The runtime is an observer; it does not schedule the policy or move either arm.
 It handles the actions declared in the program, not arbitrary undeclared actions.
 Bounded numeric asset repeats and explicit read-only scene gates now bind at
-layout setup. Automatic role/choice resolution, task-specific game/conveyor
-gates and compilation of the 54 prose source plans remain to implement.
+layout setup. Explicit route/subset choices, initial object candidate snapshots, trajectory
+windows and material geometry are also available; see [ADVANCED_RUNTIME.md](ADVANCED_RUNTIME.md).
+Automatic role resolution, task-specific game/conveyor gates and compilation
+of the 54 prose source plans remain to implement.
 
 Each stage's `recognition` is independent of its geometric conditions and is
 preserved across variants. A geometric target cannot relax a contact, motion,
@@ -42,8 +44,9 @@ provenance or support requirement. Native endpoint checks remain separate.
 | fold | unavailable | Requires live cloth patch IDs, particle/finger contacts, grasp correspondence, crease and layer tracking |
 
 These are evidence-based heuristics, not proofs of force closure, thread
-engagement or causality. Tool touch is a debounced contact recognizer; strike
-velocity, rebound and musical timing remain separate adapters. Insertion uses a
+engagement or causality. Tool touch is a debounced contact recognizer; `held_tool_strike` additionally
+measures pre-impact target-relative speed, impact and held separation/retraction.
+Natural rebound and musical timing constraints remain separate work. Insertion uses a
 calibrated frame and tolerances; it does not prove arbitrary peg/hole clearance.
 Twist uses a configured part root and pivot; verify the root represents the
 intended constrained axis before using it. Joint travel uses simulator-native
@@ -52,8 +55,8 @@ units (metres for prismatic DOFs, radians for revolute DOFs).
 Rigid pouring requires **explicit calibrated interior convex boxes**, not vessel
 outer bounding boxes. Source and target half-extents are expressed in their
 named live frames. Whole material meshes must fit. `outside_both` includes
-material in flight and is not automatically labeled a spill. This adapter does
-not read liquid particles or report fluid mass. It is not yet bound to the
+material in flight and is not automatically labeled a spill. This adapter is distinct from the new `fluid_material_transfer` adapter, which reads persistent
+particle IDs and reports raw counts/nominal mass in calibrated interiors. It is not yet bound to the
 historical ball-pouring program, whose cavity calibration remains to verify.
 
 ## Physical transitions and continuous constraints
@@ -97,7 +100,7 @@ predicates instead; annotation must not consume events from native rewards.
 
 ## Programs and calibration
 
-Ten programs now load. Five additions:
+Eleven program files now load for ten tasks, including a stricter xylophone alternative. Five original additions:
 
 - `align_blocks`: tool pick, then independently enabled tool pushes for each of
   the three blocks. A single stroke may complete several branches. These stages
@@ -150,8 +153,10 @@ a joint's moving body from an annotated `joint_tag`. Functional/support
 landmarks with `base_link` use initialized PhysX articulation link transforms,
 converted xyzw→wxyz and translated into the environment-local frame. They
 never fall back to stale USD/Fabric xforms. `contact_points.joint_tag` filters
-to the actual moving joint body. Generic moving-link mesh geometry remains
-unimplemented; root-anchored meshes must not represent an articulated cap.
+to the actual moving joint body. Moving-link mesh templates now follow live PhysX
+child poses, including frozen historical footprints. Link-supported-on scopes
+signed force-bearing support contacts to the selected bodies and retains their
+raw evidence. Asset mesh/link mappings still need simulator validation.
 
 ## Boundaries and starting stages
 

@@ -9,7 +9,7 @@ import numpy as np
 from omegaconf import DictConfig, ListConfig
 import omni.kit.commands
 from omni.physx.scripts import particleUtils, physicsUtils
-from pxr import Gf, PhysxSchema, Sdf, UsdGeom, Vt
+from pxr import Gf, PhysxSchema, Sdf, Usd, UsdGeom, Vt
 from scipy.spatial import Delaunay
 import torch
 
@@ -133,6 +133,7 @@ class FluidObject:
 
         self.particle_point_instancer_path = Sdf.Path(self.usd_prim_path).AppendChild("particles")
 
+        self.particle_mass_kg = 0.0005
         particleUtils.add_physx_particleset_pointinstancer(
             stage=self.stage,
             path=self.particle_point_instancer_path,
@@ -142,11 +143,12 @@ class FluidObject:
             self_collision=True,
             fluid=True,
             particle_group=0,
-            particle_mass=0.0005,
+            particle_mass=self.particle_mass_kg,
             density=0.0,
         )
 
         self.point_instancer = UsdGeom.PointInstancer.Get(self.stage, self.particle_point_instancer_path)
+        self.point_instancer.CreateIdsAttr(Vt.Int64Array.FromNumpy(np.arange(len(self.init_particle_positions), dtype=np.int64)))
 
         init_scale_array = np.array(self.init_scale, dtype=np.float32)
         combined_scale = init_scale_array * self.visual_scale
@@ -262,6 +264,22 @@ class FluidObject:
         positions = np.array(positions_attr.Get(), dtype=np.float32)
 
         return positions, None, None
+
+    def get_atomic_particle_state(self):
+        """Explicit USD particle-copy backend; retain IDs, scale and nominal mass."""
+        settings = carb.settings.get_settings()
+        if not settings.get('/physics/updateToUsd') or not settings.get('/physics/updateParticlesToUsd'):
+            raise RuntimeError('atomic fluid measurement requires enabled physics/particle copies to USD')
+        positions = self.point_instancer.GetPositionsAttr().Get()
+        ids = self.point_instancer.GetIdsAttr().Get()
+        if positions is None or ids is None:
+            raise RuntimeError('atomic fluid positions and persistent particle IDs are unavailable')
+        transform = UsdGeom.Xformable(self.point_instancer.GetPrim()).ComputeLocalToWorldTransform(Usd.TimeCode.Default())
+        return {'positions_local': np.asarray(positions, dtype=float), 'ids': np.asarray(ids),
+                'local_to_world_row_matrix': np.asarray(transform, dtype=float),
+                'nominal_particle_mass_kg': self.particle_mass_kg,
+                'backend': 'physics particle copy to USD PointInstancer',
+                'identity': 'explicit persistent PointInstancer ids'}
 
     def set_particle_positions(self, positions: np.ndarray):
         """

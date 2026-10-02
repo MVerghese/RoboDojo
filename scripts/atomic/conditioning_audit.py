@@ -24,20 +24,20 @@ MD_PATH = REPO / 'task/atomic/CONDITIONING_AUDIT.md'
 # Each slot is reviewed explicitly. Codes describe measurement/event readiness,
 # independently of whether that family's action recognizer exists.
 PROFILES = {
-    'selection': ('S', 'Initial referent selection; needs a stage-start snapshot, candidate resolution and ambiguity checks. Fixed labels and later poses do not score selection.'),
+    'selection': ('S', 'Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.'),
     'contact': ('C', 'Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.'),
     'goal': ('G', 'Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.'),
-    'approach': ('M', 'Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.'),
+    'approach': ('G', 'before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.'),
     'release': ('G', 'supported_release emits object-specific release and settled events after held transport, all-finger release, support and bounded pose changes. Live rigid geometry can be sampled at either event. Offline counterexamples; task binding/calibration and live verification remain.'),
     'tool': ('M', 'Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.'),
-    'path': ('M', 'Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.'),
+    'path': ('G', 'TrajectoryObserver samples an explicit physical landmark each physics substep between declared events; records max/RMS polyline deviation, ordered waypoint witnesses, backtracking and coverage failures. Raw samples reproduce offline. Active sweep-tip calibration, feasibility and live validation remain; no inference between unsampled physics states.'),
     'spout': ('G', 'Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.'),
-    'stream': ('M', 'Needs material exit/impact tracking, destination opening geometry and finite containment. No rigid contents pose or generic stream direction selector.'),
-    'link': ('G', 'PhysX link frames, annotated moving-control joint binding and contact-coupled motion/press-release events implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Approach events, per-asset calibration and live verification remain.'),
+    'stream': ('M', 'fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.'),
+    'link': ('G', 'PhysX link frames, annotated moving-control joint binding, contact-coupled motion/press-release events and live child mesh geometry implemented. P/D/R use moving-link contacts. T/O require an oriented physical frame plus contact evidence. Link supported-on scopes signed support contacts to exact selected bodies. Per-asset calibration and live verification remain.'),
     'twist': ('M', 'Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.'),
     'entry': ('G', 'Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.'),
     'handover': ('G', 'grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.'),
-    'deformable': ('M', 'Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.'),
+    'deformable': ('M', 'Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.'),
     'categorical': ('NA', 'Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.'),
 }
 SLOTS = {
@@ -94,7 +94,7 @@ def build():
             if family == 'push' and slot == 'goal' and factor == 'D':
                 detail += ' Stage-start offsets use reference time=stage_start; episode-start state across later stages still requires a separately retained snapshot.'
             if profile == 'tool' and slot in ('start contact', 'contact') and factor in 'PDR' and concept != '—':
-                status, detail = 'G', 'Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.'
+                status, detail = 'G', 'Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact provide held stroke/contact evidence offline. held_tool_strike adds pre-impact approach speed and held retraction after impact; active-part calibration, musical timing and live verification remain. Contacts have no orientation.'
             if family == 'insert' and slot in ('opening', 'alignment', 'goal') and factor == 'R' and concept != '—':
                 status, detail = 'M', 'Through/centred/seated/flush are not generic relation names. Define opening crossing/fit/depth; finite convex inside_box only covers its explicit box semantics.'
             if family == 'pour' and slot == 'tilt' and concept != '—':
@@ -113,7 +113,7 @@ def build():
     fingerprints = {str(p): hashlib.sha256((REPO / p).read_bytes()).hexdigest() for p in (
         Path('task/atomic/TAXONOMY.md'), Path('task/atomic/spec.py'), Path('task/atomic/geometry.py'),
         Path('task/atomic/session.py'), Path('task/atomic/surfaces.py'), Path('task/atomic/contacts.py'),
-        Path('task/atomic/recognizers.py'), Path('task/atomic/bindings.py'), Path('task/atomic/landmarks.py'))}
+        Path('task/atomic/recognizers.py'), Path('task/atomic/bindings.py'), Path('task/atomic/landmarks.py'), Path('task/atomic/materials.py'), Path('task/atomic/selection.py'), Path('task/atomic/trajectory.py'), Path('env/scene_manager/objects/fluid.py'), Path('env/scene_manager/objects/garment.py'))}
     counts = {code: sum(cell['status'] == code for row in rows for cell in row['factors'].values())
               for code in ('L', 'C', 'G', 'F', 'S', 'M', 'NA')}
     return {'schema_version': 1, 'scope': 'source/semantics audit, not universal live validation',
@@ -135,7 +135,7 @@ def render(data):
                 'C': 'Finger contact location checker available; cell-specific live evidence absent.',
                 'G': 'Generic rigid point/frame/relation math and selectors available; calibrated assets/events and family wiring still needed.',
                 'F': 'Contact point has no orientation: use a separate physical frame and independent contact evidence.',
-                'S': 'Initial referent-selection snapshot/resolution adapter missing.',
+                'S': 'Explicit object candidate snapshots/contact identity supported; automatic and landmark-specific selection remain.',
                 'M': 'Required measurement, event, trajectory, initial frame or relation adapter missing.',
                 'NA': 'Modifier does not apply to this categorical/intrinsic slot.'}
     for code, meaning in meanings.items():

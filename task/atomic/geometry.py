@@ -112,8 +112,9 @@ def evaluate_geometry(condition: dict, measured, reference=None) -> GeometryResu
             raise ValueError('contact points do not define an SE(3) orientation; use an explicit contact frame')
         results = [evaluate_geometry(condition, p, reference) for p in points]
         worst = max(results, key=lambda r: r.error)
+        count_key='material_points' if measured.get('point_kind') in ('cloth','fluid') else 'contact_points'
         return GeometryResult(all(r.passed for r in results), worst.error, worst.tolerance,
-                              {**worst.components, 'contact_points': float(len(points))},
+                              {**worst.components, count_key: float(len(points))},
                               {'centroid_in_reference': local_point.tolist(),
                                'per_contact': [r.observed for r in results]})
 

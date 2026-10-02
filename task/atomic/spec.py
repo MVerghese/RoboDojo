@@ -16,11 +16,12 @@ FAMILIES = frozenset(
 GEOMETRY_KINDS = frozenset(
     {"point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"}
 )
-EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "recognition_event"})
+EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "before_contact", "recognition_event"})
 CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "articulated_link_pose", "joint_link_pose"}) | CONTACT_KINDS
-FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position'} - CONTACT_KINDS
-OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose'}
+MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','fluid_points'}
+FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS
+OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
                                'near', 'inside_box', 'on_top'})
 
@@ -60,6 +61,8 @@ def _validate_selector(selector, name):
               'contact_points': {'label', 'arm', 'min_finger_bodies', 'joint_tag'},
               'articulated_link_pose': {'label', 'link'},
               'joint_link_pose': {'label', 'joint_tag'},
+              'cloth_points': {'label','ids'}, 'cloth_landmark': {'label','tag'},
+              'cloth_patch_frame': {'label','origin_id','x_id','y_id'}, 'fluid_points': {'label','ids'},
               'object_contact_points': {'label', 'other_label'}}.get(selector['kind'], {'label'})
     if set(selector) - common - fields:
         raise ValueError(f'{name} has unsupported selector fields: {set(selector) - common - fields}')
@@ -94,6 +97,16 @@ def _validate_selector(selector, name):
             raise ValueError('object_contact_points requires the other object label')
         if selector['other_label'] == selector['label']:
             raise ValueError('object contact requires two distinct labels')
+    if selector['kind'] in ('cloth_points','fluid_points'):
+        ids=selector.get('ids')
+        if not isinstance(ids,list) or not ids or any(type(i) is not int or i<0 for i in ids) or len(set(ids))!=len(ids):
+            raise ValueError('material points require distinct explicit nonnegative IDs')
+    if selector['kind']=='cloth_landmark' and (not isinstance(selector.get('tag'),str) or not selector['tag']):
+        raise ValueError('cloth landmark requires an annotated material tag')
+    if selector['kind']=='cloth_patch_frame':
+        ids=[selector.get(k) for k in ('origin_id','x_id','y_id')]
+        if any(type(i) is not int or i<0 for i in ids) or len(set(ids))!=3:
+            raise ValueError('cloth patch frame requires three distinct material vertex IDs')
 
 
 def _validate_condition(condition):
@@ -186,19 +199,25 @@ def _validate_condition(condition):
             if condition['min_overlap_fraction'] > 1:
                 raise ValueError('min_overlap_fraction must be in (0,1]')
     event = condition.get("event", {"kind": "stage_success"})
+    _validate_event(event)
+    if event['kind'] == 'before_contact' and measurement['kind'] in CONTACT_KINDS:
+        raise ValueError('before_contact needs an independently measurable approach point/frame, not a nonexistent contact')
+
+
+def _validate_event(event):
     if not isinstance(event, dict) or event.get("kind") not in EVENT_KINDS:
-        raise ValueError(f"condition {condition['id']} has unsupported event")
+        raise ValueError('unsupported geometric sampling event')
     if event["kind"] in ("first_lift", "first_motion") and not event.get("label"):
-        raise ValueError(f"condition {condition['id']} event needs object label")
+        raise ValueError('sampling event needs object label')
     if event['kind'] in ('first_lift', 'first_motion'):
         _finite_number(event.get('threshold', 0.01), 'event threshold', positive=True)
     if event["kind"] == "first_predicate":
         checks = event.get("checks")
         if not isinstance(checks, list) or not checks or event.get("mode", "any") not in ("any", "all"):
-            raise ValueError(f"condition {condition['id']} first_predicate needs checks and any/all mode")
+            raise ValueError('first_predicate needs checks and any/all mode')
         for check in checks:
             _validate_check(check)
-    if event['kind'] == 'first_contact':
+    if event['kind'] in ('first_contact', 'before_contact'):
         _validate_selector(event.get('measurement'), 'first_contact.measurement')
         if event['measurement']['kind'] not in CONTACT_KINDS:
             raise ValueError('first_contact requires physical contact measurement')
@@ -274,6 +293,8 @@ class AtomicStage:
     step_limit: int | None = None
     recognition: dict | None = None
     maintained_holds: tuple[dict, ...] = ()
+    trajectories: tuple[dict, ...] = ()
+    selection: dict | None = None
 
     @classmethod
     def from_dict(cls, data):
@@ -307,7 +328,19 @@ class AtomicStage:
             _validate_selector({'kind': 'contact_points', **hold}, 'maintained_holds')
             if set(hold) != {'label', 'arm', 'min_finger_bodies'} or hold['min_finger_bodies'] < 2:
                 raise ValueError('maintained_holds requires label, arm and at least two distinct fingers')
-        return cls(data["id"], data["family"], data["instruction"], checks, geometry, step_limit, recognition, maintained_holds)
+        trajectories = tuple(deepcopy(data.get('trajectories', ())))
+        from task.atomic.trajectory import validate_trajectory
+        for trajectory in trajectories:
+            validate_trajectory(trajectory, _validate_selector, _validate_event)
+            _validate_stage_event({'event':trajectory['start_event']}, recognition)
+            _validate_stage_event({'event':trajectory['end_event']}, recognition)
+        if len({t['id'] for t in trajectories}) != len(trajectories):
+            raise ValueError('trajectory IDs must be unique')
+        selection = deepcopy(data.get('selection'))
+        if selection is not None:
+            from task.atomic.selection import validate_selection
+            validate_selection(selection, _validate_condition)
+        return cls(data["id"], data["family"], data["instruction"], checks, geometry, step_limit, recognition, maintained_holds, trajectories, selection)
 
     def with_variant(self, variant):
         """Overlay instruction and expected geometry without changing the task.
@@ -331,6 +364,7 @@ class AtomicStage:
         return AtomicStage(
             self.id, self.family, variant.get("instruction", self.instruction),
             self.success_checks, tuple(conditions), self.step_limit, deepcopy(self.recognition), deepcopy(self.maintained_holds),
+            deepcopy(self.trajectories), deepcopy(self.selection),
         )
 
 
@@ -344,6 +378,7 @@ class AtomicProgram:
     repeat_counts: dict | None = None
     gates: tuple = ()
     binding_evidence: dict | None = None
+    choices: tuple = ()
 
     def __post_init__(self):
         stage_ids = {s.id for s in self.stages}
@@ -352,6 +387,9 @@ class AtomicProgram:
         gate_ids = {g.id for g in self.gates}
         if len(gate_ids) != len(self.gates) or stage_ids & gate_ids:
             raise ValueError('gates require unique IDs distinct from action stages')
+        choice_ids = {c.id for c in self.choices}
+        if len(choice_ids)!=len(self.choices) or choice_ids & (stage_ids|gate_ids):
+            raise ValueError('choices require unique IDs distinct from gates and stages')
         if self.repeat_counts is not None:
             if not isinstance(self.repeat_counts, dict) or set(self.repeat_counts) - stage_ids:
                 raise ValueError('repeat_counts must reference existing action stages')
@@ -362,10 +400,10 @@ class AtomicProgram:
                         or not 1 <= binding['min'] <= binding['max'] <= 100):
                     raise ValueError('repeat counts require label and finite integer bounds 1 <= min <= max <= 100')
         if self.stage_dependencies is None:
-            if self.gates:
-                raise ValueError('programs with scene gates require explicit stage_dependencies')
+            if self.gates or self.choices:
+                raise ValueError('programs with scene gates or choices require explicit stage_dependencies')
             return
-        ids = stage_ids | gate_ids
+        ids = stage_ids | gate_ids | choice_ids
         deps = self.stage_dependencies
         if not isinstance(deps, dict) or set(deps) != ids:
             raise ValueError('stage_dependencies must define every stage exactly once')
@@ -380,6 +418,29 @@ class AtomicProgram:
                 raise ValueError('stage_dependencies contains a cycle')
             done.update(ready)
             pending.difference_update(ready)
+        membership={}
+        for choice in self.choices:
+            if deps[choice.id] != [branch[-1] for branch in choice.branches]:
+                raise ValueError('choice dependencies must list its branch terminals in branch order')
+            for index,branch in enumerate(choice.branches):
+                if set(branch)-stage_ids:
+                    raise ValueError('choice branches must name concrete action stages')
+                for ident in branch:
+                    if ident in membership:
+                        raise ValueError('an action can belong to only one choice branch')
+                    membership[ident]=(choice.id,index)
+                ancestors=set()
+                todo=list(deps[branch[-1]])
+                while todo:
+                    ident=todo.pop()
+                    if ident not in ancestors:
+                        ancestors.add(ident);todo.extend(deps[ident])
+                if not set(branch[:-1])<=ancestors:
+                    raise ValueError('choice terminal must depend on every earlier branch action')
+        for ident,parents in deps.items():
+            for parent in parents:
+                if parent in membership and ident not in choice_ids and membership.get(ident)!=membership[parent]:
+                    raise ValueError('external successors must depend on the choice node, not an optional branch')
 
     def dependencies(self):
         if self.stage_dependencies is not None:
@@ -406,8 +467,9 @@ class AtomicProgram:
         if geometric_instruction is not None and (not isinstance(geometric_instruction, str) or not geometric_instruction.strip()):
             raise ValueError('geometric_instruction must be nonempty text')
         gates = tuple(AtomicGate.from_dict(g) for g in data.get('gates', ()))
+        choices = tuple(AtomicChoice.from_dict(c) for c in data.get('choices', ()))
         return cls(data["task_name"], stages, instruction, geometric_instruction,
-                   deepcopy(data.get('stage_dependencies')), deepcopy(data.get('repeat_counts')), gates)
+                   deepcopy(data.get('stage_dependencies')), deepcopy(data.get('repeat_counts')), gates, None, choices)
 
     def stage(self, stage_id):
         for stage in self.stages:
@@ -431,6 +493,26 @@ class AtomicGate:
         for check in checks:
             _validate_check(check)
         return cls(data['id'], checks)
+
+
+@dataclass(frozen=True)
+class AtomicChoice:
+    id: str
+    branches: tuple[tuple[str, ...], ...]
+    required: int
+
+    @classmethod
+    def from_dict(cls,data):
+        if not isinstance(data,dict) or set(data)!={'id','branches','required'} or not isinstance(data['id'],str) or not data['id']:
+            raise ValueError('choice requires id, branches and required count')
+        branches=data['branches']
+        if (not isinstance(branches,list) or len(branches)<2 or any(not isinstance(b,list) or not b or
+                any(not isinstance(s,str) or not s for s in b) for b in branches)):
+            raise ValueError('choice requires at least two nonempty action branches')
+        ids=[s for b in branches for s in b]
+        if len(ids)!=len(set(ids)) or type(data['required']) is not int or not 1<=data['required']<len(branches):
+            raise ValueError('choice branch actions must be distinct and 1 <= required < branches')
+        return cls(data['id'],tuple(tuple(b) for b in branches),data['required'])
 
 
 @dataclass(frozen=True)

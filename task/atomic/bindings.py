@@ -42,16 +42,21 @@ def expand_repeats(program, env, env_idx):
         names[stage.id] = ([f'{stage.id}__{i+1}' for i in range(count)] if binding else [stage.id])
     stages, deps = [], {}
     old_deps = program.dependencies()
-    gate_ids = {g.id for g in program.gates}
+    gate_ids = {g.id for g in program.gates} | {c.id for c in program.choices}
     def last(ident):
         return ident if ident in gate_ids else names[ident][-1]
     for stage in program.stages:
         for i, ident in enumerate(names[stage.id]):
             stages.append(replace(stage, id=ident, recognition=deepcopy(stage.recognition),
-                                  geometry=deepcopy(stage.geometry), maintained_holds=deepcopy(stage.maintained_holds)))
+                                  geometry=deepcopy(stage.geometry), maintained_holds=deepcopy(stage.maintained_holds),
+                                  trajectories=deepcopy(stage.trajectories), selection=deepcopy(stage.selection)))
             deps[ident] = ([names[stage.id][i-1]] if i else [last(p) for p in old_deps[stage.id]])
     for gate in program.gates:
         deps[gate.id] = [last(p) for p in old_deps[gate.id]]
+    choices=[]
+    for choice in program.choices:
+        deps[choice.id]=[last(p) for p in old_deps[choice.id]]
+        choices.append(replace(choice,branches=tuple(tuple(n for ident in branch for n in names[ident]) for branch in choice.branches)))
     expanded = AtomicProgram(program.task_name, tuple(stages), program.instruction,
-        program.geometric_instruction, deps, None, program.gates, evidence)
+        program.geometric_instruction, deps, None, program.gates, evidence, tuple(choices))
     return expanded

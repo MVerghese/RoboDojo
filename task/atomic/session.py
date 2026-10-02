@@ -48,7 +48,10 @@ class AtomicSession:
             from task.atomic.recognizers import PhysicalRecognizer
             self._physical_recognizer = PhysicalRecognizer(self)
         self._frozen_references = {}
+        self._frozen_surfaces = {}
         self._event_evidence = {}
+        self._precontact_samples = {}
+        self._precontact_consumed = set()
         self.sample_index = 0
         self.initial_positions = {}
         if stage.recognition is not None:
@@ -58,7 +61,10 @@ class AtomicSession:
             if check['name'] == 'is_atomic_rise_since_activation':
                 label = check['args']['label']
                 self.initial_positions[label] = self._object_pose(label)[:3].copy()
-        for condition in stage.geometry:
+        definitions = list(stage.geometry) + list(stage.trajectories)
+        if stage.selection:
+            definitions += stage.selection['conditions']
+        for condition in definitions:
             event = condition.get("event", {"kind": "stage_success"})
             if event["kind"] in ("first_lift", "first_motion"):
                 label = event["label"]
@@ -73,6 +79,15 @@ class AtomicSession:
                     root_pose = (self._object_pose(reference['label']).copy()
                                  if reference['kind'] in ('object_pose', 'object_center_pose') else None)
                     self._frozen_references[key] = (deepcopy(value), deepcopy(source), root_pose)
+                if condition.get('relation_scope')=='objects' and key not in self._frozen_surfaces:
+                    self._frozen_surfaces[key]=deepcopy(self._surface_for_selector({**reference,'time':'live'}))
+        self._trajectory_observer = self._selection_observer = None
+        if stage.trajectories:
+            from task.atomic.trajectory import TrajectoryObserver
+            self._trajectory_observer = TrajectoryObserver(self)
+        if stage.selection:
+            from task.atomic.selection import SelectionObserver
+            self._selection_observer = SelectionObserver(self)
 
     def _action_index(self):
         return int(self.env.take_action_cnt[self.env_idx]) if hasattr(self.env, 'take_action_cnt') else None
@@ -98,6 +113,9 @@ class AtomicSession:
             return deepcopy(value), deepcopy(source)
         source = {**selector, "frame": "environment_local_world"}
         kind = selector["kind"]
+        if kind in ('cloth_points','cloth_landmark','cloth_patch_frame','fluid_points'):
+            from task.atomic.materials import resolve_material
+            return resolve_material(self.env,selector,self.env_idx)
         if kind in ('articulated_link_pose', 'joint_link_pose'):
             from task.atomic.landmarks import live_link_pose
             link = selector.get('link')
@@ -116,7 +134,7 @@ class AtomicSession:
         if kind in ('object_center_pose', 'object_center_position'):
             pose = self.env._atomic_surfaces.center_pose(selector['label'], self.env_idx,
                                                        self._object_pose(selector['label']))
-            source['landmark'] = 'centre of local mesh bounds, transformed by live rigid-body pose'
+            source['landmark'] = 'centre of live surface bounds in object-root axes; articulated child meshes follow PhysX link poses'
             return (pose if kind == 'object_center_pose' else pose[:3]), source
         if kind == 'contact_points':
             contacts = getattr(self.env, '_atomic_contacts', None)
@@ -347,10 +365,15 @@ class AtomicSession:
             if condition_id in self.results or condition_id in self.measurement_failures:
                 continue
             event = condition.get("event", {"kind": "stage_success"})
-            if not self._event_fired(event, success_now):
+            before = event['kind'] == 'before_contact'
+            historic = self._before_contact(condition) if before else None
+            if before:
+                if historic is None:
+                    continue
+            elif not self._event_fired(event, success_now):
                 continue
             try:
-                measured, measurement_source, reference, reference_source = self._resolve_condition(condition)
+                measured, measurement_source, reference, reference_source = (historic['states'] if before else self._resolve_condition(condition))
             except ContactUnavailable as error:
                 self.measurement_failures[condition_id] = {
                     'event': deepcopy(event), 'event_observed': True,
@@ -366,7 +389,8 @@ class AtomicSession:
                 "event": event,
                 'event_evidence': deepcopy(self._event_evidence.get(self._selector_key(event))),
                 "sample_index": self.sample_index,
-                "policy_action_index": (
+                'measurement_physics_step': historic['physics_step'] if before else getattr(getattr(self.env,'_atomic_contacts',None),'steps',None),
+                "policy_action_index": historic['policy_action_index'] if before else (
                     int(self.env.take_action_cnt[self.env_idx])
                     if hasattr(self.env, "take_action_cnt") else None
                 ),
@@ -383,6 +407,34 @@ class AtomicSession:
                 "result": result.as_dict(),
             }
 
+    def _before_contact(self, condition):
+        """Latch the preceding synchronized state when the first contact appears."""
+        ident=condition['id']
+        if ident in self._precontact_consumed:
+            return None
+        contacts=getattr(self.env,'_atomic_contacts',None)
+        if contacts is None:
+            raise RuntimeError('before_contact requires synchronized physical contact reports')
+        event=condition['event']
+        try:
+            measured,source=self._resolve_with_source(event['measurement'])
+        except ContactUnavailable:
+            # Preserve complete point/frame and surface evidence for offline audit.
+            self._precontact_samples[ident]={'physics_step':contacts.steps,
+                'policy_action_index':self._action_index(),
+                'states':deepcopy(self._resolve_condition(condition))}
+            return None
+        self._precontact_consumed.add(ident)
+        sample=self._precontact_samples.get(ident)
+        evidence={'contact_physics_step':contacts.steps,'measured_contacts':_state(measured),'contact_source':deepcopy(source)}
+        self._event_evidence[self._selector_key(event)]=evidence
+        if sample is None or sample['physics_step']!=contacts.steps-1:
+            self.measurement_failures[ident]={'status':'preceding_sample_missing','event_observed':True,
+                'event':deepcopy(event),'event_evidence':evidence,'policy_action_index':self._action_index()}
+            return None
+        evidence['preceding_physics_step']=sample['physics_step']
+        return sample
+
     def _resolve_condition(self, condition):
         measured, source = self._resolve_with_source(condition['measurement'])
         reference, reference_source = self._resolve_with_source(condition['reference']) if condition.get('reference') else (None, None)
@@ -391,22 +443,45 @@ class AtomicSession:
             # Attach surface evidence without changing the explicitly selected
             # landmark. A root-frame reference must not become a bounds centre.
             measured_pose, reference_pose = _array(measured), _array(reference)
-            measured = {**surfaces.resolve(condition['measurement']['label'], self.env_idx,
-                                           self._object_pose(condition['measurement']['label'])),
+            measured = {**self._surface_for_selector(condition['measurement']),
                         'position': measured_pose[:3].tolist(), 'orientation': measured_pose[3:].tolist()}
-            reference_root = (self._frozen_references[self._selector_key(condition['reference'])][2]
-                              if condition['reference'].get('time') == 'stage_start'
-                              else self._object_pose(condition['reference']['label']))
-            reference = {**surfaces.resolve(condition['reference']['label'], self.env_idx, reference_root),
+            reference_surface=(deepcopy(self._frozen_surfaces[self._selector_key(condition['reference'])])
+                               if condition['reference'].get('time')=='stage_start' else self._surface_for_selector(condition['reference']))
+            reference = {**reference_surface,
                          'position': reference_pose[:3].tolist(), 'orientation': reference_pose[3:].tolist()}
             source['geometry_representation'] = measured['geometry_representation']
             reference_source['geometry_representation'] = reference['geometry_representation']
             if condition['expected'] == 'on_top':
                 from task.atomic.geometry import _rotation
-                measured['support_contact'] = self.env._atomic_contacts.has_support_contact(
-                    condition['measurement']['label'], condition['reference']['label'], self.env_idx,
-                    _rotation(reference['orientation'])[:, 2])
+                link_kinds = ('articulated_link_pose', 'joint_link_pose')
+                object_link = condition['measurement']['kind'] in link_kinds
+                support_link = condition['reference']['kind'] in link_kinds
+                if object_link or support_link:
+                    support_label = condition['reference']['label']
+                    evidence = self.env._atomic_contacts.support_evidence(
+                        condition['measurement']['label'], [support_label], self.env_idx,
+                        _rotation(reference['orientation'])[:, 2],
+                        object_body_path=measured['prim_path'] if object_link else None,
+                        support_body_paths={support_label: reference['prim_path']} if support_link else None)
+                    measured['support_contact'] = bool(evidence['contacts'])
+                    measured['support_contact_evidence'] = deepcopy(evidence)
+                else:
+                    measured['support_contact'] = self.env._atomic_contacts.has_support_contact(
+                        condition['measurement']['label'], condition['reference']['label'], self.env_idx,
+                        _rotation(reference['orientation'])[:, 2])
         return measured, source, reference, reference_source
+
+    def _surface_for_selector(self,selector):
+        if selector['kind'] in ('articulated_link_pose','joint_link_pose'):
+            link=selector.get('link')
+            if link is None:
+                from task.atomic.bindings import joint_from_tag
+                from task.atomic.recognizers import live_joint_state
+                joint=joint_from_tag(self.env,selector['label'],selector['joint_tag'],self.env_idx)
+                _,path=live_joint_state(self.env,selector['label'],joint,self.env_idx)
+                link=path.rsplit('/',1)[-1]
+            return self.env._atomic_surfaces.resolve_link(selector['label'],link,self.env_idx)
+        return self.env._atomic_surfaces.resolve(selector['label'],self.env_idx,self._object_pose(selector['label']))
 
     def observe_events(self):
         """Capture first-lift/motion geometry at physics-step resolution."""
@@ -419,6 +494,8 @@ class AtomicSession:
         success_now = self._check_success()
         self.goal_success = success_now
         self._sample(success_now)
+        if self._selection_observer:
+            self._selection_observer.observe()
         # Diagnostic scores for failed attempts, separate from the required event.
         for condition in self.stage.geometry:
             if not diagnostics or not condition.get('track_closest', True):
@@ -444,6 +521,8 @@ class AtomicSession:
             if self.stage.family == 'pick':
                 success_now = (success_now and self.current_hold_observed
                                and self._recognition_current_displacement[2] >= self._held_lift_required)
+        if self._trajectory_observer:
+            self._trajectory_observer.observe(success_now and not self.maintained_hold_failures)
         self.success = self.success or (success_now and not self.maintained_hold_failures)
         return self.success
 
@@ -481,6 +560,8 @@ class AtomicSession:
             'interaction_evidence': deepcopy(self.interaction_evidence),
             'physical_events': deepcopy(self._physical_recognizer.events) if self._physical_recognizer else {},
             'physical_metrics': deepcopy(getattr(self._physical_recognizer, 'metrics', {})),
+            'trajectories': self._trajectory_observer.summary() if self._trajectory_observer else {},
+            'selection': self._selection_observer.summary() if self._selection_observer else None,
             'current_hold_observed': self.current_hold_observed,
             'maintained_holds': deepcopy(list(self.stage.maintained_holds)),
             'maintained_hold_failures': deepcopy(self.maintained_hold_failures),
