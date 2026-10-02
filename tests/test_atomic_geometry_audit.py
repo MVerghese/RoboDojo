@@ -6,6 +6,7 @@ from pathlib import Path
 import tempfile
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 import numpy as np
 from task.atomic.geometry import evaluate_geometry
 from task.atomic.contacts import PhysXContacts, ContactUnavailable
@@ -22,6 +23,17 @@ def plate(x=0, y=0, z=0):
 
 
 class AuditRegressionTests(unittest.TestCase):
+    def test_quota_failure_preserves_previous_valid_report(self):
+        from scripts.atomic.storage import atomic_write_json
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'result.json'
+            atomic_write_json(path, {'complete': True})
+            with patch('scripts.atomic.storage.os.fsync', side_effect=OSError(122, 'Disk quota exceeded')):
+                with self.assertRaises(OSError):
+                    atomic_write_json(path, {'incomplete': True})
+            self.assertEqual(json.loads(path.read_text()), {'complete': True})
+            self.assertEqual(list(Path(directory).iterdir()), [path])
+
     def test_actual_physics_loop_observes_each_substep_after_pose_update(self):
         repo = Path(__file__).resolve().parents[1]
         path = repo / 'env/environment/isaac/direct_rl_env.py'

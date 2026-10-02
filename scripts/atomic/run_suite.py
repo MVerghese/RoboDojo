@@ -15,6 +15,7 @@ import time
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from scripts.atomic.audit_scores import audit_report
+from scripts.atomic.storage import atomic_write_json, atomic_write_text
 
 TERMINAL = {"Completed", "Succeeded", "Failed", "Stopped", "Cancelled", "Canceled"}
 
@@ -104,7 +105,7 @@ def summarize(manifest, root):
                   ("score_audit_failed" if mismatches else "completed_with_infrastructure_failures"
                    if any(r["status"] != "passed" for r in rows) else
                    "end_to_end_verified" if scored else "no_event_scores_observed")}
-    (root / "benchmark_results.json").write_text(json.dumps(result, indent=2) + "\n")
+    atomic_write_json(root / 'benchmark_results.json', result)
     lines = ["# Full-task atomic geometric benchmark", "", f"Task: `{manifest['task']}`. "
              f"Collected {result['completed_cases']} / {len(rows)} cases; reproduced {scored} event scores.", "",
              "Policy task/action failures are valid benchmark outcomes. Infrastructure failures and "
@@ -121,7 +122,7 @@ def summarize(manifest, root):
                 if score["status"] == "reproduced":
                     metrics.append(f"{stage['stage_id']}/{condition} closest (diagnostic): {score['recorded_result']['components']}")
         lines.append(f"| {row['case_id']} | {row['task']} | {row['prompt_mode']} | {row['status']} | {row.get('full_task_success', 'pending')} | {'; '.join(metrics) or 'pending'} |")
-    (root / "benchmark_results.md").write_text("\n".join(lines) + "\n")
+    atomic_write_text(root / 'benchmark_results.md', '\n'.join(lines) + '\n')
     if manifest['mode'] == 'paired_native_and_geometrically_conditioned':
         from scripts.atomic.report_paired_suite import write_report
         write_report(manifest, result, root)

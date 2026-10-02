@@ -2,6 +2,7 @@
 import json
 import math
 from pathlib import Path
+from scripts.atomic.storage import atomic_write_text
 
 
 def metrics(score):
@@ -105,4 +106,4 @@ def write_report(manifest, result, root):
                   'All initial attempts are excluded from the eight-episode comparison and retained in '
                   f"`{root / 'invalid-instrumentation-attempts'}`. Corrected runtime commit: "
                   f"`{restart['new_git_commit']}`.", '']
-    (root / 'REPORT.md').write_text('\n'.join(lines))
+    atomic_write_text(root / 'REPORT.md', '\n'.join(lines))

@@ -13,6 +13,7 @@ import boto3
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from task.atomic.spec import AtomicTrace
 from scripts.atomic.audit_scores import audit_report
+from scripts.atomic.storage import atomic_write_json
 
 
 def s3_location(url: str) -> tuple[str, str]:
@@ -40,11 +41,11 @@ def main() -> int:
     report = json.loads(client.get_object(Bucket=bucket, Key=f"{prefix}/eval_report.json")["Body"].read())
     print("evaluation:", report["status"], "completed episodes:", report["completed_episodes"])
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    (args.output_dir.parent / "eval_report.json").write_text(json.dumps(report, indent=2) + "\n")
+    atomic_write_json(args.output_dir.parent / 'eval_report.json', report)
     audit = audit_report(report)
     if audit["atomic_episodes"]:
         audit_path = args.output_dir.parent / "atomic-score-audit.json"
-        audit_path.write_text(json.dumps(audit, indent=2) + "\n")
+        atomic_write_json(audit_path, audit)
         print("atomic score audit:", audit_path)
 
     body = client.get_object(Bucket=bucket, Key=f"{prefix}/results.tar.gz")["Body"]
@@ -69,7 +70,7 @@ def main() -> int:
             if not isinstance(payload.get("stage_starts"), dict):
                 raise ValueError(f"trace is missing stage boundaries: {member.name}")
             output = args.output_dir / path.name
-            output.write_text(json.dumps(payload, indent=2) + "\n")
+            atomic_write_json(output, payload)
             trace = AtomicTrace.load(output)
             print("trace:", output, "layout:", trace.layout_id, "actions:", len(trace.actions),
                   "stage starts:", trace.stage_starts, "episode success:", payload.get("episode_success"))
