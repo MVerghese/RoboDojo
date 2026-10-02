@@ -25,6 +25,9 @@ DEPENDENCIES = (
     'task/RoboDojo/config/_task.yml',
     'task/atomic/sequence.py',
     'task/atomic/session.py',
+    'task/atomic/spec.py',
+    'task/atomic/recognizers.py',
+    'task/atomic/contacts.py',
     'task/atomic/replay.py',
     'src/eval_client/eval_env.py',
 )
@@ -230,9 +233,10 @@ def render(data):
              '2. Add geometry-independent physical recognizers below. Emit contact/event intervals at physics-substep resolution '
              'with arm/object identities, provenance, confidence and missing-data status. '
              'An endpoint predicate alone does not establish the action that achieved it.',
-             '3. Replace the single-current-stage assumption for general-task observation with concurrently enabled nodes, '
-             'repeat-instance state and scene-event gates. `AtomicSequence` advances one ordered stage at most per action chunk; '
-             'it can miss short/overlapping actions and cannot represent these general plans.',
+             '3. Bind these plans to the new concurrent dependency runtime. `AtomicSequence` now samples all enabled '
+             'stages each physics substep and permits overlapping independent branches; finite repetitions can be explicitly '
+             'unrolled. Automatic layout/choice resolution, repeat expansion and scene-event gates remain missing. '
+             'See [RUNTIME.md](RUNTIME.md); the prose plans are still not executable programs.',
              '4. Capture verified start states at observed action boundaries. Save the common and task-specific state below. '
              '`replay_prefix` currently replays actions and checks preceding predicates; it is not a full simulator snapshot. '
              '`_start_atomic_stage` resets parser baselines and robot origin after replay, so memory/game/count/trigger tasks need '

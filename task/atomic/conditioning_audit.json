@@ -3,11 +3,12 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
-    "task/atomic/spec.py": "30412fb8877f98ebf389f3ac60d41abfb466a91ebba66f2065b1f3bac2345f63",
+    "task/atomic/spec.py": "1b09f8bb94b577bac76f59be4f534fc1846c0a3ff0aa0d116f81aeffee37a63a",
     "task/atomic/geometry.py": "e9342ef0ec2b93566310d484aa06ff189ce490839a380eb920fb1bdabce982ec",
-    "task/atomic/session.py": "01da2bb8e78b0986a2b93b96a05e8ab36dc679858af1cd32bd055126733d991c",
+    "task/atomic/session.py": "df4e8b58de21ebba0ad6d66502349f83c797e0fd18a0d19c832359feadfef1e9",
     "task/atomic/surfaces.py": "aba37aa0e295d8eb8286920c5e573e5d527fa2103a6c825fd3cdc9c51f5e7f2a",
-    "task/atomic/contacts.py": "8bacf65a1aa04503547c4559248c4e31693818de483336777ca79331ab154655"
+    "task/atomic/contacts.py": "74dc04ecf73e872c58e66ced05b25a8faf24603b3ee416ccfcf24e9a210461f2",
+    "task/atomic/recognizers.py": "42476b93c076fec90142562f49685ea2b642c7cd4680203dbf1306836ee006e4"
   },
   "families": 11,
   "slots": 54,
@@ -15,10 +16,10 @@
   "status_counts": {
     "L": 5,
     "C": 4,
-    "G": 52,
+    "G": 64,
     "F": 4,
     "S": 75,
-    "M": 102,
+    "M": 90,
     "NA": 28
   },
   "rows": [
@@ -282,36 +283,36 @@
         "P": {
           "kind": "point",
           "concept": "Release when object/gripper is at P.",
-          "status": "M",
-          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "status": "G",
+          "audit": "supported_release emits object-specific release and settled events after held transport, all-finger release, support and bounded pose changes. Live rigid geometry can be sampled at either event. Offline counterexamples; task binding/calibration and live verification remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Release at specified object/gripper pose.",
-          "status": "M",
-          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "status": "G",
+          "audit": "supported_release emits object-specific release and settled events after held transport, all-finger release, support and bounded pose changes. Live rigid geometry can be sampled at either event. Offline counterexamples; task binding/calibration and live verification remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Release at offset from target.",
-          "status": "M",
-          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "status": "G",
+          "audit": "supported_release emits object-specific release and settled events after held transport, all-finger release, support and bounded pose changes. Live rigid geometry can be sampled at either event. Offline counterexamples; task binding/calibration and live verification remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Release with object aligned to target.",
-          "status": "M",
-          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "status": "G",
+          "audit": "supported_release emits object-specific release and settled events after held transport, all-finger release, support and bounded pose changes. Live rigid geometry can be sampled at either event. Offline counterexamples; task binding/calibration and live verification remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Release above/inside target region.",
-          "status": "M",
-          "audit": "Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.",
+          "status": "G",
+          "audit": "supported_release emits object-specific release and settled events after held transport, all-finger release, support and bounded pose changes. Live rigid geometry can be sampled at either event. Offline counterexamples; task binding/calibration and live verification remain.",
           "live_evidence": null
         }
       }
@@ -619,7 +620,7 @@
           "kind": "point",
           "concept": "First tool-object contact at P.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
           "live_evidence": null
         },
         "T": {
@@ -633,7 +634,7 @@
           "kind": "relative_displacement",
           "concept": "Start at offset from object center.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
           "live_evidence": null
         },
         "O": {
@@ -647,7 +648,7 @@
           "kind": "spatial_relation",
           "concept": "Start behind/in front of objects.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
           "live_evidence": null
         }
       }
@@ -1669,7 +1670,7 @@
           "kind": "point",
           "concept": "Strike surface point P.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
           "live_evidence": null
         },
         "T": {
@@ -1683,7 +1684,7 @@
           "kind": "relative_displacement",
           "concept": "Strike offset from target center.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
           "live_evidence": null
         },
         "O": {
@@ -1697,7 +1698,7 @@
           "kind": "spatial_relation",
           "concept": "Strike center/left side of target.",
           "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.",
+          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.",
           "live_evidence": null
         }
       }
@@ -1962,36 +1963,36 @@
         "P": {
           "kind": "point",
           "concept": "Object/gripper exchange at P.",
-          "status": "M",
-          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "status": "G",
+          "audit": "grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Exchange object pose T.",
-          "status": "M",
-          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "status": "G",
+          "audit": "grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Exchange offset from table/robot landmark.",
-          "status": "M",
-          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "status": "G",
+          "audit": "grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Object orientation relative to receiver gripper.",
-          "status": "M",
-          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "status": "G",
+          "audit": "grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Exchange above table/between arms.",
-          "status": "M",
-          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "status": "G",
+          "audit": "grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.",
           "live_evidence": null
         }
       }
@@ -2011,8 +2012,8 @@
         "T": {
           "kind": "pose",
           "concept": "Object pose at transfer T.",
-          "status": "M",
-          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "status": "G",
+          "audit": "grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.",
           "live_evidence": null
         },
         "D": {
@@ -2025,8 +2026,8 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Handle/graspable feature oriented toward receiver.",
-          "status": "M",
-          "audit": "Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.",
+          "status": "G",
+          "audit": "grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.",
           "live_evidence": null
         },
         "R": {

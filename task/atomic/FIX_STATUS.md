@@ -36,27 +36,48 @@ These new fixes have offline regression coverage. No new live simulator
 validation is claimed here; previous pilot results must not be relabeled as
 evidence for the new recognizer or snapshot semantics.
 
-## Still to implement
+## Additional runtime implementation
+
+See [RUNTIME.md](RUNTIME.md) for the complete schema, semantics and limits.
+
+- Concurrent dependency-driven stage observer, sampled every physics substep.
+  Independent branches can overlap; finite repetitions can be explicitly unrolled.
+- Eight additional recognizers: supported release, held-tool push, held-tool
+  contact, grip transfer, held insertion, contact-coupled joint motion,
+  constrained unwrapped rotation, and rigid material transfer provenance/counts.
+- Named physical-transition geometry events and continuous other-arm holds.
+- Stateful native predicates rejected to protect native reward history.
+- Precise substep boundaries saved; mid-chunk starts excluded from whole-action
+  prefix replay. Nonlinear prefix replay fails explicitly.
+- New prototype programs: align_blocks, stack_blocks_by_language, push_T_random.
+
+Verification: **86 offline atomic tests pass**, including 22 new temporal/runtime
+counterexamples; the updated audit skill validates. No new live results are
+claimed. Earlier table entries describe their original implementation boundary;
+held-tool, placement and handover additions supersede the missing-recognizer
+parts of those entries.
+
+## Remaining implementation/calibration
 
 - Initial referent selection and ambiguity checks against a start-state candidate
   snapshot; fixed labels alone do not score which object the robot selected.
-- Place: held→released→settled supported-object intervals.
-- Tool push/strike: held tool, active-part identity, contact-coupled motion,
-  impact velocity/impulse and rebound/debounce.
-- Actuate: live moving-link/control frames and contact-coupled joint transitions.
-- Twist: constrained axis/pivot, unwrapped signed rotation and engagement;
-  verify whether the screw assets represent thread progress.
-- Handover: giver hold, receiver hold, actual giver release and continued support.
-- Pour: source-exit provenance, liquid/material transfer, residue and spill mass.
-- Fold: live material IDs/vertices, grasp correspondence, crease and layer order.
-- General insertion: calibrated openings/peg fit and temporal crossing paths.
-- Concurrent/repeated/choice stage execution and faithful scene/native-history
-  restoration at observed boundaries for all-task plans.
-- Throw family and release/flight/landing recognition, after taxonomy review.
+- Task-specific binding/calibration/live verification of generic rigid adapters:
+  openings/tips, actual tool/control parts, pivots, constraints and thresholds.
+- Tool strike approach velocity, rebound and musical timing; swept path scoring.
+- Live articulated child-link geometry selectors; thread engagement/progress
+  and feasibility of the screw assets.
+- Liquid particle transfer, raw residue/spill mass and material conservation.
+- Cloth material IDs/vertices, particle/finger contact, grasp correspondence,
+  crease and layer order.
+- Automatic source-plan compilation with layout-dependent choices, repeats,
+  memory/game/conveyor scene-event gates and constraint bindings.
+- Faithful full-state restoration and partial-action replay for graph or
+  mid-chunk starts. Whole-action prefix replay remains limited to linear starts.
+- Throw taxonomy and release/flight/landing recognition.
 
-Missing family recognizers currently report `endpoint_checks_only`; a native
-goal predicate is not evidence that the intended interaction occurred. The
-54 source plans do not implement these adapters.
+Original coin/charger insertion and ball-pour programs still have
+`endpoint_checks_only` stages. Generic adapters do not migrate these programs
+without calibrated landmarks/volumes. All 54 plans remain source plans.
 
 ## Support-vector convention
 

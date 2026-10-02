@@ -1,0 +1,114 @@
+{
+  "task_name": "align_blocks",
+  "stages": [
+    {
+      "id": "pick_target",
+      "family": "pick",
+      "instruction": "Pick up target.",
+      "recognition": {
+        "kind": "finger_contact_motion",
+        "label": "target",
+        "arm": "any",
+        "motion_threshold_m": 0.025,
+        "min_contact_steps": 2
+      },
+      "success_checks": [
+        {
+          "name": "is_lift",
+          "args": {
+            "label": "target",
+            "z_threshold": 0.025
+          }
+        }
+      ],
+      "geometry": []
+    },
+    {
+      "id": "tool_push_cube0",
+      "family": "push_with_tool",
+      "instruction": "Use the held set square to push cube0 along the table.",
+      "recognition": {
+        "kind": "held_tool_push",
+        "label": "target",
+        "arm": "any",
+        "min_contact_steps": 2,
+        "target_label": "cube0",
+        "support_labels": [
+          "@table"
+        ],
+        "motion_threshold_m": 0.005,
+        "tool_motion_threshold_m": 0.005,
+        "max_vertical_motion_m": 0.007
+      },
+      "success_checks": [
+        {
+          "name": "is_atomic_interaction",
+          "args": {}
+        }
+      ],
+      "geometry": []
+    },
+    {
+      "id": "tool_push_cube1",
+      "family": "push_with_tool",
+      "instruction": "Use the held set square to push cube1 along the table.",
+      "recognition": {
+        "kind": "held_tool_push",
+        "label": "target",
+        "arm": "any",
+        "min_contact_steps": 2,
+        "target_label": "cube1",
+        "support_labels": [
+          "@table"
+        ],
+        "motion_threshold_m": 0.005,
+        "tool_motion_threshold_m": 0.005,
+        "max_vertical_motion_m": 0.007
+      },
+      "success_checks": [
+        {
+          "name": "is_atomic_interaction",
+          "args": {}
+        }
+      ],
+      "geometry": []
+    },
+    {
+      "id": "tool_push_cube2",
+      "family": "push_with_tool",
+      "instruction": "Use the held set square to push cube2 along the table.",
+      "recognition": {
+        "kind": "held_tool_push",
+        "label": "target",
+        "arm": "any",
+        "min_contact_steps": 2,
+        "target_label": "cube2",
+        "support_labels": [
+          "@table"
+        ],
+        "motion_threshold_m": 0.005,
+        "tool_motion_threshold_m": 0.005,
+        "max_vertical_motion_m": 0.007
+      },
+      "success_checks": [
+        {
+          "name": "is_atomic_interaction",
+          "args": {}
+        }
+      ],
+      "geometry": []
+    }
+  ],
+  "stage_dependencies": {
+    "pick_target": [],
+    "tool_push_cube0": [
+      "pick_target"
+    ],
+    "tool_push_cube1": [
+      "pick_target"
+    ],
+    "tool_push_cube2": [
+      "pick_target"
+    ]
+  }
+}

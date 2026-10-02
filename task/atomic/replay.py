@@ -8,6 +8,10 @@ def replay_prefix(program, selected_stage, trace, take_action, stage_succeeded):
     can be tested without importing Isaac Sim.
     """
     stage_ids = [stage.id for stage in program.stages]
+    linear = {s.id: ([] if i == 0 else [program.stages[i - 1].id])
+              for i, s in enumerate(program.stages)}
+    if program.dependencies() != linear:
+        raise ValueError('prefix replay currently requires a linear program; graph starts need state restoration')
     selected_index = stage_ids.index(selected_stage.id)
     if trace.task_name != program.task_name:
         raise ValueError("atomic trace task_name does not match program")

@@ -17,6 +17,11 @@ recognition is now a required stage field independent of geometric conditions;
 keep it identical across variants/pairs. Frozen start references and physical
 object-pair contacts have offline coverage; they do not establish live family
 recognition, initial object selection or faithful full-state restarts.
+Read `RUNTIME.md` when adding physical recognizers or programs: dependency stages
+now run concurrently at physics resolution, with named physical events and
+continuous other-arm holds. Generic rigid adapters are offline implementations;
+they require actual asset/arm/control bindings before live claims. Mid-chunk
+starts are not whole-action replay boundaries.
 
 ## Ground the decomposition
 
@@ -39,6 +44,9 @@ recognition, initial object selection or faithful full-state restarts.
   Run `scripts/atomic/segmentation_plans.py --refresh` and `--check` after review.
   These source plans cannot be passed to AtomicProgram; executable recognizers,
   layout resolution and verified boundary states require separate implementation.
+  Bind calibrated adapters to a program's stage_dependencies explicitly. Never
+  infer an executable selection expression from prose. Stateful native is_*
+  predicates that consume reward history are forbidden in the observer.
 
 ## Audit a measurement or add a recognizer
 

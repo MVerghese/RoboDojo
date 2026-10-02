@@ -1,6 +1,6 @@
 # Atomic geometry benchmark prototype
 
-This branch adds a separate evaluation mode on top of RoboDojo's existing full-task eval. Its [taxonomy](TAXONOMY.md) defines 11 manipulation families and five geometric modifier types. The [source-backed task map](TASK_MAP.md) audits all 54 task modules with concrete action examples and native predicate evidence. Five schema-loadable programs are included in `programs/`; four were exercised by the live pilot. The deposit-coin insertion landmark remains a gap.
+This branch adds a separate evaluation mode on top of RoboDojo's existing full-task eval. Its [taxonomy](TAXONOMY.md) defines 11 manipulation families and five geometric modifier types. The [source-backed task map](TASK_MAP.md) audits all 54 task modules with concrete action examples and native predicate evidence. Eight schema-loadable programs are included in `programs/`; four original programs were exercised by the live pilot. See [RUNTIME.md](RUNTIME.md) for the new dependency runtime and generic physical recognizers, which have offline coverage only. The deposit-coin insertion landmark remains a gap.
 
 Start with [conditioning and A/B instructions](CONDITIONING_AB.md), [all-family audit](ACTION_AUDIT.md), [completed pilot results](PILOT_RESULTS.md), and [agent workflow skills](../../.agents/skills/README.md).
 
@@ -34,7 +34,7 @@ observed trace labels. Inspect one with
   force-bearing tool/object pairs. A `first_contact` event accepts a contact
   `measurement` selector and records the physical event evidence, even when
   the scored measurement is a separate object pose. Held-tool, sweep and
-  impact/rebound recognition remain separate missing adapters.
+  impact velocity/rebound and live active-part calibration remain separate gaps. Held-tool contact/push and transfer state machines now exist offline.
 - Geometry conditions report continuous error and pass/fail for a point, SE(3) pose, landmark-relative displacement, landmark-relative orientation, or spatial relation.
 - `AtomicSession` measures first object lift/motion at physics-step resolution and stage success after each policy action chunk. The result keeps **action success** and **geometry adherence** separate in `eval_result.details[*].atomic`. `geometry_pass_rate` is null until a condition is observed; `geometry_coverage` reports how many conditions fired.
 - A `first_predicate` event can capture geometry when any or all read-only RoboDojo predicates first become true at a physics step. The `pour_balls_into_vase` program uses this to measure cup placement when the first ball enters the vase.
@@ -105,7 +105,7 @@ For automatic opposite-target scoring after a Lepton trial, pass the opposite va
 
 ## Record, annotate, run
 
-Run a normal RoboDojo evaluation with the usual policy server and append `--atomic_record_dir /path/to/traces --atomic_record_spec task/atomic/programs/deposit_coin.json` to `scripts/eval_policy.sh`. This writes one JSON trace per episode, marking stage starts when each predicate first succeeds at a policy action boundary. For a task without an executable program, use `--atomic_record_dir` alone and annotate a successful trace manually; for `deposit_coin`, for example:
+Run a normal RoboDojo evaluation with the usual policy server and append `--atomic_record_dir /path/to/traces --atomic_record_spec task/atomic/programs/deposit_coin.json` to `scripts/eval_policy.sh`. This writes one JSON trace per episode, recording stage activation/completion at synchronized physics substeps. Only whole-action starts enter the replayable `stage_starts` map; precise `stage_boundaries` also records mid-chunk starts. See RUNTIME.md for graph and replay limits. For a task without an executable program, use `--atomic_record_dir` alone and annotate a successful trace manually; for `deposit_coin`, for example:
 
 When launching through `scripts/robodojo.sh client`, set `ATOMIC_RECORD_DIR` and `ATOMIC_RECORD_SPEC` in the simulator environment. The client forwards them to `eval_policy.sh`. The Lepton trace capture helper is `scripts/atomic/submit_trace.py`; it overlays this fork onto the existing RoboDojo image and writes traces into the result archive.
 

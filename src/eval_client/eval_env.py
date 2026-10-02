@@ -111,7 +111,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     self.atomic_trace = AtomicTrace.load(self.eval_cfg["atomic_trace"])
                     if self.atomic_trace.task_name != self.task_name:
                         raise ValueError("atomic trace task_name does not match eval task")
-                elif self.atomic_stage.id != self.atomic_program.stages[0].id:
+                elif self.atomic_program.dependencies()[self.atomic_stage.id]:
                     raise ValueError("a recorded trace is required to start after the first atomic stage")
             self.eval_batch = self.eval_cfg.get("eval_batch", False)
             self.eval_num = int(self.eval_cfg.get("eval_num", 50))
@@ -271,7 +271,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             if programs:
                 from task.atomic.surfaces import ObjectSurfaces
                 self._atomic_surfaces = ObjectSurfaces(self)
-                if (any(s.recognition is not None for program in programs for s in program.stages)
+                if (any(s.recognition is not None or s.maintained_holds for program in programs for s in program.stages)
                         or any(c['measurement']['kind'] in ('contact_points', 'object_contact_points')
                                or c.get('expected') == 'on_top'
                                or c.get('event', {}).get('kind') == 'first_contact'
@@ -291,6 +291,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 session = self._atomic_sessions.get(env_idx)
                 if self.atomic_stage is not None and session is not None:
                     session.observe_events()
+                    # Impacts/releases can finish before the action chunk ends.
+                    # Latch physical success in this same synchronized substep.
+                    session.step(diagnostics=False)
                 sequence = self._atomic_sequences.get(env_idx)
                 if sequence is not None:
                     sequence.observe_events()
@@ -939,6 +942,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     "layout_id": int(self.env_seeds[env_idx]),
                     "actions": self._atomic_recorded_actions[env_idx],
                     "stage_starts": stage_starts,
+                    "stage_boundaries": (self._atomic_sequences[env_idx].stage_boundaries
+                                         if env_idx in self._atomic_sequences else {}),
                     "episode_success": bool(self.success[env_idx]),
                 },
                 os.path.join(self._atomic_record_dir, file_name),

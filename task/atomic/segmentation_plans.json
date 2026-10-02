@@ -19,7 +19,7 @@
         "gripper release",
         "stable support"
       ],
-      "current_support": "Native endpoint predicates exist; release/support/stability recognizer missing.",
+      "current_support": "supported_release now tracks held transport, all-finger release, upward support and consecutive bounded pose changes. Prototype stack_blocks_by_language binding and offline counterexamples; asset calibration and live validation remain.",
       "requires_independent_of_geometry": true
     },
     "push": {
@@ -39,7 +39,7 @@
         "tool/object contact",
         "stroke interval"
       ],
-      "current_support": "Explicit tool/target body-pair sampler and first_contact event implemented with offline coverage. Held-tool, calibrated active-edge and contact-coupled stroke recognizer still missing.",
+      "current_support": "held_tool_push now requires sustained tool grasp, simultaneous tool/target contact, support and new planar tool/target motion. Prototype align_blocks binding and offline counterexamples; active-edge calibration and live validation remain.",
       "requires_independent_of_geometry": true
     },
     "pour": {
@@ -49,7 +49,7 @@
         "first target entry",
         "transfer interval"
       ],
-      "current_support": "Ball target-entry sampler exists; source-exit provenance and generic fluid adapter missing.",
+      "current_support": "rigid_material_transfer now tracks initially contained source contents, held/tilted source exit, whole-rigid-object target entry and raw counts in explicitly calibrated convex interior volumes. Offline only; existing ball program not migrated, liquid particle/mass adapter missing.",
       "requires_independent_of_geometry": true
     },
     "actuate": {
@@ -59,7 +59,7 @@
         "joint transition",
         "release/debounce"
       ],
-      "current_support": "Moving-link contact and contact-coupled joint recognizer missing.",
+      "current_support": "contact_joint_motion now reads live DOF state and its actual USD moving-body contact, with directed travel during a contact interval. Offline counterexamples; per-control joint/sign/limits binding, moving-link geometry selectors and live validation remain.",
       "requires_independent_of_geometry": true
     },
     "twist": {
@@ -69,7 +69,7 @@
         "unwrapped signed rotation",
         "constraint continuity"
       ],
-      "current_support": "Temporal rotation, pivot/axis and thread-progress adapter missing.",
+      "current_support": "contact_constrained_twist now accumulates signed substep rotation with held part/target contact, configured pivot depth/radius and bounded off-axis rotation. Offline counterexamples; calibrated part-root/pivot, thread engagement/progress and live validation remain.",
       "requires_independent_of_geometry": true
     },
     "insert": {
@@ -79,7 +79,7 @@
         "fit/depth interval",
         "seated state"
       ],
-      "current_support": "Charger-specific tip/depth checks exist; general opening/peg adapter missing.",
+      "current_support": "held_insertion now recognizes an aligned held-tip path from outside a live opening into signed bounded depth with target contact. Offline counterexamples; task-specific hole/peg/tip fit calibration, existing program migration and live validation remain.",
       "requires_independent_of_geometry": true
     },
     "touch_with_tool": {
@@ -89,7 +89,7 @@
         "target identity",
         "rebound/debounce"
       ],
-      "current_support": "Explicit tool/target body-pair contact points/impulses and first_contact event implemented with offline coverage. Held-tool, calibrated tip, impact velocity and strike/rebound recognizer still missing.",
+      "current_support": "held_tool_contact now requires held tool, new contact after separation, named active body/collider suffixes and impulse. Offline counterexamples; actual tip/key bindings, impact velocity/rebound/timing and live validation remain.",
       "requires_independent_of_geometry": true
     },
     "handover": {
@@ -100,7 +100,7 @@
         "giver release",
         "receiver support"
       ],
-      "current_support": "Arm-resolved contacts exist; transfer state machine missing.",
+      "current_support": "grip_transfer now tracks giver-only hold, sustained overlap, actual giver release and continued receiver-only hold with bounded per-step displacement. Offline counterexamples; named task-arm bindings and live validation remain.",
       "requires_independent_of_geometry": true
     },
     "fold": {
@@ -7378,19 +7378,31 @@
     },
     {
       "path": "task/atomic/sequence.py",
-      "sha256": "3c0120d0eacd0928e60649b4244220f44447776a6bd43fbb26ad73f9b4d67eac"
+      "sha256": "df4841fc93fd2217adba9f08828eb8f01a252c47515cface2b502619bd46c576"
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "01da2bb8e78b0986a2b93b96a05e8ab36dc679858af1cd32bd055126733d991c"
+      "sha256": "df4e8b58de21ebba0ad6d66502349f83c797e0fd18a0d19c832359feadfef1e9"
+    },
+    {
+      "path": "task/atomic/spec.py",
+      "sha256": "1b09f8bb94b577bac76f59be4f534fc1846c0a3ff0aa0d116f81aeffee37a63a"
+    },
+    {
+      "path": "task/atomic/recognizers.py",
+      "sha256": "42476b93c076fec90142562f49685ea2b642c7cd4680203dbf1306836ee006e4"
+    },
+    {
+      "path": "task/atomic/contacts.py",
+      "sha256": "74dc04ecf73e872c58e66ced05b25a8faf24603b3ee416ccfcf24e9a210461f2"
     },
     {
       "path": "task/atomic/replay.py",
-      "sha256": "2937ee9fd4437f127404a870cb8d4a675de3cff9b3528187137f523d6804cf94"
+      "sha256": "63a9bc5f671a412aa628c183b6fd8260c545c00225d90d693804777be8e649a6"
     },
     {
       "path": "src/eval_client/eval_env.py",
-      "sha256": "3647a049779e07215b0ffaca4146c336a76bd4d0caaea0de27b8c7b8d8b33029"
+      "sha256": "5fc87595dc2e614b99ab11a4a56ad19c65448cc2b07102b8a55096cf1a0d5de0"
     }
   ]
 }

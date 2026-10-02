@@ -89,6 +89,9 @@ class PhysXContacts:
         root = getattr(obj, 'usd_prim_path', None) or getattr(obj, 'prim_path', None)
         if not root:
             raise RuntimeError(f'no rigid prim path for {selector["label"]}')
+        body_path = selector.get('body_path')
+        if body_path and not (body_path == root or body_path.startswith(root + '/')):
+            raise ValueError('moving contact body must belong to the selected object')
         def inside(path):
             return path == root or path.startswith(root + '/')
         selected = []
@@ -96,7 +99,11 @@ class PhysXContacts:
             for index, other in ((0, 1), (1, 0)):
                 body = row[f'actor{index}']
                 finger = self.fingers.get(body)
-                if finger and finger[0] == env_idx and inside(row[f'actor{other}']):
+                if (finger and finger[0] == env_idx
+                        and (inside(row[f'actor{other}']) or inside(row[f'collider{other}']))):
+                    if body_path and not any(p == body_path or p.startswith(body_path + '/')
+                                             for p in (row[f'actor{other}'], row[f'collider{other}'])):
+                        continue
                     if selector.get('arm', 'any') not in ('any', 'nearest', finger[1]):
                         continue
                     selected.append({**row, 'finger_body': body, 'arm': finger[1]})

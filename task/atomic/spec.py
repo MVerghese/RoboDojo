@@ -16,7 +16,7 @@ FAMILIES = frozenset(
 GEOMETRY_KINDS = frozenset(
     {"point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"}
 )
-EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact"})
+EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "recognition_event"})
 CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point"}) | CONTACT_KINDS
 FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position'} - CONTACT_KINDS
@@ -198,6 +198,8 @@ def _validate_condition(condition):
             raise ValueError('first_contact requires physical contact measurement')
         if event['measurement'].get('time', 'live') != 'live':
             raise ValueError('first_contact requires live contacts')
+    if event['kind'] == 'recognition_event' and not isinstance(event.get('name'), str):
+        raise ValueError('recognition_event requires a named physical transition')
 
 
 def _validate_check(check):
@@ -207,12 +209,19 @@ def _validate_check(check):
         raise ValueError("atomic success checks must be read-only is_* predicates")
     if check["args"].get("update"):
         raise ValueError("atomic success checks must not update parser state")
+    if check['name'] in ('is_joint_position_ratio_change_from_above_to_below', 'is_joint_position_change',
+                         'is_functional_point_moved', 'is_functional_point_not_moved'):
+        raise ValueError('stateful native predicates are forbidden in observers; use a private physical recognizer')
 
 
 def _validate_recognition(recognition, family):
     if recognition is None:
         if family in ('pick', 'push'):
             raise ValueError(f'{family} requires explicit recognition independent of geometry')
+        return
+    if isinstance(recognition, dict) and recognition.get('kind') != 'finger_contact_motion':
+        from task.atomic.recognizers import validate_recognition
+        validate_recognition(recognition, family, _validate_selector)
         return
     allowed = {'kind', 'label', 'arm', 'motion_threshold_m', 'min_contact_steps'}
     if family == 'push':
@@ -236,6 +245,14 @@ def _validate_recognition(recognition, family):
             raise ValueError('push recognition needs distinct named support_labels; @table names the scene table')
 
 
+def _validate_stage_event(condition, recognition):
+    event = condition.get('event', {})
+    if event.get('kind') == 'recognition_event':
+        from task.atomic.recognizers import TRANSITIONS
+        if not recognition or event['name'] not in TRANSITIONS.get(recognition['kind'], ()):
+            raise ValueError('recognition_event must name a transition emitted by this stage recognizer')
+
+
 @dataclass(frozen=True)
 class AtomicStage:
     id: str
@@ -245,6 +262,7 @@ class AtomicStage:
     geometry: tuple[dict, ...]
     step_limit: int | None = None
     recognition: dict | None = None
+    maintained_holds: tuple[dict, ...] = ()
 
     @classmethod
     def from_dict(cls, data):
@@ -266,13 +284,19 @@ class AtomicStage:
         geometry = tuple(data.get("geometry", ()))
         for condition in geometry:
             _validate_condition(condition)
+            _validate_stage_event(condition, recognition)
         ids = [condition["id"] for condition in geometry]
         if len(ids) != len(set(ids)):
             raise ValueError(f"stage {data['id']} has duplicate condition ids")
         step_limit = data.get("step_limit")
         if step_limit is not None and (not isinstance(step_limit, int) or step_limit <= 0):
             raise ValueError("step_limit must be a positive integer")
-        return cls(data["id"], data["family"], data["instruction"], checks, geometry, step_limit, recognition)
+        maintained_holds = tuple(deepcopy(data.get('maintained_holds', ())))
+        for hold in maintained_holds:
+            _validate_selector({'kind': 'contact_points', **hold}, 'maintained_holds')
+            if set(hold) != {'label', 'arm', 'min_finger_bodies'} or hold['min_finger_bodies'] < 2:
+                raise ValueError('maintained_holds requires label, arm and at least two distinct fingers')
+        return cls(data["id"], data["family"], data["instruction"], checks, geometry, step_limit, recognition, maintained_holds)
 
     def with_variant(self, variant):
         """Overlay instruction and expected geometry without changing the task.
@@ -291,10 +315,11 @@ class AtomicStage:
             if changed["id"] != condition["id"] or changed["slot"] != condition["slot"]:
                 raise ValueError("variant cannot change condition identity or slot")
             _validate_condition(changed)
+            _validate_stage_event(changed, self.recognition)
             conditions.append(changed)
         return AtomicStage(
             self.id, self.family, variant.get("instruction", self.instruction),
-            self.success_checks, tuple(conditions), self.step_limit, deepcopy(self.recognition),
+            self.success_checks, tuple(conditions), self.step_limit, deepcopy(self.recognition), deepcopy(self.maintained_holds),
         )
 
 
@@ -304,6 +329,32 @@ class AtomicProgram:
     stages: tuple[AtomicStage, ...]
     instruction: str | None = None
     geometric_instruction: str | None = None
+    stage_dependencies: dict | None = None
+
+    def __post_init__(self):
+        if self.stage_dependencies is None:
+            return
+        ids = {s.id for s in self.stages}
+        deps = self.stage_dependencies
+        if not isinstance(deps, dict) or set(deps) != ids:
+            raise ValueError('stage_dependencies must define every stage exactly once')
+        for stage_id, parents in deps.items():
+            if (not isinstance(parents, list) or any(not isinstance(p, str) or p not in ids for p in parents)
+                    or len(parents) != len(set(parents)) or stage_id in parents):
+                raise ValueError('stage dependencies require unique existing parents, excluding self')
+        pending, done = set(ids), set()
+        while pending:
+            ready = {s for s in pending if set(deps[s]) <= done}
+            if not ready:
+                raise ValueError('stage_dependencies contains a cycle')
+            done.update(ready)
+            pending.difference_update(ready)
+
+    def dependencies(self):
+        if self.stage_dependencies is not None:
+            return deepcopy(self.stage_dependencies)
+        return {s.id: ([] if i == 0 else [self.stages[i - 1].id])
+                for i, s in enumerate(self.stages)}
 
     @classmethod
     def load(cls, path):
@@ -319,7 +370,8 @@ class AtomicProgram:
         geometric_instruction = data.get('geometric_instruction')
         if geometric_instruction is not None and (not isinstance(geometric_instruction, str) or not geometric_instruction.strip()):
             raise ValueError('geometric_instruction must be nonempty text')
-        return cls(data["task_name"], stages, instruction, geometric_instruction)
+        return cls(data["task_name"], stages, instruction, geometric_instruction,
+                   deepcopy(data.get('stage_dependencies')))
 
     def stage(self, stage_id):
         for stage in self.stages:

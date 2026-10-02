@@ -28,7 +28,7 @@ PROFILES = {
     'contact': ('C', 'Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.'),
     'goal': ('G', 'Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.'),
     'approach': ('M', 'Needs an independent pre-contact/approach event and calibrated hand/tool frame; endpoint proximity alone does not establish an approach.'),
-    'release': ('M', 'Needs object-specific held-to-released transition, support and a stability interval. Generic open-gripper state is insufficient.'),
+    'release': ('G', 'supported_release emits object-specific release and settled events after held transport, all-finger release, support and bounded pose changes. Live rigid geometry can be sampled at either event. Offline counterexamples; task binding/calibration and live verification remain.'),
     'tool': ('M', 'Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.'),
     'path': ('M', 'Needs continuous segment/path samples, phase events and deviation aggregation. Two endpoint values do not prove the intervening sweep.'),
     'spout': ('G', 'Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.'),
@@ -36,7 +36,7 @@ PROFILES = {
     'link': ('M', 'Needs live articulated child-link/joint/control selectors and contact-coupled joint events; cached root-anchored meshes cannot represent changing articulation.'),
     'twist': ('M', 'Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.'),
     'entry': ('G', 'Annotated tip/opening frame math and charger-specific entry predicates exist. Other assets need verified frames/clearance/crossing adapters; charger entry was not reached in the pilot.'),
-    'handover': ('M', 'Needs giver hold, receiver hold, giver release and continued receiver support events. One-arm contact resolution is not a transfer recognizer.'),
+    'handover': ('G', 'grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain.'),
     'deformable': ('M', 'Needs current material vertices/IDs, patch/tangent frames and fold/contact events. Rigid USD meshes cached at setup are not deforming garment geometry.'),
     'categorical': ('NA', 'Categorical/material identity; geometry belongs on another named slot. Amount, flow, joint travel and twist angle are separate intrinsic parameters.'),
 }
@@ -94,7 +94,7 @@ def build():
             if family == 'push' and slot == 'goal' and factor == 'D':
                 detail += ' Stage-start offsets use reference time=stage_start; episode-start state across later stages still requires a separately retained snapshot.'
             if profile == 'tool' and slot in ('start contact', 'contact') and factor in 'PDR' and concept != '—':
-                status, detail = 'G', 'Force-bearing object_contact_points resolves explicit tool/target body pairs; first_contact records synchronized points, colliders and impulses. Local regression tested. Held-tool, active-part calibration, stroke/impact recognition and live verification still needed; contacts have no orientation.'
+                status, detail = 'G', 'Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact now provide held stroke/contact evidence offline. Active-part calibration, impact velocity/rebound and live verification remain; contacts have no orientation.'
             if family == 'insert' and slot in ('opening', 'alignment', 'goal') and factor == 'R' and concept != '—':
                 status, detail = 'M', 'Through/centred/seated/flush are not generic relation names. Define opening crossing/fit/depth; finite convex inside_box only covers its explicit box semantics.'
             if family == 'pour' and slot == 'tilt' and concept != '—':
@@ -112,7 +112,8 @@ def build():
         raise ValueError('taxonomy/action/slot/factor coverage changed; review every missing or new cell')
     fingerprints = {str(p): hashlib.sha256((REPO / p).read_bytes()).hexdigest() for p in (
         Path('task/atomic/TAXONOMY.md'), Path('task/atomic/spec.py'), Path('task/atomic/geometry.py'),
-        Path('task/atomic/session.py'), Path('task/atomic/surfaces.py'), Path('task/atomic/contacts.py'))}
+        Path('task/atomic/session.py'), Path('task/atomic/surfaces.py'), Path('task/atomic/contacts.py'),
+        Path('task/atomic/recognizers.py'))}
     counts = {code: sum(cell['status'] == code for row in rows for cell in row['factors'].values())
               for code in ('L', 'C', 'G', 'F', 'S', 'M', 'NA')}
     return {'schema_version': 1, 'scope': 'source/semantics audit, not universal live validation',

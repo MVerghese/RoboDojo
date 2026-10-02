@@ -18,7 +18,8 @@
         }
       ],
       "audit_gaps": [
-        "Body-pair contact sampling exists, but row alignment and no lifting do not prove a held set-square stroke. Add calibrated active-edge and contact-coupled block-motion recognition. Tool reset placement is proposed cleanup, not a native stage."
+        "Prototype program now recognizes held set-square/target contact-coupled supported motion independently for cube0/cube1/cube2. Native row alignment/no-lift remains separate. Calibrate active edges and validate live. Tool reset placement is proposed cleanup, not a native stage.",
+        "Generic physical adapters now exist offline for push_with_tool. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/align_blocks.py",
@@ -72,7 +73,8 @@
         }
       ],
       "audit_gaps": [
-        "XY proximity and world-axis orientation do not verify release, support or full footprint containment on the mat; largest-number selection is a precondition."
+        "XY proximity and world-axis orientation do not verify release, support or full footprint containment on the mat; largest-number selection is a precondition.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/arrange_largest_number.py",
@@ -141,7 +143,8 @@
         }
       ],
       "audit_gaps": [
-        "XY proximity and world-axis orientation do not verify release, support or full footprint containment on the mat; largest-number selection is a precondition. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "XY proximity and world-axis orientation do not verify release, support or full footprint containment on the mat; largest-number selection is a precondition. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/arrange_largest_number_random.py",
@@ -210,7 +213,8 @@
         }
       ],
       "audit_gaps": [
-        "Native height, support-circle and axis checks need mesh footprint overlap and load-bearing contact; protect already assembled pieces and check stable release."
+        "Native height, support-circle and axis checks need mesh footprint overlap and load-bearing contact; protect already assembled pieces and check stable release.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/build_tower.py",
@@ -289,7 +293,8 @@
         }
       ],
       "audit_gaps": [
-        "Category membership and height constraints do not establish finite-volume containment or stable release. Resolve per-layout categories and basket labels before defining repeated stages."
+        "Category membership and height constraints do not establish finite-volume containment or stable release. Resolve per-layout categories and basket labels before defining repeated stages.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/classify_objects.py",
@@ -363,7 +368,8 @@
         }
       ],
       "audit_gaps": [
-        "Keep object-resolved language and wrong-category exclusions; add full object containment, support and release rather than relying on root XY/height checks."
+        "Keep object-resolved language and wrong-category exclusions; add full object containment, support and release rather than relying on root XY/height checks.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/classify_objects_by_language.py",
@@ -517,7 +523,8 @@
         }
       ],
       "audit_gaps": [
-        "Cover/uncover predicates are sequential but do not establish grasp/contact or interior-shell containment. Preserve remembered order; verify inverted cup geometry and release."
+        "Cover/uncover predicates are sequential but do not establish grasp/contact or interior-shell containment. Preserve remembered order; verify inverted cup geometry and release.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/cover_blocks.py",
@@ -776,7 +783,8 @@
         }
       ],
       "audit_gaps": [
-        "Whole-coin containment between bottom/center tags is a terminal predicate, not entry evidence. The bank origin cannot substitute for an annotated slot frame; entry geometry remains unimplemented."
+        "Whole-coin containment between bottom/center tags is a terminal predicate, not entry evidence. The bank origin cannot substitute for an annotated slot frame; entry geometry remains unimplemented.",
+        "Generic physical adapters now exist offline for insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/deposit_coin.py",
@@ -830,7 +838,8 @@
         }
       ],
       "audit_gaps": [
-        "Config makes nuts Rigid and bolts fixed Geometry; never target a fixed bolt for pick. Native reward measures nut depth/alignment only, not rotation or tightening. Verify thread/constraint representation and contact-coupled unwrapped rotation."
+        "Config makes nuts Rigid and bolts fixed Geometry; never target a fixed bolt for pick. Native reward measures nut depth/alignment only, not rotation or tightening. Verify thread/constraint representation and contact-coupled unwrapped rotation.",
+        "Generic physical adapters now exist offline for insert, twist. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/fasten_screws.py",
@@ -919,7 +928,8 @@
         }
       ],
       "audit_gaps": [
-        "Closing is a joint-ratio endpoint only. Audit joint limits/sign and actual finger/lid contact; each egg needs finite containment and support before the close stage."
+        "Closing is a joint-ratio endpoint only. Audit joint limits/sign and actual finger/lid contact; each egg needs finite containment and support before the close stage.",
+        "Generic physical adapters now exist offline for actuate, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/fill_egg_holder.py",
@@ -1033,7 +1043,8 @@
         }
       ],
       "audit_gaps": [
-        "The instruction requires continuous other-hand support, which native final-state checks do not prove. Pen check-point alignment/depth needs an annotated entry plane and actual tip crossing; enforce holder stability throughout insertion."
+        "The instruction requires continuous other-hand support, which native final-state checks do not prove. Pen check-point alignment/depth needs an annotated entry plane and actual tip crossing; enforce holder stability throughout insertion.",
+        "Generic physical adapters now exist offline for insert, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/fill_pen_holder.py",
@@ -1440,7 +1451,8 @@
         }
       ],
       "audit_gaps": [
-        "Handle-point proximity, orientation and lift do not establish hook engagement or support. Verify rack/mug contact and stability after releasing; do not substitute handle centre proximity for hanging."
+        "Handle-point proximity, orientation and lift do not establish hook engagement or support. Verify rack/mug contact and stability after releasing; do not substitute handle centre proximity for hanging.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/hang_mugs.py",
@@ -1614,7 +1626,8 @@
         }
       ],
       "audit_gaps": [
-        "Handle-point proximity, orientation and lift do not establish hook engagement or support. Verify rack/mug contact and stability after releasing; do not substitute handle centre proximity for hanging. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Handle-point proximity, orientation and lift do not establish hook engagement or support. Verify rack/mug contact and stability after releasing; do not substitute handle centre proximity for hanging. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/hang_mugs_random.py",
@@ -1788,7 +1801,8 @@
         }
       ],
       "audit_gaps": [
-        "The scripted support_arm0 demonstration is a scene event. Preserve order and resolve basket0/basket1 and aim landmarks from the active phase; add grasp, containment and release recognition."
+        "The scripted support_arm0 demonstration is a scene event. Preserve order and resolve basket0/basket1 and aim landmarks from the active phase; add grasp, containment and release recognition.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/imitate_sorting_sequence.py",
@@ -1967,7 +1981,8 @@
         }
       ],
       "audit_gaps": [
-        "Lift and final depth/XY/orientation do not establish handover or a turn after insertion. Add giver/receiver contact sequence and unwrapped rotation about the keyhole axis while depth is maintained."
+        "Lift and final depth/XY/orientation do not establish handover or a turn after insertion. Add giver/receiver contact sequence and unwrapped rotation about the keyhole axis while depth is maintained.",
+        "Generic physical adapters now exist offline for handover, insert, twist. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/insert_key.py",
@@ -2041,7 +2056,8 @@
         }
       ],
       "audit_gaps": [
-        "Final containment/depth/upright orientation lacks individual opening identities and entry-plane crossing; calibrate tube tips and each opening frame rather than rack root."
+        "Final containment/depth/upright orientation lacks individual opening identities and entry-plane crossing; calibrate tube tips and each opening frame rather than rack root.",
+        "Generic physical adapters now exist offline for insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/insert_tubes.py",
@@ -2151,7 +2167,8 @@
       ],
       "audit_gaps": [
         "Declare-kong language does not prescribe a unique motor sequence. Opponent discard and rule state must be preserved; native tile-location/game logic needs release/support evidence for each proposed placement.",
-        "Native reward additionally requires mahjong9_0 orientation checkpoint then final XY [.319,-.15] with local y upright; matching-three poses alone do not complete the task."
+        "Native reward additionally requires mahjong9_0 orientation checkpoint then final XY [.319,-.15] with local y upright; matching-three poses alone do not complete the task.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/make_kong.py",
@@ -2235,7 +2252,8 @@
         }
       ],
       "audit_gaps": [
-        "Audit the actual bread/slot landmark fit and lever joint direction. Native insertion and lever state endpoints do not verify slot crossing or force-bearing lever contact; preserve bread before pressing."
+        "Audit the actual bread/slot landmark fit and lever joint direction. Native insertion and lever state endpoints do not verify slot crossing or force-bearing lever contact; preserve bread before pressing.",
+        "Generic physical adapters now exist offline for actuate, insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/make_toast.py",
@@ -2324,7 +2342,8 @@
         }
       ],
       "audit_gaps": [
-        "Audit the actual bread/slot landmark fit and lever joint direction. Native insertion and lever state endpoints do not verify slot crossing or force-bearing lever contact; preserve bread before pressing. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Audit the actual bread/slot landmark fit and lever joint direction. Native insertion and lever state endpoints do not verify slot crossing or force-bearing lever contact; preserve bread before pressing. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.",
+        "Generic physical adapters now exist offline for actuate, insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/make_toast_random.py",
@@ -2442,7 +2461,8 @@
         }
       ],
       "audit_gaps": [
-        "Per-item stable position and axis checks do not establish support or direct pushing. Add fingertip contact and table-constrained keyboard motion; placement above requires footprint overlap/support."
+        "Per-item stable position and axis checks do not establish support or direct pushing. Add fingertip contact and table-constrained keyboard motion; placement above requires footprint overlap/support.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/organize_table.py",
@@ -2566,7 +2586,8 @@
         }
       ],
       "audit_gaps": [
-        "Resolve per-object front-axis conventions. Native containment/orientation must be checked against whole geometry in finite box bounds and stable release, with exclusion of box wall penetration."
+        "Resolve per-object front-axis conventions. Native containment/orientation must be checked against whole geometry in finite box bounds and stable release, with exclusion of box wall penetration.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/pack_objects_into_box.py",
@@ -2770,7 +2791,8 @@
         }
       ],
       "audit_gaps": [
-        "Resolve per-object front-axis conventions. Native containment/orientation must be checked against whole geometry in finite box bounds and stable release, with exclusion of box wall penetration. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Resolve per-object front-axis conventions. Native containment/orientation must be checked against whole geometry in finite box bounds and stable release, with exclusion of box wall penetration. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/pack_objects_into_box_random.py",
@@ -2974,7 +2996,8 @@
         }
       ],
       "audit_gaps": [
-        "Image identity, conveyor timing and continued basket support are preconditions. Add simultaneous other-arm contact/holder stability and whole-object containment; target lift alone is insufficient."
+        "Image identity, conveyor timing and continued basket support are preconditions. Add simultaneous other-arm contact/holder stability and whole-object containment; target lift alone is insufficient.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/pick_from_conveyor_by_image.py",
@@ -3013,7 +3036,8 @@
         }
       ],
       "audit_gaps": [
-        "Beat-point bbox and height events can trigger without impact. Explicit mallet/key body-pair contact sampling and first_contact exist; add active-tip identity, held-tool, approach velocity and strike/rebound debounce. Retain key order and lift between hits. New sampling has offline coverage only."
+        "Beat-point bbox and height can trigger without impact. held_tool_contact now supports a held mallet, named active tip/key collision paths, force-bearing impulse and separation debounce. Bind actual asset paths and add approach velocity/rebound/timing; retain key order and lift between hits. Offline only.",
+        "Generic physical adapters now exist offline for touch_with_tool. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/play_Xylophone.py",
@@ -3157,7 +3181,8 @@
         }
       ],
       "audit_gaps": [
-        "Instruction says place; the constrained peg geometry motivates insert. XY/depth endpoints do not prove the peg crossed the piece hole; use actual hole/pole axis, radial clearance and bounded depth."
+        "Instruction says place; the constrained peg geometry motivates insert. XY/depth endpoints do not prove the peg crossed the piece hole; use actual hole/pole axis, radial clearance and bounded depth.",
+        "Generic physical adapters now exist offline for insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/play_stacking_toy.py",
@@ -3281,7 +3306,8 @@
         }
       ],
       "audit_gaps": [
-        "Game instruction does not specify a motor sequence. Preserve opponent moves and turn/legal-cell state; cell occupancy needs full footprint fit, release and no interference with existing pieces."
+        "Game instruction does not specify a motor sequence. Preserve opponent moves and turn/legal-cell state; cell occupancy needs full footprint fit, release and no interference with existing pieces.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/play_tic_tac_toe.py",
@@ -3405,7 +3431,8 @@
         }
       ],
       "audit_gaps": [
-        "Pilot uses annotated tip/opening frames, lateral clearance, bounded depth and axis alignment. Calibrate all outlet frames and physical fit; endpoint geometry alone still does not prove electrical engagement or mechanical support."
+        "Pilot uses annotated tip/opening frames, lateral clearance, bounded depth and axis alignment. Calibrate all outlet frames and physical fit; endpoint geometry alone still does not prove electrical engagement or mechanical support.",
+        "Generic physical adapters now exist offline for insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/plug_in_charger.py",
@@ -3454,7 +3481,8 @@
         }
       ],
       "audit_gaps": [
-        "Pilot tightens native unbounded is_A_in_B to whole-ball finite bbox containment and samples cup height/footprint/orientation at first whole-ball entry. Add explicit source-exit provenance and spill accounting before claiming stream fidelity."
+        "Pilot tightens native unbounded is_A_in_B to whole-ball finite bbox containment and samples cup height/footprint/orientation at first whole-ball entry. Add explicit source-exit provenance and spill accounting before claiming stream fidelity.",
+        "Generic physical adapters now exist offline for pour. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/pour_balls_into_vase.py",
@@ -3528,7 +3556,8 @@
         }
       ],
       "audit_gaps": [
-        "Native fluid filtering can ignore scattered particles/components. Record total particle mass, source loss, target gain and spills without silently applying native ignore filters; preserve all color assignments."
+        "Native fluid filtering can ignore scattered particles/components. Record total particle mass, source loss, target gain and spills without silently applying native ignore filters; preserve all color assignments.",
+        "Generic physical adapters now exist offline for pour. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/pour_by_language.py",
@@ -3612,7 +3641,8 @@
         }
       ],
       "audit_gaps": [
-        "Native 97 percent fluid threshold uses residual/scatter filtering and an upright trigger. Audit raw particle mass conservation, finite target containment, source-exit events and spill amount; liquid fidelity has not been live validated by the ball pilot."
+        "Native 97 percent fluid threshold uses residual/scatter filtering and an upright trigger. Audit raw particle mass conservation, finite target containment, source-exit events and spill amount; liquid fidelity has not been live validated by the ball pilot.",
+        "Generic physical adapters now exist offline for pour. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/pour_liquid_into_cup.py",
@@ -3651,7 +3681,8 @@
         }
       ],
       "audit_gaps": [
-        "Native 97 percent fluid threshold uses residual/scatter filtering and an upright trigger. Audit raw particle mass conservation, finite target containment, source-exit events and spill amount; liquid fidelity has not been live validated by the ball pilot. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Native 97 percent fluid threshold uses residual/scatter filtering and an upright trigger. Audit raw particle mass conservation, finite target containment, source-exit events and spill amount; liquid fidelity has not been live validated by the ball pilot. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.",
+        "Generic physical adapters now exist offline for pour. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/pour_liquid_into_cup_random.py",
@@ -3686,7 +3717,8 @@
       ],
       "audit_gaps": [
         "Native joint-ratio crossing already provides temporal press events, but add contact point/force and release hysteresis so hovering, external motion and held-down repeats cannot count as valid presses.",
-        "Native reward requires two blue press/release confirmations, one after each red-button series, despite singular confirmation wording in the instruction."
+        "Native reward requires two blue press/release confirmations, one after each red-button series, despite singular confirmation wording in the instruction.",
+        "Generic physical adapters now exist offline for actuate. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/press_by_number.py",
@@ -3770,7 +3802,7 @@
         }
       ],
       "audit_gaps": [
-        "Pilot uses live single-finger contact at first 1 cm motion plus final mesh-centre pose; no contact at that instant means unverified interaction, even when goal alignment passes. Add contact intervals if requiring recognition of other contact timings."
+        "Current explicit physical recognizer requires contact-held planar motion and upward named support, independent of geometry. Historical base-T pilot measured first-motion contact and final goal separately; new interval rules and the random program need fresh live validation."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/push_T.py",
@@ -3814,7 +3846,7 @@
         }
       ],
       "audit_gaps": [
-        "Pilot uses live single-finger contact at first 1 cm motion plus final mesh-centre pose; no contact at that instant means unverified interaction, even when goal alignment passes. Add contact intervals if requiring recognition of other contact timings. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Current explicit physical recognizer requires contact-held planar motion and upward named support, independent of geometry. Historical base-T pilot measured first-motion contact and final goal separately; new interval rules and the random program need fresh live validation."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/push_T_random.py",
@@ -3863,7 +3895,8 @@
         }
       ],
       "audit_gaps": [
-        "THROW is explicitly required and is outside the eleven-family schema. Native dustbin-bottom landing does not prove throwing or handover; add release velocity, contact-free flight and finite landing containment before creating a throw benchmark."
+        "THROW is explicitly required and is outside the eleven-family schema. Native dustbin-bottom landing does not prove throwing or handover; add release velocity, contact-free flight and finite landing containment before creating a throw benchmark.",
+        "Generic physical adapters now exist offline for handover. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/put_bottles_into_dustbin.py",
@@ -3922,7 +3955,8 @@
         }
       ],
       "audit_gaps": [
-        "Arithmetic/identity is a precondition; XY and world-axis checks do not establish full pad fit, support or release. Use the per-layout missing token and mat state."
+        "Arithmetic/identity is a precondition; XY and world-axis checks do not establish full pad fit, support or release. Use the per-layout missing token and mat state.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/solve_equation.py",
@@ -3971,7 +4005,8 @@
         }
       ],
       "audit_gaps": [
-        "Relative left/right and y spread do not establish release/support, non-overlap or measured size ordering. Calibrate footprint extents and row landmarks per variant."
+        "Relative left/right and y spread do not establish release/support, non-overlap or measured size ordering. Calibrate footprint extents and row landmarks per variant.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/sort_nesting_dolls_by_size.py",
@@ -4020,7 +4055,8 @@
         }
       ],
       "audit_gaps": [
-        "Relative left/right and y spread do not establish release/support, non-overlap or measured size ordering. Calibrate footprint extents and row landmarks per variant. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Relative left/right and y spread do not establish release/support, non-overlap or measured size ordering. Calibrate footprint extents and row landmarks per variant. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/sort_nesting_dolls_by_size_random.py",
@@ -4069,7 +4105,8 @@
         }
       ],
       "audit_gaps": [
-        "Native is_stacked must be audited for mesh footprint and support-contact semantics; add stable release and contact persistence, including permitted block order."
+        "Native is_stacked must be audited for mesh footprint and support-contact semantics; add stable release and contact persistence, including permitted block order.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/stack_blocks.py",
@@ -4138,7 +4175,8 @@
         }
       ],
       "audit_gaps": [
-        "Preserve the resolved color mapping and in_order requirement. XY/height stack checks need full mesh overlap, support and post-release stability; avoid changing atomic success to match each geometric target."
+        "Prototype program preserves resolved label/color order and recognizes pick plus held transport/release/upward support/settling on each named lower block. Geometry separately scores footprint/support. Calibrate thresholds against physics dt and validate live; do not change recognition with geometric targets.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/stack_blocks_by_language.py",
@@ -4202,7 +4240,8 @@
         }
       ],
       "audit_gaps": [
-        "Native is_stacked must be audited for mesh footprint and support-contact semantics; add stable release and contact persistence, including permitted block order. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Native is_stacked must be audited for mesh footprint and support-contact semantics; add stable release and contact persistence, including permitted block order. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/stack_blocks_random.py",
@@ -4271,7 +4310,8 @@
         }
       ],
       "audit_gaps": [
-        "Nested shells have cavities; convex bbox support/containment can be wrong. Use actual shell/contact geometry, stable release and permitted nesting order; preserve holes in projected footprints."
+        "Nested shells have cavities; convex bbox support/containment can be wrong. Use actual shell/contact geometry, stable release and permitted nesting order; preserve holes in projected footprints.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/stack_bowls.py",
@@ -4455,7 +4495,8 @@
         }
       ],
       "audit_gaps": [
-        "Nested shells have cavities; convex bbox support/containment can be wrong. Use actual shell/contact geometry, stable release and permitted nesting order; preserve holes in projected footprints. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Nested shells have cavities; convex bbox support/containment can be wrong. Use actual shell/contact geometry, stable release and permitted nesting order; preserve holes in projected footprints. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/stack_bowls_random.py",
@@ -4644,7 +4685,8 @@
         }
       ],
       "audit_gaps": [
-        "Functional-frame proximity and hinge ratio do not verify hanging support, force-bearing hinge actuation or rack fit. Check articulated child-link geometry after closing and stable release in both placements."
+        "Functional-frame proximity and hinge ratio do not verify hanging support, force-bearing hinge actuation or rack fit. Check articulated child-link geometry after closing and stable release in both placements.",
+        "Generic physical adapters now exist offline for actuate, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/store_laptop_and_headphones.py",
@@ -4733,7 +4775,8 @@
         }
       ],
       "audit_gaps": [
-        "Functional-frame proximity and hinge ratio do not verify hanging support, force-bearing hinge actuation or rack fit. Check articulated child-link geometry after closing and stable release in both placements. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Functional-frame proximity and hinge ratio do not verify hanging support, force-bearing hinge actuation or rack fit. Check articulated child-link geometry after closing and stable release in both placements. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.",
+        "Generic physical adapters now exist offline for actuate, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/store_laptop_and_headphones_random.py",
@@ -4817,7 +4860,8 @@
         }
       ],
       "audit_gaps": [
-        "Native functional-point proximity/cover checks do not establish full tool fit or stable release. Resolve symmetric pliers orientations; constrained insert is a candidate only if an actual entry path is verified."
+        "Native functional-point proximity/cover checks do not establish full tool fit or stable release. Resolve symmetric pliers orientations; constrained insert is a candidate only if an actual entry path is verified.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/store_tools_in_toolbox.py",
@@ -4936,7 +4980,8 @@
         }
       ],
       "audit_gaps": [
-        "Preserve saved initial layout poses, actual root-to-mesh-centre offsets and a feasible temporary parking region; final XY/quaternion checks do not recognize the picks or supported release."
+        "Preserve saved initial layout poses, actual root-to-mesh-centre offsets and a feasible temporary parking region; final XY/quaternion checks do not recognize the picks or supported release.",
+        "Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/swap_T.py",
@@ -4995,7 +5040,8 @@
         }
       ],
       "audit_gaps": [
-        "Native sequence already tracks position and press crossings. Add block support/release and finger/button contact, preserve exact move/confirm ordering and identify the empty mat from the layout."
+        "Native sequence already tracks position and press crossings. Add block support/release and finger/button contact, preserve exact move/confirm ordering and identify the empty mat from the layout.",
+        "Generic physical adapters now exist offline for actuate, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/swap_blocks.py",
@@ -5179,7 +5225,8 @@
         }
       ],
       "audit_gaps": [
-        "Native dustpan location/orientation and cube containment do not prove broom contact or handover. Explicit tool-target contact sampling exists; add calibrated active broom-head, held-tool stroke and handover recognizers; ensure continued dustpan stabilization."
+        "Native dustpan location/orientation and cube containment do not prove sweeping or handover. Generic held_tool_push/grip_transfer and maintained_holds now exist offline. Bind actual broom-head, giver/receiver arms and dustpan constraints, preserve item/layout counts and validate live.",
+        "Generic physical adapters now exist offline for handover, push_with_tool. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/sweep_blocks.py",
@@ -5243,7 +5290,8 @@
         }
       ],
       "audit_gaps": [
-        "Native dustpan location/orientation and cube containment do not prove broom contact or handover. Explicit tool-target contact sampling exists; add calibrated active broom-head, held-tool stroke and handover recognizers; ensure continued dustpan stabilization. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Native dustpan location/orientation and cube containment do not prove sweeping or handover. Generic held_tool_push/grip_transfer and maintained_holds now exist offline. Bind actual broom-head, giver/receiver arms and dustpan constraints, preserve item/layout counts and validate live.",
+        "Generic physical adapters now exist offline for handover, push_with_tool. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/sweep_blocks_random.py",

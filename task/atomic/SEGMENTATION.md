@@ -19,7 +19,7 @@ Selection names and goal text are reviewed resolution contracts, **not executabl
 
 1. Bind labels/roles and live functional landmarks from each loaded layout. Preserve free choices and optional stages. Calibrate geometry against actual meshes and feasible trajectories.
 2. Add geometry-independent physical recognizers below. Emit contact/event intervals at physics-substep resolution with arm/object identities, provenance, confidence and missing-data status. An endpoint predicate alone does not establish the action that achieved it.
-3. Replace the single-current-stage assumption for general-task observation with concurrently enabled nodes, repeat-instance state and scene-event gates. `AtomicSequence` advances one ordered stage at most per action chunk; it can miss short/overlapping actions and cannot represent these general plans.
+3. Bind these plans to the new concurrent dependency runtime. `AtomicSequence` now samples all enabled stages each physics substep and permits overlapping independent branches; finite repetitions can be explicitly unrolled. Automatic layout/choice resolution, repeat expansion and scene-event gates remain missing. See [RUNTIME.md](RUNTIME.md); the prose plans are still not executable programs.
 4. Capture verified start states at observed action boundaries. Save the common and task-specific state below. `replay_prefix` currently replays actions and checks preceding predicates; it is not a full simulator snapshot. `_start_atomic_stage` resets parser baselines and robot origin after replay, so memory/game/count/trigger tasks need explicit state restoration rather than treating that reset as equivalent to the original boundary.
 5. Validate replay/snapshot fidelity against original poses, joints, velocities, material/particle state and native phase; reject already-completed or unsupported starts. Then generate with/without-condition pairs using identical recognition/success checks and calibrated slot targets. Report recognition, task success, geometry error and coverage separately.
 
@@ -30,15 +30,15 @@ A single rigid-object pilot is insufficient to establish later-stage restarts fo
 | Family | Required physical evidence/boundaries | Current support |
 | --- | --- | --- |
 | `pick` | Force-bearing finger/object grasp followed by supported lift; bind arm/contact region. Boundaries: contact onset, secure hold, lift onset. | Explicit geometry-independent same-arm two-finger contact-held motion interval, full native lift within the current held interval and current hold at endpoint implemented for rigid pick. Offline regression coverage; new live verification, broader force closure and grasp-stability calibration still needed. |
-| `place` | Held object approaches target, is released, settles with intended containment/support. Boundaries: approach, gripper release, stable support. | Native endpoint predicates exist; release/support/stability recognizer missing. |
+| `place` | Held object approaches target, is released, settles with intended containment/support. Boundaries: approach, gripper release, stable support. | supported_release now tracks held transport, all-finger release, upward support and consecutive bounded pose changes. Prototype stack_blocks_by_language binding and offline counterexamples; asset calibration and live validation remain. |
 | `push` | Robot/object contact co-occurs with object motion while intended table support persists. Boundaries: contact onset, motion interval, contact loss. | Explicit geometry-independent finger/contact-held planar motion with named upward force-bearing scene-table/object support each sampled step implemented. Offline regression coverage; new live verification, independent stroke segmentation and palm contacts still needed. |
-| `push_with_tool` | Held tool active surface contacts selected objects and causes displacement. Boundaries: tool grasp, tool/object contact, stroke interval. | Explicit tool/target body-pair sampler and first_contact event implemented with offline coverage. Held-tool, calibrated active-edge and contact-coupled stroke recognizer still missing. |
-| `pour` | Selected material exits source and enters target with residue/spill accounting. Boundaries: source exit, first target entry, transfer interval. | Ball target-entry sampler exists; source-exit provenance and generic fluid adapter missing. |
-| `actuate` | Robot contacts moving mechanism link and causes calibrated joint transition. Boundaries: link contact, joint transition, release/debounce. | Moving-link contact and contact-coupled joint recognizer missing. |
-| `twist` | Gripped part rotates about intended constrained axis with engagement maintained. Boundaries: engagement, unwrapped signed rotation, constraint continuity. | Temporal rotation, pivot/axis and thread-progress adapter missing. |
-| `insert` | Tip/hole crosses opening/peg with fit, axis alignment and bounded signed depth. Boundaries: entry crossing, fit/depth interval, seated state. | Charger-specific tip/depth checks exist; general opening/peg adapter missing. |
-| `touch_with_tool` | Held tool tip physically impacts intended target then separates for next strike. Boundaries: impact impulse, target identity, rebound/debounce. | Explicit tool/target body-pair contact points/impulses and first_contact event implemented with offline coverage. Held-tool, calibrated tip, impact velocity and strike/rebound recognizer still missing. |
-| `handover` | Giver hold precedes receiver hold, giver release and continued receiver support. Boundaries: giver hold, dual hold, giver release, receiver support. | Arm-resolved contacts exist; transfer state machine missing. |
+| `push_with_tool` | Held tool active surface contacts selected objects and causes displacement. Boundaries: tool grasp, tool/object contact, stroke interval. | held_tool_push now requires sustained tool grasp, simultaneous tool/target contact, support and new planar tool/target motion. Prototype align_blocks binding and offline counterexamples; active-edge calibration and live validation remain. |
+| `pour` | Selected material exits source and enters target with residue/spill accounting. Boundaries: source exit, first target entry, transfer interval. | rigid_material_transfer now tracks initially contained source contents, held/tilted source exit, whole-rigid-object target entry and raw counts in explicitly calibrated convex interior volumes. Offline only; existing ball program not migrated, liquid particle/mass adapter missing. |
+| `actuate` | Robot contacts moving mechanism link and causes calibrated joint transition. Boundaries: link contact, joint transition, release/debounce. | contact_joint_motion now reads live DOF state and its actual USD moving-body contact, with directed travel during a contact interval. Offline counterexamples; per-control joint/sign/limits binding, moving-link geometry selectors and live validation remain. |
+| `twist` | Gripped part rotates about intended constrained axis with engagement maintained. Boundaries: engagement, unwrapped signed rotation, constraint continuity. | contact_constrained_twist now accumulates signed substep rotation with held part/target contact, configured pivot depth/radius and bounded off-axis rotation. Offline counterexamples; calibrated part-root/pivot, thread engagement/progress and live validation remain. |
+| `insert` | Tip/hole crosses opening/peg with fit, axis alignment and bounded signed depth. Boundaries: entry crossing, fit/depth interval, seated state. | held_insertion now recognizes an aligned held-tip path from outside a live opening into signed bounded depth with target contact. Offline counterexamples; task-specific hole/peg/tip fit calibration, existing program migration and live validation remain. |
+| `touch_with_tool` | Held tool tip physically impacts intended target then separates for next strike. Boundaries: impact impulse, target identity, rebound/debounce. | held_tool_contact now requires held tool, new contact after separation, named active body/collider suffixes and impulse. Offline counterexamples; actual tip/key bindings, impact velocity/rebound/timing and live validation remain. |
+| `handover` | Giver hold precedes receiver hold, giver release and continued receiver support. Boundaries: giver hold, dual hold, giver release, receiver support. | grip_transfer now tracks giver-only hold, sustained overlap, actual giver release and continued receiver-only hold with bounded per-step displacement. Offline counterexamples; named task-arm bindings and live validation remain. |
 | `fold` | Grasped material region moves across crease; layers align and remain after release. Boundaries: material grasp, crease crossing, layer overlap, stable release. | Live deformable material/contact/layer adapter missing. |
 
 See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geometry to any action. All recipes require recognition independent of the requested geometric target.
@@ -131,7 +131,8 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - One stroke may move several blocks; do not create one action per block just from final alignment.
-- Body-pair contact sampling exists, but row alignment and no lifting do not prove a held set-square stroke. Add calibrated active-edge and contact-coupled block-motion recognition. Tool reset placement is proposed cleanup, not a native stage.
+- Prototype program now recognizes held set-square/target contact-coupled supported motion independently for cube0/cube1/cube2. Native row alignment/no-lift remains separate. Calibrate active edges and validate live. Tool reset placement is proposed cleanup, not a native stage.
+- Generic physical adapters now exist offline for push_with_tool. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 1 tool pick + one or more tool pushes.
 
@@ -157,6 +158,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Descending spatial digit order does not require descending manipulation order.
 - XY proximity and world-axis orientation do not verify release, support or full footprint containment on the mat; largest-number selection is a precondition.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Digit-to-mat assignment and any already placed digits.
 - Canonical count: 2N canonical actions, N=4–5.
 
@@ -182,6 +184,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Descending spatial digit order does not require descending manipulation order.
 - XY proximity and world-axis orientation do not verify release, support or full footprint containment on the mat; largest-number selection is a precondition. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Digit-to-mat assignment and any already placed digits.
 - Canonical count: 2N canonical actions, N=4–5.
 
@@ -227,6 +230,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Source base structure accepts multiple left/right role assignments. Independent pair placement order; boards depend on both supports. Already satisfied supports may be left in place only with verified state.
 - Native height, support-circle and axis checks need mesh footprint overlap and load-bearing contact; protect already assembled pieces and check stable release.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Chosen support roles, tower contact graph and stability history.
 - Canonical count: 16 canonical actions if all eight pieces are repositioned; fewer if supports already valid.
 
@@ -252,6 +256,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Any object manipulation order is valid; do not pick the fixed baskets.
 - Category membership and height constraints do not establish finite-volume containment or stable release. Resolve per-layout categories and basket labels before defining repeated stages.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 2N canonical actions, N=3–9.
 
@@ -276,6 +281,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Keep object-resolved language and wrong-category exclusions; add full object containment, support and release rather than relying on root XY/height checks.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 2N canonical actions, N=6–9.
 
@@ -306,6 +312,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Do not move blocks >5 cm; cups must remain inverted at native completion. No extra initial-pose cup reset is requested.
 - Cover/uncover predicates are sequential but do not establish grasp/contact or interior-shell containment. Preserve remembered order; verify inverted cup geometry and release.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Initial block x/color order, actual cup→block assignment and cover/uncover phase.
 - Canonical count: 12 canonical actions.
 
@@ -329,6 +336,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Whole-coin containment between bottom/center tags is a terminal predicate, not entry evidence. The bank origin cannot substitute for an annotated slot frame; entry geometry remains unimplemented.
+- Generic physical adapters now exist offline for insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Bank root is not the opening; annotate the slot and verify coin passage before adding insertion geometry.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 2.
@@ -356,6 +364,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Instruction calls for screw insertion/tightening, but config makes nuts movable and bolts fixed. Native reward checks only nut depth/alignment; tightening is not verified.
 - Config makes nuts Rigid and bolts fixed Geometry; never target a fixed bolt for pick. Native reward measures nut depth/alignment only, not rotation or tightening. Verify thread/constraint representation and contact-coupled unwrapped rotation.
+- Generic physical adapters now exist offline for insert, twist. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Verify thread/constraint representation and measurable tightening progress; if absent, twist feasibility remains unresolved.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 9 canonical actions; twist is an unverified requirement.
@@ -384,6 +393,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Any egg order; close lid after all four placements.
 - Closing is a joint-ratio endpoint only. Audit joint limits/sign and actual finger/lid contact; each egg needs finite containment and support before the close stage.
+- Generic physical adapters now exist offline for actuate, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Holder lid joint position/velocity.
 - Canonical count: 9.
 
@@ -413,6 +423,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Holder pick is followed by a maintained hold, not a one-time proximity check.
 - The instruction requires continuous other-hand support, which native final-state checks do not prove. Pen check-point alignment/depth needs an annotated entry plane and actual tip crossing; enforce holder stability throughout insertion.
+- Generic physical adapters now exist offline for insert, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Both arm holds, pen/holder contacts and held-object velocities.
 - Canonical count: 10.
 
@@ -509,6 +520,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Bind an available hook per mug; hanging is a constrained supported placement, not root proximity.
 - Handle-point proximity, orientation and lift do not establish hook engagement or support. Verify rack/mug contact and stability after releasing; do not substitute handle centre proximity for hanging.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 6.
 
@@ -534,6 +546,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Bind an available hook per mug; hanging is a constrained supported placement, not root proximity.
 - Handle-point proximity, orientation and lift do not establish hook engagement or support. Verify rack/mug contact and stability after releasing; do not substitute handle centre proximity for hanging. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 6.
 
@@ -560,6 +573,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Opponent demonstration objects aim0..4 are not the policy placement targets. Preserve native no-interference queries.
 - The scripted support_arm0 demonstration is a scene event. Preserve order and resolve basket0/basket1 and aim landmarks from the active phase; add grasp, containment and release recognition.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Demonstrated order, aim/target mapping, support-arm action queue/index, native phase and completed prefix.
 - Canonical count: 10 robot actions + demonstration event.
 
@@ -586,6 +600,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Native final key orientation does not verify either handover or temporal turning.
 - Lift and final depth/XY/orientation do not establish handover or a turn after insertion. Add giver/receiver contact sequence and unwrapped rotation about the keyhole axis while depth is maintained.
+- Generic physical adapters now exist offline for handover, insert, twist. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 4.
 
@@ -610,6 +625,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Final containment/depth/upright orientation lacks individual opening identities and entry-plane crossing; calibrate tube tips and each opening frame rather than rack root.
+- Generic physical adapters now exist offline for insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 6.
 
@@ -641,6 +657,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 - Native reward adds a mahjong9_0 orientation checkpoint and final pose beyond the generic instruction. Pick/place decomposition is proposed; physical reorientation could use a different route and needs observed evidence. Do not pick opponent discard tile just because it defines the group.
 - Declare-kong language does not prescribe a unique motor sequence. Opponent discard and rule state must be preserved; native tile-location/game logic needs release/support evidence for each proposed placement.
 - Native reward additionally requires mahjong9_0 orientation checkpoint then final XY [.319,-.15] with local y upright; matching-three poses alone do not complete the task.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: self.push/kong/push_idx, opponent queue/index, native declaration orientation phase, preserved nonmatching tiles.
 - Canonical count: 8 proposed canonical pick/place actions + opponent event; route unresolved.
 
@@ -667,6 +684,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Audit the actual bread/slot landmark fit and lever joint direction. Native insertion and lever state endpoints do not verify slot crossing or force-bearing lever contact; preserve bread before pressing.
+- Generic physical adapters now exist offline for actuate, insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Selected bread identities, slot assignment and lever joint state.
 - Canonical count: 5.
 
@@ -693,6 +711,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Audit the actual bread/slot landmark fit and lever joint direction. Native insertion and lever state endpoints do not verify slot crossing or force-bearing lever contact; preserve bread before pressing. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Generic physical adapters now exist offline for actuate, insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Selected bread identities, slot assignment and lever joint state.
 - Canonical count: 5.
 
@@ -749,6 +768,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Four object goals are independent; instruction enumerates them without a native required manipulation sequence.
 - Per-item stable position and axis checks do not establish support or direct pushing. Add fingertip contact and table-constrained keyboard motion; placement above requires footprint overlap/support.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 7 canonical actions.
 
@@ -774,6 +794,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Box is also Rigid but is the container, not an item to pack. Preserve left-facing orientation and finite containment.
 - Resolve per-object front-axis conventions. Native containment/orientation must be checked against whole geometry in finite box bounds and stable release, with exclusion of box wall penetration.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 8.
 
@@ -799,6 +820,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Box is also Rigid but is the container, not an item to pack. Preserve left-facing orientation and finite containment.
 - Resolve per-object front-axis conventions. Native containment/orientation must be checked against whole geometry in finite box bounds and stable release, with exclusion of box wall penetration. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 8.
 
@@ -827,6 +849,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Native reward only checks target support and target lift; explicitly recognize the requested basket lift and sustained hold. Image reading can occur before or during basket lift.
 - Image identity, conveyor timing and continued basket support are preconditions. Add simultaneous other-arm contact/holder stability and whole-object containment; target lift alone is insufficient.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Conveyor clock, spawn history, image-target mapping and basket hold.
 - Canonical count: 3.
 
@@ -850,7 +873,8 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 **Ordering, recognition and restart gaps:**
 
-- Beat-point bbox and height events can trigger without impact. Explicit mallet/key body-pair contact sampling and first_contact exist; add active-tip identity, held-tool, approach velocity and strike/rebound debounce. Retain key order and lift between hits. New sampling has offline coverage only.
+- Beat-point bbox and height can trigger without impact. held_tool_contact now supports a held mallet, named active tip/key collision paths, force-bearing impulse and separation debounce. Bind actual asset paths and add approach velocity/rebound/timing; retain key order and lift between hits. Offline only.
+- Generic physical adapters now exist offline for touch_with_tool. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Current key index, impact debounce and prior contact/lift state.
 - Canonical count: 9.
 
@@ -876,6 +900,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Assignments: block0..3→pole/0; block4..6→pole/1; block7..8→pole/2; block9→pole/3. Per-peg support dependencies must come from chosen stacking arrangement; native endpoint checks do not mandate item manipulation order.
 - Instruction says place; the constrained peg geometry motivates insert. XY/depth endpoints do not prove the peg crossed the piece hole; use actual hole/pole axis, radial clearance and bounded depth.
+- Generic physical adapters now exist offline for insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 20 canonical actions.
 
@@ -903,6 +928,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Task asks to fill the board, not necessarily win. No fixed cell sequence may be assumed from source.
 - Game instruction does not specify a motor sequence. Preserve opponent moves and turn/legal-cell state; cell occupancy needs full footprint fit, release and no interference with existing pieces.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Board occupancy, player/opponent turn, RNG state, opponent selected cell and pending action queue/index.
 - Canonical count: 10 robot actions + four opponent events.
 
@@ -927,6 +953,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Multiple outlets are alternatives; pilot selects socket/1, not a universal task requirement.
 - Pilot uses annotated tip/opening frames, lateral clearance, bounded depth and axis alignment. Calibrate all outlet frames and physical fit; endpoint geometry alone still does not prove electrical engagement or mechanical support.
+- Generic physical adapters now exist offline for insert. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 2.
 
@@ -951,6 +978,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Pilot tightens native unbounded is_A_in_B to whole-ball finite bbox containment and samples cup height/footprint/orientation at first whole-ball entry. Add explicit source-exit provenance and spill accounting before claiming stream fidelity.
+- Generic physical adapters now exist offline for pour. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Every ball pose/velocity and source/target membership, cup grasp and velocities.
 - Canonical count: 2 canonical actions; separate interrupted pours may repeat.
 
@@ -978,6 +1006,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Native fluid filtering can ignore scattered particles/components. Record total particle mass, source loss, target gain and spills without silently applying native ignore filters; preserve all color assignments.
+- Generic physical adapters now exist offline for pour. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: All three fluid states, return-trigger history, completed-prefix state and source/target mapping.
 - Canonical count: 9 canonical motor actions + 3 reset events; bottle release is proposed cleanup.
 
@@ -1002,6 +1031,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Native 97 percent fluid threshold uses residual/scatter filtering and an upright trigger. Audit raw particle mass conservation, finite target containment, source-exit events and spill amount; liquid fidelity has not been live validated by the ball pilot.
+- Generic physical adapters now exist offline for pour. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Particle positions/velocities/mass, source identity, filtering metadata and cup/bottle state.
 - Canonical count: 2.
 
@@ -1026,6 +1056,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Native 97 percent fluid threshold uses residual/scatter filtering and an upright trigger. Audit raw particle mass conservation, finite target containment, source-exit events and spill amount; liquid fidelity has not been live validated by the ball pilot. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Generic physical adapters now exist offline for pour. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Particle positions/velocities/mass, source identity, filtering metadata and cup/bottle state.
 - Canonical count: 2.
 
@@ -1057,6 +1088,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 - Native checker requires two blue confirmations despite singular confirmation wording in instruction. One actuation is a full press/release cycle, not a single threshold sample.
 - Native joint-ratio crossing already provides temporal press events, but add contact point/force and release hysteresis so hovering, external motion and held-down repeats cannot count as valid presses.
 - Native reward requires two blue press/release confirmations, one after each red-button series, despite singular confirmation wording in the instruction.
+- Generic physical adapters now exist offline for actuate. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Card counts, completed cycles, joint positions/velocities, debounce/hysteresis and query counts.
 - Canonical count: n0+n1+2 actuation cycles.
 
@@ -1078,7 +1110,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - A series of continuous contacts may form one push; segment separate strokes from contact loss/reacquisition.
-- Pilot uses live single-finger contact at first 1 cm motion plus final mesh-centre pose; no contact at that instant means unverified interaction, even when goal alignment passes. Add contact intervals if requiring recognition of other contact timings.
+- Current explicit physical recognizer requires contact-held planar motion and upward named support, independent of geometry. Historical base-T pilot measured first-motion contact and final goal separately; new interval rules and the random program need fresh live validation.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 1 canonical push, potentially several observed strokes.
 
@@ -1100,7 +1132,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - A series of continuous contacts may form one push; segment separate strokes from contact loss/reacquisition.
-- Pilot uses live single-finger contact at first 1 cm motion plus final mesh-centre pose; no contact at that instant means unverified interaction, even when goal alignment passes. Add contact intervals if requiring recognition of other contact timings. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Current explicit physical recognizer requires contact-held planar motion and upward named support, independent of geometry. Historical base-T pilot measured first-motion contact and final goal separately; new interval rules and the random program need fresh live validation.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 1 canonical push, potentially several observed strokes.
 
@@ -1129,6 +1161,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Throw is outside the eleven-family taxonomy. Do not replace it with place.
 - THROW is explicitly required and is outside the eleven-family schema. Native dustbin-bottom landing does not prove throwing or handover; add release velocity, contact-free flight and finite landing containment before creating a throw benchmark.
+- Generic physical adapters now exist offline for handover. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Add and review throw family/geometry and physical release-flight-landing recognizer.
 - Additional restart state: Release velocity, free-flight trajectory and landing state.
 - Canonical count: 4 picks + 4 unsupported throws + optional handovers.
@@ -1153,6 +1186,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Arithmetic/identity is a precondition; XY and world-axis checks do not establish full pad fit, support or release. Use the per-layout missing token and mat state.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Original equation, missing_mat and valid candidate set.
 - Canonical count: 2.
 
@@ -1177,6 +1211,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Final spatial order is required; manipulation order is free.
 - Relative left/right and y spread do not establish release/support, non-overlap or measured size ordering. Calibrate footprint extents and row landmarks per variant.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Size-to-row assignment.
 - Canonical count: 10.
 
@@ -1201,6 +1236,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Final spatial order is required; manipulation order is free.
 - Relative left/right and y spread do not establish release/support, non-overlap or measured size ordering. Calibrate footprint extents and row landmarks per variant. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Size-to-row assignment.
 - Canonical count: 10.
 
@@ -1225,6 +1261,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - No required third pick/place for an already valid base.
 - Native is_stacked must be audited for mesh footprint and support-contact semantics; add stable release and contact persistence, including permitted block order.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Chosen support roles and established contact/support graph.
 - Canonical count: 4 minimal canonical actions + optional base reposition.
 
@@ -1247,7 +1284,8 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 **Ordering, recognition and restart gaps:**
 
-- Preserve the resolved color mapping and in_order requirement. XY/height stack checks need full mesh overlap, support and post-release stability; avoid changing atomic success to match each geometric target.
+- Prototype program preserves resolved label/color order and recognizes pick plus held transport/release/upward support/settling on each named lower block. Geometry separately scores footprint/support. Calibrate thresholds against physics dt and validate live; do not change recognition with geometric targets.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 4 minimal canonical actions + optional base reposition.
 
@@ -1272,6 +1310,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - No required third pick/place for an already valid base.
 - Native is_stacked must be audited for mesh footprint and support-contact semantics; add stable release and contact persistence, including permitted block order. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Chosen support roles and established contact/support graph.
 - Canonical count: 4 minimal canonical actions + optional base reposition.
 
@@ -1295,6 +1334,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Nested shells have cavities; convex bbox support/containment can be wrong. Use actual shell/contact geometry, stable release and permitted nesting order; preserve holes in projected footprints.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Nesting roles and bowl-to-bowl contacts.
 - Canonical count: 4 minimal canonical actions + optional base reposition.
 
@@ -1318,6 +1358,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Nested shells have cavities; convex bbox support/containment can be wrong. Use actual shell/contact geometry, stable release and permitted nesting order; preserve holes in projected footprints. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Nesting roles and bowl-to-bowl contacts.
 - Canonical count: 4 minimal canonical actions + optional base reposition.
 
@@ -1347,6 +1388,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Instruction requires headset hanging, then laptop closure, then storage. Native reward chiefly checks final endpoints.
 - Functional-frame proximity and hinge ratio do not verify hanging support, force-bearing hinge actuation or rack fit. Check articulated child-link geometry after closing and stable release in both placements.
+- Generic physical adapters now exist offline for actuate, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Moving laptop lid/root state and headset support state.
 - Canonical count: 5.
 
@@ -1376,6 +1418,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Instruction requires headset hanging, then laptop closure, then storage. Native reward chiefly checks final endpoints.
 - Functional-frame proximity and hinge ratio do not verify hanging support, force-bearing hinge actuation or rack fit. Check articulated child-link geometry after closing and stable release in both placements. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Generic physical adapters now exist offline for actuate, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Moving laptop lid/root state and headset support state.
 - Canonical count: 5.
 
@@ -1400,6 +1443,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Native functional-point proximity/cover checks do not establish full tool fit or stable release. Resolve symmetric pliers orientations; constrained insert is a candidate only if an actual entry path is verified.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
 - Canonical count: 8.
 
@@ -1437,6 +1481,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Preserve saved initial layout poses, actual root-to-mesh-centre offsets and a feasible temporary parking region; final XY/quaternion checks do not recognize the picks or supported release.
+- Generic physical adapters now exist offline for place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Both original T poses, chosen route/parking pose, arm holds.
 - Canonical count: 4 canonical bimanual or 6 canonical parking actions.
 
@@ -1465,6 +1510,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 - Native task performs three move/press phases; retain original planes and mutable update_object_state baselines.
 - Native sequence already tracks position and press crossings. Add block support/release and finger/button contact, preserve exact move/confirm ordering and identify the empty mat from the layout.
+- Generic physical adapters now exist offline for actuate, place. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Original mat assignments, empty mat, chosen first block, move index, press counts, updated object baselines.
 - Canonical count: 9.
 
@@ -1491,7 +1537,8 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Stabilization is a maintained precondition, not an invented dustpan lift. One stroke may move multiple objects.
-- Native dustpan location/orientation and cube containment do not prove broom contact or handover. Explicit tool-target contact sampling exists; add calibrated active broom-head, held-tool stroke and handover recognizers; ensure continued dustpan stabilization.
+- Native dustpan location/orientation and cube containment do not prove sweeping or handover. Generic held_tool_push/grip_transfer and maintained_holds now exist offline. Bind actual broom-head, giver/receiver arms and dustpan constraints, preserve item/layout counts and validate live.
+- Generic physical adapters now exist offline for handover, push_with_tool. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Broom hand identity, dustpan support/contact and object containment.
 - Canonical count: 1 pick + 1 handover + one or more sweep strokes.
 
@@ -1518,7 +1565,8 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Stabilization is a maintained precondition, not an invented dustpan lift. One stroke may move multiple objects.
-- Native dustpan location/orientation and cube containment do not prove broom contact or handover. Explicit tool-target contact sampling exists; add calibrated active broom-head, held-tool stroke and handover recognizers; ensure continued dustpan stabilization. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Native dustpan location/orientation and cube containment do not prove sweeping or handover. Generic held_tool_push/grip_transfer and maintained_holds now exist offline. Bind actual broom-head, giver/receiver arms and dustpan constraints, preserve item/layout counts and validate live.
+- Generic physical adapters now exist offline for handover, push_with_tool. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Broom hand identity, dustpan support/contact and object containment.
 - Canonical count: 1 pick + 1 handover + one or more sweep strokes.
 

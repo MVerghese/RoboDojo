@@ -32,6 +32,8 @@ class AtomicSession:
         self.interaction_evidence = None
         self.goal_success = False
         self.current_hold_observed = False
+        self.maintained_hold_failures = []
+        self._maintained_hold_step = None
         self._recognition_last_step = None
         self._recognition_arm = None
         self._recognition_anchor = None
@@ -39,7 +41,12 @@ class AtomicSession:
         self._recognition_current_displacement = np.zeros(3)
         self._held_lift_required = max([float(check['args']['z_threshold']) for check in stage.success_checks
                                        if stage.family == 'pick' and check['name'] == 'is_lift']
-                                      + ([stage.recognition['motion_threshold_m']] if stage.recognition else [0.]))
+                                      + ([stage.recognition['motion_threshold_m']]
+                                         if stage.family == 'pick' and stage.recognition else [0.]))
+        self._physical_recognizer = None
+        if stage.recognition and stage.recognition['kind'] != 'finger_contact_motion':
+            from task.atomic.recognizers import PhysicalRecognizer
+            self._physical_recognizer = PhysicalRecognizer(self)
         self._frozen_references = {}
         self._event_evidence = {}
         self.sample_index = 0
@@ -161,8 +168,30 @@ class AtomicSession:
         twice. Contact loss/arm changes reset the interval. Contacts acquired
         after ballistic motion cannot take credit for that earlier motion.
         """
+        if self.stage.maintained_holds:
+            contacts = getattr(self.env, '_atomic_contacts', None)
+            if contacts is None:
+                raise RuntimeError('maintained holds require initialized PhysX contacts')
+            if contacts.steps != self._maintained_hold_step:
+                # A skipped sample cannot certify a continuous constraint.
+                if self._maintained_hold_step is not None and contacts.steps != self._maintained_hold_step + 1:
+                    self.maintained_hold_failures.append({'physics_step': contacts.steps, 'reason': 'sampling_gap'})
+                self._maintained_hold_step = contacts.steps
+                for hold in self.stage.maintained_holds:
+                    try:
+                        contacts.resolve({'kind': 'contact_points', **hold}, self.env_idx)
+                    except ContactUnavailable as error:
+                        failure = {'hold': deepcopy(hold), 'physics_step': contacts.steps, 'reason': str(error)}
+                        if not any(f.get('hold') == hold for f in self.maintained_hold_failures):
+                            self.maintained_hold_failures.append(failure)
         recognition = self.stage.recognition
         if recognition is None:
+            return
+        if self._physical_recognizer is not None:
+            self._physical_recognizer.observe()
+            self.interaction_observed = self.interaction_observed or self._physical_recognizer.ready
+            if self._physical_recognizer.ready:
+                self.interaction_evidence = deepcopy(self._physical_recognizer.evidence)
             return
         contacts = getattr(self.env, '_atomic_contacts', None)
         if contacts is None:
@@ -214,6 +243,8 @@ class AtomicSession:
             }
 
     def _predicate(self, check):
+        if check['name'] == 'is_atomic_interaction':
+            return bool(self._physical_recognizer and self._physical_recognizer.ready)
         if check['name'] in ('is_atomic_entry', 'is_atomic_inserted'):
             from task.atomic.geometry import _rotation
             args = check['args']
@@ -240,6 +271,13 @@ class AtomicSession:
         kind = event["kind"]
         if kind == "stage_success":
             return success_now
+        if kind == 'recognition_event':
+            recognizer = self._physical_recognizer
+            evidence = recognizer.events.get(event['name']) if recognizer else None
+            if not evidence or evidence['physics_step'] != recognizer.contacts.steps:
+                return False
+            self._event_evidence[self._selector_key(event)] = deepcopy(evidence)
+            return True
         if kind == "first_predicate":
             values = (
                 self._predicate(check)
@@ -339,15 +377,15 @@ class AtomicSession:
         self._observe_interaction()
         self._sample(success_now=False)
 
-    def step(self):
-        """Evaluate stage success after a policy action chunk."""
+    def step(self, diagnostics=True):
+        """Latch success at a physical sample; optionally score chunk diagnostics."""
         self._observe_interaction()
         success_now = self._check_success()
         self.goal_success = success_now
         self._sample(success_now)
         # Diagnostic scores for failed attempts, separate from the required event.
         for condition in self.stage.geometry:
-            if not condition.get('track_closest', True):
+            if not diagnostics or not condition.get('track_closest', True):
                 continue
             try:
                 measured, source, reference, _ = self._resolve_condition(condition)
@@ -365,11 +403,12 @@ class AtomicSession:
                     "ee_contact_proxy": condition["measurement"]["kind"] == "robot_ee_pose",
                 }
         if self.stage.recognition is not None:
-            success_now = success_now and self.interaction_observed
+            success_now = success_now and (self._physical_recognizer.ready if self._physical_recognizer
+                                          else self.interaction_observed)
             if self.stage.family == 'pick':
                 success_now = (success_now and self.current_hold_observed
                                and self._recognition_current_displacement[2] >= self._held_lift_required)
-        self.success = self.success or success_now
+        self.success = self.success or (success_now and not self.maintained_hold_failures)
         return self.success
 
     def check_success_only(self):
@@ -400,10 +439,15 @@ class AtomicSession:
             'measurement_failures': deepcopy(self.measurement_failures),
             'interaction_observed': self.interaction_observed,
             'recognition': deepcopy(self.stage.recognition),
-            'recognition_status': ('physical_contact_motion' if self.stage.recognition is not None
+            'recognition_status': (self.stage.recognition['kind'] if self._physical_recognizer
+                                   else 'physical_contact_motion' if self.stage.recognition is not None
                                    else 'endpoint_checks_only'),
             'interaction_evidence': deepcopy(self.interaction_evidence),
+            'physical_events': deepcopy(self._physical_recognizer.events) if self._physical_recognizer else {},
+            'physical_metrics': deepcopy(getattr(self._physical_recognizer, 'metrics', {})),
             'current_hold_observed': self.current_hold_observed,
+            'maintained_holds': deepcopy(list(self.stage.maintained_holds)),
+            'maintained_hold_failures': deepcopy(self.maintained_hold_failures),
             'goal_success': self.goal_success,
             'recognition_checks': deepcopy(list(self.stage.success_checks)),
             'initial_object_positions': {k: v.tolist() for k, v in self.initial_positions.items()},
