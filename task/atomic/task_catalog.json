@@ -816,21 +816,21 @@
         {
           "family": "pick",
           "basis": "proposed_decomposition",
-          "example": "bolt{i} screw for the matching nut{i}"
+          "example": "movable nut{i} for matching fixed Geometry bolt{i} (instruction names the screw/nut roles oppositely)"
         },
         {
           "family": "insert",
           "basis": "explicit_instruction",
-          "example": "same-color screw/nut pair along the opening axis"
+          "example": "movable nut{i} onto same-color fixed bolt{i} along the engagement axis"
         },
         {
           "family": "twist",
           "basis": "explicit_instruction",
-          "example": "screw about its axial pivot to tighten in the matching nut"
+          "example": "engaged movable nut about fixed bolt axis; tightening feasibility requires asset/thread audit"
         }
       ],
       "audit_gaps": [
-        "Native code checks nut upright, nut/bolt lateral alignment and depth; it does not measure accumulated rotation or thread engagement. Verify which member is movable from assets before assigning screw-versus-nut manipulation."
+        "Config makes nuts Rigid and bolts fixed Geometry; never target a fixed bolt for pick. Native reward measures nut depth/alignment only, not rotation or tightening. Verify thread/constraint representation and contact-coupled unwrapped rotation."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/fasten_screws.py",
@@ -2149,7 +2149,8 @@
         }
       ],
       "audit_gaps": [
-        "Declare-kong language does not prescribe a unique motor sequence. Opponent discard and rule state must be preserved; native tile-location/game logic needs release/support evidence for each proposed placement."
+        "Declare-kong language does not prescribe a unique motor sequence. Opponent discard and rule state must be preserved; native tile-location/game logic needs release/support evidence for each proposed placement.",
+        "Native reward additionally requires mahjong9_0 orientation checkpoint then final XY [.319,-.15] with local y upright; matching-three poses alone do not complete the task."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/make_kong.py",
@@ -3679,11 +3680,12 @@
         {
           "family": "actuate",
           "basis": "explicit_instruction",
-          "example": "button0 and button1 press joints for the number-card counts, then button2 blue confirmation"
+          "example": "button0 card-count press/release cycles, blue button2 confirmation, button1 card-count cycles, second blue confirmation"
         }
       ],
       "audit_gaps": [
-        "Native joint-ratio crossing already provides temporal press events, but add contact point/force and release hysteresis so hovering, external motion and held-down repeats cannot count as valid presses."
+        "Native joint-ratio crossing already provides temporal press events, but add contact point/force and release hysteresis so hovering, external motion and held-down repeats cannot count as valid presses.",
+        "Native reward requires two blue press/release confirmations, one after each red-button series, despite singular confirmation wording in the instruction."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/press_by_number.py",

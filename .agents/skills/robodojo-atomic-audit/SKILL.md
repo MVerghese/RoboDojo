@@ -26,6 +26,14 @@ distinguishes generic checker support, missing adapters and specific live eviden
   Run `--check` to reject missing tasks, stale evidence or lost family coverage.
 - After reviewing changed geometry source/taxonomy, refresh/check
   `scripts/atomic/conditioning_audit.py` to keep every slot/factor status explicit.
+- For task segmentation, read `task/atomic/SEGMENTATION.md` and edit the curated
+  `segmentation_plans.json`. Preserve independent item branches, source-ordered
+  cycles, choices, maintained holds and non-robot scene events. Cross-check
+  movable versus fixed config categories (fasten_screws has movable nuts and
+  fixed bolts). Native press_by_number requires two blue confirmations.
+  Run `scripts/atomic/segmentation_plans.py --refresh` and `--check` after review.
+  These source plans cannot be passed to AtomicProgram; executable recognizers,
+  layout resolution and verified boundary states require separate implementation.
 
 ## Audit a measurement or add a recognizer
 

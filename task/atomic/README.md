@@ -7,6 +7,13 @@ Start with [conditioning and A/B instructions](CONDITIONING_AB.md), [all-family 
 The [conditioning coverage matrix](CONDITIONING_AUDIT.md) audits every action slot
 against all five factors, with implementation gaps and exact live evidence.
 
+The [all-task segmentation investigation](SEGMENTATION.md) supplies candidate
+plans for all 54 modules: object bindings, independent/ordered stages,
+repetitions, choices, maintained holds, physical recognition boundaries and
+restart state requirements. These source plans are not executable programs or
+observed trace labels. Inspect one with
+`python scripts/atomic/segmentation_plans.py --task press_by_number`.
+
 ## What runs today
 
 - A program JSON defines named atomic stages, an instruction, existing RoboDojo success predicates, and geometric conditions on typed slots.

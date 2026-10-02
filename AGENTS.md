@@ -9,6 +9,10 @@ This fork's work is on `benchmark/atomic-geometry`.
   `python scripts/atomic/task_catalog.py --refresh` and `--check`.
 - Repository workflows are in `.agents/skills/`. Use the applicable skill for
   action audits, pair design or execution/collection.
+- `task/atomic/SEGMENTATION.md` is generated from `segmentation_plans.json`.
+  Review task helpers and asset config before editing candidate plans, then run
+  `scripts/atomic/segmentation_plans.py --refresh` and `--check`. These plans
+  include repeats/choices/holds and are not executable `AtomicProgram` files.
 - `task/atomic/CONDITIONING_AUDIT.md` and `conditioning_audit.json` record every
   taxonomy slot/factor cell. After reviewing changed conditioning source or
   taxonomy, run `python scripts/atomic/conditioning_audit.py --refresh` and `--check`.

@@ -20,6 +20,7 @@ geometric conditioning and controlled policy A/B experiments.
 - [Audit of all 11 action families](task/atomic/ACTION_AUDIT.md)
 - [Every slot × conditioning factor: implementation and evidence](task/atomic/CONDITIONING_AUDIT.md)
 - [Source-backed examples across all 54 task modules](task/atomic/TASK_MAP.md)
+- [Atomic stage plans, ordering and restart requirements for all 54 modules](task/atomic/SEGMENTATION.md)
 - [Completed eight-run pilot](task/atomic/PILOT_RESULTS.md)
 - [Agent workflow skills](.agents/skills/README.md)
 
