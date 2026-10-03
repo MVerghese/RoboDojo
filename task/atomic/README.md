@@ -4,6 +4,15 @@ This branch adds a separate evaluation mode on top of RoboDojo's existing full-t
 
 Start with [conditioning and A/B instructions](CONDITIONING_AB.md), [all-family audit](ACTION_AUDIT.md), [completed pilot results](PILOT_RESULTS.md), and [agent workflow skills](../../.agents/skills/README.md).
 
+Implementation details:
+
+1. [Geometric instrumentation and eval measurements](GEOMETRIC_MEASUREMENT.md):
+   all selectors, five modifier checks, sampling events, paths and selection.
+2. [Atomic action success checks](ATOMIC_SUCCESS.md): each family/recognizer,
+   completion rules and endpoint-only program exceptions.
+3. [Action recognition and segmentation](RECOGNITION_SEGMENTATION.md): activation,
+   physical events, dependencies, repeats/choices, saved boundaries and restarts.
+
 The [conditioning coverage matrix](CONDITIONING_AUDIT.md) audits every action slot
 against all five factors, with implementation gaps and exact live evidence.
 
@@ -28,15 +37,24 @@ observed trace labels. Inspect one with
   event-contact rule and is not live validation of the update.
 - A reference selector can specify `"time": "stage_start"` to freeze its actual
   pose (and rigid footprint for object relations). This supports lift/goal
-  offsets without a moving self-reference. `on_top` requires live support;
-  snapshots do not implement initial object selection or full simulator restore.
+  offsets without a moving self-reference. `on_top` requires live support.
+  Initial candidate selection uses a separate snapshot/contact observer; full
+  simulator restoration remains unimplemented.
 - `object_contact_points` with `label` and `other_label` measures actual
   force-bearing tool/object pairs. A `first_contact` event accepts a contact
   `measurement` selector and records the physical event evidence, even when
-  the scored measurement is a separate object pose. Held-tool, sweep and
-  impact velocity/rebound and live active-part calibration remain separate gaps. Held-tool contact/push and transfer state machines now exist offline.
+  the scored measurement is a separate object pose. Physical recognition comes
+  from separate held-tool/contact/motion state machines. Held-tool contact/push,
+  pre-impact speed/retraction and transfer state machines now exist offline;
+  live active-part/path calibration, natural rebound and musical timing remain gaps.
 - Geometry conditions report continuous error and pass/fail for a point, SE(3) pose, landmark-relative displacement, landmark-relative orientation, or spatial relation.
-- `AtomicSession` measures first object lift/motion at physics-step resolution and stage success after each policy action chunk. The result keeps **action success** and **geometry adherence** separate in `eval_result.details[*].atomic`. `geometry_pass_rate` is null until a condition is observed; `geometry_coverage` reports how many conditions fired.
+- `AtomicSession` measures events and physical completion at physics-step resolution,
+  with additional checks after each policy action chunk. The result keeps **action
+  success** and **geometry adherence** separate in `eval_result.details[*].atomic`.
+  Ordinary `stage_success` geometry samples endpoint predicate success before the
+  physical completion gate; see [measurement semantics](GEOMETRIC_MEASUREMENT.md).
+  `geometry_pass_rate` is null until a condition is observed; `geometry_coverage`
+  reports how many conditions fired.
 - A `first_predicate` event can capture geometry when any or all read-only RoboDojo predicates first become true at a physics step. The `pour_balls_into_vase` program uses this to measure cup placement when the first ball enters the vase.
 - A normal evaluation can record policy action traces and automatically mark stage starts for an executable program. Atomic mode resets the original layout, replays the action prefix, verifies preceding stage predicates at the recorded boundaries, starts a fresh stage scoring window, and stops when the selected atomic success checks pass or its step limit expires.
 - A variant JSON changes expected geometry, tolerances, references, event, and instruction while keeping the same stage success checks. Changing targets permits different-target steering trials. With/without-prompt A/B pairs instead keep all geometry and success checks identical.
