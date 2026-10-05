@@ -94,6 +94,17 @@ Memory and neighbor ledgers stay enabled. After two other collected failed
 cases the controller stops new submissions for diagnosis. Archived jobs are
 terminal; collected report status determines collection success.
 
+`--max-concurrent` counts queued and executing jobs together (default 4;
+supported range 1–128). Set it to the experiment's authorized submission window.
+`--priority-class high-9000` records a scheduling amendment for future submissions
+without rebuilding frozen simulator inputs. Exact submitted specs and hashes are
+retained separately. Lepton rejects priority changes on existing jobs: only
+`stopped` is mutable. To change queued jobs, stop them, archive their preparation
+and scheduler records, and requeue fresh names with identical experimental inputs.
+Restarting with this flag alone does not update existing jobs. Stop the suite
+controller and collectors before replacing a
+controller, leaving remote jobs intact, then resume the same frozen suite.
+
 ## Outputs and validity
 
 - `EVAL_MATRIX_REPORT.md`: compact checkpoint/task/action/prompt counts.

@@ -76,15 +76,29 @@ def read_frozen_case(run, program, task):
     return frozen
 
 
-def submit_frozen_case(run, program, task, credentials):
+def submit_frozen_case(run, program, task, credentials, priority_class=None):
     from scripts.atomic.submit_trace import submit_prepared
     frozen = read_frozen_case(run, program, task)
     plan_path = run / 'run_plan.json'
     plan = json.loads(plan_path.read_text())
     patched = json.loads((run / f"{plan['jobs'][0]}.atomic-job-spec.json").read_text())
+    if priority_class is not None:
+        if not re.fullmatch(r'[a-z0-9][a-z0-9-]*', priority_class):
+            raise ValueError('priority_class must be a scheduler class name')
+        patched['spec'].setdefault('queue_config', {})['priority_class'] = priority_class
+    # Retain the frozen preparation and record the exact scheduling amendment.
+    # The overlay, policy controls and prepared spec remain immutable.
+    submitted_spec = run / f"{plan['jobs'][0]}.submission-spec.json"
+    atomic_write_json(submitted_spec, patched)
+    scheduling = {'priority_class': patched['spec'].get('queue_config', {}).get('priority_class'),
+                  'prepared_spec_sha256': frozen['spec_sha256'],
+                  'submitted_spec_sha256': hashlib.sha256(submitted_spec.read_bytes()).hexdigest()}
+    plan.update(priority=scheduling['priority_class'], scheduling=scheduling)
+    atomic_write_json(plan_path, plan)
     provenance = {'mode':'full_task_benchmark', 'task':task,
                   'program_sha256':frozen['program_sha256'], 'runtime_sha256':frozen['runtime_sha256'],
-                  'gpu_admission':{'max_used_mib':512, 'reject_compute_processes':True}}
+                  'gpu_admission':{'max_used_mib':512, 'reject_compute_processes':True},
+                  'scheduling': scheduling}
     return submit_prepared(plan_path, patched, run / 'robodojo-overlay.tar.gz',
                            frozen['overlay_sha256'], credentials, provenance)
 
@@ -268,6 +282,7 @@ def summarize(manifest, root):
             plan = json.loads((run / "run_plan.json").read_text())
             row["job_id"] = plan["submitted"][0]["id"] if plan["submitted"] else None
             row['checkpoint'] = plan.get('checkpoint')
+            row['scheduling'] = plan.get('scheduling')
             if (run / 'prepared_case.json').exists():
                 frozen = json.loads((run / 'prepared_case.json').read_text())
                 row['runtime_sha256'] = frozen['runtime_sha256']
@@ -341,12 +356,15 @@ def main():
     parser.add_argument("--credentials-file", type=Path, required=True)
     parser.add_argument("--name", required=True)
     parser.add_argument("--max-concurrent", type=int, default=4)
+    parser.add_argument('--priority-class', help='Record a queue-priority amendment without rebuilding frozen inputs')
     parser.add_argument("--gpu-memory-ledger", type=Path, required=True)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument('--max-busy-retries', type=int, default=2)
     args = parser.parse_args()
-    if not re.fullmatch(r"[a-z0-9-]+", args.name) or not 1 <= args.max_concurrent <= 8 or not 0 <= args.max_busy_retries <= 5:
-        parser.error("use a job-name slug and concurrency between one and eight")
+    if not re.fullmatch(r"[a-z0-9-]+", args.name) or not 1 <= args.max_concurrent <= 128 or not 0 <= args.max_busy_retries <= 5:
+        parser.error("use a job-name slug and concurrency between one and 128")
+    if args.priority_class and not re.fullmatch(r'[a-z0-9][a-z0-9-]*', args.priority_class):
+        parser.error('priority-class must be a scheduler class name')
     manifest = json.loads(args.suite.read_text())
     validate_suite(manifest)
     bases = {}
@@ -447,7 +465,8 @@ def main():
             return
         for case in pending[:max(0, args.max_concurrent - active)]:
             run = root / "runs" / case["id"]
-            submit_frozen_case(run, case['program'], case.get('task', manifest['task']), args.credentials_file)
+            submit_frozen_case(run, case['program'], case.get('task', manifest['task']), args.credentials_file,
+                               priority_class=args.priority_class)
             print(f"Submitted full-task case {case['id']}", flush=True)
         if not pending and not monitors and result["completed_cases"] == len(manifest["cases"]):
             print("Suite collected:", root / "benchmark_results.md", flush=True)

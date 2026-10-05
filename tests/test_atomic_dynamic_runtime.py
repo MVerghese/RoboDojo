@@ -160,7 +160,8 @@ class DynamicTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp:
             run=Path(temp); program=run/'input.json'; program.write_text('{}')
             (run/'run_plan.json').write_text(json.dumps({'jobs':['j']}))
-            (run/'j.atomic-job-spec.json').write_text('{}')
+            (run/'j.atomic-job-spec.json').write_text(json.dumps({'spec':{'queue_config':{
+                'priority_class':'high-8000', 'can_preempt':False}}}))
             (run/'code.tar.gz').write_bytes(b'fixed source bundle')
             def archive(runtime, inp):
                 with tarfile.open(run/'robodojo-overlay.tar.gz','w:gz') as tar:
@@ -175,6 +176,12 @@ class DynamicTests(unittest.TestCase):
             with patch('scripts.atomic.submit_trace.submit_prepared',return_value='job') as submit:
                 self.assertEqual(submit_frozen_case(run,program,'t',Path('credentials')),'job')
                 self.assertEqual(submit.call_args.args[3],frozen['overlay_sha256'])
+                self.assertEqual(submit_frozen_case(run,program,'t',Path('credentials'),priority_class='high-9000'),'job')
+                amended=submit.call_args.args[1]
+                self.assertEqual(amended['spec']['queue_config'],{'priority_class':'high-9000','can_preempt':False})
+                self.assertEqual(read_frozen_case(run,program,'t'),frozen)
+                self.assertEqual(json.loads((run/'j.atomic-job-spec.json').read_text())['spec']['queue_config']['priority_class'],'high-8000')
+                self.assertEqual(json.loads((run/'run_plan.json').read_text())['scheduling']['priority_class'],'high-9000')
             archive(b'fixed runtime',b'{"different":1}')
             self.assertEqual(overlay_runtime_hash(run/'robodojo-overlay.tar.gz'),frozen['runtime_sha256'])
             with self.assertRaises(ValueError):read_frozen_case(run,program,'t')

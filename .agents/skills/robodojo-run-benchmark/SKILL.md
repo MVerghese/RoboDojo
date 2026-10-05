@@ -31,6 +31,13 @@ paths and existing run state before creating a new suite or duplicate job.
 
 - Resume with the same suite, code and run name; submitted bundles are immutable.
   Do not regenerate programs underneath submitted plans.
+- A user-authorized priority change uses `--priority-class` for future
+  submissions and retains the exact amended spec separately from frozen inputs.
+  Lepton permits only `stopped` updates on existing jobs. Replace queued jobs
+  under fresh names after stopping and archiving their original records; reuse
+  the exact overlay/source/program and preserve inference controls. The runner
+  supports a 1–128 submission window, counting queued and executing jobs together;
+  select the limit from the user's authorized scope.
 - Check job state, controller/monitor logs, collection status and admission
   before classifying a failed case. The controller stops new submissions after
   two infrastructure/collection failures. Preserve failed attempts; retries use
