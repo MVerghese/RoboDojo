@@ -105,6 +105,13 @@ Restarting with this flag alone does not update existing jobs. Stop the suite
 controller and collectors before replacing a
 controller, leaving remote jobs intact, then resume the same frozen suite.
 
+Use `--exclude-node NODE_ID` (repeatable) when admission evidence repeatedly
+identifies a node with existing GPU memory. This filters the prepared node
+allowlist for future submissions and retries, retains the reservation, and records
+the effective allowlist in the separate submission spec and scheduling metadata.
+It fails before submission if no prepared node remains. Existing jobs retain
+their original placement constraints; frozen policy inputs are unchanged.
+
 ## Outputs and validity
 
 - `EVAL_MATRIX_REPORT.md`: compact checkpoint/task/action/prompt counts.

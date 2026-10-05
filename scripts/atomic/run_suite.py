@@ -76,7 +76,7 @@ def read_frozen_case(run, program, task):
     return frozen
 
 
-def submit_frozen_case(run, program, task, credentials, priority_class=None):
+def submit_frozen_case(run, program, task, credentials, priority_class=None, excluded_nodes=None):
     from scripts.atomic.submit_trace import submit_prepared
     frozen = read_frozen_case(run, program, task)
     plan_path = run / 'run_plan.json'
@@ -86,11 +86,23 @@ def submit_frozen_case(run, program, task, credentials, priority_class=None):
         if not re.fullmatch(r'[a-z0-9][a-z0-9-]*', priority_class):
             raise ValueError('priority_class must be a scheduler class name')
         patched['spec'].setdefault('queue_config', {})['priority_class'] = priority_class
+    excluded_nodes = sorted(set(excluded_nodes or []))
+    if excluded_nodes:
+        affinity = patched['spec'].get('affinity', {})
+        allowed = affinity.get('allowed_nodes_in_node_group')
+        if not allowed:
+            raise ValueError('node exclusions require an explicit prepared node allowlist')
+        eligible = [node for node in allowed if node not in excluded_nodes]
+        if not eligible:
+            raise ValueError('node exclusions remove every prepared eligible node')
+        affinity['allowed_nodes_in_node_group'] = eligible
     # Retain the frozen preparation and record the exact scheduling amendment.
     # The overlay, policy controls and prepared spec remain immutable.
     submitted_spec = run / f"{plan['jobs'][0]}.submission-spec.json"
     atomic_write_json(submitted_spec, patched)
     scheduling = {'priority_class': patched['spec'].get('queue_config', {}).get('priority_class'),
+                  'excluded_nodes': excluded_nodes,
+                  'allowed_nodes_in_node_group': patched['spec'].get('affinity', {}).get('allowed_nodes_in_node_group'),
                   'prepared_spec_sha256': frozen['spec_sha256'],
                   'submitted_spec_sha256': hashlib.sha256(submitted_spec.read_bytes()).hexdigest()}
     plan.update(priority=scheduling['priority_class'], scheduling=scheduling)
@@ -357,6 +369,8 @@ def main():
     parser.add_argument("--name", required=True)
     parser.add_argument("--max-concurrent", type=int, default=4)
     parser.add_argument('--priority-class', help='Record a queue-priority amendment without rebuilding frozen inputs')
+    parser.add_argument('--exclude-node', action='append', default=[],
+                        help='Exclude a prepared eligible node from future submissions; repeat as needed')
     parser.add_argument("--gpu-memory-ledger", type=Path, required=True)
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument('--max-busy-retries', type=int, default=2)
@@ -466,7 +480,7 @@ def main():
         for case in pending[:max(0, args.max_concurrent - active)]:
             run = root / "runs" / case["id"]
             submit_frozen_case(run, case['program'], case.get('task', manifest['task']), args.credentials_file,
-                               priority_class=args.priority_class)
+                               priority_class=args.priority_class, excluded_nodes=args.exclude_node)
             print(f"Submitted full-task case {case['id']}", flush=True)
         if not pending and not monitors and result["completed_cases"] == len(manifest["cases"]):
             print("Suite collected:", root / "benchmark_results.md", flush=True)
