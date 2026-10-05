@@ -40,6 +40,12 @@ paths and existing run state before creating a new suite or duplicate job.
   does not expose UUID/process-to-job assignments. Do not message users unless
   the user authorizes it.
 
+Expanded eval-set runs use `generate_eval_matrix.py` and `EVAL_MATRIX.md`.
+The runner retries GPU admission rejections at most twice with exact frozen
+inputs and archived evidence. Other failures retain the two-case stop budget.
+Archived jobs are terminal. Quiet startup scenes await contact evidence; real
+reports and no callback errors are still required for verified A/B comparisons.
+
 ## Report
 
 Use `benchmark_results.json`, paired `REPORT.md`, immutable run plans and raw

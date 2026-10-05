@@ -7378,15 +7378,15 @@
     },
     {
       "path": "task/atomic/sequence.py",
-      "sha256": "05ee47074bb9ae1c968995f80ccba61f9828ece0c295b0b0cf38b306e6701f81"
+      "sha256": "536d86cf8167b3278bec548fda01ebd2b743b343cd1959a4aeddc7c0b1af5c30"
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "4699703ce72202a4a0e0f0063ab7a5088ea82795007f630b77b9145d1cb2615e"
+      "sha256": "02c01c1d0b994a171141fe1bb13b8c0bb94f4a57bf9761517eb4bba90edf8c79"
     },
     {
       "path": "task/atomic/spec.py",
-      "sha256": "61aebaade436639fb6a836db0054d45a1c1ed50b754e26a2b0f155fa6708522b"
+      "sha256": "32c6ef9f54c9cab599d2fbf0b6178e87bc9d0ee67bce12bfde5902a9b161f58b"
     },
     {
       "path": "task/atomic/recognizers.py",
@@ -7394,7 +7394,7 @@
     },
     {
       "path": "task/atomic/bindings.py",
-      "sha256": "35e462a90c248761b4c095baada220698d99da7c6591df82636fa1e7ed68f8b9"
+      "sha256": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549"
     },
     {
       "path": "task/atomic/landmarks.py",
@@ -7422,15 +7422,15 @@
     },
     {
       "path": "task/atomic/contacts.py",
-      "sha256": "f4572be57a00540258fc5b540c037ed9e7f0431fafdbb200c57cd542375b251a"
+      "sha256": "4abda1615a24568dae4d283d2ac85e9583b1146cd01f2d6ffeeb87aa63a6ddce"
     },
     {
       "path": "task/atomic/replay.py",
-      "sha256": "bd6c127bedf5f2f51d343e6eb26da588fc1e1301a61cc8f799f0428fa7823ddd"
+      "sha256": "322e7665b4c3a601a0f42115dbc5ff4ddddcab922f5a35655ba6384424034aba"
     },
     {
       "path": "src/eval_client/eval_env.py",
-      "sha256": "9679d8968d93fbad016e46ff10869206d575efb6901870b510152cac6cc04a7b"
+      "sha256": "209550ba0b8f94a54b152d1dd7064bc294e16eeb9507662f109f3b068ff7b7a1"
     }
   ]
 }

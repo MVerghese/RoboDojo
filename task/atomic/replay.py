@@ -8,7 +8,7 @@ def replay_prefix(program, selected_stage, trace, take_action, stage_succeeded):
     can be tested without importing Isaac Sim.
     """
     stage_ids = [stage.id for stage in program.stages]
-    if program.repeat_counts or program.gates or program.choices:
+    if program.repeat_counts or program.gates or program.choices or program.label_templates:
         raise ValueError('prefix replay requires an expanded linear program without scene gates or choices')
     linear = {s.id: ([] if i == 0 else [program.stages[i - 1].id])
               for i, s in enumerate(program.stages)}

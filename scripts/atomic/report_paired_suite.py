@@ -32,14 +32,15 @@ def write_report(manifest, result, root):
             raise ValueError('paired report requires adjacent same-task baseline/conditioned cases')
     completed_episodes = sum(r.get('completed_episodes', 0) for r in result['cases'])
     rejected = list((root / 'runs').glob('*/attempts/attempt-*/eval_report.json'))
+    rejected += list((root / 'attempts').glob('*/attempt-*/eval_report.json'))
     lines = ['# Paired geometric benchmark', '',
              f"Completed policy episodes: **{completed_episodes} / {total}**. Collected case results: **{result['completed_cases']} / {total}**. "
              f"Score mismatches: **{result['score_mismatches']}**. Archived infrastructure attempts: **{len(rejected)}**.", '',
              'Each baseline receives the baseline full-task instruction (native unless explicitly overridden). Its conditioned partner receives '
              'the same instruction plus the geometric text below. Both are evaluated against the same '
              'geometric targets. Atomic stages are observers; they do not switch the policy prompt.', '',
-             '| Task | Prompt | Pipeline | Native task success | Atomic action recognition | Geometric event scores |',
-             '| --- | --- | --- | --- | --- | --- |']
+             '| Checkpoint | Task | Prompt | Pipeline | Native task success | Atomic action recognition | Geometric event scores |',
+             '| --- | --- | --- | --- | --- | --- | --- |']
     for row in result['cases']:
         native = row.get('full_task_success')
         native_text = ', '.join('yes' if x else 'no' for x in native) if native else 'pending'
@@ -48,7 +49,8 @@ def write_report(manifest, result, root):
             contact_missing = any(c.get('status') == 'contact_not_observed_at_event'
                                   for c in stage['conditions'].values())
             actions.append(stage['stage_id'] + ': ' + ('yes' if stage['action_success'] else 'no') +
-                           (' (optional route not selected)' if not stage.get('required',True) else
+                           (' (optional route not selected)' if stage.get('choice_status') == 'not_selected' else
+                            ' (candidate observer)' if not stage.get('required',True) else
                             ' (unreached)' if not stage.get('reached', True) else
                             ' (interaction unverified)' if contact_missing and not stage['action_success'] else ''))
             for name, score in stage['conditions'].items():
@@ -62,7 +64,7 @@ def write_report(manifest, result, root):
                                    (selection.get('observed') or {}).get('status', 'contact_not_observed'))
                 geometry.append('selection: '+('PASS' if selection['passed'] else 'FAIL' if selection['passed'] is False else unscored_status)+
                                 (' (score mismatch)' if selection['status']=='score_mismatch' else ''))
-        lines.append(f"| {row['task']} | {row['prompt_mode']} | {row['status']} | {native_text} | "
+        lines.append(f"| {row.get('checkpoint_id', 'default')} | {row['task']} | {row['prompt_mode']} | {row['status']} | {native_text} | "
                      f"{'; '.join(actions) or 'pending'} | {'; '.join(geometry) or 'pending'} |")
     lines += ['', '## Pair controls and captured prompts', '']
     controls_path = root / 'pair-controls.json'
@@ -75,7 +77,7 @@ def write_report(manifest, result, root):
                   f"at `{controls['adapter_source']}`.", '']
     by_id = {r['case_id']: r for r in result['cases']}
     for base, conditioned in zip(manifest['cases'][::2], manifest['cases'][1::2]):
-        lines += [f"### {base['task']}", '', '**Geometric append:**', '', conditioned['geometric_prompt_append'], '']
+        lines += [f"### {base.get('checkpoint_id', 'default')} / {base['task']}", '', '**Geometric append:**', '', conditioned['geometric_prompt_append'], '']
         prompts = []
         for case in (base, conditioned):
             row = by_id[case['id']]
@@ -108,7 +110,7 @@ def write_report(manifest, result, root):
               '- Grasp success requires two finger bodies of the same arm plus the required lift.',
               '- Pick/push recognition requires contact evidence at the declared lift/motion event. A missing contact leaves the interaction unverified, even when a goal-pose condition passes; it does not prove no push occurred.',
               '- Object “above” requires signed relative height and projected mesh-footprint overlap.',
-              '- Pour recognition checks whole balls within finite vase bounds; insertion uses annotated connector/opening frames.',
+              '- Each action uses the recognizer and calibrated frames declared in its packaged program; endpoint-only predicates do not establish physical interaction.',
               '- Missing/unreached events have no geometric pass. Callback or collection errors are infrastructure failures.',
               '- One episode per prompt establishes an integration pilot, not a statistical steering effect.',
               '', '## Evidence', '',

@@ -21,10 +21,18 @@ from scripts.atomic.audit_scores import audit_report
 from scripts.atomic.storage import atomic_write_json, atomic_write_text
 from task.atomic.spec import AtomicProgram
 
-TERMINAL = {"Completed", "Succeeded", "Failed", "Stopped", "Cancelled", "Canceled"}
+TERMINAL = {"Completed", "Succeeded", "Failed", "Stopped", "Cancelled", "Canceled", "Archived"}
 # Existing i4 workflow routes these variants to H200, not this L40S controller.
 H200_TASKS = {'fold_clothes_random', 'hang_mugs_random',
               'arrange_largest_number_random', 'stack_blocks_random'}
+
+
+def execution_controls(plan):
+    return {key: plan.get(key) for key in (
+        'checkpoint', 'config_name', 'policy', 'seeds', 'eval_num', 'action_type',
+        'joint_deadband_rad', 'num_steps', 'guidance', 'disable_compile',
+        'pointcond_mode', 'pointcond_condition', 'pointcond_assignment_seed',
+        'timeouts_seconds', 'image', 'reservation', 'reservation_burst', 'resource_shape')}
 
 
 def overlay_runtime_hash(path):
@@ -47,6 +55,8 @@ def freeze_case(run, program, task):
               'overlay_sha256': hashlib.sha256(overlay.read_bytes()).hexdigest(),
               'spec_sha256': hashlib.sha256(spec.read_bytes()).hexdigest(),
               'runtime_sha256': overlay_runtime_hash(overlay)}
+    frozen['execution_controls'] = execution_controls(plan)
+    frozen['source_archive_sha256'] = hashlib.sha256((run / 'code.tar.gz').read_bytes()).hexdigest()
     atomic_write_json(run / 'prepared_case.json', frozen)
     return frozen
 
@@ -59,6 +69,10 @@ def read_frozen_case(run, program, task):
     if frozen['task'] != task or any(hashlib.sha256(path.read_bytes()).hexdigest() != frozen[key]
                                    for key, path in paths.items()):
         raise ValueError('prepared case changed; create a fresh suite rather than rebuilding queued evidence')
+    if frozen.get('execution_controls') is not None and frozen['execution_controls'] != execution_controls(plan):
+        raise ValueError('prepared execution controls changed')
+    if frozen.get('source_archive_sha256') is not None and frozen['source_archive_sha256'] != hashlib.sha256((run / 'code.tar.gz').read_bytes()).hexdigest():
+        raise ValueError('prepared source archive changed')
     return frozen
 
 
@@ -75,6 +89,57 @@ def submit_frozen_case(run, program, task, credentials):
                            frozen['overlay_sha256'], credentials, provenance)
 
 
+def retry_busy_case(root, case, max_retries):
+    """Preserve a rejected allocation and reuse its exact packaged inputs."""
+    run = root / 'runs' / case['id']
+    report_path = run / 'eval_report.json'
+    if not report_path.exists() or json.loads(report_path.read_text()).get('failure_kind') != 'gpu_admission_rejected':
+        return False
+    attempts = root / 'attempts' / case['id']
+    count = len(list(attempts.glob('attempt-*'))) if attempts.exists() else 0
+    if count >= max_retries:
+        return False
+    frozen = read_frozen_case(run, case['program'], case['task'])
+    plan = json.loads((run / 'run_plan.json').read_text())
+    old = plan['jobs'][0]
+    new = old.split('-retry-')[0] + f'-retry-{count + 1}'
+    spec = json.loads((run / f'{old}.atomic-job-spec.json').read_text())
+    # Use the actual cloud prefix, which omits the per-base '-000' job suffix.
+    old_prefix = plan['results_s3'].rsplit('/', 1)[-1]
+    new_prefix = old_prefix.split('-retry-')[0] + f'-retry-{count + 1}'
+    def rebase(value):
+        if isinstance(value, str):
+            return value.replace(old_prefix, new_prefix)
+        if isinstance(value, list):
+            return [rebase(v) for v in value]
+        if isinstance(value, dict):
+            return {k: rebase(v) for k, v in value.items()}
+        return value
+    spec = rebase(spec)
+    plan = rebase(plan)
+    plan.update(jobs=[new], submitted=[], staged=False)
+    spec['metadata']['name'] = new
+    attempts.mkdir(parents=True, exist_ok=True)
+    archived = attempts / f'attempt-{count + 1:03d}'
+    run.rename(archived)
+    run.mkdir()
+    for filename in ('code.tar.gz', 'source_manifest.json', 'robodojo-overlay.tar.gz'):
+        source = archived / filename
+        if source.is_symlink():
+            (run / filename).symlink_to(source.resolve(strict=True))
+        else:
+            os.link(source, run / filename)
+    atomic_write_json(run / 'run_plan.json', plan)
+    atomic_write_json(run / f'{new}.atomic-job-spec.json', spec)
+    current = freeze_case(run, case['program'], case['task'])
+    for key in ('program_sha256', 'overlay_sha256', 'runtime_sha256', 'execution_controls', 'source_archive_sha256'):
+        if current[key] != frozen[key]:
+            raise ValueError('retry changed immutable experimental inputs')
+    atomic_write_json(run / 'retry-provenance.json', {'archived_attempt': str(archived),
+        'reason': 'gpu_admission_rejected', 'retry': count + 1, 'job_name': new})
+    return True
+
+
 def validate_suite(manifest):
     """Reject mislabeled A/B controls before reading the scheduler or submitting."""
     cases = manifest['cases']
@@ -83,6 +148,8 @@ def validate_suite(manifest):
         raise ValueError('case IDs must be nonempty, unique directory-safe names')
     programs = []
     for case in cases:
+        if manifest.get('checkpoints') and case.get('checkpoint_id') not in manifest['checkpoints']:
+            raise ValueError('case checkpoint_id must exist in checkpoint manifest')
         path = Path(case['program'])
         program = AtomicProgram.load(path)
         if program.task_name != case.get('task', manifest['task']):
@@ -101,13 +168,16 @@ def validate_suite(manifest):
             append = conditioned.pop('geometric_instruction', None)
             if (a.get('prompt_mode'), b.get('prompt_mode')) != ('baseline', 'conditioned') or a.get('task') != b.get('task'):
                 raise ValueError('A/B pair must have the same task and baseline/conditioned order')
+            if (a.get('checkpoint_id') != b.get('checkpoint_id')
+                    or a.get('task_timeout_s') != b.get('task_timeout_s')):
+                raise ValueError('A/B pair must have identical checkpoint and timeout controls')
             if not append or append != b.get('geometric_prompt_append') or a.get('geometric_prompt_append'):
                 raise ValueError('manifest geometric append does not match the program')
             if baseline.get('geometric_instruction') or baseline != conditioned:
                 raise ValueError('A/B programs must differ only in geometric_instruction')
 
 
-def prepare_case(source, destination, name, client, ledger, task=None):
+def prepare_case(source, destination, name, client, ledger, task=None, task_timeout_s=None):
     old = source.name
     old_task = json.loads((source / 'run_plan.json').read_text())['tasks'][0]
     def rename(value):
@@ -160,6 +230,25 @@ def prepare_case(source, destination, name, client, ledger, task=None):
     spec["metadata"]["name"] = name + "-000"
     spec["spec"]["affinity"]["allowed_nodes_in_node_group"] = eligible
     spec["spec"]["reservation_config"]["allow_burst_to_other_reservations"] = False
+    if task_timeout_s is not None:
+        if type(task_timeout_s) is not int or task_timeout_s < 1:
+            raise ValueError('task_timeout_s must be a positive integer')
+        timing = plan['timeouts_seconds']
+        overall = max(timing['overall'], timing['startup'] + task_timeout_s + 3600)
+        timing.update(task=task_timeout_s, overall=overall)
+        envs = spec['spec']['envs']
+        matches = [e for e in envs if e['name'] == 'TASK_TIMEOUT_S']
+        if len(matches) != 1:
+            raise ValueError('base plan must define exactly one TASK_TIMEOUT_S environment entry')
+        matches[0]['value'] = str(task_timeout_s)
+        command = spec['spec']['container']['command']
+        replacement_count = 0
+        for i, value in enumerate(command):
+            command[i], count = re.subn(r'(exec timeout --signal=TERM --kill-after=120s )\d+s',
+                                       lambda m: m[1] + str(overall) + 's', value)
+            replacement_count += count
+        if replacement_count != 1:
+            raise ValueError('base plan must define exactly one supported overall timeout command')
     (destination / "run_plan.json").write_text(json.dumps(plan, indent=2) + "\n")
     (destination / (name + "-000.job-spec.json")).write_text(json.dumps(spec, indent=2) + "\n")
 
@@ -174,9 +263,16 @@ def summarize(manifest, root):
         row = {"case_id": case["id"], "conditioned_stage": case["stage"], "kind": case["kind"],
                "run_dir": str(run), "status": "pending", 'task': case.get('task', manifest['task']),
                'prompt_mode': case.get('prompt_mode', 'legacy')}
+        row['checkpoint_id'] = case.get('checkpoint_id', 'default')
         if (run / "run_plan.json").exists():
             plan = json.loads((run / "run_plan.json").read_text())
             row["job_id"] = plan["submitted"][0]["id"] if plan["submitted"] else None
+            row['checkpoint'] = plan.get('checkpoint')
+            if (run / 'prepared_case.json').exists():
+                frozen = json.loads((run / 'prepared_case.json').read_text())
+                row['runtime_sha256'] = frozen['runtime_sha256']
+                row['execution_controls'] = frozen.get('execution_controls')
+                row['source_archive_sha256'] = frozen.get('source_archive_sha256')
         if (run / "eval_report.json").exists():
             report = json.loads((run / "eval_report.json").read_text())
             row.update(status=report["status"], completed_episodes=report["completed_episodes"], errors=report["errors"])
@@ -231,6 +327,9 @@ def summarize(manifest, root):
     if manifest['mode'] == 'paired_native_and_geometrically_conditioned':
         from scripts.atomic.report_paired_suite import write_report
         write_report(manifest, result, root)
+        if manifest.get('coverage'):
+            from scripts.atomic.report_eval_matrix import write_matrix_report
+            write_matrix_report(manifest, result, root)
     return result
 
 
@@ -244,14 +343,23 @@ def main():
     parser.add_argument("--max-concurrent", type=int, default=4)
     parser.add_argument("--gpu-memory-ledger", type=Path, required=True)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument('--max-busy-retries', type=int, default=2)
     args = parser.parse_args()
-    if not re.fullmatch(r"[a-z0-9-]+", args.name) or not 1 <= args.max_concurrent <= 8:
+    if not re.fullmatch(r"[a-z0-9-]+", args.name) or not 1 <= args.max_concurrent <= 8 or not 0 <= args.max_busy_retries <= 5:
         parser.error("use a job-name slug and concurrency between one and eight")
     manifest = json.loads(args.suite.read_text())
     validate_suite(manifest)
-    base_plan = json.loads((args.base_run / 'run_plan.json').read_text())
-    if base_plan.get('seeds') != [0] or base_plan.get('eval_num') != '1':
-        parser.error('suite runner currently requires a one-episode seed-0 base plan')
+    bases = {}
+    for case in manifest['cases']:
+        checkpoint_id = case.get('checkpoint_id', 'default')
+        control = manifest.get('checkpoints', {}).get(checkpoint_id)
+        base = Path(control['base_run']) if control else args.base_run
+        base_plan = json.loads((base / 'run_plan.json').read_text())
+        if base_plan.get('seeds') != [0] or base_plan.get('eval_num') != '1':
+            parser.error('suite runner currently requires a one-episode seed-0 base plan')
+        if control and base_plan.get('checkpoint') != control['checkpoint']:
+            parser.error('checkpoint manifest does not match its base-run checkpoint')
+        bases[checkpoint_id] = base
     if any(case.get('layout_id', manifest.get('layout_id', 0)) != 0 for case in manifest['cases']):
         parser.error('suite runner currently supports layout 0 only; metadata cannot select another layout')
     root = args.suite.parent
@@ -265,7 +373,8 @@ def main():
             continue
         if (run / "run_plan.json").exists() and json.loads((run / "run_plan.json").read_text())["submitted"]:
             raise ValueError('submitted legacy case has no frozen preparation; use its original controller version')
-        prepare_case(args.base_run, run, f"{args.name}-{index:02d}", client, args.gpu_memory_ledger, task=case_task)
+        prepare_case(bases[case.get('checkpoint_id', 'default')], run, f"{args.name}-{index:03d}", client,
+                     args.gpu_memory_ledger, task=case_task, task_timeout_s=case.get('task_timeout_s'))
         subprocess.run([sys.executable, "scripts/atomic/submit_trace.py", "--run-dir", str(run),
                         '--task', case_task,
                         "--program", case["program"], "--max-initial-gpu-memory-mib", "512", "--dry-run"],
@@ -273,12 +382,21 @@ def main():
         runtimes.add(freeze_case(run, case['program'], case_task)['runtime_sha256'])
     if len(runtimes) != 1:
         raise ValueError('suite cases have different packaged runtimes; prepare a fresh suite')
+    if manifest['mode'] == 'paired_native_and_geometrically_conditioned':
+        for a, b in zip(manifest['cases'][::2], manifest['cases'][1::2]):
+            controls_a = json.loads((root / 'runs' / a['id'] / 'prepared_case.json').read_text()).get('execution_controls')
+            controls_b = json.loads((root / 'runs' / b['id'] / 'prepared_case.json').read_text()).get('execution_controls')
+            if controls_a != controls_b:
+                raise ValueError('prepared A/B pair has different checkpoint/inference/execution controls')
+            source_a = json.loads((root / 'runs' / a['id'] / 'prepared_case.json').read_text()).get('source_archive_sha256')
+            source_b = json.loads((root / 'runs' / b['id'] / 'prepared_case.json').read_text()).get('source_archive_sha256')
+            if source_a != source_b:
+                raise ValueError('prepared A/B pair has different source archives')
     summarize(manifest, root)
     if args.dry_run:
         print(f"Prepared {len(manifest['cases'])} cases; maximum concurrent GPUs: {args.max_concurrent}")
         return
     monitors = {}
-    infrastructure_failures = 0
     while True:
         active = 0
         pending = []
@@ -309,9 +427,21 @@ def main():
             if code is not None:
                 (root / "runs" / case_id / "collection_finished.json").write_text(json.dumps({"exit_code": code}) + "\n")
                 if code:
-                    infrastructure_failures += 1
+                    print(f'Collection ended for {case_id} with code {code}', flush=True)
                 del monitors[case_id]
+        retried = False
+        for case in manifest['cases']:
+            run = root / 'runs' / case['id']
+            if (run / 'collection_finished.json').exists() and retry_busy_case(root, case, args.max_busy_retries):
+                print(f'Retrying rejected GPU allocation for {case["id"]}; original evidence archived.', flush=True)
+                retried = True
+        if retried:
+            continue  # Recompute pending/active after replacing the run plan.
         result = summarize(manifest, root)
+        infrastructure_failures = sum(r['status'] == 'failed' and not (
+            (Path(r['run_dir']) / 'eval_report.json').exists() and
+            json.loads((Path(r['run_dir']) / 'eval_report.json').read_text()).get('failure_kind') == 'gpu_admission_rejected')
+            for r in result['cases'])
         if infrastructure_failures >= 2:
             print("Stopping new submissions after two infrastructure/collection failures; inspect per-case evidence.", flush=True)
             return

@@ -90,6 +90,7 @@ def audit_atomic(atomic, variant=None):
         changed = {**condition, **overrides.get(condition_id, {})}
         rows[condition_id] = {
             "status": "reproduced" if matches else "score_mismatch",
+            'kind': condition['kind'], 'slot': condition['slot'], 'condition': condition,
             "recorded_result": reproduced,
             "rescored_result": evaluate_geometry(changed, measured, reference).as_dict(),
             "policy_action_index": item.get("policy_action_index"),
@@ -98,7 +99,8 @@ def audit_atomic(atomic, variant=None):
         }
     for condition_id in conditions.keys() - rows.keys():
         failure = atomic.get('measurement_failures', {}).get(condition_id)
-        rows[condition_id] = failure or {"status": "event_not_observed"}
+        rows[condition_id] = {**(failure or {"status": "event_not_observed"}),
+                              'kind': conditions[condition_id]['kind'], 'slot': conditions[condition_id]['slot']}
     output = {
         "stage_id": atomic["stage_id"], "instruction": atomic.get("instruction"),
         "action_success": atomic["action_success"],
@@ -108,6 +110,8 @@ def audit_atomic(atomic, variant=None):
         "conditions": rows,
         'required':atomic.get('required',True),
         'choice_status':atomic.get('choice_status'),
+        'family': atomic.get('family'), 'recognition_status': atomic.get('recognition_status'),
+        'interaction_observed': atomic.get('interaction_observed'),
         'trajectories': audit_trajectories(atomic.get('trajectories',{})),
         'selection': audit_selection(atomic.get('selection')),
     }

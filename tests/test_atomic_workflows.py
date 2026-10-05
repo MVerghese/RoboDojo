@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 
 from scripts.atomic.audit_scores import audit_atomic
 from scripts.atomic.generate_ab_suite import generate
-from scripts.atomic.run_suite import prepare_case, validate_suite
+from scripts.atomic.run_suite import prepare_case, validate_suite, freeze_case, retry_busy_case, read_frozen_case
 from task.atomic.geometry import evaluate_geometry
 from task.atomic.spec import AtomicProgram
 
@@ -78,10 +78,13 @@ class WorkflowControlsTests(unittest.TestCase):
             bundle.write_bytes(b'archive fixture')
             (source / 'code.tar.gz').symlink_to(bundle)
             (source / 'source_manifest.json').write_text('{}')
-            plan = {'tasks': ['pour_balls_into_vase'], 'reservation': 'reserved', 'results_s3': 's3://bucket/prefix/source'}
+            plan = {'tasks': ['pour_balls_into_vase'], 'reservation': 'reserved', 'results_s3': 's3://bucket/prefix/source',
+                    'timeouts_seconds': {'startup': 5400, 'task': 2400, 'overall': 10800}}
             (source / 'run_plan.json').write_text(json.dumps(plan))
             spec = {'metadata': {'name': 'source-000'}, 'spec': {
-                'affinity': {'allowed_dedicated_node_groups': ['group']}, 'reservation_config': {}}}
+                'affinity': {'allowed_dedicated_node_groups': ['group']}, 'reservation_config': {},
+                'envs': [{'name': 'TASK_TIMEOUT_S', 'value': '2400'}],
+                'container': {'command': ['bash', '-c', 'exec timeout --signal=TERM --kill-after=120s 10800s bash script']}}}
             (source / 'source-000.job-spec.json').write_text(json.dumps(spec))
             client = Mock()
             client._get.return_value.json.return_value = [{
@@ -90,12 +93,42 @@ class WorkflowControlsTests(unittest.TestCase):
                 'status': {'machine_status': 'Healthy', 'status': ['Ready', 'Healthy'],
                            'reserved_status': {'id': 'reserved'}}}]
             with patch('scripts.atomic.run_suite.os.link', side_effect=OSError(errno.EXDEV, 'cross-device')) as link:
-                prepare_case(source, destination, 'trial', client, root / 'ledger.jsonl')
+                prepare_case(source, destination, 'trial', client, root / 'ledger.jsonl', task_timeout_s=7200)
             self.assertEqual(link.call_args.args[0], bundle.resolve())
             self.assertTrue((destination / 'code.tar.gz').is_symlink())
             self.assertEqual((destination / 'code.tar.gz').read_bytes(), b'archive fixture')
             patched = json.loads((destination / 'trial-000.job-spec.json').read_text())
             self.assertFalse(patched['spec']['reservation_config']['allow_burst_to_other_reservations'])
+            self.assertEqual(patched['spec']['envs'][0]['value'], '7200')
+            self.assertIn('16200s', patched['spec']['container']['command'][-1])
+            self.assertEqual(json.loads((destination/'run_plan.json').read_text())['timeouts_seconds']['task'], 7200)
+
+    def test_busy_retry_retains_evidence_and_exact_overlay(self):
+        import io
+        import tarfile
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp); run = root/'runs'/'a'; run.mkdir(parents=True)
+            program = root/'program.json'; program.write_text('{}')
+            plan = {'tasks':['task'], 'jobs':['suite-000-000'], 'run_id':'suite-000',
+                    'submitted':[{'id':'old-job'}], 'results_s3':'s3://bucket/suite-000', 'checkpoint':'fixed'}
+            (run/'run_plan.json').write_text(json.dumps(plan))
+            (run/'suite-000-000.atomic-job-spec.json').write_text(json.dumps({'metadata':{'name':'suite-000-000'},
+                'spec':{'container':{'command':['download s3://bucket/suite-000/robodojo-overlay.tar.gz']}}}))
+            (run/'code.tar.gz').write_bytes(b'fixed source')
+            (run/'source_manifest.json').write_text('{}')
+            with tarfile.open(run/'robodojo-overlay.tar.gz','w:gz') as tar:
+                item=tarfile.TarInfo('fixed.py'); item.size=1; tar.addfile(item,io.BytesIO(b'x'))
+            frozen=freeze_case(run,program,'task')
+            (run/'eval_report.json').write_text(json.dumps({'failure_kind':'gpu_admission_rejected'}))
+            case={'id':'a','task':'task','program':str(program)}
+            self.assertTrue(retry_busy_case(root,case,1))
+            current=read_frozen_case(run,program,'task')
+            self.assertEqual(current['overlay_sha256'],frozen['overlay_sha256'])
+            self.assertTrue((root/'attempts/a/attempt-001/eval_report.json').exists())
+            self.assertEqual(json.loads((run/'run_plan.json').read_text())['submitted'],[])
+            self.assertIn('retry-1',json.loads((run/'run_plan.json').read_text())['results_s3'])
+            (run/'eval_report.json').write_text(json.dumps({'failure_kind':'gpu_admission_rejected'}))
+            self.assertFalse(retry_busy_case(root,case,1))
 
 
 if __name__ == '__main__':

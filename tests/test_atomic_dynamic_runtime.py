@@ -161,6 +161,7 @@ class DynamicTests(unittest.TestCase):
             run=Path(temp); program=run/'input.json'; program.write_text('{}')
             (run/'run_plan.json').write_text(json.dumps({'jobs':['j']}))
             (run/'j.atomic-job-spec.json').write_text('{}')
+            (run/'code.tar.gz').write_bytes(b'fixed source bundle')
             def archive(runtime, inp):
                 with tarfile.open(run/'robodojo-overlay.tar.gz','w:gz') as tar:
                     for name,data in [('task/atomic/session.py',runtime),('task/atomic/inputs/program.json',inp)]:
@@ -168,6 +169,9 @@ class DynamicTests(unittest.TestCase):
             archive(b'fixed runtime',b'{}')
             frozen=freeze_case(run,program,'t')
             self.assertEqual(read_frozen_case(run,program,'t'),frozen)
+            (run/'run_plan.json').write_text(json.dumps({'jobs':['j'], 'checkpoint':'changed'}))
+            with self.assertRaisesRegex(ValueError, 'controls changed'):read_frozen_case(run,program,'t')
+            (run/'run_plan.json').write_text(json.dumps({'jobs':['j']}))
             with patch('scripts.atomic.submit_trace.submit_prepared',return_value='job') as submit:
                 self.assertEqual(submit_frozen_case(run,program,'t',Path('credentials')),'job')
                 self.assertEqual(submit.call_args.args[3],frozen['overlay_sha256'])

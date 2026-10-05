@@ -137,6 +137,8 @@ class PhysXContacts:
 
     def summary(self):
         return {'backend': 'PhysX contact reports', 'steps': self.steps, 'reports': self.reports,
+                'health_status': ('callback_error' if self.errors else
+                                  'observed_reports' if self.reports else 'awaiting_contact_evidence'),
                 'resolved_finger_bodies': self.fingers, 'errors': self.errors}
 
     def resolve_object_pair(self, selector, env_idx):

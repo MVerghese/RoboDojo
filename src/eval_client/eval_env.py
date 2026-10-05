@@ -98,7 +98,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 if self.num_envs != 1:
                     raise ValueError("atomic stage evaluation currently requires num_envs=1")
                 self.atomic_program = AtomicProgram.load(self.eval_cfg["atomic_spec"])
-                if self.atomic_program.repeat_counts or self.atomic_program.gates or self.atomic_program.choices:
+                if self.atomic_program.repeat_counts or self.atomic_program.gates or self.atomic_program.choices or self.atomic_program.label_templates:
                     raise ValueError('atomic stage mode requires a concrete expanded program without scene gates or choices')
                 if self.atomic_program.task_name != self.task_name:
                     raise ValueError("atomic program task_name does not match eval task")
@@ -338,8 +338,11 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             if self._atomic_contacts is not None:
                 health = self._atomic_contacts.summary()
                 print('[atomic contacts] settled-scene health:', health, flush=True)
-                if health['errors'] or health['reports'] == 0:
+                if health['errors']:
                     raise RuntimeError('Atomic contact instrumentation failed its settled-scene health check')
+                if health['reports'] == 0:
+                    print('[atomic contacts] quiet scene: awaiting actual contact reports; '
+                          'callback health is not yet established', flush=True)
             self.robot_manager.set_origin_endpose()
             self.robot_manager.set_robot_init_state()
             self.reward_manager.init_state()

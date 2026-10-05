@@ -295,6 +295,7 @@ class AtomicStage:
     maintained_holds: tuple[dict, ...] = ()
     trajectories: tuple[dict, ...] = ()
     selection: dict | None = None
+    required: bool = True
 
     @classmethod
     def from_dict(cls, data):
@@ -340,7 +341,9 @@ class AtomicStage:
         if selection is not None:
             from task.atomic.selection import validate_selection
             validate_selection(selection, _validate_condition)
-        return cls(data["id"], data["family"], data["instruction"], checks, geometry, step_limit, recognition, maintained_holds, trajectories, selection)
+        if type(data.get('required', True)) is not bool:
+            raise ValueError('required must be boolean')
+        return cls(data["id"], data["family"], data["instruction"], checks, geometry, step_limit, recognition, maintained_holds, trajectories, selection, data.get('required', True))
 
     def with_variant(self, variant):
         """Overlay instruction and expected geometry without changing the task.
@@ -364,7 +367,7 @@ class AtomicStage:
         return AtomicStage(
             self.id, self.family, variant.get("instruction", self.instruction),
             self.success_checks, tuple(conditions), self.step_limit, deepcopy(self.recognition), deepcopy(self.maintained_holds),
-            deepcopy(self.trajectories), deepcopy(self.selection),
+            deepcopy(self.trajectories), deepcopy(self.selection), self.required,
         )
 
 
@@ -379,6 +382,7 @@ class AtomicProgram:
     gates: tuple = ()
     binding_evidence: dict | None = None
     choices: tuple = ()
+    label_templates: dict | None = None
 
     def __post_init__(self):
         stage_ids = {s.id for s in self.stages}
@@ -390,6 +394,22 @@ class AtomicProgram:
         choice_ids = {c.id for c in self.choices}
         if len(choice_ids)!=len(self.choices) or choice_ids & (stage_ids|gate_ids):
             raise ValueError('choices require unique IDs distinct from gates and stages')
+        if self.label_templates is not None:
+            fields = {'prefix', 'placeholder', 'min', 'max', 'category'}
+            if not isinstance(self.label_templates, dict) or not self.label_templates or set(self.label_templates) - stage_ids:
+                raise ValueError('label_templates must name existing stage templates')
+            for ident, binding in self.label_templates.items():
+                if (not isinstance(binding, dict) or set(binding) != fields
+                        or not isinstance(binding['prefix'], str) or not binding['prefix']
+                        or not isinstance(binding['placeholder'], str) or not binding['placeholder'].startswith('$') or len(binding['placeholder']) < 2
+                        or binding['category'] != 'rigid'
+                        or type(binding['min']) is not int or type(binding['max']) is not int
+                        or not 1 <= binding['min'] <= binding['max'] <= 100):
+                    raise ValueError('label templates require an explicit prefix/placeholder, rigid category and bounded count')
+                if self.repeat_counts and ident in self.repeat_counts:
+                    raise ValueError('a stage cannot have both numeric and object-label repeats')
+                if any(ident in b for choice in self.choices for b in choice.branches):
+                    raise ValueError('object-label templates inside choice branches require explicit branch compilation')
         if self.repeat_counts is not None:
             if not isinstance(self.repeat_counts, dict) or set(self.repeat_counts) - stage_ids:
                 raise ValueError('repeat_counts must reference existing action stages')
@@ -449,8 +469,8 @@ class AtomicProgram:
                 for i, s in enumerate(self.stages)}
 
     def bind(self, env, env_idx):
-        from task.atomic.bindings import expand_repeats
-        return expand_repeats(self, env, env_idx)
+        from task.atomic.bindings import expand_label_templates, expand_repeats
+        return expand_repeats(expand_label_templates(self, env, env_idx), env, env_idx)
 
     @classmethod
     def load(cls, path):
@@ -469,7 +489,8 @@ class AtomicProgram:
         gates = tuple(AtomicGate.from_dict(g) for g in data.get('gates', ()))
         choices = tuple(AtomicChoice.from_dict(c) for c in data.get('choices', ()))
         return cls(data["task_name"], stages, instruction, geometric_instruction,
-                   deepcopy(data.get('stage_dependencies')), deepcopy(data.get('repeat_counts')), gates, None, choices)
+                   deepcopy(data.get('stage_dependencies')), deepcopy(data.get('repeat_counts')), gates, None, choices,
+                   deepcopy(data.get('label_templates')))
 
     def stage(self, stage_id):
         for stage in self.stages:

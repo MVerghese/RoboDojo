@@ -95,7 +95,10 @@ actor/collider paths, world contact position, normal and impulse.
 Contacts with impulse magnitude at most `1e-9` are omitted. Positions, normals
 and impulses must be finite 3-vectors; a force-bearing normal must be unit length
 within `1e-3`. Malformed reports accumulate backend errors and cause eval failure.
-Reset checks settled-scene report health before starting a policy episode.
+Reset checks settled-scene callback errors before starting a policy episode.
+A quiet scene with zero reports starts as `awaiting_contact_evidence`, not as
+healthy or failed. The expanded A/B reporter requires actual reports by episode
+end and no callback errors before accepting a geometric comparison.
 
 Finger contacts are scoped to an object subtree and environment. Arms must meet
 the distinct-finger requirement before an arm is selected. If several arms

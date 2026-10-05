@@ -23,7 +23,7 @@ def expand_repeats(program, env, env_idx):
     if not program.repeat_counts:
         return program
     from task.atomic.spec import AtomicProgram
-    counts, evidence, names = {}, {}, {}
+    counts, evidence, names = {}, deepcopy(program.binding_evidence or {}), {}
     lm = env.scene_manager.layout_manager
     for stage in program.stages:
         binding = program.repeat_counts.get(stage.id)
@@ -60,3 +60,59 @@ def expand_repeats(program, env, env_idx):
     expanded = AtomicProgram(program.task_name, tuple(stages), program.instruction,
         program.geometric_instruction, deps, None, program.gates, evidence, tuple(choices))
     return expanded
+
+
+def expand_label_templates(program, env, env_idx):
+    """Instantiate reviewed prefix observers from actual layout labels.
+
+    Each instance is independent; external dependencies on the template expand
+    to all instances. This does not resolve language or game roles.
+    """
+    if not program.label_templates:
+        return program
+    lm = env.scene_manager.layout_manager
+    names, definitions = {}, {}
+    evidence = deepcopy(program.binding_evidence or {})
+    def substitute(value, token, label):
+        if isinstance(value, str):
+            return label if value == token else value
+        if isinstance(value, dict):
+            return {k: substitute(v, token, label) for k, v in value.items()}
+        if isinstance(value, (list, tuple)):
+            return type(value)(substitute(v, token, label) for v in value)
+        return deepcopy(value)
+    for stage in program.stages:
+        binding = program.label_templates.get(stage.id)
+        if binding is None:
+            names[stage.id] = [stage.id]
+            definitions[stage.id] = [stage]
+            continue
+        labels = list(lm.get_labels_by_prefix(prefix=binding['prefix'], env_idx=env_idx))
+        if any(not isinstance(label, str) or not label for label in labels):
+            raise ValueError('object-label template requires nonempty string labels')
+        labels.sort()
+        if (len(labels) != len(set(labels)) or not binding['min'] <= len(labels) <= binding['max']
+                or any(not isinstance(label, str) or not label for label in labels)):
+            raise ValueError('object-label template count/identity does not match reviewed bounds')
+        for label in labels:
+            name = lm.get_instance_name(env_idx=env_idx, label=label)
+            if lm.instance_type_by_env[env_idx].get(name) != binding['category']:
+                raise ValueError(f'{label} is not the required {binding["category"]} category')
+        instances = []
+        for i, label in enumerate(labels, start=1):
+            values = {key: substitute(getattr(stage, key), binding['placeholder'], label)
+                      for key in ('success_checks', 'geometry', 'recognition', 'maintained_holds', 'trajectories', 'selection')}
+            if values == {key: getattr(stage, key) for key in values}:
+                raise ValueError('label template placeholder was not used in its stage')
+            instances.append(replace(stage, id=f'{stage.id}__label_{i}', **values))
+        names[stage.id] = [s.id for s in instances]
+        definitions[stage.id] = instances
+        evidence[stage.id] = {**deepcopy(binding), 'labels': labels,
+                              'instances': dict(zip(names[stage.id], labels))}
+    deps = {}
+    for ident, parents in program.dependencies().items():
+        expanded_parents = [n for p in parents for n in names.get(p, [p])]
+        for name in names.get(ident, [ident]):
+            deps[name] = expanded_parents.copy()
+    return replace(program, stages=tuple(s for stage in program.stages for s in definitions[stage.id]),
+                   stage_dependencies=deps, label_templates=None, binding_evidence=evidence)

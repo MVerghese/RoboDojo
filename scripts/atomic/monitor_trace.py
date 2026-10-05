@@ -15,7 +15,7 @@ REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from scripts.atomic.gpu_memory_log import record_admission
 from scripts.atomic.node_neighbors import collect_node_neighbors, save_node_neighbors
-TERMINAL_STATES = {"Completed", "Succeeded", "Failed", "Cancelled", "Canceled", "Stopped"}
+TERMINAL_STATES = {"Completed", "Succeeded", "Failed", "Cancelled", "Canceled", "Stopped", "Archived"}
 
 
 def main() -> int:
@@ -154,7 +154,8 @@ def main() -> int:
                             "output": audit.stdout.strip(), "error": audit.stderr.strip()})
                     if audit.returncode:
                         return audit.returncode
-                return 0 if state in {"Completed", "Succeeded"} else 1
+                collected = json.loads((args.run_dir / 'eval_report.json').read_text())
+                return 0 if collected['status'] == 'passed' else 1
             if result.returncode == 2:
                 record({"event": "no_trace", "job_state": state, "output": result.stdout.strip(),
                         "error": result.stderr.strip()})

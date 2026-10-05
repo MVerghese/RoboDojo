@@ -131,6 +131,7 @@ class AtomicSequence:
                        'conditions': deepcopy(list(stage.geometry)), 'reached': False,
                        'recognition': deepcopy(stage.recognition), 'recognition_status': 'not_started',
                        'action_success': False, 'geometry_pass_rate': None,
+                       'required': stage.required,
                        'geometry_coverage': 0.0 if stage.geometry else None,
                        'geometry_observed': 0, 'geometry_total': len(stage.geometry),
                        'geometry': {}, 'start_action': None, 'end_action': None,

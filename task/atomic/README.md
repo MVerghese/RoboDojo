@@ -6,6 +6,9 @@ Start with [conditioning and A/B instructions](CONDITIONING_AB.md), [all-family 
 
 Implementation details:
 
+The [expanded eval matrix](EVAL_MATRIX.md) documents the 49-task partial-observer
+screen, checkpoint mappings, bounded idle-GPU retries and aggregate validity.
+
 1. [Geometric instrumentation and eval measurements](GEOMETRIC_MEASUREMENT.md):
    all selectors, five modifier checks, sampling events, paths and selection.
 2. [Atomic action success checks](ATOMIC_SUCCESS.md): each family/recognizer,

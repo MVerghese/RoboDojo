@@ -2,6 +2,14 @@
 
 Updated 2026-10-02. Describes implementation commit `46ffcbf`.
 
+October 4 extension: [EVAL_MATRIX.md](EVAL_MATRIX.md) adds independent candidate
+observers and bounded layout-prefix templates. `required: false` labels
+candidate observers in reports; it does not change recognition or native task
+success. Templates replace exact `$object` selector values with actual labels,
+preserve reviewed count/category evidence, and expand a dependent template ID
+to every concrete instance. They are not supported inside choice branches or
+unexpanded selected-stage replay.
+
 This document explains what the runtime recognizes, how stages are enabled and
 bounded, and how that differs from the source plans for all eval tasks. See
 [success checks](ATOMIC_SUCCESS.md) for each physical state machine and

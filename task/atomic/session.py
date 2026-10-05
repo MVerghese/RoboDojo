@@ -545,6 +545,7 @@ class AtomicSession:
             "distance_unit": "metres",
             "angle_unit": "radians",
             "action_success": self.success,
+            'required': self.stage.required,
             "geometry_pass_rate": passed / observed if observed else None,
             "geometry_coverage": observed / total if total else None,
             "geometry_observed": observed,

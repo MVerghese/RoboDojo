@@ -343,3 +343,7 @@ See [RUNTIME.md](RUNTIME.md) for the new button-count and xylophone programs
 and their prototype calibration limits. Both arms must score the same contact
 or placement conditions; put numerical geometric guidance only in the
 conditioned program's `geometric_instruction`.
+# Expanded eval-set screen
+
+See [EVAL_MATRIX.md](EVAL_MATRIX.md) and `generate_eval_matrix.py` for a checkpoint
+map and the 49-task partial-observer A/B matrix. Retain the controls below.
