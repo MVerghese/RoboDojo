@@ -14,7 +14,7 @@ class PhysXContacts:
         import carb
         import omni.usd
         from omni.physx import get_physx_simulation_interface
-        from pxr import PhysxSchema, PhysicsSchemaTools, Usd, UsdPhysics
+        from pxr import PhysicsSchemaTools, Usd, UsdPhysics
         self.env = env
         # SimulationContext disables this by default. Contact sensors explicitly
         # re-enable it too; subscribing alone otherwise produces zero reports.
@@ -24,13 +24,19 @@ class PhysXContacts:
         self.steps = 0
         self.reports = 0
         self.errors = []
+        self._support_cache = {}
+        self._lost_pairs = set()
+        self.event_types = {}
+        self.pair_diagnostics = {}
+        self.report_pair_diagnostics = {}
+        self.enabled_body_paths = []
+        self.enable_errors = []
+        self.material_states = {}
+        from omni.physx.bindings._physx import ContactEventType
+        self._contact_event_lost = ContactEventType.CONTACT_LOST
         self.fingers = {}
         stage = omni.usd.get_context().get_stage()
-        enabled = 0
-        for prim in stage.Traverse():
-            if prim.HasAPI(UsdPhysics.RigidBodyAPI):
-                PhysxSchema.PhysxContactReportAPI.Apply(prim).CreateThresholdAttr(0.0)
-                enabled += 1
+        enabled = self.enable_scene_contacts()
         # Resolve finger rigid bodies from the robot's gripper joints, not link-name guesses.
         for robot_index, robot in enumerate(env.robot_manager.robot_list):
             if robot.type != 'target':
@@ -50,9 +56,45 @@ class PhysXContacts:
         self.subscription = get_physx_simulation_interface().subscribe_contact_report_events(self._report)
         print(f'[atomic contacts] enabled {enabled} bodies; fingers {self.fingers}', flush=True)
 
+    def enable_scene_contacts(self):
+        """Enable reports after task assets exist, including every scene reset.
+
+        The initial simulator setup contains robots only. Applying the API once
+        in __init__ misses task bodies later loaded by EvalEnv.setup_scene().
+        """
+        import omni.usd
+        from pxr import PhysxSchema, Usd, UsdPhysics
+        stage=omni.usd.get_context().get_stage();paths=[]
+        for prim in Usd.PrimRange(stage.GetPseudoRoot(),Usd.TraverseInstanceProxies()):
+            if not prim.HasAPI(UsdPhysics.RigidBodyAPI):continue
+            try:
+                PhysxSchema.PhysxContactReportAPI.Apply(prim).CreateThresholdAttr(0.0)
+                paths.append(str(prim.GetPath()))
+            except Exception as error:
+                self.enable_errors.append({'body':str(prim.GetPath()),'error':str(error)})
+        self.enabled_body_paths=paths
+        if self.enable_errors:raise RuntimeError('contact report API could not be enabled: '+str(self.enable_errors[:4]))
+        print(f'[atomic contacts] scene bodies enabled: {len(paths)}',flush=True)
+        return len(paths)
+
     def begin_step(self):
         self.rows = []
+        if hasattr(self,'material_states'): self.material_states.clear()
         self.steps += 1
+
+    def reset_scene_evidence(self):
+        """A reloaded body path must never inherit another episode's contact."""
+        self.rows = []
+        self._support_cache.clear()
+        self._lost_pairs.clear()
+        self.material_states.clear()
+        self.pair_diagnostics.clear()
+        self.report_pair_diagnostics.clear()
+        self.event_types.clear()
+        self.errors.clear()
+        self.enable_errors.clear()
+        self.steps = 0
+        self.reports = 0
 
     def _report(self, headers, data):
         self.reports += 1
@@ -62,6 +104,27 @@ class PhysXContacts:
                 b = str(self._decode(header.actor1))
                 c0 = str(self._decode(header.collider0))
                 c1 = str(self._decode(header.collider1))
+                kind = getattr(header, 'type', None)
+                if not hasattr(self, '_lost_pairs'): self._lost_pairs = set()
+                if not hasattr(self, 'event_types'): self.event_types = {}
+                name = str(kind)
+                self.event_types[name] = self.event_types.get(name, 0) + 1
+                pair = tuple(sorted(((a, c0), (b, c1))))
+                lifecycle = kind is not None and getattr(self, '_contact_event_lost', None) is not None
+                if lifecycle and kind == self._contact_event_lost:
+                    self._lost_pairs.add(pair)
+                    continue
+                if lifecycle: self._lost_pairs.discard(pair)
+                if not hasattr(self, 'report_pair_diagnostics'): self.report_pair_diagnostics = {}
+                key = '|'.join((a,b,c0,c1))
+                if key not in self.report_pair_diagnostics and len(self.report_pair_diagnostics) < 96:
+                    self.report_pair_diagnostics[key] = {'headers':0, 'points':0, 'force_points':0,
+                        'zero_impulse_points':0, 'latest_physics_step':self.steps}
+                diagnostic = self.report_pair_diagnostics.get(key)
+                if diagnostic:
+                    diagnostic['headers'] += 1
+                    diagnostic['points'] += header.num_contact_data
+                    diagnostic['latest_physics_step'] = self.steps
                 for contact in data[header.contact_data_offset:header.contact_data_offset + header.num_contact_data]:
                     impulse = np.asarray(contact.impulse, dtype=float)
                     position = np.asarray(contact.position, dtype=float)
@@ -69,12 +132,15 @@ class PhysXContacts:
                     if any(value.shape != (3,) or not np.isfinite(value).all() for value in (impulse, position, normal)):
                         raise ValueError('contact position, normal and impulse must be finite 3-vectors')
                     if np.linalg.norm(impulse) <= 1e-9:
+                        if diagnostic: diagnostic['zero_impulse_points'] += 1
                         continue
+                    if diagnostic: diagnostic['force_points'] += 1
                     if not np.isclose(np.linalg.norm(normal), 1., atol=1e-3):
                         raise ValueError('force-bearing contact normal must be a unit vector')
                     self.rows.append({'actor0': a, 'actor1': b, 'collider0': c0, 'collider1': c1,
                                       'position_world': position.tolist(), 'normal_world': normal.tolist(),
-                                      'impulse': impulse.tolist()})
+                                      'impulse': impulse.tolist(), 'lifecycle_supported': lifecycle,
+                                      'force_report_physics_step': self.steps})
         except Exception as error:
             self.errors.append(f'{type(error).__name__}: {error}')
             if len(self.errors) == 1:
@@ -137,6 +203,11 @@ class PhysXContacts:
 
     def summary(self):
         return {'backend': 'PhysX contact reports', 'steps': self.steps, 'reports': self.reports,
+                'event_types': dict(getattr(self, 'event_types', {})),
+                'support_pair_diagnostics': dict(getattr(self, 'pair_diagnostics', {})),
+                'report_pair_diagnostics': dict(getattr(self, 'report_pair_diagnostics', {})),
+                'enabled_body_paths': list(getattr(self, 'enabled_body_paths', [])),
+                'enable_errors': list(getattr(self, 'enable_errors', [])),
                 'health_status': ('callback_error' if self.errors else
                                   'observed_reports' if self.reports else 'awaiting_contact_evidence'),
                 'resolved_finger_bodies': self.fingers, 'errors': self.errors}
@@ -244,10 +315,65 @@ class PhysXContacts:
                             selected.append({**row, 'support_label': support_label,
                                              'normal_on_object_world': normal.tolist(),
                                              'impulse_on_object_world': impulse.tolist()})
+        if not hasattr(self, 'pair_diagnostics'): self.pair_diagnostics = {}
+        if len(self.pair_diagnostics) < 64 or label in self.pair_diagnostics:
+            old = self.pair_diagnostics.setdefault(label, {'candidate_steps': 0, 'force_support_steps': 0})
+            old['candidate_steps'] += int(bool(candidates))
+            old['force_support_steps'] += int(bool(selected))
+            if candidates: old['latest_candidates'] = candidates[:16]
+        # PhysX may stop reporting impulses once bodies sleep. Preserve a
+        # previously force-bearing support pair only with an available contact
+        # lifecycle, no LOST event, and unchanged *both* object/support poses.
+        # This history is never used for grasp/tool contact measurements.
+        if not hasattr(self, '_support_cache'): self._support_cache = {}
+        cache_key = (env_idx, label, tuple(sorted(support_labels)), tuple(axis))
+        poses = None
+        def articulated(item):
+            if item == '@table': return False
+            instance = lm.get_instance_name(env_idx, item)
+            category = getattr(lm, 'instance_type_by_env', [{}])[env_idx].get(instance)
+            return category == 'articulation'
+        if (object_body_path is None and not support_body_paths
+                and not any(articulated(item) for item in [label]+list(support_labels))):
+            try:
+                def pose_for(item):
+                    if item == '@table':
+                        position, orientation = self.env.scene_manager._tables[env_idx].get_world_pose()
+                    else:
+                        position, orientation = lm.get_instance_pose(env_idx=env_idx, label=item)
+                    values = []
+                    for value in (position, orientation):
+                        if hasattr(value, 'detach'): value = value.detach().cpu().numpy()
+                        values.extend(np.asarray(value, dtype=float).reshape(-1))
+                    value = np.asarray(values)
+                    if value.shape != (7,) or not np.isfinite(value).all(): raise ValueError('invalid support pose')
+                    return value
+                poses = {item: pose_for(item) for item in [label]+list(support_labels)}
+            except (AttributeError, TypeError, ValueError):
+                poses = None
+        persistent = False
+        if selected:
+            eligible = [r for r in selected if r.get('lifecycle_supported')]
+            if poses is not None and eligible:
+                self._support_cache[cache_key] = {'poses': poses, 'contacts': eligible, 'physics_step': self.steps}
+        elif candidates:
+            self._support_cache.pop(cache_key, None)
+        elif poses is not None:
+            cached = self._support_cache.get(cache_key)
+            if cached and all(np.allclose(poses[k], cached['poses'][k], rtol=0, atol=1e-7) for k in poses):
+                valid = [row for row in cached['contacts'] if tuple(sorted(
+                    ((row['actor0'],row['collider0']),(row['actor1'],row['collider1'])))) not in getattr(self,'_lost_pairs',set())]
+                if valid:
+                    selected = [{**row, 'support_evidence_kind':'persistent_unchanged_contact',
+                                 'last_force_report_physics_step':cached['physics_step']} for row in valid]
+                    persistent = True
+            else:
+                self._support_cache.pop(cache_key, None)
         return {'object': label, 'object_root': root, 'support_roots': supports,
                 'object_contact_scope': object_scope, 'support_contact_scopes': support_scopes,
                 'normal_axis_world': axis.tolist(), 'physics_step': self.steps, 'contacts': selected,
                 'candidate_contact_diagnostics': candidates,
+                'support_evidence_kind': 'persistent_unchanged_contact' if persistent else 'current_force_report',
                 'normal_convention': 'shape1 to shape0, reversed for supported object in slot1'}
 
     def close(self):

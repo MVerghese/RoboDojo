@@ -7382,15 +7382,15 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "91abff69c7a97af31981d24c54337e3194063e0dba822f7837dc24c2456352ae"
+      "sha256": "998f55421bcae0b1309c608945426662e366a5faa730f69f6d8f7ac713d0f49f"
     },
     {
       "path": "task/atomic/spec.py",
-      "sha256": "abe7adcb3429da5d28f986a6db0653d441af5ee295cf5f487570d62ae32f0668"
+      "sha256": "7cf45237d1f811a7c6006c0fb582ae9a408313053dec2d51fd3fa0323c875d8b"
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "4075e84f3b49af28d5c333d84c30f754af83563315891ba7ae866b9b1ee4eb19"
+      "sha256": "63bedd02132841d1fe342220f8dccce66e0d26fa935b4af6bf1a38ff676fef9a"
     },
     {
       "path": "task/atomic/bindings.py",
@@ -7402,7 +7402,7 @@
     },
     {
       "path": "task/atomic/materials.py",
-      "sha256": "14ffb59312ca3d2ed78ebb3c04fe150822018c5ffaf0c115fa977f01d30ffc6b"
+      "sha256": "e8794470c4259c24c988cf44b5c487b187a6fe8ef7aa2f8808980d5f1145e148"
     },
     {
       "path": "task/atomic/selection.py",
@@ -7413,16 +7413,32 @@
       "sha256": "08e3e5647a643a4af22dd90fb9bb040586a7151cd84abf91f1f6b5712718bc44"
     },
     {
+      "path": "task/atomic/regions.py",
+      "sha256": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753"
+    },
+    {
+      "path": "task/atomic/fit.py",
+      "sha256": "ec6e40bf1aa3c652ab17fb5945ab0607d88de39e6ae4c4b009224644607aeb99"
+    },
+    {
+      "path": "task/atomic/flow.py",
+      "sha256": "2b0fe795a5cd6fc299140522d74f1175a2d042a4d1f8c9f8e6e0fd9cdf2ac913"
+    },
+    {
+      "path": "task/atomic/fold.py",
+      "sha256": "5d7de33352ec070c84ad2e2088c2a20baa500acfe1ad648edcb19839db0c4e97"
+    },
+    {
       "path": "env/scene_manager/objects/fluid.py",
       "sha256": "7dd2cfe8b7b7e7fc0051d6b9d887f6151be31588a9abc1f1c88e8d83cabad712"
     },
     {
       "path": "env/scene_manager/objects/garment.py",
-      "sha256": "7e55edc5f0fc77f556721316b96bc1aafedd6238f5faf4e38ab9966084ee182d"
+      "sha256": "b72ff2772598c457260b3ceaeba1078e289f6cd3b0d933ae8e6d755ebc882fd9"
     },
     {
       "path": "task/atomic/contacts.py",
-      "sha256": "061f0bbf140f15d3e2f40ac7e57e58841a91d9b0e56eb9cebbfda4068f2a2173"
+      "sha256": "f8890d18794399c4c9d3d436f52afdc9d0cbb03a4429c35795880c69ff7a4b69"
     },
     {
       "path": "task/atomic/replay.py",
@@ -7430,7 +7446,7 @@
     },
     {
       "path": "src/eval_client/eval_env.py",
-      "sha256": "300f48a588e66e2fa8177f2fc7be0b858ebcf4011880b2f7e4836a2d6cee7b07"
+      "sha256": "ef97e3b410fff657f8b1d3ea3d5769259985e6b9976b9da92d692d31ab19a0fc"
     }
   ]
 }

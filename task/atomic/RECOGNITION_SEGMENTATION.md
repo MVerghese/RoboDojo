@@ -30,8 +30,8 @@ bounded, and how that differs from the source plans for all eval tasks. See
 | Taxonomy | 11 families: pick, place, push, push with tool, pour, actuate, twist, insert, touch with tool, handover, fold. |
 | Source decomposition | Reviewed candidate plans for all 54 task modules, counting random variants separately; [SEGMENTATION.md](SEGMENTATION.md) and [segmentation_plans.json](segmentation_plans.json). |
 | Executable programs | 11 schema-loadable JSON files for ten tasks in [programs/](programs/). A source plan is not automatically compiled into one. |
-| Physical recognition | 13 configuration kinds across ten families: special pick/push contact-motion logic plus 12 generic state machines. Fold has no physical recognizer. |
-| Observed live coverage | Historical four-task pilot with earlier implementation; later adapters have offline coverage and need fresh live verification. |
+| Physical recognition | Special pick/push contact-motion logic plus 13 generic configurations across eleven families. Fold's new observer recognizes material deformation and does not establish a cloth grasp. |
+| Observed live coverage | Original 49-task screen plus 31 completed additional policy episodes with 81 reproduced geometric events and zero mismatches. New support, material and breadth batches are queued; their adapters still require live validation. |
 | Restart | Whole-action prefix replay for suitable linear programs; no faithful full-state or partial-action restoration. |
 
 The runtime observes **declared actions on bound objects**, rather than searching
@@ -53,6 +53,15 @@ prove clearance or install a recognizer. Candidate object lists and physical
 landmarks must match the loaded layout. Numeric repeats and annotated joint
 tags are resolved by [bindings.py](bindings.py); arbitrary task/language roles
 and all 54 prose source plans are not automatically resolved.
+
+The expansion generator adds explicit first-selection snapshots, actual
+contacting-gripper frames, independent first-strike/path observers and three
+garment-region deformation observers. Independent observers do not prove
+musical order or a complete fold workflow. Actual annotated/captured meshes
+are exported for reviewing offsets. `calibrated_frame` can express a reviewed
+rigid tip/opening offset with provenance; an annotation or source plan alone
+does not verify a mouth, cavity, pivot or fit. Failed attempts retain measurable
+`attempt_end` goals without manufacturing an unobserved action boundary.
 
 At stage activation, a new [AtomicSession](session.py) captures event motion
 baselines, any frozen reference geometry, initial selection candidates and the

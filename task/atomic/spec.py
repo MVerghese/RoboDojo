@@ -19,11 +19,11 @@ GEOMETRY_KINDS = frozenset(
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "before_contact", "recognition_event", "attempt_end"})
 CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "articulated_link_pose", "joint_link_pose"}) | CONTACT_KINDS
-MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','fluid_points'}
+MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame'}
 FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS
-OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose'}
+OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
-                               'near', 'inside_box', 'on_top'})
+                               'near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top'})
 
 
 def _finite_number(value, name, positive=False):
@@ -55,13 +55,17 @@ def _validate_selector(selector, name):
     if not isinstance(selector, dict) or selector.get("kind") not in MEASUREMENT_KINDS:
         raise ValueError(f"{name} must have kind in {sorted(MEASUREMENT_KINDS)}")
     common = {'kind', 'time'}
-    fields = {'robot_ee_pose': {'arm', 'label'},
+    fields = {'robot_ee_pose': {'arm', 'label', 'min_finger_bodies'},
+              'calibrated_frame': {'label', 'local_pose', 'calibration_id', 'asset_uuid','asset_model'},
+              'object_pose': {'label', 'mesh_paths', 'calibration_id', 'asset_uuid','asset_model'},
               'functional_point': {'label', 'tag', 'type', 'index'},
               'support_point': {'label', 'tag', 'type', 'index'},
               'contact_points': {'label', 'arm', 'min_finger_bodies', 'joint_tag'},
               'articulated_link_pose': {'label', 'link'},
               'joint_link_pose': {'label', 'joint_tag'},
               'cloth_points': {'label','ids'}, 'cloth_landmark': {'label','tag'},
+              'cloth_tag_frame': {'label','tag'},
+              'cloth_line_frame': {'label','tag_a','tag_b','normal_tag'},
               'cloth_patch_frame': {'label','origin_id','x_id','y_id'}, 'fluid_points': {'label','ids'},
               'object_contact_points': {'label', 'other_label'}}.get(selector['kind'], {'label'})
     if set(selector) - common - fields:
@@ -73,10 +77,33 @@ def _validate_selector(selector, name):
     if selector["kind"] == "robot_ee_pose":
         if not selector.get("arm"):
             raise ValueError(f"{name}.arm is required for robot_ee_pose")
-        if selector["arm"] == "nearest" and not selector.get("label"):
-            raise ValueError(f"{name}.label is required when arm is nearest")
+        if selector["arm"] in ('nearest', 'contacting') and not selector.get("label"):
+            raise ValueError(f"{name}.label is required when arm is nearest/contacting")
+        if 'min_finger_bodies' in selector:
+            if selector['arm'] != 'contacting' or type(selector['min_finger_bodies']) is not int or selector['min_finger_bodies'] < 1:
+                raise ValueError('robot frame finger count applies only to a physically contacting arm')
     elif not selector.get("label"):
         raise ValueError(f"{name}.label is required for {selector['kind']}")
+    if selector['kind'] == 'calibrated_frame':
+        _geometry_vector(selector.get('local_pose'),7,'calibrated_frame.local_pose')
+        if math.hypot(*selector['local_pose'][3:]) == 0:
+            raise ValueError('calibrated frame orientation must be nonzero')
+        if not isinstance(selector.get('calibration_id'),str) or not selector['calibration_id']:
+            raise ValueError('calibrated frame needs reviewed calibration provenance')
+    if 'asset_uuid' in selector and (not isinstance(selector['asset_uuid'],str) or not selector['asset_uuid']):
+        raise ValueError('calibrated asset identity must be a nonempty UUID')
+    if 'asset_model' in selector:
+        model=selector['asset_model']
+        if (not isinstance(model,dict) or set(model)!={'name','index'} or not isinstance(model['name'],str)
+                or not model['name'] or type(model['index']) is not int or model['index']<0):
+            raise ValueError('calibrated asset_model requires a model name and nonnegative integer index')
+    if 'mesh_paths' in selector:
+        paths=selector['mesh_paths']
+        if (not isinstance(paths,list) or not paths or len(set(paths))!=len(paths)
+                or any(not isinstance(p,str) or not p or p.startswith('/') or any(s in ('','.','..') for s in p.split('/')) for p in paths)):
+            raise ValueError('mesh_paths requires distinct root-relative prim paths inside the selected object')
+        if not selector.get('calibration_id'):
+            raise ValueError('selected material meshes require calibration provenance')
     if selector['kind'] in ('functional_point', 'support_point'):
         if not selector.get('tag') or selector.get('type', 'active') not in ('active', 'passive'):
             raise ValueError('functional_point requires a tag and active/passive type')
@@ -101,8 +128,11 @@ def _validate_selector(selector, name):
         ids=selector.get('ids')
         if not isinstance(ids,list) or not ids or any(type(i) is not int or i<0 for i in ids) or len(set(ids))!=len(ids):
             raise ValueError('material points require distinct explicit nonnegative IDs')
-    if selector['kind']=='cloth_landmark' and (not isinstance(selector.get('tag'),str) or not selector['tag']):
+    if selector['kind'] in ('cloth_landmark','cloth_tag_frame') and (not isinstance(selector.get('tag'),str) or not selector['tag']):
         raise ValueError('cloth landmark requires an annotated material tag')
+    if selector['kind']=='cloth_line_frame':
+        if any(not isinstance(selector.get(k),str) or not selector[k] for k in ('tag_a','tag_b','normal_tag')) or selector['tag_a']==selector['tag_b']:
+            raise ValueError('cloth crease needs two distinct material tags and a real normal tag')
     if selector['kind']=='cloth_patch_frame':
         ids=[selector.get(k) for k in ('origin_id','x_id','y_id')]
         if any(type(i) is not int or i<0 for i in ids) or len(set(ids))!=3:
@@ -144,7 +174,7 @@ def _validate_condition(condition):
         if kind != 'pose':
             raise ValueError('angle_tolerance_rad only applies to pose')
         _finite_number(condition['angle_tolerance_rad'], 'angle_tolerance_rad')
-    for field in ('relation_scope', 'margin', 'half_extents', 'min_overlap_fraction'):
+    for field in ('relation_scope', 'margin', 'half_extents', 'min_overlap_fraction', 'interior_boxes', 'aperture_profile', 'required_clearance_m'):
         if field in condition and kind != 'spatial_relation':
             raise ValueError(f'{field} only applies to spatial_relation')
     _validate_selector(condition.get("measurement"), f"condition {condition['id']}.measurement")
@@ -177,23 +207,38 @@ def _validate_condition(condition):
         if scope not in ('points', 'objects'):
             raise ValueError('relation_scope must be points or objects')
         if scope == 'objects' and (measurement['kind'] not in OBJECT_FRAME_KINDS or
-                                   condition['reference']['kind'] not in OBJECT_FRAME_KINDS):
+                                   (condition['reference']['kind'] not in OBJECT_FRAME_KINDS and condition['expected'] != 'inside_aperture')):
             raise ValueError('objects scope needs object frame selectors; it cannot replace functional landmarks')
         relation = condition['expected']
         if relation == 'on_top' and condition['reference'].get('time') == 'stage_start':
             raise ValueError('supported-on requires a live support frame and contact, not historical geometry')
-        if 'margin' in condition and relation in ('near', 'inside_box', 'on_top'):
+        if 'margin' in condition and relation in ('near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top'):
             raise ValueError('margin only applies to directional separation relations')
         if 'half_extents' in condition and not (relation == 'inside_box' or (scope == 'points' and relation == 'on_top')):
             raise ValueError('half_extents requires a box relation')
         _finite_number(condition.get('margin', 0), 'margin')
+        if relation == 'inside_region':
+            if scope != 'objects':
+                raise ValueError('inside_region certifies a whole solid object, not a centre point')
+            from task.atomic.regions import validate_boxes
+            validate_boxes(condition.get('interior_boxes'))
+        elif 'interior_boxes' in condition:
+            raise ValueError('interior_boxes only applies to inside_region')
+        if relation == 'inside_aperture':
+            if scope != 'objects' or condition['reference'].get('time') == 'stage_start':
+                raise ValueError('inside_aperture requires a whole object and a live calibrated opening frame')
+            from task.atomic.fit import aperture_polygon
+            aperture_polygon(condition.get('aperture_profile'))
+            _finite_number(condition.get('required_clearance_m', 0.), 'required_clearance_m')
+        elif 'aperture_profile' in condition or 'required_clearance_m' in condition:
+            raise ValueError('aperture profile and clearance only apply to inside_aperture')
         if condition['expected'] in ('inside_box', 'on_top'):
             if condition['expected'] == 'inside_box' or scope == 'points':
                 _geometry_vector(condition.get('half_extents'), 3, 'half_extents')
                 if any(x <= 0 for x in condition['half_extents']):
                     raise ValueError('half_extents must be positive')
         if 'min_overlap_fraction' in condition:
-            if scope != 'objects' or relation == 'inside_box':
+            if scope != 'objects' or relation in ('inside_box', 'inside_region', 'inside_aperture'):
                 raise ValueError('min_overlap_fraction only applies to projected object relations')
             _finite_number(condition['min_overlap_fraction'], 'min_overlap_fraction', positive=True)
             if condition['min_overlap_fraction'] > 1:

@@ -84,9 +84,12 @@ Quaternions are normalized; `q` and `-q` represent the same rotation.
 | `joint_link_pose` | Annotated joint tag resolves one joint and its USD Body1 target; read that body's live PhysX transform. |
 | `contact_points` | Force-bearing finger/object manifold points, scoped to the object, environment and selected arm; optional joint tag scopes to the actual moving body. |
 | `object_contact_points` | Force-bearing manifold points between two explicit object subtrees, including tool/target pairs. This alone does not prove a held tool. |
-| `cloth_points` | Explicit persistent material vertex IDs from initialized PhysX cloth world-position tensors. |
+| `cloth_points` | Explicit persistent material vertex IDs from initialized PhysX cloth tensors, or live CPU cloth USD readback with the timeline running and Fabric disabled. |
 | `cloth_landmark` | Material IDs from `passive.functional[tag].id`; each vertex is measured. |
 | `cloth_patch_frame` | Live frame from `origin_id`, `x_id`, `y_id`: normalize the x tangent, cross it with the second tangent for z, then form y. Degenerate/collinear patches fail. |
+| `cloth_tag_frame` | Tangent frame on the first authored material triangle incident on the tag's first vertex; retains the actual three material IDs. |
+| `cloth_line_frame` | Midpoint and direction of two actual material tags, with a separately defined cloth tangent normal. Coincident endpoints or a parallel normal fail. |
+| `calibrated_frame` | Explicit reviewed metre offset and orientation from a live rigid/static object root; `calibration_id` records provenance. Articulated root and cloth proxies are rejected. |
 | `fluid_points` | Explicit persistent PointInstancer IDs; current particle positions transformed by the complete USD local-to-world matrix, including scale. Requires enabled physics/particle copies to USD. |
 
 Resolvers: [session.py](session.py), [landmarks.py](landmarks.py),
@@ -95,9 +98,56 @@ Resolvers: [session.py](session.py), [landmarks.py](landmarks.py),
 [liquid](../../env/scene_manager/objects/fluid.py) state readers.
 
 Cloth/liquid point sets have no orientation; use a real patch/frame for pose or
-orientation. Cloth has no rigid-cache or CPU/USD fallback. Liquid USD-copy
+orientation. Cloth has no rigid-cache fallback. CPU cloth reads the live points
+used by native RoboDojo predicates and requires explicit `use_fabric=False`.
+One material read is shared per synchronized physics step; resets/steps clear it.
+Liquid USD-copy
 freshness still needs live verification; mass metadata is configured nominal
 particle mass, not measured density.
+
+### Finite interiors and aperture fit
+
+`inside_region` measures a closed, consistently oriented solid mesh in a
+calibrated union of 1–16 interior boxes. The union may be nonconvex; overlapping
+boxes are counted once. Signed tetrahedral volume integration reports actual
+`outside_volume_m3`, `object_volume_m3`, and outside fraction. Vertex error in
+metres is separate and cannot certify a fit alone. Tests include a cavity hole
+entirely enclosed by the object despite every object vertex/surface being in
+the allowed region. Open/inconsistent meshes yield `geometry_unavailable`,
+not success. Box face tolerance expands along local axes (L-infinity). The
+authored box union remains an approximation to curved receptacle walls.
+
+`inside_aperture` intersects the actual solid mesh with a calibrated opening
+plane. Its 2D polygon may contain holes. It measures section area outside the
+physical aperture and outside the permitted clearance/tolerance region in m²,
+plus boundary distance in metres. Required clearance erodes the aperture;
+position tolerance expands it. No section at the plane is unavailable, not
+an empty-section fit. This does not prove insertion depth, seating force or
+thread engagement; those need independent temporal/contact evidence.
+
+### Material opening crossings
+
+A pour recognizer can declare `flow` with a live calibrated opening frame,
+aperture polygon, XY target and independent positional/angular tolerances.
+Only initially source-qualified material which exited while the source was
+held and tilted is eligible. Consecutive physics positions give a linear
+substep downward plane crossing, position error/overrun in metres, relative
+velocity direction in radians, and speed in m/s. Opening translation is
+subtracted; an opening rotation over 0.05 rad in a step is explicitly unscored.
+Gaps cannot borrow crossing evidence. Raw crossing samples and exit provenance
+are retained for independent reproduction. This sampled model does not certify
+an unobserved curved trajectory or measured liquid volume.
+
+### Resting physical support
+
+Current upward force-bearing contact is preferred. A previously measured
+support pair may persist through PhysX sleep only when the contact lifecycle is
+available, no LOST event occurred, and both supported/supporting rigid poses
+remain unchanged within 1e-7 metre/quaternion-component tolerance. Evidence
+retains its last force-report step and is labeled `persistent_unchanged_contact`.
+Motion, contact loss or counterevidence invalidates it. Articulated/body-scoped
+support cannot borrow root-pose persistence. Grasp/tool contact location never
+uses this support history. Live support validation is pending in the new suite.
 
 ### Physical contact acquisition
 
@@ -302,3 +352,14 @@ geometry, path aggregates and candidate geometry from saved raw states. It does
 not independently reconstruct all physical action state machines from a complete
 physics trace. Score reproduction establishes scoring consistency, not policy
 causality, successful full-task execution or statistical steerability.
+
+### Reviewed material meshes and model identity
+
+`object_pose` may select explicit root-relative `mesh_paths` with a
+`calibration_id`. Object relations then use exactly those material surfaces,
+excluding separately authored collision proxies. Missing paths fail closed.
+`asset_model: {name, index}` verifies the actual live layout metadata for a
+calibrated frame or mesh; UUID checks are optional only when the runtime retains
+that UUID. The baked export records source checksums, while live calibration
+checks scaled bounds and model identity. These checks do not repair a nonclosed
+or inconsistently oriented solid.

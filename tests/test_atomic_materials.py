@@ -45,6 +45,37 @@ def pour_world():
 
 
 class MaterialTests(unittest.TestCase):
+    def test_crease_direction_uses_two_material_tags_and_step_cache_is_invalidated(self):
+        w=World();label,data=attach_material(w,'cloth',[5,8,11],[[0,0,0],[1,0,0],[0,1,0]])
+        data['triangles']=[[5,8,11]]
+        w.env.scene_manager.layout_manager.get_instance_metadata=lambda **kw:{'passive':{'functional':{'a':{'id':[5]},'b':{'id':[8]}}}}
+        c={'kind':'cloth_line_frame','label':label,'tag_a':'a','tag_b':'b','normal_tag':'a'}
+        _validate_selector(c,'crease');pose,source=resolve_material(w.env,c,0)
+        np.testing.assert_allclose(pose[:3],[.5,0,0]);self.assertEqual(source['crease_length_m'],1)
+        data['positions_world'][1]=[0,1,0];data['positions_world'][2]=[-1,0,0]
+        pose,_=resolve_material(w.env,c,0);np.testing.assert_allclose(_rotation(pose[3:])[:,0],[0,1,0],atol=1e-8)
+        from task.atomic.contacts import PhysXContacts
+        contacts=PhysXContacts.__new__(PhysXContacts);contacts.steps=1;contacts.material_states={}
+        w.env._atomic_contacts=contacts
+        material_state(w.env,label,'cloth',0)
+        data['positions_world'][0]=[.5,0,0]
+        # Same synchronized step shares one read; the next step must read new positions.
+        self.assertEqual(material_state(w.env,label,'cloth',0)['positions'][0,0],0)
+        contacts.begin_step()
+        self.assertEqual(material_state(w.env,label,'cloth',0)['positions'][0,0],.5)
+
+    def test_cpu_cloth_rejects_fabric_and_tag_frame_uses_actual_incident_triangle(self):
+        w=World();label,data=attach_material(w,'cloth',[5,8,11],[[0,0,0],[1,0,0],[0,1,0]])
+        data.update(requires_fabric_disabled=True, triangles=[[11,5,8]])
+        with self.assertRaisesRegex(RuntimeError,'Fabric|fabric'):material_state(w.env,label,'cloth',0)
+        w.env.use_fabric=False
+        pose,source=resolve_material(w.env,{'kind':'cloth_tag_frame','label':label,'tag':'sleeve'},0)
+        self.assertEqual(source['material_ids'],[5,8,11])
+        np.testing.assert_allclose(_rotation(pose[3:]),np.eye(3))
+        data['positions_world'][2]=[0,0,1]
+        pose,_=resolve_material(w.env,{'kind':'cloth_tag_frame','label':label,'tag':'sleeve'},0)
+        np.testing.assert_allclose(_rotation(pose[3:])[:,2],[0,-1,0],atol=1e-8)
+
     def test_fluid_applies_current_scale_rotation_translation_and_origin_once(self):
         w=World();label,data=attach_material(w,'fluid',[15,3],[[1,0,0],[0,1,0]])
         data['local_to_world_row_matrix']=np.array([[0,2,0,0],[-3,0,0,0],[0,0,4,0],[10,20,30,1.]])

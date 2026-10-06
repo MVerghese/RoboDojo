@@ -3,19 +3,24 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
-    "task/atomic/spec.py": "abe7adcb3429da5d28f986a6db0653d441af5ee295cf5f487570d62ae32f0668",
-    "task/atomic/geometry.py": "c8d311d66dc498834107b8eb8a84e9edf9ffbd9baac69c012087424d99bd08a6",
-    "task/atomic/session.py": "91abff69c7a97af31981d24c54337e3194063e0dba822f7837dc24c2456352ae",
-    "task/atomic/surfaces.py": "4b3f4a89c4d500914ac258953b6c074a72e3fc1c9bad1130ad89bf81173c6ca1",
-    "task/atomic/contacts.py": "061f0bbf140f15d3e2f40ac7e57e58841a91d9b0e56eb9cebbfda4068f2a2173",
-    "task/atomic/recognizers.py": "4075e84f3b49af28d5c333d84c30f754af83563315891ba7ae866b9b1ee4eb19",
+    "task/atomic/spec.py": "7cf45237d1f811a7c6006c0fb582ae9a408313053dec2d51fd3fa0323c875d8b",
+    "task/atomic/geometry.py": "9465b3da7143dc833f153e1159c8cba34171099c4f25cc8e5c767b8b462cb696",
+    "task/atomic/session.py": "998f55421bcae0b1309c608945426662e366a5faa730f69f6d8f7ac713d0f49f",
+    "task/atomic/surfaces.py": "88cd8a95b3071f4b0155b2c352494fff77023fe4bbb450ce21c9b3fbba63053d",
+    "task/atomic/contacts.py": "f8890d18794399c4c9d3d436f52afdc9d0cbb03a4429c35795880c69ff7a4b69",
+    "task/atomic/recognizers.py": "63bedd02132841d1fe342220f8dccce66e0d26fa935b4af6bf1a38ff676fef9a",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
-    "task/atomic/materials.py": "14ffb59312ca3d2ed78ebb3c04fe150822018c5ffaf0c115fa977f01d30ffc6b",
+    "task/atomic/materials.py": "e8794470c4259c24c988cf44b5c487b187a6fe8ef7aa2f8808980d5f1145e148",
     "task/atomic/selection.py": "5af24b1d06513a65a381802e969ae744c5dd12f0f96b80755bef2af232616f8d",
     "task/atomic/trajectory.py": "08e3e5647a643a4af22dd90fb9bb040586a7151cd84abf91f1f6b5712718bc44",
+    "task/atomic/regions.py": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753",
+    "task/atomic/fit.py": "ec6e40bf1aa3c652ab17fb5945ab0607d88de39e6ae4c4b009224644607aeb99",
+    "task/atomic/flow.py": "2b0fe795a5cd6fc299140522d74f1175a2d042a4d1f8c9f8e6e0fd9cdf2ac913",
+    "task/atomic/fold.py": "5d7de33352ec070c84ad2e2088c2a20baa500acfe1ad648edcb19839db0c4e97",
+    "task/atomic/calibration.py": "dc394307fb39252e01254cbd99c0955959c1112f65b6ba5b6c4f36d3bbac25ee",
     "env/scene_manager/objects/fluid.py": "7dd2cfe8b7b7e7fc0051d6b9d887f6151be31588a9abc1f1c88e8d83cabad712",
-    "env/scene_manager/objects/garment.py": "7e55edc5f0fc77f556721316b96bc1aafedd6238f5faf4e38ab9966084ee182d"
+    "env/scene_manager/objects/garment.py": "b72ff2772598c457260b3ceaeba1078e289f6cd3b0d933ae8e6d755ebc882fd9"
   },
   "families": 11,
   "slots": 54,
@@ -23,10 +28,10 @@
   "status_counts": {
     "L": 5,
     "C": 4,
-    "G": 94,
-    "F": 4,
+    "G": 142,
+    "F": 8,
     "S": 75,
-    "M": 60,
+    "M": 8,
     "NA": 28
   },
   "rows": [
@@ -584,36 +589,36 @@
         "P": {
           "kind": "point",
           "concept": "Specify contact point on tool.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Specify tool-tip contact pose.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Specify tip offset from tool handle.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Align tip orientation to target surface.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Keep tip below/behind object center.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         }
       }
@@ -633,8 +638,8 @@
         "T": {
           "kind": "pose",
           "concept": "First tool-object contact pose T.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "F",
+          "audit": "Actual contact points have no orientation. Use a separately calibrated physical tool/target frame and independently verify the contact event.",
           "live_evidence": null
         },
         "D": {
@@ -647,8 +652,8 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Tool heading relative to object/edge.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "F",
+          "audit": "Actual contact points have no orientation. Use a separately calibrated physical tool/target frame and independently verify the contact event.",
           "live_evidence": null
         },
         "R": {
@@ -920,36 +925,36 @@
         "P": {
           "kind": "point",
           "concept": "Aim stream at opening point P.",
-          "status": "M",
-          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
+          "status": "G",
+          "audit": "Persistent source-qualified material crossings measure XY opening error, aperture overrun, relative velocity direction and speed. Raw consecutive physics samples reproduce independently; excessive opening rotation or gaps are unscored. Vessel cavity/mouth calibration and fresh liquid USD readback validation remain. Nominal particle mass is not measured liquid volume or density.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Match opening pose T.",
-          "status": "M",
-          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
+          "status": "G",
+          "audit": "Persistent source-qualified material crossings measure XY opening error, aperture overrun, relative velocity direction and speed. Raw consecutive physics samples reproduce independently; excessive opening rotation or gaps are unscored. Vessel cavity/mouth calibration and fresh liquid USD readback validation remain. Nominal particle mass is not measured liquid volume or density.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Aim at offset within opening.",
-          "status": "M",
-          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
+          "status": "G",
+          "audit": "Persistent source-qualified material crossings measure XY opening error, aperture overrun, relative velocity direction and speed. Raw consecutive physics samples reproduce independently; excessive opening rotation or gaps are unscored. Vessel cavity/mouth calibration and fresh liquid USD readback validation remain. Nominal particle mass is not measured liquid volume or density.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Stream direction relative to opening normal.",
-          "status": "M",
-          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
+          "status": "G",
+          "audit": "Persistent source-qualified material crossings measure XY opening error, aperture overrun, relative velocity direction and speed. Raw consecutive physics samples reproduce independently; excessive opening rotation or gaps are unscored. Vessel cavity/mouth calibration and fresh liquid USD readback validation remain. Nominal particle mass is not measured liquid volume or density.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Stream enters interior of destination.",
-          "status": "M",
-          "audit": "fluid_material_transfer tracks persistent source-cohort particles, held/tilted exit, target-interior settling, raw occupancy and nominal mass partitions without artifact filtering. Explicit convex interior calibration and USD copy verification remain; opening/stream direction, flight versus spill and whole liquid volumes are not implemented.",
+          "status": "G",
+          "audit": "Persistent source-qualified material crossings measure XY opening error, aperture overrun, relative velocity direction and speed. Raw consecutive physics samples reproduce independently; excessive opening rotation or gaps are unscored. Vessel cavity/mouth calibration and fresh liquid USD readback validation remain. Nominal particle mass is not measured liquid volume or density.",
           "live_evidence": null
         }
       }
@@ -1298,29 +1303,29 @@
         "P": {
           "kind": "point",
           "concept": "Pivot point P (a point alone does not define axis).",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Pose T defines pivot and directed axis.",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Pivot offset from part/landmark.",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Axis direction relative to landmark axis.",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "R": {
@@ -1340,36 +1345,36 @@
         "P": {
           "kind": "point",
           "concept": "Grasp/contact point P.",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Hand contact pose T.",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Contact offset from pivot/handle.",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Hand orientation relative to twist axis.",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Grasp outside rim/at end of handle.",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         }
       }
@@ -1389,8 +1394,8 @@
         "T": {
           "kind": "pose",
           "concept": "Final part pose T.",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "D": {
@@ -1403,8 +1408,8 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Final orientation relative to slot/base (e.g. mark facing front).",
-          "status": "M",
-          "audit": "Needs live pivot/axis, unwrapped rotation and constrained grip/depth over time. Final orientation cannot recognize a twist.",
+          "status": "G",
+          "audit": "contact_constrained_twist measures unwrapped signed substep rotation only during verified grip, part/target contact, pivot radius/depth and bounded off-axis motion. Pivot/axis/contact geometry requires calibrated asset frames. Failed attempts retain depth/radius but no fabricated angle; final orientation alone cannot recognize a twist. Live binding remains.",
           "live_evidence": null
         },
         "R": {
@@ -1536,8 +1541,8 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Enter through named side/opening.",
-          "status": "M",
-          "audit": "Through/centred/seated/flush are not generic relation names. Define opening crossing/fit/depth; finite convex inside_box only covers its explicit box semantics.",
+          "status": "G",
+          "audit": "inside_aperture measures actual closed-solid cross-section outside a calibrated opening polygon, including aperture holes and requested clearance. held_insertion separately requires outside-to-inside depth, hold and target contact. Annotated seat/rim poses measure gap/alignment but do not prove thread engagement or seating force. through/flush are not unrestricted generic relation names; live calibration remains.",
           "live_evidence": null
         }
       }
@@ -1578,8 +1583,8 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Object centered in opening.",
-          "status": "M",
-          "audit": "Through/centred/seated/flush are not generic relation names. Define opening crossing/fit/depth; finite convex inside_box only covers its explicit box semantics.",
+          "status": "G",
+          "audit": "inside_aperture measures actual closed-solid cross-section outside a calibrated opening polygon, including aperture holes and requested clearance. held_insertion separately requires outside-to-inside depth, hold and target contact. Annotated seat/rim poses measure gap/alignment but do not prove thread engagement or seating force. through/flush are not unrestricted generic relation names; live calibration remains.",
           "live_evidence": null
         }
       }
@@ -1620,8 +1625,8 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Fully inside/seated/flush with receptacle.",
-          "status": "M",
-          "audit": "Through/centred/seated/flush are not generic relation names. Define opening crossing/fit/depth; finite convex inside_box only covers its explicit box semantics.",
+          "status": "G",
+          "audit": "inside_aperture measures actual closed-solid cross-section outside a calibrated opening polygon, including aperture holes and requested clearance. held_insertion separately requires outside-to-inside depth, hold and target contact. Annotated seat/rim poses measure gap/alignment but do not prove thread engagement or seating force. through/flush are not unrestricted generic relation names; live calibration remains.",
           "live_evidence": null
         }
       }
@@ -1683,8 +1688,8 @@
         "T": {
           "kind": "pose",
           "concept": "Tool-target contact pose T.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "F",
+          "audit": "Actual contact points have no orientation. Use a separately calibrated physical tool/target frame and independently verify the contact event.",
           "live_evidence": null
         },
         "D": {
@@ -1697,8 +1702,8 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Tool orientation relative to target normal.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "F",
+          "audit": "Actual contact points have no orientation. Use a separately calibrated physical tool/target frame and independently verify the contact event.",
           "live_evidence": null
         },
         "R": {
@@ -1760,36 +1765,36 @@
         "P": {
           "kind": "point",
           "concept": "Name impact point on tool.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Specify tip contact pose T.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Tip offset from tool handle/head center.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Tip orientation relative to target.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Tip above/inside target region at contact.",
-          "status": "M",
-          "audit": "Needs actual tool-target collision pairs and active tip/edge landmarks; existing finger/object contacts do not observe tool contact.",
+          "status": "G",
+          "audit": "Actual tool/target collision pairs and calibrated active tip/edge frames are distinct from finger/tool grasp. Object-pair contact locations and functional-frame geometry are implemented; post-scene-load report enablement fixes the missing task-body APIs. Active-part calibration and fresh live recognition/geometry validation remain.",
           "live_evidence": null
         }
       }
@@ -2054,36 +2059,36 @@
         "P": {
           "kind": "point",
           "concept": "Select garment by initial landmark P.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial garment frame T if defined.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select garment offset from landmark.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select orientation of garment frame relative to table.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select garment left of/on table.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         }
       }
@@ -2096,36 +2101,36 @@
         "P": {
           "kind": "point",
           "concept": "Two P values define crease endpoints.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "T defines crease center and directed line.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Crease offset from seam/hem landmark.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Crease direction relative to garment axis.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Crease between named garment regions.",
           "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "audit": "Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer.",
           "live_evidence": null
         }
       }
@@ -2138,36 +2143,36 @@
         "P": {
           "kind": "point",
           "concept": "Name garment point/patch at P.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Patch pose T if local frame exists.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Region offset from seam/landmark.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Patch orientation relative to garment frame.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Left sleeve/region above crease.",
           "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "audit": "Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer.",
           "live_evidence": null
         }
       }
@@ -2180,36 +2185,36 @@
         "P": {
           "kind": "point",
           "concept": "Moving landmark ends at P.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Patch goal pose T if frame exists.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Target offset from chest/shoulder landmark.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Final patch orientation relative to torso.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Sleeve over chest; hem near shoulder.",
           "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "audit": "Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer.",
           "live_evidence": null
         }
       }
@@ -2223,35 +2228,35 @@
           "kind": "point",
           "concept": "Grasp garment point P.",
           "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "audit": "Actual finger/cloth-particle contact correspondence is unavailable. Material landmarks, EEF proximity and deformation cannot substitute for a measured cloth grasp contact.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Gripper contact pose T.",
           "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "audit": "Actual finger/cloth-particle contact correspondence is unavailable. Material landmarks, EEF proximity and deformation cannot substitute for a measured cloth grasp contact.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Grasp offset from seam/corner.",
           "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "audit": "Actual finger/cloth-particle contact correspondence is unavailable. Material landmarks, EEF proximity and deformation cannot substitute for a measured cloth grasp contact.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Gripper orientation relative to garment edge.",
           "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "audit": "Actual finger/cloth-particle contact correspondence is unavailable. Material landmarks, EEF proximity and deformation cannot substitute for a measured cloth grasp contact.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Grasp corner/edge of garment.",
           "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "audit": "Actual finger/cloth-particle contact correspondence is unavailable. Material landmarks, EEF proximity and deformation cannot substitute for a measured cloth grasp contact.",
           "live_evidence": null
         }
       }
@@ -2271,8 +2276,8 @@
         "T": {
           "kind": "pose",
           "concept": "Final patch/garment pose T if defined.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "D": {
@@ -2285,8 +2290,8 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Folded edge aligned with shoulder line.",
-          "status": "M",
-          "audit": "Live cloth_points/cloth_landmark use stable material IDs and PhysX cloth tensors; cloth_patch_frame follows three noncollinear material vertices. Offline math/frame tests; CPU cloth copy, particle/finger contact correspondence, crease/layer/fold recognition and live validation remain. Rigid mesh caches never substitute.",
+          "status": "G",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
           "live_evidence": null
         },
         "R": {

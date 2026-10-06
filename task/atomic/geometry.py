@@ -10,6 +10,10 @@ from typing import Any
 import numpy as np
 
 
+class GeometryUnavailable(ValueError):
+    """Valid condition whose live geometric representation cannot certify it."""
+
+
 @dataclass(frozen=True)
 class GeometryResult:
     passed: bool
@@ -225,6 +229,16 @@ def _object_relation(condition, measured, reference, ref_pos, ref_matrix, local_
     relation = condition['expected']
     direction = {'above': (2, 1), 'below': (2, -1), 'right_of': (0, 1), 'left_of': (0, -1),
                  'in_front_of': (1, 1), 'behind': (1, -1), 'on_top': (2, 1)}
+    if relation == 'inside_region':
+        from task.atomic.regions import region_containment
+        result = region_containment(a, at, condition['interior_boxes'], tolerance)
+        components = {k: v for k, v in result.items() if k.endswith(('_m', '_m3', '_fraction'))}
+        return GeometryResult(result['passed'], result['outside_volume_fraction'], 0., components, result)
+    if relation == 'inside_aperture':
+        from task.atomic.fit import section_fit
+        result = section_fit(a, at, condition['aperture_profile'], condition.get('required_clearance_m', 0.), tolerance)
+        components = {k: v for k, v in result.items() if k.endswith(('_m', '_m2'))}
+        return GeometryResult(result['passed'], result['outside_allowed_area_m2'], 0., components, result)
     if relation == 'inside_box':
         half = _vector(condition['half_extents'], 3, 'half_extents')
         if np.any(half <= 0):

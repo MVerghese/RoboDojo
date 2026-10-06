@@ -331,11 +331,14 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     self.current_env_seed_map[idx] = seed[idx]
 
             super().reset(seed=self.env_seeds, options=options)
+            if self._atomic_contacts is not None:
+                self._atomic_contacts.reset_scene_evidence()
             if self._atomic_surfaces is not None:
                 self._atomic_surfaces.cache.clear()
             self.obs_manager.reset()  # Reset observation manager for the next episode
             self.setup_scene()
             if self._atomic_contacts is not None:
+                self._atomic_contacts.enable_scene_contacts()
                 health = self._atomic_contacts.summary()
                 print('[atomic contacts] settled-scene health:', health, flush=True)
                 if health['errors']:

@@ -10,7 +10,7 @@ from isaacsim.core.utils.string import find_unique_string_name
 import numpy as np
 from omegaconf import DictConfig
 import omni.kit.commands
-from pxr import Usd, UsdGeom, UsdShade, Vt
+from pxr import Usd, UsdGeom, UsdShade, Vt, PhysxSchema
 import torch
 
 
@@ -289,7 +289,31 @@ class GarmentObject(SingleClothPrim):
         return transformed_mesh_points, mesh_points, pos_world, ori_world
 
     def get_atomic_vertex_state(self):
-        """Read material vertices from initialized cloth physics, never a mesh cache."""
+        """Read live material vertices from the active GPU or CPU cloth solver."""
+        mesh = UsdGeom.Mesh.Get(self.stage, self.mesh_prim_path)
+        # Topology is authored and fixed. Positions below are always live;
+        # rebuilding thousands of triangle indices for each landmark is wasteful.
+        if not hasattr(self, '_atomic_triangles'):
+            triangles=[];indices=list(mesh.GetFaceVertexIndicesAttr().Get());offset=0
+            for count in mesh.GetFaceVertexCountsAttr().Get():
+                face=indices[offset:offset+count];offset+=count
+                triangles.extend([[face[0],face[i],face[i+1]] for i in range(1,count-1)])
+            self._atomic_triangles=triangles
+        triangles=self._atomic_triangles
+        if str(self._device) == 'cpu':
+            # RoboDojo's native CPU garment predicates read this same points
+            # attribute after each PhysX update. This is live solver readback,
+            # not the constructor's cached initial mesh. Fabric must be disabled.
+            import omni.timeline
+            prim = mesh.GetPrim()
+            if not omni.timeline.get_timeline_interface().is_playing() or not prim.HasAPI(PhysxSchema.PhysxParticleClothAPI):
+                raise RuntimeError('CPU cloth readback requires a running PhysX cloth prim')
+            local = np.asarray(mesh.GetPointsAttr().Get(), dtype=float)
+            matrix = np.asarray(UsdGeom.XformCache().GetLocalToWorldTransform(prim), dtype=float)
+            positions = (np.column_stack((local, np.ones(len(local)))) @ matrix)[:, :3]
+            return {'positions_world': positions, 'ids': np.arange(len(positions)), 'triangles': triangles,
+                    'backend': 'PhysX CPU cloth live USD readback', 'requires_fabric_disabled': True,
+                    'identity': 'stable authored material vertex indices'}
         view = getattr(self, '_cloth_prim_view', None)
         if view is None or getattr(view, '_physics_view', None) is None:
             raise RuntimeError('atomic cloth landmarks require initialized PhysX cloth tensors; CPU/USD fallback is unsupported')
@@ -300,7 +324,7 @@ class GarmentObject(SingleClothPrim):
         if points.ndim != 3 or points.shape[0] != 1 or points.shape[2] != 3:
             raise RuntimeError('expected one cloth tensor [1, material vertices, 3]')
         return {'positions_world': points[0], 'ids': np.arange(points.shape[1]),
-                'backend': 'PhysX cloth world positions', 'identity': 'stable cloth material vertex indices'}
+                'triangles': triangles, 'backend': 'PhysX cloth world positions', 'identity': 'stable cloth material vertex indices'}
 
     def _apply_visual_material(self, material_path: str):
         """Apply a visual material to the garment mesh."""

@@ -1,117 +1,56 @@
 # Audit of all atomic action families
 
-This extends the [implemented geometry audit](INSTRUMENTATION_AUDIT.md) across all
-**11 families** in the [taxonomy](TAXONOMY.md). The [task catalogue](TASK_MAP.md)
-contains examples and source evidence for **every one of the 54 task modules**.
-An action occurs only in the tasks that require it; not every task contains every
-action. Examples below describe requirements, not observed successful rollouts.
+All **11 families**, **54 taxonomy slots**, **270 factor cells**, and **54 native
+source modules** are indexed in [CONDITIONING_AUDIT.md](CONDITIONING_AUDIT.md),
+[TAXONOMY.md](TAXONOMY.md), [TASK_MAP.md](TASK_MAP.md), and
+[SEGMENTATION.md](SEGMENTATION.md). The eval manifest determines the evaluable task
+set; a source module is not automatically an eval entry. A source plan is not an
+observed trace or a runnable atomic program.
 
-The [exhaustive conditioning audit](CONDITIONING_AUDIT.md) records implementation
-and live-evidence status for every slot × factor cell, plus every implemented
-spatial-relation subtype. This family table alone is not that exhaustive matrix.
+## Current boundary
 
-## Current instrumentation boundary
+Physical runtime adapters now exist for all eleven family names. Coverage differs
+by binding and by observed evidence. Action success, geometric error and complete
+native task success are separate outputs. Final task state does not establish
+which actions occurred. See [EXPANSION_STATUS.md](EXPANSION_STATUS.md) for the
+frozen live suites and outstanding validation, and the three detailed references:
 
-The schema accepts all eleven family names. That does **not** install eleven
-recognizers. The live four-task pilot exercised finger contacts for pick/push,
-rigid mesh geometry, ball transfer predicates and annotated charger entry frames.
-It did not reach charger insertion. Place, tool interactions, actuation, twisting,
-handover, deformable folds and liquid mass measurements still need dedicated
-recognition/measurement adapters and live validation. Generic native predicates
-can be observed, but final task state does not prove the intervening action.
+- [GEOMETRIC_MEASUREMENT.md](GEOMETRIC_MEASUREMENT.md): factor definitions and units.
+- [ATOMIC_SUCCESS.md](ATOMIC_SUCCESS.md): physical action success and limitations.
+- [RECOGNITION_SEGMENTATION.md](RECOGNITION_SEGMENTATION.md): boundaries, events and segmentation.
 
-The five geometric types and the complete per-slot applicability matrices are
-in [TAXONOMY.md](TAXONOMY.md). The audit adds the **physical meaning** of each
-slot: selection is evaluated at stage start; interaction geometry at a declared
-contact/entry/transfer event; goal geometry after completion and release where
-required. A requested contact position has no orientation. To condition approach
-orientation, use an actual tool/gripper frame as a separate slot, not an invented
-orientation on a contact point.
+| Family; example | Implemented recognition and conditioning | Remaining evidence or implementation boundary |
+| --- | --- | --- |
+| **pick**; `general_pickup`, `plug_in_charger` | Same-arm force-bearing two-finger held motion; actual per-contact geometry, initial selection, held endpoint, full/object-axis and contacting-arm TCP orientation. | Selection/TCP probes submitted; opposing bodies alone do not certify force closure. |
+| **place**; `stack_blocks`, `stack_bowls` | Held transport, gradual same-arm jaw release, no remaining finger contact, upward support and bounded settling; release/final pose, yaw, overlap and calibrated containment. | Fresh scene-load contact enablement must validate actual object/object support. Hanging needs calibrated hook/handle predicates. |
+| **push**; `push_T` | Physical contact-coupled supported object motion; first-motion contact, final pose and attempt-end error even when success fails. | Longer paths and other asset contact surfaces need bindings; no held/lifted transport counted as push. |
+| **push_with_tool**; `align_blocks`, `sweep_blocks` | Independent finger/tool hold and tool/target contact, supported target/tool motion; contact points, heading and path/endpoints. | Fresh object contact reporting and active tool edges need live validation. |
+| **pour**; `pour_balls_into_vase`, `pour_liquid_into_cup` | Persistent rigid/particle source cohort, held/tilted source exit and sustained target entry; source pose, mouth frames and interpolated opening crossing position/velocity errors. | Actual cavities and mouths must be calibrated from material geometry. Nominal particle mass is not measured liquid volume. Liquid capture suite currently measures pickup only. |
+| **actuate**; `press_by_number` | Actual moving cap/joint state and scoped contact, press/release cycles or contact joint motion; cap contact, approach and returned endpoint. | Lever/bidirectional joint adapters need asset-specific bindings and live examples. |
+| **twist**; `fasten_screws` | Held part/target contact, pivot radius/depth, signed unwrapped rotation and bounded off-axis motion; pivot endpoint/contact/axis conditions. | Matching nut/bolt shaft-top bindings prepared; mechanical thread engagement is not certified. |
+| **insert**; `plug_in_charger`, `insert_key` | Held outside-to-inside tip/opening depth, actual target contact and alignment; entry/end pose, explicit material section/aperture fit and seat/rim metrics. | Physical opening, material mesh and fit/seat bindings need calibration; annotation alone is insufficient. Through/flush are not unrestricted generic relation names. |
+| **touch_with_tool**; `play_Xylophone` | Actual held tool/target encounter, target-relative approach and held retraction; impact region, tool orientation and retraction trajectory. | Fresh contacts/landmarks must validate strike and path events. First-strike observers do not establish musical order or timing. |
+| **handover**; `insert_key` | Named giver hold, simultaneous overlap, receiver-only sustained contact and bounded object motion; exchange pose and receiving-hand offset. | Receiving-hand probes submitted; gripper proximity cannot replace actual named-arm contact. |
+| **fold**; `fold_clothes` | Live persistent cloth vertices/tangent/line frames; newly lifted, closed, bent and settled material deformation; landmark destination, normal, crease drift and pose. | No force-bearing finger/cloth-particle correspondence yet. Whole-patch layer overlap and self-penetration are not certified by landmark gaps. |
 
-## Family audit and concrete examples
+## Shared audit corrections
 
-| Family; example task | Slots and geometry to measure | Recognition and continuous metrics | Implementation status / required correction |
-| --- | --- | --- | --- |
-| **pick**; `general_pickup`, cup in `pour_balls_into_vase` | Object selection at start; force-bearing finger contacts in object frame; grasp/approach frame separately; lift displacement/pose. P/D/R for contact location, T/O only on an actual oriented frame. | Same-arm opposing finger-body evidence and object lift. Per-contact distance or selected-axis band error; worst point determines pass. Also report contact count, arm, lift and timing. | Implemented contact sampler and first-lift geometry event, plus a geometry-independent same-arm two-finger held-motion interval. Current held interval must achieve the full native lift and remain held at goal; no EEF-origin fallback. New interval rules have offline coverage only. Two bodies alone do not prove force closure; calibrate normal/load stability before claiming secure grasp. |
-| **place**; `stack_blocks`, `hang_mugs` | Held object, target support surface/interior, release pose and final object pose. P/T/D/O/R on oriented object/target frames; hanging uses handle/hook frames. | Previously held object released, stable at target for a declared interval; support/contact or valid enclosure. Pose error, signed height gap, footprint overlap, containment violation and drift. | supported_release now tracks held transport, all-finger release, upward support and consecutive bounded pose changes. Prototype stack_blocks_by_language binding and offline counterexamples; asset calibration and live validation remain. |
-| **push**; `push_T`, keyboard in `organize_table` | Object contact on the actual touched surface; object goal pose/path; maintained support. P/D/R contact, T/O on object/approach frames. | Finger/object contact concurrent with motion, object remains table supported; declared final goal predicate. Contact-region error, goal pose error, lift/support deviation and contact duration. | First-motion contact geometry and goal pose are implemented for T. New independent contact-held planar-motion intervals require named upward force-bearing support each sampled step. Missing event geometry stays missing even if later physical interaction is recognized. New interval/support rules have offline coverage only; add stroke segmentation and palm selectors. Historical results retain their original semantics. |
-| **push_with_tool**; `sweep_blocks`, `align_blocks` | Tool grasp, active head/edge pose, tool-target contact, swept objects and goal region. P/T/D/O/R apply to appropriate points/frames; sweep corridor is a path/region extension, not a single 3D point. | Robot holds tool; tool, not bare hand, contacts targets during motion; objects reach dustpan/row; stabilizing hand maintains its constraint. Contact error, tool normal/axis error, path deviation, final containment, missed/spilled objects. | held_tool_push now requires sustained tool grasp, simultaneous tool/target contact, support and new planar tool/target motion. Prototype align_blocks binding and offline counterexamples; active-edge calibration and live validation remain. |
-| **pour**; `pour_balls_into_vase`, `pour_liquid_into_cup` | Source/target selection, source mouth pose, aim point and target opening; orientation of pour axis; above with footprint overlap. P/T/D/O/R on rigid source/target/mouth frames. | Material exits selected source and enters selected target; account for source residue and spills. Pose/axis error at first transfer and over transfer interval, transferred mass/count, spill fraction. | rigid_material_transfer now tracks initially contained source contents, held/tilted source exit, whole-rigid-object target entry and raw counts in explicitly calibrated convex interior volumes. Offline only; existing ball program not migrated, liquid particle/mass adapter missing. |
-| **actuate**; `press_by_number`, toaster lever, laptop lid | Mechanism/control identity, actual moving-link contact point, joint state, approach axis. Geometric types on point/frame slots; desired joint ratio/state is an action parameter, not SE(3). | Contact-coupled joint transition in correct direction; press/release hysteresis and sequence counts. Contact error, approach angle, joint displacement/state residual, duration and impulse. | contact_joint_motion now reads live DOF state and its actual USD moving-body contact, with directed travel during a contact interval. Offline counterexamples; per-control joint/sign/limits binding, moving-link geometry selectors and live validation remain. |
-| **twist**; `insert_key`, `fasten_screws` | Moving part, joint/thread axis, pivot, target rotation and grip/approach frame. P/D/R on pivot/contact; T/O on actual axis/part frames. | Rotation occurs while gripped and constrained to the pivot/axis; insertion depth maintained where required. Unwrapped signed rotation, axial tilt, pivot drift, depth change; threaded progress/torque if represented. | contact_constrained_twist now accumulates signed substep rotation with held part/target contact, configured pivot depth/radius and bounded off-axis rotation. Offline counterexamples; calibrated part-root/pivot, thread engagement/progress and live validation remain. |
-| **insert**; `plug_in_charger`, `deposit_coin`, tubes/pegs | Object tip/hole frame, opening/peg frame, entry pose, insertion axis and bounded depth. P/T/D/O/R for actual annotated frames; scalar depth remains a parameter. | Tip crosses opening plane with lateral fit and correct axis, then reaches bounded depth; peg through hole for stacking toy. Entry position/orientation error, signed depth, lateral error and clearance violations. | held_insertion now recognizes an aligned held-tip path from outside a live opening into signed bounded depth with target contact. Offline counterexamples; task-specific hole/peg/tip fit calibration, existing program migration and live validation remain. |
-| **touch_with_tool**; `play_Xylophone` | Held tool, active beat/tip landmark, target key/contact point, approach frame. P/D/R for impact location; T/O for actual tool/target frames. | Tool-target contact/impulse with correct key identity and sequence; rebound/lift for separate strikes. Impact-location error, normal/approach angle, impulse and timing/order. | held_tool_contact now requires held tool, new contact after separation, named active body/collider suffixes and impulse. Offline counterexamples; actual tip/key bindings, impact velocity/rebound/timing and live validation remain. |
-| **handover**; `insert_key`, `sweep_blocks` | Object, giver/receiver arms, each grasp region/frame, transfer pose. All five types on object/arm frames, P/D/R on contact regions. | Giver holds, receiver establishes contact/hold, giver releases, receiver continues supporting; object never drops. Transfer pose error, each contact-region error, overlap duration and unsupported displacement. | grip_transfer now tracks giver-only hold, sustained overlap, actual giver release and continued receiver-only hold with bounded per-step displacement. Offline counterexamples; named task-arm bindings and live validation remain. |
-| **fold**; `fold_clothes` and `_random` | Material corner/edge grasp points, fold line (two material landmarks), moving/fixed garment regions, final landmark/layer relations. P/D/R on deforming material points; T/O only on defined local tangent frames. A line needs two points plus direction, not one point/pose. | Material patch is grasped and moved across a defined crease; intended layer overlap/order and stable release. Landmark distance, crease line error, material-region overlap, layer order and self-penetration. | Native sleeve/chest/hem/shoulder material-point ranges and line angle provide useful phases. Atomic selectors currently address rigid objects, not current deformable material topology. Add a garment adapter using live vertices/material IDs and contact correspondence. Mesh-bound centres cannot measure a fold. |
+Contact reports are enabled after task objects load, not only when the initial
+robot scene is constructed. Fresh stack/tool runs validate this fix. Previous
+frozen runs with robot-only enablement retain that limitation. Missing events
+remain missing and do not become zero errors or successful actions.
 
-## Further adapter implementation
+Geometry uses selected physical points/frames, all contact points, live articulated
+child poses and actual material vertices. Directional object relations require
+signed ordering and projected triangle overlap; supported-on additionally requires
+support evidence. Root/centre/functional offsets and live/initial reference times
+are explicit. P/D/R contact positions carry no orientation; T/O need a separate
+real frame. Distances, angles, area, volume and fractions are reported separately.
 
-[ADVANCED_RUNTIME.md](ADVANCED_RUNTIME.md) documents initial candidate snapshots,
-pre-contact samples, physics-resolution paths, route/subset choices,
-`held_tool_strike`, cloth vertex/tangent frames, persistent liquid particle
-provenance/counts/nominal mass and live articulated child meshes. Earlier family
-rows describe their original boundary; these additions supersede the listed
-missing-adapter portions. Asset calibration and fresh simulator validation
-remain required. Full fold recognition still needs particle/finger contacts
-and material correspondence.
+Selected material meshes exclude duplicate visual/collision proxies when computing
+closed-solid volume or aperture fit. Missing/nonclosed meshes fail certification.
+Finite nonconvex interior-box unions are independently calibrated cavities; outer
+object bounds are never silently interpreted as interiors.
 
-## Audit rules shared by every family
-
-1. **Declare semantics before scoring.** Record units, scalar-first quaternion
-   order, coordinate frame, root versus mesh centre versus functional landmark,
-   affected axes, symmetry, event and timing tolerance. An initial selection
-   constraint must not be scored on a moved object's final pose.
-2. **Use synchronized physical evidence.** Read pose and contacts from the same
-   actual physics substep, transform by the current physical body frame, and
-   resolve contact bodies to the intended object/link. Preserve points, normals,
-   impulses, identities and backend health. Contact-processing failure is an
-   infrastructure failure, not poor policy adherence.
-3. **Treat relations as geometry with declared scope.** Above/below for objects
-   requires signed relative height **and footprint overlap projected along the
-   reference z axis**. Supported-on additionally requires load-bearing contact.
-   Holes remain holes; finite containment uses complete geometry. A centre-point
-   inside an open/nonconvex container is not object containment. Object-surface
-   `near` is currently unsupported; point-to-point distance has different semantics.
-4. **Keep orientation meaningful.** Normalize quaternions and account for sign
-   equivalence. Use axis alignment for justified rotational symmetry, full frame
-   error otherwise; do not invent a contact orientation. Articulated links and
-   deformable tangent frames need live adapters, not initial USD root transforms.
-5. **Recognize the action independently of requested geometry.** Targets must not
-   alter success checks inside an A/B pair. Missed events, unavailable contact
-   and unreached stages remain unobserved; closest approach is diagnostic only.
-   Score contact points individually rather than letting a centroid mask errors.
-6. **Preserve dependencies.** Retain native task success, order/game rules,
-   conveyor timing, other-arm stabilization, source material identity and cleanup.
-   Save stage-local baselines when measuring motion; episode-start displacement
-   can be already true when a later stage starts.
-7. **Calibrate feasibility and restart fidelity.** Inspect per-layout asset
-   geometry and landmarks; never declare candidate targets reachable solely
-   because the schema loads. Prefix replay reproduces actions, not a simulator
-   snapshot. Compare rigid poses/joints, velocities, material state and contact
-   conditions before trusting later-stage A/B comparisons.
-
-## What was fixed, and what is not yet implemented
-
-Existing instrumentation fixes are documented in
-[INSTRUMENTATION_AUDIT.md](INSTRUMENTATION_AUDIT.md): actual finger contacts,
-per-substep synchronization, enabled/checked PhysX reports, worst-point contact
-scoring, explicit mesh centres, height plus footprint relations, support contact,
-finite convex containment, annotated charger frames and physically correct T
-goal height. The legacy cup variants and variation generator now describe their
-actual contact/object measurements and axes rather than an EEF proxy.
-
-Subsequent runtime fixes are tracked in [FIX_STATUS.md](FIX_STATUS.md): geometry-independent contact-held pick/push intervals, frozen stage-start references, explicit tool/object contacts, arm eligibility and backend failure checks. These additions have offline regression coverage and require new live verification.
-
-This wider audit establishes requirements and source evidence for every family;
-it does not claim that the missing adapters above have been implemented. The generic rigid recognizers and concurrent runtime now exist; see [RUNTIME.md](RUNTIME.md). Bind and calibrate button actuation, tool contact/handover and constrained twist against actual assets before live claims. Deformable folding and fluid mass transfer still need state/contact adapters.
-
-**Taxonomy gap:** `put_bottles_into_dustbin` explicitly says to throw. Release
-velocity and contact-free ballistic flight are not covered by place. Throw is
-flagged in the catalogue, not silently relabeled or added to the current schema.
-
-## All-task segmentation plans
-
-[SEGMENTATION.md](SEGMENTATION.md) records candidate stage control flow, config-backed
-bindings, physical boundary recipes and restart state for all 54 modules. These
-source plans preserve choices, repeats, concurrent holds and opponent events;
-they are not observed trace labels or executable AtomicProgram files.
+`put_bottles_into_dustbin` explicitly requests throwing. Place does not certify
+release velocity and ballistic flight. Throw remains a flagged taxonomy gap.

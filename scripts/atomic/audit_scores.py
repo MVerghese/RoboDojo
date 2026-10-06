@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from task.atomic.geometry import evaluate_geometry
 
 
-TARGET_FIELDS = {"expected", "tolerance", "angle_tolerance_rad", "margin", "half_extents", "min_overlap_fraction"}
+TARGET_FIELDS = {"expected", "tolerance", "angle_tolerance_rad", "margin", "half_extents", "min_overlap_fraction", "interior_boxes", "aperture_profile", "required_clearance_m"}
 
 
 def _same_result(a,b):
@@ -35,6 +35,20 @@ def audit_trajectories(rows):
         output[ident]={'status':'reproduced' if _same_result(result,row['result']) else 'score_mismatch',
                        'recorded_result':result,'condition':row['condition']}
     return output
+
+
+def audit_flow(flow):
+    if not flow:return None
+    from task.atomic.flow import score_crossing
+    rows={}
+    for ident,row in flow['crossings'].items():
+        provenance=row.get('source_exit_provenance',{})
+        if not provenance.get('eligible') or not provenance.get('exited_while_held_and_tilted'):
+            rows[ident]={'status':'missing_source_provenance'};continue
+        result=score_crossing(flow['condition'],row['before'],row['after'])
+        rows[ident]={'status':'reproduced' if _same_result(result,row['result']) else 'score_mismatch',
+                     'recorded_result':result}
+    return {'condition':flow['condition'],'crossings':rows,'sampling_failures':flow['failures']}
 
 
 def audit_selection(selection):
@@ -114,6 +128,7 @@ def audit_atomic(atomic, variant=None):
         'interaction_observed': atomic.get('interaction_observed'),
         'trajectories': audit_trajectories(atomic.get('trajectories',{})),
         'selection': audit_selection(atomic.get('selection')),
+        'material_flow': audit_flow(atomic.get('material_flow')),
     }
     if atomic.get("closest_approach"):
         alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}

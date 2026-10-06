@@ -6,6 +6,7 @@ import unittest
 from scripts.atomic.continuous_report import (
     arm_summary, component_names, condition_parameters, measurement_row, report_html, report_markdown,
     shared_summary,
+    collect_events, component_unit,
 )
 
 
@@ -18,6 +19,25 @@ def event(components=None, status='reproduced'):
 
 
 class ContinuousReportTests(unittest.TestCase):
+    def test_flow_path_and_selected_referent_keep_units_and_exclude_unscored_crossing(self):
+        rows={'atomic_scores':[{'stage_id':'s','family':'pour','conditions':{},
+            'material_flow':{'crossings':{
+                '0':{'status':'reproduced','recorded_result':{'status':'scored','components':{
+                    'crossing_position_error_m':.004,'velocity_angle_rad':.2,'relative_speed_m_s':.3}}},
+                '1':{'status':'reproduced','recorded_result':{'status':'opening_rotation_sampling_limit'}}}},
+            'trajectories':{'p':{'status':'reproduced','condition':{'slot':'path'},
+                'recorded_result':{'status':'scored','max_deviation_m':.006,'duration_s':1.5}}},
+            'selection':{'status':'reproduced','target_status':'resolved',
+                'observed':{'contacts':[{'label':'wrong'}]},'candidates':{
+                    'right':{'c':{'status':'reproduced','recorded_result':{'components':{'position_m':0}}}},
+                    'wrong':{'c':{'status':'reproduced','recorded_result':{'components':{'position_m':.1}}}}}}}]}
+        events=collect_events(rows); summary=arm_summary(events.values())
+        self.assertEqual(summary['observed'],3)
+        self.assertEqual(summary['components']['position_m']['mean'],.1)
+        self.assertEqual(summary['components']['duration_s']['mean'],1.5)
+        self.assertEqual(component_unit('relative_speed_m_s'),('relative speed (mm/s)',1000))
+        self.assertEqual(component_unit('duration_s'),('duration (s)',1))
+
     def test_delta_compares_shared_events_not_different_observed_populations(self):
         a = {('a', 'c'): event({'displacement_m': .001}),
              ('b', 'c'): event({'displacement_m': .009}),

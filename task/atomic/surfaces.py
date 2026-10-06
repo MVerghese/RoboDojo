@@ -15,15 +15,16 @@ class ObjectSurfaces:
         self.env = env
         self.cache = {}
 
-    def resolve(self, label, env_idx, pose):
+    def resolve(self, label, env_idx, pose, mesh_paths=None):
         lm=self.env.scene_manager.layout_manager
         if hasattr(lm,'instance_type_by_env'):
             category=lm.instance_type_by_env[env_idx].get(lm.get_instance_name(env_idx,label))
             if category in ('garment','fluid'):
                 raise RuntimeError('deforming material cannot use a cached rigid mesh footprint; use material selectors')
             if category=='articulation':
+                if mesh_paths:raise RuntimeError('selected root-relative material meshes require a rigid object')
                 return self._articulated(label,env_idx,pose)
-        key = (env_idx, label)
+        key = (env_idx, label) if mesh_paths is None else (env_idx,label,tuple(mesh_paths))
         if key not in self.cache:
             import omni.usd
             from pxr import Gf, Usd, UsdGeom
@@ -35,10 +36,13 @@ class ObjectSurfaces:
             xforms = UsdGeom.XformCache()
             _reject_shear(xforms.GetLocalToWorldTransform(root))
             scale = np.asarray(Gf.Transform(xforms.GetLocalToWorldTransform(root)).GetScale(), dtype=float)
-            points, triangles = [], []
+            points, triangles, selected = [], [], []
             for prim in Usd.PrimRange(root, Usd.TraverseInstanceProxies()):
                 if not prim.IsA(UsdGeom.Mesh):
                     continue
+                relative_path=str(prim.GetPath())[len(str(root.GetPath()))+1:]
+                if mesh_paths is not None and relative_path not in mesh_paths:continue
+                selected.append(relative_path)
                 mesh = UsdGeom.Mesh(prim)
                 values = mesh.GetPointsAttr().Get()
                 if values is None or not len(values):
@@ -53,6 +57,8 @@ class ObjectSurfaces:
                     for j in range(1, count - 1):
                         triangles.append([base + face[0], base + face[j], base + face[j + 1]])
                     offset += count
+            if mesh_paths is not None and set(selected)!=set(mesh_paths):
+                raise RuntimeError(f'calibrated material mesh missing from {label}: {set(mesh_paths)-set(selected)}')
             if not triangles:
                 raise RuntimeError(f'no mesh surface available for footprint of {label}')
             self.cache[key] = (np.asarray(points), triangles, path)
@@ -61,7 +67,8 @@ class ObjectSurfaces:
         center = ((points.min(axis=0) + points.max(axis=0)) / 2) @ _rotation(pose[3:]).T + pose[:3]
         return {'position': center.tolist(), 'orientation': pose[3:].tolist(),
                 'vertices': vertices.tolist(), 'triangles': triangles,
-                'geometry_representation': 'union of projected USD mesh triangles', 'prim_path': path}
+                'geometry_representation': ('calibrated material mesh triangles' if mesh_paths else 'union of projected USD mesh triangles'),
+                'selected_mesh_paths':mesh_paths, 'prim_path': path}
 
     def center_pose(self, label, env_idx, pose):
         lm=self.env.scene_manager.layout_manager

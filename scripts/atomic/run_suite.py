@@ -121,6 +121,23 @@ def retry_busy_case(root, case, max_retries):
     report_path = run / 'eval_report.json'
     if not report_path.exists() or json.loads(report_path.read_text()).get('failure_kind') != 'gpu_admission_rejected':
         return False
+    return retry_frozen_case(root, case, max_retries, 'gpu_admission_rejected')
+
+
+def retry_frozen_case(root, case, max_retries, reason):
+    """Explicit infrastructure retry; preserve every original attempt and hash.
+
+    Non-admission retries require a diagnosed reason and no native episodes.
+    The normal controller calls only retry_busy_case, never this broader path.
+    """
+    if reason not in ('gpu_admission_rejected', 'client_terminated', 'native_collection_failure'):
+        raise ValueError('infrastructure retry requires a diagnosed supported reason')
+    run = root / 'runs' / case['id']
+    report_path = run / 'eval_report.json'
+    if not report_path.exists(): return False
+    report = json.loads(report_path.read_text())
+    if report.get('native_results') or report.get('completed_episodes', 0):
+        raise ValueError('cannot infrastructure-retry an observed native episode')
     attempts = root / 'attempts' / case['id']
     count = len(list(attempts.glob('attempt-*'))) if attempts.exists() else 0
     if count >= max_retries:
@@ -162,7 +179,7 @@ def retry_busy_case(root, case, max_retries):
         if current[key] != frozen[key]:
             raise ValueError('retry changed immutable experimental inputs')
     atomic_write_json(run / 'retry-provenance.json', {'archived_attempt': str(archived),
-        'reason': 'gpu_admission_rejected', 'retry': count + 1, 'job_name': new})
+        'reason': reason, 'retry': count + 1, 'job_name': new})
     return True
 
 
@@ -282,7 +299,7 @@ def prepare_case(source, destination, name, client, ledger, task=None, task_time
 def summarize(manifest, root):
     rows = []
     scored = 0
-    path_scored = selection_scored = 0
+    path_scored = selection_scored = flow_scored = 0
     mismatches = 0
     for case in manifest["cases"]:
         run = root / "runs" / case["id"]
@@ -323,16 +340,20 @@ def summarize(manifest, root):
                 if selection:
                     selection_scored+=int(selection['status']=='reproduced' and selection['passed'] is not None)
                     mismatches+=int(selection['status']=='score_mismatch')
+                for flow in (atomic.get('material_flow') or {}).get('crossings',{}).values():
+                    flow_scored += int(flow['status']=='reproduced' and flow['recorded_result']['status']=='scored')
+                    mismatches += int(flow['status']=='score_mismatch')
         rows.append(row)
     result = {"updated_at": datetime.now(timezone.utc).isoformat(), "task": manifest["task"],
               "mode": manifest["mode"], "cases": rows, "reproduced_event_scores": scored,
               "completed_cases": sum(r["status"] != "pending" for r in rows),
               "score_mismatches": mismatches,
               'reproduced_trajectory_scores':path_scored,'reproduced_selection_scores':selection_scored,
+              'reproduced_flow_scores':flow_scored,
               "benchmark_proof": "pending" if any(r["status"] == "pending" for r in rows) else
                   ("score_audit_failed" if mismatches else "completed_with_infrastructure_failures"
                    if any(r["status"] != "passed" for r in rows) else
-                   "end_to_end_verified" if scored or path_scored or selection_scored else "no_event_scores_observed")}
+                   "end_to_end_verified" if scored or path_scored or selection_scored or flow_scored else "no_event_scores_observed")}
     atomic_write_json(root / 'benchmark_results.json', result)
     lines = ["# Full-task atomic geometric benchmark", "", f"Task: `{manifest['task']}`. "
              f"Collected {result['completed_cases']} / {len(rows)} cases; reproduced {scored} event scores.", "",

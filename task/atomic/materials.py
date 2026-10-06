@@ -10,6 +10,11 @@ def _array(value):
 
 
 def material_state(env,label,kind,env_idx):
+    # Production cache is invalidated before every PhysX step and episode reset.
+    # It never substitutes constructor geometry for a live solver readback.
+    cache=getattr(getattr(env,'_atomic_contacts',None),'material_states',None)
+    key=(env_idx,label,kind)
+    if cache is not None and key in cache:return cache[key]
     lm=env.scene_manager.layout_manager
     name=lm.get_instance_name(env_idx=env_idx,label=label)
     if name is None:raise ValueError('unknown material label '+label)
@@ -20,6 +25,8 @@ def material_state(env,label,kind,env_idx):
     method='get_atomic_vertex_state' if kind=='cloth' else 'get_atomic_particle_state'
     if not hasattr(obj,method):raise RuntimeError(f'{label} has no live atomic {kind} backend')
     raw=getattr(obj,method)()
+    if raw.get('requires_fabric_disabled') and getattr(env, 'use_fabric', None) is not False:
+        raise RuntimeError('CPU cloth USD readback requires explicit use_fabric=False; stale USD coordinates are forbidden')
     ids=_array(raw['ids'])
     if ids.ndim!=1 or ids.dtype.kind not in 'iu' or len(set(ids.tolist()))!=len(ids) or np.any(ids<0):
         raise RuntimeError('material IDs must be unique persistent nonnegative integers')
@@ -42,20 +49,45 @@ def material_state(env,label,kind,env_idx):
         if not np.isfinite(mass) or mass<=0:raise RuntimeError('fluid nominal particle mass must be finite and positive')
     if positions.shape!=(len(ids),3) or not len(ids) or not np.isfinite(positions).all():
         raise RuntimeError('material positions must be finite nonempty Nx3 and match persistent IDs')
-    return {'ids':ids.astype(np.int64),'positions':positions,'nominal_mass_kg':mass,
+    result={'ids':ids.astype(np.int64),'positions':positions,'nominal_mass_kg':mass,
+            'triangles': raw.get('triangles'),
             'source':{'label':label,'kind':kind,'backend':raw['backend'],'identity':raw['identity'],
                       'frame':'environment_local_world','mass_semantics':'configured nominal particle mass, not measured density' if kind=='fluid' else None}}
+    if cache is not None:cache[key]=result
+    return result
 
 
 def resolve_material(env,selector,env_idx):
+    if selector['kind']=='cloth_line_frame':
+        label=selector['label']
+        a,sa=resolve_material(env,{'kind':'cloth_landmark','label':label,'tag':selector['tag_a']},env_idx)
+        b,sb=resolve_material(env,{'kind':'cloth_landmark','label':label,'tag':selector['tag_b']},env_idx)
+        normal,sn=resolve_material(env,{'kind':'cloth_tag_frame','label':label,'tag':selector['normal_tag']},env_idx)
+        a,b=np.asarray(a['position']),np.asarray(b['position']);x=b-a
+        if np.linalg.norm(x)<=1e-10:raise RuntimeError('cloth crease endpoints coincide')
+        x=x/np.linalg.norm(x)
+        from task.atomic.geometry import _rotation
+        z=_rotation(normal[3:])[:,2];z=z-x*(z@x)
+        if np.linalg.norm(z)<=1e-10:raise RuntimeError('cloth crease normal is parallel to the line')
+        z=z/np.linalg.norm(z);y=np.cross(z,x)
+        return np.concatenate(((a+b)/2,matrix_quaternion(np.column_stack((x,y,z))))),{
+            **selector,'frame':'environment_local_world','crease_length_m':float(np.linalg.norm(b-a)),
+            'endpoint_sources':[sa,sb],'normal_source':sn,'material_kind':'cloth'}
     kind='fluid' if selector['kind']=='fluid_points' else 'cloth'
     state=material_state(env,selector['label'],kind,env_idx)
-    if selector['kind']=='cloth_landmark':
+    if selector['kind'] in ('cloth_landmark', 'cloth_tag_frame'):
         lm=env.scene_manager.layout_manager
         metadata=lm.get_instance_metadata(env_idx=env_idx,label=selector['label'])
         ids=metadata.get('passive',{}).get('functional',{}).get(selector['tag'],{}).get('id')
         if not isinstance(ids,list) or not ids or any(type(i) is not int or i<0 for i in ids) or len(set(ids))!=len(ids):
             raise ValueError('cloth tag must annotate distinct explicit material vertex IDs')
+        if selector['kind'] == 'cloth_tag_frame':
+            triangles = state.get('triangles')
+            if triangles is None: raise RuntimeError('a cloth tag frame requires actual material mesh topology')
+            triangles = np.asarray(triangles)
+            adjacent = [face.tolist() for face in triangles if ids[0] in face]
+            if not adjacent: raise ValueError('cloth landmark has no incident material triangle')
+            face = adjacent[0]; start = face.index(ids[0]); ids = face[start:]+face[:start]
     elif selector['kind']=='cloth_patch_frame':
         ids=[selector[k] for k in ('origin_id','x_id','y_id')]
     else:ids=selector['ids']
@@ -63,7 +95,7 @@ def resolve_material(env,selector,env_idx):
     if set(ids)-lookup.keys():raise ValueError('requested material IDs are missing from live state')
     points=state['positions'][[lookup[i] for i in ids]]
     source={**state['source'],**selector,'material_kind':kind,'material_ids':list(ids)}
-    if selector['kind']=='cloth_patch_frame':
+    if selector['kind'] in ('cloth_patch_frame', 'cloth_tag_frame'):
         x,y=points[1]-points[0],points[2]-points[0]
         if np.linalg.norm(x)<=1e-10 or np.linalg.norm(y)<=1e-10:
             raise RuntimeError('cloth tangent frame is degenerate')

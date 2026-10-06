@@ -5,7 +5,7 @@ import json
 
 import numpy as np
 
-from task.atomic.geometry import evaluate_geometry
+from task.atomic.geometry import evaluate_geometry, GeometryUnavailable
 from task.atomic.contacts import ContactUnavailable
 
 
@@ -116,9 +116,32 @@ class AtomicSession:
             return deepcopy(value), deepcopy(source)
         source = {**selector, "frame": "environment_local_world"}
         kind = selector["kind"]
-        if kind in ('cloth_points','cloth_landmark','cloth_patch_frame','fluid_points'):
+        if 'asset_model' in selector:
+            metadata=self.env.scene_manager.layout_manager.get_instance_metadata(env_idx=self.env_idx,label=selector['label'])
+            model=selector['asset_model']
+            if metadata.get('model_name')!=model['name'] or int(metadata.get('model_id',-1))!=model['index']:
+                raise RuntimeError('calibrated frame/mesh model differs from the reviewed asset')
+            source['verified_asset_model']=dict(model)
+        if 'asset_uuid' in selector:
+            metadata=self.env.scene_manager.layout_manager.get_instance_metadata(env_idx=self.env_idx,label=selector['label'])
+            if metadata.get('uuid') != selector['asset_uuid']:
+                raise RuntimeError('calibrated frame/mesh asset identity differs from the reviewed asset')
+            source['verified_asset_uuid']=metadata['uuid']
+        if kind in ('cloth_points','cloth_landmark','cloth_patch_frame','cloth_tag_frame','cloth_line_frame','fluid_points'):
             from task.atomic.materials import resolve_material
             return resolve_material(self.env,selector,self.env_idx)
+        if kind == 'calibrated_frame':
+            lm = self.env.scene_manager.layout_manager
+            name = lm.get_instance_name(env_idx=self.env_idx,label=selector['label'])
+            if str(lm.instance_type_by_env[self.env_idx].get(name)).lower() not in ('rigid','geometry'):
+                raise RuntimeError('calibrated root-local frame requires a rigid/static object, not a moving link or material proxy')
+            root = self._object_pose(selector['label']); local = np.asarray(selector['local_pose'])
+            from task.atomic.geometry import _rotation
+            from task.atomic.landmarks import matrix_quaternion
+            value = np.concatenate((root[:3]+_rotation(root[3:])@local[:3],
+                matrix_quaternion(_rotation(root[3:])@_rotation(local[3:]))))
+            return value, {**source,'root_pose':root.tolist(),
+                'calibration_semantics':'explicit reviewed offset in scaled object-root metres; no automatic mouth/tip inference'}
         if kind in ('articulated_link_pose', 'joint_link_pose'):
             from task.atomic.landmarks import live_link_pose
             link = selector.get('link')
@@ -150,7 +173,13 @@ class AtomicSession:
                 raise RuntimeError('PhysX contacts were not initialized')
             return contacts.resolve_object_pair(selector, self.env_idx)
         if kind == "robot_ee_pose":
-            if selector["arm"] == "nearest":
+            if selector['arm'] == 'contacting':
+                contacts = self.env._atomic_contacts
+                _, evidence = contacts.resolve({'kind': 'contact_points', 'label': selector['label'],
+                    'arm': 'any', 'min_finger_bodies': selector.get('min_finger_bodies', 2)}, self.env_idx)
+                robot = next((r for r in self.env.robot_manager.robot_list if r.arm_name == evidence['resolved_arm']), None)
+                source['arm_contact_evidence'] = deepcopy(evidence)
+            elif selector["arm"] == "nearest":
                 target = self._object_pose(selector["label"])[:3]
                 candidates = [r for r in self.env.robot_manager.robot_list if r.type == "target"]
                 if not candidates:
@@ -391,7 +420,15 @@ class AtomicSession:
                     'policy_action_index': self._action_index(),
                 }
                 continue
-            result = evaluate_geometry(condition, measured, reference)
+            try:
+                result = evaluate_geometry(condition, measured, reference)
+            except GeometryUnavailable as error:
+                self.measurement_failures[condition_id] = {
+                    'event': deepcopy(event), 'event_observed': True,
+                    'status': 'geometry_unavailable', 'reason': str(error),
+                    'policy_action_index': self._action_index(),
+                }
+                continue
             self.results[condition_id] = {
                 "slot": condition["slot"],
                 "kind": condition["kind"],
@@ -490,7 +527,8 @@ class AtomicSession:
                 _,path=live_joint_state(self.env,selector['label'],joint,self.env_idx)
                 link=path.rsplit('/',1)[-1]
             return self.env._atomic_surfaces.resolve_link(selector['label'],link,self.env_idx)
-        return self.env._atomic_surfaces.resolve(selector['label'],self.env_idx,self._object_pose(selector['label']))
+        return self.env._atomic_surfaces.resolve(selector['label'],self.env_idx,self._object_pose(selector['label']),
+            **({'mesh_paths':selector['mesh_paths']} if 'mesh_paths' in selector else {}))
 
     def observe_events(self):
         """Capture first-lift/motion geometry at physics-step resolution."""
@@ -536,7 +574,10 @@ class AtomicSession:
                 measured, source, reference, _ = self._resolve_condition(condition)
             except ContactUnavailable:
                 continue
-            result = evaluate_geometry(condition, measured, reference).as_dict()
+            try:
+                result = evaluate_geometry(condition, measured, reference).as_dict()
+            except GeometryUnavailable:
+                continue
             old = self.closest_approach.get(condition["id"])
             if old is None or result["error"] < old["result"]["error"]:
                 self.closest_approach[condition["id"]] = {
@@ -593,6 +634,8 @@ class AtomicSession:
             'interaction_evidence': deepcopy(self.interaction_evidence),
             'physical_events': deepcopy(self._physical_recognizer.events) if self._physical_recognizer else {},
             'physical_metrics': deepcopy(getattr(self._physical_recognizer, 'metrics', {})),
+            'material_flow': self._physical_recognizer.flow_observer.summary() if (
+                self._physical_recognizer and self._physical_recognizer.flow_observer) else None,
             'trajectories': self._trajectory_observer.summary() if self._trajectory_observer else {},
             'selection': self._selection_observer.summary() if self._selection_observer else None,
             'current_hold_observed': self.current_hold_observed,

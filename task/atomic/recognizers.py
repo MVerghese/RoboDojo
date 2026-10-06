@@ -15,6 +15,10 @@ from task.atomic.geometry import _rotation, _angular_error
 
 
 SCHEMAS = {
+    'cloth_landmark_fold': ('fold', {'label','moving','target','moving_frame','stationary_frame','crease_a','crease_b',
+        'min_relative_lift_m','min_closure_m','min_bend_rad','max_region_distance_m','min_layer_gap_m',
+        'max_layer_gap_m','min_crease_length_fraction','settle_steps','max_position_step_m','max_angle_step_rad',
+        'max_settle_displacement_m','max_settle_angle_rad'}),
     'supported_release': ('place', {'label', 'arm', 'min_contact_steps', 'transport_threshold_m',
         'support_labels', 'settle_steps', 'max_position_step_m', 'max_angle_step_rad',
         'max_settle_displacement_m', 'max_settle_angle_rad'}),
@@ -48,6 +52,7 @@ SCHEMAS = {
 }
 
 TRANSITIONS = {
+    'cloth_landmark_fold': {'folded'},
     'supported_release': {'release', 'settled'}, 'held_tool_push': {'stroke'},
     'held_tool_contact': {'contact'}, 'grip_transfer': {'giver_hold', 'overlap', 'receiver_only'},
     'held_insertion': {'entry', 'inserted'}, 'contact_joint_motion': {'motion'},
@@ -65,6 +70,7 @@ COMPLETION['rigid_material_transfer'] = 'transfer_complete'
 COMPLETION.update(button_press_cycle='cycle', held_tool_landmark_contact='contact')
 COMPLETION['held_tool_strike'] = 'strike'
 COMPLETION['fluid_material_transfer'] = 'transfer_complete'
+COMPLETION['cloth_landmark_fold'] = 'folded'
 
 
 def validate_recognition(config, family, validate_selector):
@@ -72,8 +78,14 @@ def validate_recognition(config, family, validate_selector):
     if kind not in SCHEMAS or SCHEMAS[kind][0] != family:
         raise ValueError(f'unsupported physical recognizer {kind!r} for {family}')
     fields = SCHEMAS[kind][1] | {'kind'}
-    if set(config) != fields:
+    optional = {'flow'} if kind in ('rigid_material_transfer', 'fluid_material_transfer') else set()
+    if set(config) - optional != fields:
         raise ValueError(f'{kind} requires exactly {sorted(fields)}')
+    if 'flow' in config:
+        from task.atomic.flow import validate_flow
+        validate_flow(config['flow'], validate_selector)
+        if config['flow']['opening']['label'] != config['target_label']:
+            raise ValueError('flow opening must belong to the material target')
     for key in fields & {'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label', 'joint_name', 'joint_tag','fluid_label'}:
         if not isinstance(config[key], str) or not config[key]:
             raise ValueError(f'{kind}.{key} must be a nonempty name')
@@ -82,7 +94,7 @@ def validate_recognition(config, family, validate_selector):
             raise ValueError(f'{kind}.{key} must be at least two distinct physics steps')
     numeric = fields - {'kind', 'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label',
         'joint_name', 'joint_tag', 'fluid_label','tool_point', 'target_point', 'support_labels', 'tip', 'opening', 'pivot', 'axis', 'direction',
-        'tool_contact_suffix', 'target_contact_suffix', 'min_contact_steps', 'settle_steps',
+        'tool_contact_suffix', 'target_contact_suffix', 'moving','target','moving_frame','stationary_frame','crease_a','crease_b', 'min_contact_steps', 'settle_steps',
         'overlap_steps', 'receiver_steps', 'source_frame', 'target_frame', 'source_half_extents_m',
         'target_half_extents_m', 'material_labels', 'required_count', 'min_retraction_steps', 'max_retraction_steps'}
     for key in numeric:
@@ -104,11 +116,19 @@ def validate_recognition(config, family, validate_selector):
             raise ValueError('handover requires two distinct explicit arms')
     for key in fields & {'tip', 'opening', 'pivot', 'source_frame', 'target_frame', 'tool_point', 'target_point'}:
         validate_selector(config[key], key)
-        if config[key]['kind'] not in ('functional_point', 'support_point', 'object_pose', 'object_center_pose') or config[key].get('time', 'live') != 'live':
+        if config[key]['kind'] not in ('functional_point', 'support_point', 'object_pose', 'object_center_pose','calibrated_frame') or config[key].get('time', 'live') != 'live':
             raise ValueError(f'{key} must select a live oriented object landmark')
         expected_label = config['label'] if key in ('tip', 'source_frame', 'tool_point') else config['target_label']
         if config[key]['label'] != expected_label:
             raise ValueError(f'{key} must belong to {expected_label}')
+    if kind == 'cloth_landmark_fold':
+        for key in ('moving','target','moving_frame','stationary_frame','crease_a','crease_b'):
+            validate_selector(config[key],key)
+            expected = ('cloth_patch_frame','cloth_tag_frame') if key.endswith('frame') else ('cloth_landmark',)
+            if config[key]['kind'] not in expected or config[key]['label'] != config['label'] or config[key].get('time','live') != 'live':
+                raise ValueError('fold requires live same-garment material landmarks and tangent frames')
+        if config['min_crease_length_fraction']>1 or config['min_layer_gap_m']>=config['max_layer_gap_m']:
+            raise ValueError('fold layer gap and crease preservation bounds are inconsistent')
     if kind == 'button_press_cycle' and not 0 < config['pressed_ratio'] < config['released_ratio'] <= config['initial_ratio'] <= 1:
         raise ValueError('button ratios require 0 < pressed < released <= initial <= 1')
     if kind == 'held_tool_strike' and config['max_retraction_steps'] < config['min_retraction_steps']:
@@ -155,13 +175,22 @@ class PhysicalRecognizer:
         self.metrics = {}
         self.material = {}
         self.fluid = {}
+        self.flow_observer = None
+        if 'flow' in self.c:
+            from task.atomic.flow import FlowObserver
+            self.flow_observer = FlowObserver(self.c['flow'])
         lm = session.env.scene_manager.layout_manager
         if hasattr(lm, 'instance_type_by_env'):
-            expected = 'Articulation' if self.kind in ('contact_joint_motion', 'button_press_cycle') else 'Rigid'
+            expected = ('Garment' if self.kind == 'cloth_landmark_fold' else
+                        'Articulation' if self.kind in ('contact_joint_motion', 'button_press_cycle') else 'Rigid')
             name = lm.get_instance_name(env_idx=session.env_idx, label=self.c['label'])
             actual = lm.instance_type_by_env[session.env_idx].get(name)
             if not isinstance(actual, str) or actual.lower() != expected.lower():
                 raise RuntimeError(f'{self.kind} expects a {expected} object; {self.c["label"]} is {actual}')
+        self.fold_observer = None
+        if self.kind == 'cloth_landmark_fold':
+            from task.atomic.fold import ClothFoldObserver
+            self.fold_observer = ClothFoldObserver(self.c, self._fold_state())
         if self.kind == 'rigid_material_transfer':
             if hasattr(lm, 'instance_type_by_env'):
                 for label in self.c['material_labels']:
@@ -251,6 +280,11 @@ class PhysicalRecognizer:
             self.state.clear()
             self.holds.clear()
             self.current_contacts.clear()
+            if self.fold_observer:
+                self.fold_observer.previous = None
+                self.fold_observer.settle_steps = 0
+                self.fold_observer.peak_gap = 0.
+                self.fold_observer.settle_anchor = None
             for label, m in self.material.items():
                 m.update(exited_while_held_and_tilted=False, target_steps=0,
                          previous_in_source=self._material_inside(label, 'source'))
@@ -260,12 +294,40 @@ class PhysicalRecognizer:
                     self.fluid[int(ident)].update(exited_while_held_and_tilted=False,target_steps=0,previous_in_source=bool(inside))
         self.last_step, self.ready = step, False
         getattr(self, '_' + self.kind)()
+        if self.flow_observer:
+            if self.kind == 'fluid_material_transfer':
+                fluid, _, _ = self._fluid_state()
+                positions = {str(i): p for i,p in zip(fluid['ids'],fluid['positions'])}
+                provenance = {str(i): m for i,m in self.fluid.items() if m['eligible'] and m['exited_while_held_and_tilted']}
+            else:
+                positions = {label:self.session._resolve({'kind':'object_center_position','label':label}) for label in self.c['material_labels']}
+                provenance = {label:m for label,m in self.material.items() if m['eligible'] and m['exited_while_held_and_tilted']}
+            opening = self.session._resolve(self.c['flow']['opening'])
+            self.flow_observer.observe(positions,opening,provenance,self.contacts.steps,
+                                       self.session.env.dt,self.session._action_index())
+
+    def _fold_state(self):
+        states={'sources':{}}
+        for key in ('moving','target','moving_frame','stationary_frame','crease_a','crease_b'):
+            value,source=self.session._resolve_with_source(self.c[key])
+            states[key]=(value['position'] if isinstance(value,dict) else value.tolist())
+            states['sources'][key]=source
+        return states
+
+    def _cloth_landmark_fold(self):
+        ready=self.fold_observer.observe(self._fold_state())
+        self.metrics=deepcopy(self.fold_observer.metrics)
+        if ready:self._emit(**self.fold_observer.evidence)
 
     def _supported_release(self):
         pose = self._pose()
         hold = self._hold(self.c['label'], self.c['arm'])
         raw_hold = self._current_hold()
         touch = self._touching()
+        # Observe support even while fingers are closed: a body can contact
+        # its support and sleep before the last finger releases.
+        support = self.contacts.support_evidence(self.c['label'], self.c['support_labels'], self.session.env_idx)
+        self.metrics['support_seen_steps'] = self.metrics.get('support_seen_steps', 0) + int(bool(support['contacts']))
         self.metrics.update(physics_step=self.contacts.steps,
                             current_pose=pose.tolist(),
                             contacting_fingers=len(touch.get('finger_bodies', [])) if touch else 0,
@@ -294,7 +356,6 @@ class PhysicalRecognizer:
             self.state.clear()
             return
         self._event('release', held_contact=self.state['hold'], pose=pose.tolist())
-        support = self.contacts.support_evidence(self.c['label'], self.c['support_labels'], self.session.env_idx)
         self.metrics.update(phase='released', support_contacts=len(support['contacts']),
                             support_diagnostics=deepcopy({k: v for k, v in support.items() if k != 'contacts'}))
         old = self.state.get('settling')
@@ -481,6 +542,10 @@ class PhysicalRecognizer:
         local = ro.T @ (tip[:3] - opening[:3])
         depth, lateral = -float(local[2]), float(np.linalg.norm(local[:2]))
         angle = float(np.arccos(np.clip(rt[:, 2] @ ro[:, 2], -1, 1)))
+        self.metrics = {'physics_step': self.contacts.steps, 'insertion_depth_m': depth,
+                        'lateral_error_m': lateral, 'axis_error_rad': angle,
+                        'currently_held': bool(hold), 'opening_pose': opening.tolist(), 'tip_pose': tip.tolist(),
+                        'entered_from_outside': bool(self.state.get('entered_from_outside'))}
         if not raw_hold or lateral > self.c['lateral_tolerance_m'] or angle > self.c['axis_tolerance_rad']:
             self.state.clear()
             return
@@ -565,6 +630,9 @@ class PhysicalRecognizer:
         axis /= np.linalg.norm(axis)
         depth = -float(local @ axis)
         radius = float(np.linalg.norm(local - (local @ axis) * axis))
+        self.metrics = {'physics_step': self.contacts.steps, 'pivot_depth_m': depth, 'pivot_radius_m': radius,
+                        'currently_held': bool(hold), 'constraint_contact': bool(pair),
+                        'signed_angle_rad': None, 'off_axis_rotation_rad': None}
         if not raw_hold or not pair or radius > self.c['max_radius_m'] or not self.c['min_depth_m'] <= depth <= self.c['max_depth_m']:
             self.state.clear()
             return
@@ -586,6 +654,8 @@ class PhysicalRecognizer:
             return
         self.state['angle'] += signed
         self.state['rotation'] = rotation.copy()
+        self.metrics.update(signed_angle_rad=float(self.state['angle']),
+                            off_axis_rotation_rad=float(self.state['off_axis']))
         if hold and self.c['direction'] * self.state['angle'] >= self.c['min_angle_rad']:
             self._emit(held_contact=hold, constraint_contact=pair, signed_angle_rad=self.state['angle'],
                 off_axis_rotation_rad=self.state['off_axis'], radius_m=radius, depth_m=depth)

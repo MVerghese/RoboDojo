@@ -44,7 +44,11 @@ def snapshot_scene(session):
                 state = material_state(env, label, 'cloth' if category == 'garment' else 'fluid', idx)
                 row['material'] = {'ids': state['ids'].tolist(),
                                    'initial_positions': state['positions'].tolist(),
+                                   'triangles': state.get('triangles'),
                                    'source': state['source'], 'nominal_mass_kg': state['nominal_mass_kg']}
+                obj = lm.get_scene_object(env_idx=idx, inst_name=name)
+                view = getattr(obj, '_cloth_prim_view', None)
+                row['backend_contact_methods'] = [key for key in dir(view) if 'contact' in key or 'force' in key]
             else:
                 pose = session._object_pose(label)
                 row['initial_root_pose'] = pose.tolist()
@@ -55,6 +59,10 @@ def snapshot_scene(session):
                     local = (vertices - pose[:3]) @ _rotation(pose[3:])
                     row['local_mesh_bounds_m'] = [local.min(axis=0).tolist(), local.max(axis=0).tolist()]
                     row['surface_representation'] = surface['geometry_representation']
+                    if label != 'camera_stand' and len(surface['triangles']) <= 100000:
+                        row['local_mesh'] = {'vertices': local.tolist(), 'triangles': surface['triangles'],
+                                             'frame': 'object_root',
+                                             'interpretation': 'actual outer/material surface; not an interior annotation'}
                 for role in ('active', 'passive'):
                     for category_name, kind in (('functional', 'functional_point'), ('support', 'support_point')):
                         for tag, item in metadata.get(role, {}).get(category_name, {}).items():

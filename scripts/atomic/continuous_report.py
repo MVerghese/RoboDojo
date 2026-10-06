@@ -14,7 +14,8 @@ from scripts.atomic.storage import atomic_write_json, atomic_write_text
 METHOD = (
     'Each geometric conditioning has separate continuous measurements in actual physical units. '
     'Position, contact and gap errors are reported in millimetres; orientation errors in degrees; '
-    'footprint overlap and its shortfall as fractions; footprint area in square millimetres. '
+    'footprint overlap and its shortfall as fractions; area in square millimetres; '
+    'solid volume in cubic millimetres; relative material speed in mm/s; path duration in seconds. '
     'SE(3) translation and rotation are separate numbers. No tolerance normalization or '
     'combined score across conditioning types is used. '
     'Contact conditions use the worst eligible contact point, not the contact centroid. '
@@ -78,7 +79,41 @@ def collect_events(row):
             if key in events:
                 raise ValueError('duplicate stage/condition event identity')
             events[key] = {'family': stage.get('family', 'unknown'), 'score': score}
+        for ident, path in stage.get('trajectories', {}).items():
+            result = path.get('recorded_result', {})
+            scored = path.get('status') == 'reproduced' and result.get('status') == 'scored'
+            components = {k:v for k,v in result.items() if k.endswith(('_m','_s')) and v is not None}
+            events[(stage['stage_id'],'path/'+ident)] = {'family':stage.get('family','unknown'),
+                'score':{'status':'reproduced' if scored else result.get('status',path.get('status','missing_raw_evidence')),
+                         'kind':'trajectory','slot':path.get('condition',{}).get('slot','path'),
+                         'recorded_result':{'components':components}}}
+        flow = stage.get('material_flow')
+        if flow is not None:
+            crossings = flow.get('crossings',{}) or {'unobserved':{'status':'event_not_observed'}}
+            for ident, crossing in crossings.items():
+                result = crossing.get('recorded_result', {})
+                scored = crossing.get('status') == 'reproduced' and result.get('status') == 'scored'
+                events[(stage['stage_id'],'flow/'+ident)] = {'family':stage.get('family','unknown'),
+                    'score':{'status':'reproduced' if scored else result.get('status',crossing['status']),
+                             'condition_id':'opening_crossing','kind':'stream_crossing','slot':'opening',
+                             'recorded_result':{'components':result.get('components',{})}}}
+        selection = stage.get('selection')
+        if selection:
+            observed = selection.get('observed') or {}; contacts = observed.get('contacts',[])
+            valid = selection.get('status') == 'reproduced' and selection.get('target_status') == 'resolved' and len(contacts) == 1
+            label = contacts[0]['label'] if valid else None
+            # Use initial geometry of the actually selected candidate, never its moved final pose.
+            for ident, candidate in next(iter(selection.get('candidates',{}).values()),{}).items():
+                score = selection['candidates'][label][ident] if valid else {'status':'selection_not_resolved'}
+                events[(stage['stage_id'],'selection/'+ident)] = {'family':stage.get('family','unknown'),
+                    'score':dict(score,slot='initial object selection',kind='selection',
+                                 condition_id='selection/'+ident)}
     return events
+
+
+def group_key(identity, event):
+    score = event['score']
+    return (event['family'],score.get('condition_id',identity[1]),score.get('kind','unknown'),score.get('slot','unknown'))
 
 
 def arm_summary(events):
@@ -88,7 +123,7 @@ def arm_summary(events):
     components = defaultdict(list)
     for result in reproduced:
         for name, value in result['components'].items():
-            if name.endswith(('_m', '_rad', '_m2', '_fraction')) and name not in (
+            if name.endswith(('_m', '_rad', '_m2', '_m3', '_m_s', '_s', '_fraction')) and name not in (
                     'required_overlap_fraction', 'vertical_tolerance_m'):
                 components[name].append(float(value))
     return {'declared': len(events), 'observed': len(reproduced),
@@ -130,16 +165,21 @@ def build_report(manifest, result, matrix, root):
                 definition = {'stage_id': stage['id'], 'condition': condition}
                 if definition not in definitions[key]:
                     definitions[key].append(definition)
+            for path in stage.get('trajectories',[]):
+                definitions[(stage['family'],'path/'+path['id'],'trajectory',path['slot'])].append({'stage_id':stage['id'],'condition':path})
+            flow = stage.get('recognition',{}).get('flow')
+            if flow:
+                definitions[(stage['family'],'opening_crossing','stream_crossing','opening')].append({'stage_id':stage['id'],'condition':flow})
+            for c in stage.get('selection',{}).get('conditions',[]):
+                definitions[(stage['family'],'selection/'+c['id'],'selection','initial object selection')].append({'stage_id':stage['id'],'condition':c})
         events = {'baseline': collect_events(ra), 'conditioned': collect_events(rb)}
         groups = set(definitions)
         for arm in events.values():
-            groups.update((e['family'], key[1], e['score'].get('kind', 'unknown'), e['score'].get('slot', 'unknown'))
-                          for key, e in arm.items())
+            groups.update(group_key(key,e) for key, e in arm.items())
         conditions = []
         for key in sorted(groups):
             selected = {mode: {identity: e for identity, e in arm.items()
-                        if (e['family'], identity[1], e['score'].get('kind', 'unknown'),
-                            e['score'].get('slot', 'unknown')) == key}
+                        if group_key(identity,e) == key}
                         for mode, arm in events.items()}
             conditions.append({'family': key[0], 'condition_id': key[1], 'kind': key[2], 'slot': key[3],
                 'definitions': definitions.get(key, []),
@@ -165,7 +205,7 @@ def build_report(manifest, result, matrix, root):
                 for identity, e in arm.items():
                     global_key = (pair['checkpoint_id'], pair['task'], *identity)
                     score = e['score']
-                    group = (pair['checkpoint_id'], e['family'], identity[1], score.get('kind'), score.get('slot'))
+                    group = (pair['checkpoint_id'], *group_key(identity,e))
                     pooled[group][mode][global_key] = e
     summary = [{'checkpoint_id': checkpoint, 'family': family, 'condition_id': ident, 'kind': kind, 'slot': slot,
                 'baseline': arm_summary(arms['baseline'].values()),
@@ -173,13 +213,13 @@ def build_report(manifest, result, matrix, root):
                 'shared': shared_summary(arms['baseline'], arms['conditioned'], True)}
                for (checkpoint, family, ident, kind, slot), arms in sorted(pooled.items())]
     return {'schema_version': 1, 'updated_at': result['updated_at'], 'method': METHOD,
-            'included_tasks': sum(c['included'] for c in manifest['coverage']),
-            'catalog_tasks': len(manifest['coverage']), 'valid_episodes': matrix['valid_episodes'],
+            'included_tasks': sum(c['included'] for c in manifest.get('coverage', [])) or len(tasks),
+            'catalog_tasks': len(manifest.get('coverage', [])) or len(tasks), 'valid_episodes': matrix['valid_episodes'],
             'matched_pairs': matrix['matched_pairs'], 'total_pairs': matrix['total_pairs'],
             'reproduced_event_scores': result.get('reproduced_event_scores'),
             'score_mismatches': result.get('score_mismatches'), 'checkpoints': manifest['checkpoints'],
-            'summary': summary, 'tasks': tasks, 'coverage': manifest['coverage'],
-            'limitations': manifest['limitations'], 'scope': manifest['scope']}
+            'summary': summary, 'tasks': tasks, 'coverage': manifest.get('coverage', []),
+            'limitations': manifest.get('limitations', []), 'scope': manifest.get('scope', 'partial action observers')}
 
 
 def number(value):
@@ -191,10 +231,16 @@ def coverage(summary):
 
 
 def component_unit(name):
+    if name.endswith('_m_s'):
+        return name[:-4].replace('_',' ') + ' (mm/s)',1000
+    if name.endswith('_s'):
+        return name[:-2].replace('_',' ') + ' (s)',1
     if name.endswith('_rad'):
         return name[:-4].replace('_', ' ') + ' (deg)', 180 / math.pi
     if name.endswith('_m2'):
         return name[:-3].replace('_', ' ') + ' (mm²)', 1e6
+    if name.endswith('_m3'):
+        return name[:-3].replace('_', ' ') + ' (mm³)', 1e9
     if name.endswith('_m'):
         return name[:-2].replace('_', ' ') + ' (mm)', 1000
     return name.replace('_', ' ') + ' (fraction)', 1
@@ -210,10 +256,21 @@ def component_names(condition):
     # Keep a row with N/A for every tested measurement even if no event occurred.
     expected = {'point': ['position_m'], 'relative_displacement': ['displacement_m'],
                 'pose': ['position_m', 'orientation_rad'], 'relative_orientation': ['orientation_rad'],
-                'spatial_relation': ['relation_error_m']}[condition['kind']]
+                'spatial_relation': ['relation_error_m'],
+                'trajectory':['max_deviation_m','rms_deviation_m','start_error_m','end_error_m','backtracking_m','duration_s'],
+                'stream_crossing':['crossing_position_error_m','aperture_overrun_m','velocity_angle_rad','relative_speed_m_s'],
+                'selection':[]}[condition['kind']]
     if condition['kind'] == 'spatial_relation':
-        expected += ['signed_separation_m', 'footprint_gap_m', 'footprint_overlap_fraction',
-                     'footprint_overlap_m2', 'overlap_shortfall_fraction']
+        definitions = [d['condition'] for d in condition.get('definitions', [])]
+        if definitions and all(d['expected'] == 'inside_region' for d in definitions):
+            expected = ['vertex_containment_error_m', 'outside_volume_m3', 'outside_volume_fraction']
+        elif definitions and all(d['expected'] == 'inside_aperture' for d in definitions):
+            expected = ['outside_aperture_area_m2', 'outside_allowed_area_m2', 'boundary_distance_m']
+        elif definitions and all(d['expected'] == 'inside_box' and d.get('relation_scope') == 'objects' for d in definitions):
+            expected = ['containment_error_m']
+        elif not definitions or any(d.get('relation_scope') == 'objects' for d in definitions):
+            expected += ['signed_separation_m', 'footprint_gap_m', 'footprint_overlap_fraction',
+                         'footprint_overlap_m2', 'overlap_shortfall_fraction']
     return sorted(set(expected) | condition['baseline']['components'].keys() |
                   condition['conditioned']['components'].keys())
 
@@ -245,30 +302,45 @@ def condition_parameters(condition):
               ('expected', 'Target'), ('axes', 'Position axes'), ('orientation_axes', 'Orientation axes'),
               ('tolerance', 'Tolerance'), ('angle_tolerance_rad', 'Angle tolerance (rad)'),
               ('event', 'Measurement event'), ('relation_scope', 'Relation scope'),
-              ('min_overlap_fraction', 'Minimum footprint overlap'), ('margin', 'Ordering margin (m)')]
+              ('min_overlap_fraction', 'Minimum footprint overlap'), ('margin', 'Ordering margin (m)'),
+              ('interior_boxes', 'Calibrated interior-box union (metres)'),
+              ('aperture_profile', 'Calibrated aperture rings (metres)'),
+              ('required_clearance_m', 'Required material clearance (metres)'),
+              ('opening','Opening frame'),('target_xy_m','Crossing XY target (metres)'),
+              ('position_tolerance_m','Crossing positional tolerance (metres)'),
+              ('angle_tolerance_rad','Crossing angular tolerance (radians)'),
+              ('start_event','Path start event'),('end_event','Path end event'),('min_samples','Required physics samples')]
     result = [('Action / modifier / slot', f"{condition['family']} / {condition['kind']} / {condition['slot']}")]
     for field, label in fields:
         converted = []
         for definition in definitions:
             c = definition['condition']
+            definition_kind = c.get('kind',condition['kind'])
             if field not in c:
                 continue
             value = c[field]
             if field == 'tolerance':
-                angular = condition['kind'] == 'relative_orientation'
+                angular = condition['kind'] == 'relative_orientation' or (
+                    condition['kind'] == 'selection' and c.get('kind') == 'relative_orientation')
                 label = 'Tolerance (deg)' if angular else 'Tolerance (mm)'
                 value *= 180 / math.pi if angular else 1000
             elif field == 'angle_tolerance_rad':
                 label, value = 'Angle tolerance (deg)', value * 180 / math.pi
+            elif field == 'position_tolerance_m':
+                label, value = 'Crossing positional tolerance (mm)', value*1000
+            elif field == 'target_xy_m':
+                label, value = 'Crossing XY target (mm)', [v*1000 for v in value]
             elif field == 'margin':
                 label, value = 'Ordering margin (mm)', value * 1000
-            elif field == 'expected' and condition['kind'] in ('point', 'relative_displacement'):
+            elif field == 'expected' and definition_kind in ('point', 'relative_displacement'):
                 label, value = 'Target displacement (mm)', [v * 1000 for v in value]
-            elif field == 'expected' and condition['kind'] == 'pose':
+            elif field == 'expected' and definition_kind == 'pose':
                 value = {'position_mm': [v * 1000 for v in value['position']],
                          'orientation_wxyz': value['orientation']}
-            elif field == 'expected' and condition['kind'] == 'relative_orientation':
+            elif field == 'expected' and definition_kind == 'relative_orientation':
                 label = 'Target relative orientation (wxyz quaternion)'
+            elif field == 'expected' and condition['kind'] == 'trajectory':
+                label, value = 'Path waypoints (mm)', [[v*1000 for v in p] for p in value]
             elif field == 'event' and value.get('kind') == 'first_lift' and 'threshold' in value:
                 value = {k: v for k, v in value.items() if k != 'threshold'} | {'threshold_mm': value['threshold'] * 1000}
             converted.append(json.dumps(value, ensure_ascii=False, sort_keys=True))
@@ -332,7 +404,7 @@ def report_markdown(data):
         for mode in ('baseline', 'conditioned'):
             lines += [f'**{mode}:**', '', *('> ' + p.replace('\n', '\n> ') for p in task['delivered_prompts'][mode]), '']
         lines += ['</details>', '']
-        unbound = next(c['unbound_families'] for c in data['coverage'] if c['task'] == task['task'])
+        unbound = next((c['unbound_families'] for c in data['coverage'] if c['task'] == task['task']), [])
         if unbound:
             lines += ['**Actions not conditioned/measured in this task:** ' + ', '.join(unbound) + '.', '']
     lines += ['## Eval tasks not run', '', *table(['Task', 'Reason', 'Conditioning tested'],
@@ -373,7 +445,7 @@ def report_html(data):
         for mode in ('baseline', 'conditioned'):
             content += '<h4>' + mode.capitalize() + '</h4>' + ''.join('<blockquote>' + esc(p) + '</blockquote>' for p in task['delivered_prompts'][mode])
         content += '</details>'
-        unbound = next(c['unbound_families'] for c in data['coverage'] if c['task'] == task['task'])
+        unbound = next((c['unbound_families'] for c in data['coverage'] if c['task'] == task['task']), [])
         if unbound:
             content += '<p>Actions not conditioned/measured in this task: <strong>' + esc(', '.join(unbound)) + '</strong>.</p>'
         families = sorted({c['family'] for c in task['conditions']})

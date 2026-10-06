@@ -262,13 +262,22 @@ Initial simultaneous holds cannot supply giver-only provenance. A disappearing
 giver contact alone is not sufficient without receiver hold. This is contact-
 based support evidence, not a formal proof of force closure or zero slip.
 
-### Fold — no physical success recognizer yet
+### Fold — `cloth_landmark_fold` material-deformation observer
 
-Live material vertices and patch frames can be geometrically scored, but no
-`recognition` kind establishes garment grip correspondence, movement across a
-crease, correct layer order, stable release or acceptable self-intersection.
-An endpoint-only fold stage would remain explicitly `endpoint_checks_only`.
-Native fold predicates/source plans must not be described as recognized folds.
+Bind moving/destination material tags, their actual tangent frames, and two
+crease endpoints on one garment. Require a newly observed relative lift,
+material-region closure and bend change, bounded destination distance and
+positive layer gap, preserved crease length, and consecutive bounded pose
+changes. A cumulative settling anchor rejects slow drift. Whole-garment rigid
+motion and an initially folded endpoint cannot establish a new fold. The event
+is `folded`; evidence retains initial/current material coordinates and IDs.
+
+This recognizes the declared **material deformation**, not finger/particle
+grasp contact, complete layer overlap/order, self-penetration or grasp/release
+causality. Those remain unsupported. Geometry targets do not supply recognition
+thresholds. CPU cloth requires a running solver and Fabric disabled; GPU
+readback requires initialized cloth tensors. The three garment A/B observers
+are newly queued and have not yet established live recognition accuracy.
 
 ## 4. Actual program wiring and endpoint-only exceptions
 
