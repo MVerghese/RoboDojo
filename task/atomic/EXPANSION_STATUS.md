@@ -31,11 +31,11 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-tool-contacts-1006` | 4 | 1 valid align-block baseline; policy never acquired the tool; no tool scores | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
 | `geometry-crease-segments-1006` | 2 | Submitted | Actual finite material-endpoint segment coincidence alongside patch layering |
 | `geometry-cloth-patches-1006` | 2 | Submitted | Model/asset/topology-verified local garment patch coverage and layer gaps |
-| `geometry-pour-cores-1006` | 2 | Submitted | Declared initial whole-ball core cohort, actual mouth pose, crossing XY/direction and final core enclosure |
+| `geometry-pour-cores-1006` | 2 | Baseline reset failed before an episode; both arms stopped and retained | Declared initial whole-ball core cohort, actual mouth pose, crossing XY/direction and final core enclosure |
 | `geometry-key-fit-1006` | 2 | Submitted | Actual key mouth/tip, closed blade collider section/clearance and shoulder gap |
 | `geometry-surface-gaps-1006` | 2 | Submitted after a global slot opened | Actual selected-patch triangle-boundary gap alongside layers |
 | `geometry-bottle-runtime-1006` | 2 | Submitted; both queued | Original bottle geometry with rigid readback fix and pinned websocket protocol |
-| `geometry-cloth-runtime-1006` | 2 | Prepared; automatic monitor awaits capacity | Combined patch/layer, finite-chord and boundary-gap conditions with pinned protocol |
+| `geometry-cloth-runtime-1006` | 2 | Submitted; queued | Combined patch/layer, finite-chord and boundary-gap conditions with pinned protocol |
 | `geometry-liquid-cores-1006` | 2 | Prepared; automatic monitor awaits capacity | Verified model-specific mouth pose and partial-cohort particle crossings |
 | `geometry-charger-tips-1006` | 2 | Prepared; automatic monitor awaits capacity | Both actual leading-tip frames and middle-slot throat entry |
 
@@ -244,3 +244,19 @@ conditioned settling drift was 0.436/0.174 mm for bowls 1/2. This is descriptive
 single-episode evidence, not a statistical steering effect. Per-condition angles,
 missing events and shared-event comparisons are in the automatically refreshed
 `geometry-body-contacts-1006/EVAL_MATRIX_REPORT.html` and Markdown counterpart.
+
+### Pour initialization correction (22:39 UTC investigation)
+
+The `geometry-pour-cores-1006` baseline reached no episode. Retained historical
+logs show late report API authoring, sphere shape deletion/view invalidation,
+then `NoneType.link_names` during robot pose initialization. The cloud allocation
+and its queued same-runtime partner were stopped; the original frozen evidence
+is retained. This is an infrastructure outcome, not a geometric/policy score.
+
+Source now installs task-body reports before tensor initialization, reuses them
+during the later scene audit, and records invalid nested bodies without adding
+independent report APIs. A bounded workflow guard preserves simulator failure
+evidence and invokes the existing collection/cleanup trap. These changes have
+local lifecycle/subprocess tests; live validation is still pending. A fresh
+`geometry-pour-initialization-1006` matched pair retains the calibrated targets
+and checkpoint, with the corrected runtime.

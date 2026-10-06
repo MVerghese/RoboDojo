@@ -288,6 +288,11 @@ class SceneManager:
                 scale,
             )
             if obj is not None:
+                contacts = getattr(self.sim, 'atomic_contact_buffer', None)
+                if contacts is not None:
+                    # Collider report APIs must precede obj.initialize() and
+                    # the first physics warmup, especially CPU-loaded bodies.
+                    contacts.enable_object_contacts(prim_path)
                 self.register_scene_object(inst_name, env_id, obj)
                 self.pending_initialization.append(obj)
 

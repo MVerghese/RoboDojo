@@ -31,6 +31,7 @@ class PhysXContacts:
         self.report_pair_diagnostics = {}
         self.enabled_body_paths = []
         self.enable_errors = []
+        self.skipped_nested_body_paths = []
         self.material_states = {}
         from omni.physx.bindings._physx import ContactEventType
         self._contact_event_lost = ContactEventType.CONTACT_LOST
@@ -56,26 +57,65 @@ class PhysXContacts:
         self.subscription = get_physx_simulation_interface().subscribe_contact_report_events(self._report)
         print(f'[atomic contacts] enabled {enabled} bodies; fingers {self.fingers}', flush=True)
 
-    def enable_scene_contacts(self):
-        """Enable reports after task assets exist, including every scene reset.
+    def enable_object_contacts(self, prim_path):
+        """Install on a newly spawned subtree before its tensor initialization."""
+        import omni.usd
+        stage = omni.usd.get_context().get_stage()
+        root = stage.GetPrimAtPath(prim_path)
+        if not root.IsValid():
+            raise RuntimeError('contact enablement cannot find spawned subtree ' + prim_path)
+        return self._enable_contact_subtree(root)
 
-        The initial simulator setup contains robots only. Applying the API once
-        in __init__ misses task bodies later loaded by EvalEnv.setup_scene().
+    def enable_scene_contacts(self):
+        """Idempotent scene audit; newly spawned bodies are enabled before warmup.
+
+        Late API authoring can rebuild collider shapes and invalidate already
+        initialized PhysX tensor views. SceneManager enables each newly spawned
+        subtree before obj.initialize(); this later audit must reuse those APIs.
         """
         import omni.usd
-        from pxr import PhysxSchema, Usd, UsdPhysics
-        stage=omni.usd.get_context().get_stage();paths=[]
-        for prim in Usd.PrimRange(stage.GetPseudoRoot(),Usd.TraverseInstanceProxies()):
+        stage = omni.usd.get_context().get_stage()
+        paths = self._enable_contact_subtree(stage.GetPseudoRoot())
+        self.enabled_body_paths = paths
+        print(f'[atomic contacts] scene bodies enabled: {len(paths)}', flush=True)
+        return len(paths)
+
+    def _enable_contact_subtree(self, root):
+        from pxr import PhysxSchema, Usd, UsdGeom, UsdPhysics
+        paths = []
+        for prim in Usd.PrimRange(root, Usd.TraverseInstanceProxies()):
             if not prim.HasAPI(UsdPhysics.RigidBodyAPI):continue
+            # A visual/collision child without a transform reset belongs to
+            # its enabled ancestor body. Do not add an independent reporting
+            # body to an invalid nested hierarchy (notably the baked spheres).
+            current = prim
+            nested = False
+            while current.IsValid():
+                transform = UsdGeom.Xformable(current)
+                if transform and transform.GetResetXformStack():
+                    break
+                current = current.GetParent()
+                if current.IsValid() and current.HasAPI(UsdPhysics.RigidBodyAPI):
+                    if UsdPhysics.RigidBodyAPI(current).GetRigidBodyEnabledAttr().Get() is not False:
+                        nested = True
+                        break
+            if nested:
+                path = str(prim.GetPath())
+                if path not in self.skipped_nested_body_paths:
+                    self.skipped_nested_body_paths.append(path)
+                continue
             try:
-                PhysxSchema.PhysxContactReportAPI.Apply(prim).CreateThresholdAttr(0.0)
+                if not prim.HasAPI(PhysxSchema.PhysxContactReportAPI):
+                    PhysxSchema.PhysxContactReportAPI.Apply(prim).CreateThresholdAttr(0.0)
+                else:
+                    threshold = PhysxSchema.PhysxContactReportAPI(prim).GetThresholdAttr()
+                    if threshold.Get() != 0.0:
+                        threshold.Set(0.0)
                 paths.append(str(prim.GetPath()))
             except Exception as error:
                 self.enable_errors.append({'body':str(prim.GetPath()),'error':str(error)})
-        self.enabled_body_paths=paths
         if self.enable_errors:raise RuntimeError('contact report API could not be enabled: '+str(self.enable_errors[:4]))
-        print(f'[atomic contacts] scene bodies enabled: {len(paths)}',flush=True)
-        return len(paths)
+        return paths
 
     def begin_step(self):
         self.rows = []
@@ -207,6 +247,7 @@ class PhysXContacts:
                 'support_pair_diagnostics': dict(getattr(self, 'pair_diagnostics', {})),
                 'report_pair_diagnostics': dict(getattr(self, 'report_pair_diagnostics', {})),
                 'enabled_body_paths': list(getattr(self, 'enabled_body_paths', [])),
+                'skipped_nested_body_paths': list(getattr(self, 'skipped_nested_body_paths', [])),
                 'enable_errors': list(getattr(self, 'enable_errors', [])),
                 'health_status': ('callback_error' if self.errors else
                                   'observed_reports' if self.reports else 'awaiting_contact_evidence'),

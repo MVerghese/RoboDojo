@@ -383,3 +383,18 @@ transported, released and settled bowls acquire placement completion boundaries;
 the stationary base candidate does not. Different event coverage is retained
 when comparing the two arms. This confirms those declared support windows,
 not automatic labeling of undeclared manipulations.
+
+### Initialization failure is not an action segment
+
+The calibrated ball-pour baseline reached no policy episode: late contact-report
+API setup invalidated a shared tensor view during reset. The failed allocation
+and queued partner were stopped and preserved. New task-body APIs are installed
+before tensor initialization, with an idempotent post-warmup audit. Invalid
+nested body declarations are recorded rather than instrumented as independent
+bodies. No authored mesh or native task geometry was changed.
+
+The workflow guard recognizes the explicit simulator exception marker only;
+it requests the existing collection/cleanup trap and bounds cleanup time. It
+does not turn task failure into an infrastructure failure, recognize an action,
+or provide a missing stage boundary. Local tests pass; the corrected matched
+pour comparison still needs simulator evidence.

@@ -562,3 +562,25 @@ condition reports mm and degrees independently. A missed insertion event stays
 unobserved; its explicit final-state measurement can still be scored.
 Local real-asset calibration and temporal counterexamples pass. Live two-tip
 recognition remains pending.
+
+### Contact setup before tensor initialization (October 6)
+
+A calibrated ball-pour worker exposed a simulator lifecycle failure: after 540
+warmup substeps, adding contact-report APIs rebuilt sphere shapes and invalidated
+the shared PhysX tensor view. The subsequent robot `body_names` lookup raised
+`NoneType.link_names`, before any policy episode. Retained cloud logs also show
+invalid nested sphere visual/collision rigid-body declarations.
+
+`SceneManager.spawn_category_objects` now installs reporting APIs on each new
+subtree before it enters `pending_initialization`. The post-warmup scan reuses
+existing APIs and zero thresholds without reauthoring them. Nested rigid-body
+declarations beneath an enabled ancestor, without a transform-stack reset, are
+excluded from independent report setup and listed in
+`skipped_nested_body_paths`. Independent bodies with a reset remain eligible.
+This does not repair the authored asset hierarchy or certify its physics.
+
+Local counterexamples verify early setup, idempotence, nested exclusion and
+independent-body retention. Fresh simulator validation is pending; previously
+frozen support rollouts retain their earlier runtime. A workflow guard records
+an explicit simulator exception and requests cleanup/upload, with a bounded
+cleanup timeout. It does not trigger on ordinary native task failure.

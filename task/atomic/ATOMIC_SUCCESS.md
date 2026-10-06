@@ -458,3 +458,18 @@ both arms. Baseline recognizes one transported placement (bowl 2); conditioned
 recognizes two (bowls 1/2). The untouched base bowl's optional observer remains
 unrecognized. Retained contact/settling evidence and each condition's physical
 measurements are linked from [EXPANSION_STATUS.md](EXPANSION_STATUS.md).
+
+### Simulator initialization failures
+
+The calibrated ball-pour baseline failed before an episode after late contact
+API authoring invalidated a PhysX view. Its allocation and queued partner were
+stopped with retained evidence; neither supplies action or geometric outcomes.
+The corrected runtime enables report APIs before new-body tensor initialization
+and leaves subsequent audits idempotent. Nested authored rigid-body declarations
+without a transform reset are excluded from independent report setup.
+
+`closed_loop_guard.py` retains explicit simulator exceptions and asks the
+existing workflow to clean up and collect artifacts within 120 seconds. Normal
+policy/native task failure does not trigger this infrastructure guard. Local
+subprocess tests verify the cleanup trap and nonzero failure outcome even when
+that trap returns zero. Fresh paired simulator validation remains necessary.

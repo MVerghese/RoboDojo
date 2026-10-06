@@ -128,6 +128,12 @@ def patch_overlay_spec(spec: dict, remote: str, digest: str, reservation: str | 
         ),
     ))
     result["spec"]["container"]["command"][2] = bootstrap.replace(marker, marker + "\n" + overlay_commands)
+    workload = 'bash /opt/imaginaire4/projects/cosmos3/cosmos3/evaluation/action/robodojo/run_closed_loop.sh'
+    guarded = ('/root/miniconda3/envs/RoboDojo/bin/python '
+               '/workspace/RoboDojo/scripts/atomic/closed_loop_guard.py -- ' + workload)
+    command = result['spec']['container']['command'][2]
+    if command.count(workload) == 1:
+        result['spec']['container']['command'][2] = command.replace(workload, guarded)
     if reservation:
         result["spec"]["reservation_config"] = {
             "reservation_id": reservation,
