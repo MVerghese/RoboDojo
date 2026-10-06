@@ -360,3 +360,14 @@ position/velocity methods but no contact-force readout in their inspected Python
 declarations. The retained SDK inventory records paths and source checksums.
 That scoped inspection explains the current cloth-grasp evidence gap; it does
 not prove every native binary API lacks cloth contacts.
+
+### Calibrated source-core pour scope
+
+The new rigid-pour profile observes only `sphere_1` and `sphere_6`, selected by
+whole initial mesh enclosure in the verified cup core. Both must exit while
+the cup is physically held and tilted at least 30°, then remain wholly inside
+the verified vase core for five physics samples. Initially present target
+material, unheld exits and material outside the source cohort cannot satisfy
+that observer. Native full-task completion still checks all seven balls.
+Qualified centre crossings of the actual vase mouth are independent geometric
+measurements; their absence is not replaced by final target containment.

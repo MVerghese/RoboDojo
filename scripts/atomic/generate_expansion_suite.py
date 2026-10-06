@@ -61,6 +61,78 @@ def calibrated_fold_profile(assets):
     return base,text
 
 
+def calibrated_pour_profile(base,scene,assets):
+    """Whole-ball source-core cohort and measured target mouth crossings."""
+    import numpy as np
+    from task.atomic.calibration import interior_core_box,opening_section
+    from task.atomic.geometry import _rotation
+    from task.atomic.regions import validate_solid
+    summary=json.loads((assets/'asset-summary.json').read_text())
+    definitions={};frames={};mouths={}
+    for label,key,name,index,center,half in [
+        ('cup','Rigid_cup_00006','cup',6,[0,0,.0055],[.015,.015,.0265]),
+        ('vase','Geometry_vase_00002','vase',2,[0,0,.0035],[.02,.02,.0635])]:
+        row=scene['objects'][label];model=summary[key.replace('_','/',1).rsplit('_',1)[0]+'/'+f'{index:05d}']
+        if row['metadata']['model_name']!=name or int(row['metadata']['model_id'])!=index:
+            raise ValueError('pour calibration requires the actual reviewed cup 6 / vase 2 models')
+        if not np.allclose(row['local_mesh_bounds_m'],model['authored_scaled_bounds'],atol=1e-7,rtol=0):
+            raise ValueError('live scaled pour mesh bounds differ from the reviewed baked assets')
+        mesh=np.load(assets/(key+'.npz'));v,t=mesh['vertices'],mesh['triangles']
+        mouth=float(v[:,2].max()-.0005)
+        definitions[label]=interior_core_box(v,t,center,half,mouth)
+        mouths[label]=opening_section(v,t,mouth)
+        frames[label]={'kind':'calibrated_frame','label':label,'local_pose':center+[1,0,0,0],
+            'calibration_id':'verified-material-free-core:'+model['asset_sha256'],
+            'asset_model':{'name':name,'index':index}}
+    source_pose=np.array(scene['objects']['cup']['initial_root_pose']);eligible=[]
+    for i in range(7):
+        label=f'sphere_{i}';row=scene['objects'][label]
+        if row['metadata']['model_name']!='sphere' or int(row['metadata']['model_id'])!=0:
+            raise ValueError('whole-ball core cohort requires reviewed sphere model 0')
+        p=np.array(row['initial_root_pose']);mesh=row['local_mesh'];v=np.asarray(mesh['vertices']);t=np.asarray(mesh['triangles'])
+        points=(v@_rotation(p[3:]).T+p[:3]-source_pose[:3])@_rotation(source_pose[3:])
+        if (np.abs(points-np.array(definitions['cup']['center']))<=definitions['cup']['half_extents']).all():eligible.append(label)
+    if not eligible:raise ValueError('no initial whole ball belongs to the verified material-free source core')
+    vase_mouth={'kind':'calibrated_frame','label':'vase','local_pose':[0,0,mouths['vase']['z_m'],1,0,0,0],
+        'calibration_id':'closed-material-wall-mouth:'+summary['Geometry/vase/00002']['asset_sha256'],
+        'asset_model':{'name':'vase','index':2}}
+    cup_mouth={'kind':'calibrated_frame','label':'cup','local_pose':[0,0,mouths['cup']['z_m'],1,0,0,0],
+        'calibration_id':'closed-material-wall-mouth:'+summary['Rigid/cup/00006']['asset_sha256'],
+        'asset_model':{'name':'cup','index':6}}
+    base=deepcopy(base)
+    base['stages'].append({'id':'calibrated_core_pour','family':'pour','required':False,
+        'instruction':'Observe transfer from the verified initial cup core into the verified vase core.',
+        'step_limit':700,'success_checks':[{'name':'is_A_bbox_in_B_bbox','args':{'label_A':label,'label_B':'vase','atol':.002}} for label in eligible],
+        'recognition':{'kind':'rigid_material_transfer','label':'cup','target_label':'vase','arm':'any',
+            'min_contact_steps':2,'source_frame':frames['cup'],'target_frame':frames['vase'],
+            'source_half_extents_m':definitions['cup']['half_extents'],'target_half_extents_m':definitions['vase']['half_extents'],
+            'material_labels':eligible,'required_count':len(eligible),'min_tilt_rad':math.pi/6,'settle_steps':5,
+            'flow':{'opening':vase_mouth,'aperture_profile':mouths['vase']['aperture_profile'],
+                'target_xy_m':[.004,0],'position_tolerance_m':.01,'angle_tolerance_rad':math.pi/9,
+                'expected_velocity_direction':[0,0,-1]}},
+        'geometry':[{'id':'cup_mouth_at_transfer','slot':'source pour pose','kind':'pose',
+            'measurement':cup_mouth,'reference':vase_mouth,
+            'expected':{'position':[0,0,.08],'orientation':[math.sqrt(.5),0,-math.sqrt(.5),0]},
+            'tolerance':.025,'angle_tolerance_rad':math.pi/6,
+            'event':{'kind':'recognition_event','name':'first_transfer'},'track_closest':False}]+[
+            {'id':label+'_final_core','slot':'goal','kind':'spatial_relation',
+             'measurement':{'kind':'object_pose','label':label},'reference':frames['vase'],
+             'relation_scope':'objects','expected':'inside_box','half_extents':definitions['vase']['half_extents'],
+             'tolerance':.001,'event':{'kind':'attempt_end'},'track_closest':False} for label in eligible]})
+    base['stage_dependencies']['calibrated_core_pour']=[]
+    text=('At the first qualified whole-ball transfer, put the actual cup mouth center 80 mm above '
+          'the actual vase mouth center within 25 mm position error, and rotate the cup mouth frame '
+          'minus 90 degrees about the vase local y axis within 30 degrees full orientation error. '
+          'For each initially source-core ball, cross the vase opening at local XY [4, 0] mm within '
+          '10 mm distance, with relative velocity within 20 degrees of the vase local downward z direction. '
+          'At episode end keep each measured ball wholly inside the calibrated vase core: local x/y '
+          'between minus 20 and plus 20 mm, local z from minus 60 to plus 67 mm, with 1 mm boundary tolerance. '
+          'The vase core follows its root. These measurements cover only '+', '.join(eligible)+
+          ', whose whole initial meshes fit the verified cup core (root x/y plus or minus 15 mm, '
+          'root z minus 21 to plus 32 mm), not all seven balls or the whole vessel cavities.')
+    return base,text
+
+
 def calibrated_key_profile(base,scene,assets):
     """Physical key-tip/opening frames and explicit blade-collider section fit."""
     import numpy as np
@@ -479,28 +551,31 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             source=Path(asset_calibration_root)/'asset-geometry.json'
             manifest.setdefault('calibration_inputs',{})['cloth_assets']={'path':str(source),
                 'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
-        if phase=='calibrated':
-            if task!='insert_key':raise ValueError('calibrated task profile is not bound yet: '+task)
+        if phase in ('calibrated','pour_core'):
+            if task!=('insert_key' if phase=='calibrated' else 'pour_balls_into_vase'):raise ValueError('calibrated task profile is not bound yet: '+task)
             if not asset_calibration_root:raise ValueError('calibrated bindings require actual asset evidence')
-            asset_files=['asset-summary.json','key-geometry.json','Geometry_key_slot_00000.npz']
+            asset_files=(['asset-summary.json','key-geometry.json','Geometry_key_slot_00000.npz'] if phase=='calibrated' else ['asset-summary.json','Rigid_cup_00006.npz','Geometry_vase_00002.npz'])
             manifest.setdefault('calibration_inputs',{})['assets']=[{
                 'path':str(Path(asset_calibration_root)/name),
                 'sha256':hashlib.sha256((Path(asset_calibration_root)/name).read_bytes()).hexdigest()}
                 for name in asset_files]
-        if (phase=='breadth' and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws') or phase=='calibrated':
+        if (phase=='breadth' and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws') or phase in ('calibrated','pour_core'):
             source=Path(calibration_root)/'runs'/f'robodojo_25k_{task}_baseline'/'eval_report.json'
+            if phase=='pour_core' and not source.exists():
+                source=source.parent.parent/f'robodojo_25k_{task}_conditioned'/'eval_report.json'
             report=json.loads(source.read_text())
             detail=next(iter(report['native_results'][0]['details'].values()))
             scene=detail['atomic_sequence']['scene_calibration']
             manifest.setdefault('calibration_inputs',{})[task]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
         base, append = (calibrated_fold_profile(Path(asset_calibration_root)) if phase=='cloth_patches' else
+                        calibrated_pour_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='pour_core' else
                         calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
                         constrained_expand(task,pair[0],scene,
                         manifest.get('calibration_inputs',{}).get(task,{}).get('sha256','actual-material-topology')) if phase=='constrained' else
                         breadth_expand(pair[0],scene) if phase=='breadth' else
                         pair if task == 'fold_clothes' and phase == 'materials' else
                         (validation_expand if phase == 'validation' else expand)(pair[0]))
-        if phase in ('validation','breadth','calibrated') or (phase=='constrained' and task!='fold_clothes'):
+        if phase in ('validation','breadth','calibrated','pour_core') or (phase=='constrained' and task!='fold_clothes'):
             append = pair[1] + ' ' + append
         manifest['coverage'].append({'task':task,'included':True,
             'families':sorted({s['family'] for s in base['stages']}), 'unbound_families':[],
@@ -532,7 +607,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()

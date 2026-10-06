@@ -22,11 +22,14 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-constrained-1006` | 4 | Submitted | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
 | `geometry-tool-contacts-1006` | 4 | Submitted | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
 
+| `geometry-cloth-patches-1006` | 2 | Submitted | Model/asset/topology-verified local garment patch coverage and layer gaps |
 | `geometry-key-fit-1006` | 2 | Submitted | Actual key mouth/tip, closed blade collider section/clearance and shoulder gap |
 
 The bottle retry retained the exact program/checkpoint/runtime package. It ended
 with client code 143 and no completed native episode. Archived logs show a policy
-websocket keepalive timeout; diagnosis is ongoing. It is an infrastructure failure,
+websocket keepalive timeout **before a successful reconnect and rollout**; it
+does not establish the later termination cause. The retry stops at step 168/700
+and diagnosis is ongoing. It is an infrastructure failure,
 not a conditioning score or policy action failure.
 
 ## Implemented additions
@@ -105,3 +108,9 @@ not complete garment regions or force-bearing cloth grasps.
 Physical opening trace and conservative interior-core calibration, optional
 stream direction, and small-retreat insertion handling also have local regression
 evidence. Fresh bindings are packaged separately from immutable queued runs.
+
+A rigid-pour core pair is calibrated for seed 0: cup-6 and vase-2 material-free
+cores select the whole initial meshes of `sphere_1` and `sphere_6`. Mouth pose,
+downward crossing XY/velocity direction and final convex-core enclosure are
+bound. Sphere volume preflight fails closed, so the endpoint condition reports
+whole-mesh box enclosure rather than a fabricated solid outside volume.

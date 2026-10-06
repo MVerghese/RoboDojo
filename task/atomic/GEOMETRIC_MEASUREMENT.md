@@ -422,3 +422,16 @@ Flow can set `expected_velocity_direction` in the opening frame. Angular error
 is measured against that normalized vector, separately from crossing XY error,
 aperture overrun and relative speed. Opening translation is subtracted; angular
 motion/sampling gaps retain unscored statuses.
+
+### Rigid-pour core binding
+
+The `pour_core` profile uses verified cup-6/vase-2 mouth traces and bounded
+material-free cores. It selects source balls by whole initial mesh enclosure;
+the captured seed-0 cohort is `sphere_1`, `sphere_6`. Their held/tilted source
+exit and five-sample target-core dwell are physical recognition evidence.
+First-transfer mouth translation/full orientation, centre crossing XY, velocity
+direction/speed, aperture overrun and final whole-mesh enclosure are separate
+measurements. The retained sphere meshes fail closed-solid validation, so the
+final condition uses vertex enclosure in a convex box with mm error, not mm³
+outside volume. Convex enclosure bounds the triangles as well as their vertices.
+The source core covers only the declared cohort, not the full vessel cavity.

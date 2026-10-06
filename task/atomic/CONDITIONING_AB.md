@@ -353,7 +353,7 @@ map and the 49-task partial-observer A/B matrix. Retain the controls below.
 `generate_expansion_suite.py` creates matched full-task programs with identical
 scoring/recognizers in both arms. The conditioned arm alone appends the geometric
 instruction. Phases are `feasible`, `validation`, `materials`, `breadth`,
-`constrained`, `calibrated`, and `cloth_patches`. Every added numeric target names its event,
+`constrained`, `calibrated`, `cloth_patches`, and `pour_core`. Every added numeric target names its event,
 reference frame, axes, physical units and tolerance.
 
 ```bash
@@ -418,3 +418,38 @@ Operational controllers/results are now under
 on Lustre. Current execution status and missing evidence are documented in
 [EXPANSION_STATUS.md](EXPANSION_STATUS.md). Per-suite Markdown and self-contained
 HTML reports use separate mm, degrees, mm², mm³, fractions, speed and duration.
+
+### Calibrated rigid-pour core pair
+
+```bash
+python scripts/atomic/generate_expansion_suite.py \
+  --phase pour_core --tasks pour_balls_into_vase \
+  --checkpoints /path/to/checkpoints.json \
+  --calibration-root /path/to/geometry-support-suite \
+  --asset-calibration-root /path/to/baked-asset-calibration \
+  --output-dir /path/to/fresh-pour-core-suite
+```
+
+The generator verifies actual model identity/scaled bounds against the captured
+initial scene and calibrates closed mouth traces plus material-free interior
+cores. It uses initial baseline scene evidence when available, otherwise the
+conditioned arm's initial scene; that input path and hash are recorded. It
+selects only whole initial balls inside the verified source core, not all seven
+balls. The captured seed-0 calibration selects `sphere_1` and `sphere_6`.
+
+The cup core is root XY ±15 mm, Z −21 to +32 mm. The vase core is root XY
+±20 mm, Z −60 to +67 mm. The transfer observer requires both selected balls
+to exit a physically held/tilted cup and remain wholly in the target core for
+five physics samples. Native full-task success still tests its original task.
+At first transfer, cup mouth pose targets [0, 0, 80] mm relative to the vase
+mouth, with −90° local-Y orientation (25 mm/30° tolerances). Each qualified
+downward mouth crossing targets XY [4, 0] mm with 10 mm tolerance and downward
+velocity within 20°. Final whole-ball box error has 1 mm tolerance.
+
+Retained sphere surfaces do not pass the closed-solid volume preflight. This
+profile therefore reports whole-mesh vertex enclosure in a calibrated convex
+box, not solid outside volume; every triangle between enclosed vertices also
+lies in that convex box. Flow tracks the ball's measured mesh centre and
+reports its crossing distance, aperture overrun, relative speed and direction
+separately. It does not certify liquid volume, continuous stream shape or
+transfer of material outside the declared source-core cohort.
