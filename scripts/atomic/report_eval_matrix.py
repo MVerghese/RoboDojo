@@ -2,7 +2,7 @@
 from collections import defaultdict
 import statistics
 
-from scripts.atomic.storage import atomic_write_json, atomic_write_text
+from scripts.atomic.storage import atomic_write_json
 
 
 def delivered_prompt(row):
@@ -94,32 +94,21 @@ def aggregate(manifest, result):
 
 
 def write_matrix_report(manifest, result, root):
+    from scripts.atomic.continuous_report import write_continuous_report
     data = aggregate(manifest, result)
     atomic_write_json(root / 'eval-matrix-results.json', data)
-    included = sum(c['included'] for c in manifest['coverage'])
-    lines = ['# RoboDojo eval matrix baseline', '',
-        f"Included tasks: **{included}/{len(manifest['coverage'])}**. Valid episodes: **{data['valid_episodes']}/{len(result['cases'])}**. "
-        f"Verified matched pairs: **{data['matched_pairs']}/{data['total_pairs']}**.", '',
-        'Full-task policy prompts are fixed within each episode. Candidate observers measure the first recognized instance per bound object; '
-        'they do not establish complete task segmentation. Unobserved conditions have no error or pass score. '
-        'Component names ending in `_m` use metres; `_rad` use radians; fractions are unitless. '
-        'Action success is recorded by live recognition; the offline audit independently reproduces geometry.', '',
-        '| Checkpoint | Task | Action | Prompt | Successful actions / observers | Observed / declared conditions | Geometry passes / observed |',
-        '| --- | --- | --- | --- | --- | --- | --- |']
-    for m in data['metrics']:
-        if m['scope'] != 'all_valid_episodes':
-            continue
-        declared = sum(c['declared'] for c in m['geometry'])
-        observed = sum(c['observed'] for c in m['geometry'])
-        passed = sum(c['passed_when_observed'] for c in m['geometry'])
-        lines.append(f"| {m['checkpoint_id']} | {m['task']} | {m['family']} | {m['prompt_mode']} | "
-            f"{m['successful_actions']}/{m['observer_instances']} | {observed}/{declared} | {passed}/{observed} |")
-    lines += ['', 'Counts describe observer instances, including optional object candidates; they are not a fraction of required native actions.',
-              'Continuous errors, unobserved-event reasons, and separate matched-only aggregates are in `eval-matrix-results.json`.', '',
-              '## Excluded or partially bound tasks', '']
-    for c in manifest['coverage']:
-        if c.get('blocker') or c['unbound_families']:
-            lines.append(f"- **{c['task']}**: " + (c.get('blocker') or 'included with partial observers') +
-                         (f"; unbound families: {', '.join(c['unbound_families'])}" if c['unbound_families'] else ''))
-    lines += ['', '## Limitations', '', *('- ' + x for x in manifest['limitations'])]
-    atomic_write_text(root / 'EVAL_MATRIX_REPORT.md', '\n'.join(lines) + '\n')
+    return write_continuous_report(manifest, result, data, root)
+
+
+if __name__ == '__main__':
+    import argparse
+    import json
+    from pathlib import Path
+    parser = argparse.ArgumentParser(description='Regenerate continuous MD/HTML reports from collected results.')
+    parser.add_argument('--run-dir', type=Path, required=True)
+    args = parser.parse_args()
+    root = args.run_dir.resolve()
+    manifest = json.loads((root / 'suite.json').read_text())
+    result = json.loads((root / 'benchmark_results.json').read_text())
+    data = write_matrix_report(manifest, result, root)
+    print(f"Rendered {len(data['tasks'])} task pairs: {root / 'EVAL_MATRIX_REPORT.md'} and .html")

@@ -1,0 +1,422 @@
+"""Portable Markdown/HTML reports of measured geometric error and conditioning."""
+from collections import Counter, defaultdict
+import hashlib
+import html
+import json
+import math
+from pathlib import Path
+import statistics
+import tarfile
+
+from scripts.atomic.storage import atomic_write_json, atomic_write_text
+
+
+METHOD = (
+    'Each geometric conditioning has separate continuous measurements in actual physical units. '
+    'Position, contact and gap errors are reported in millimetres; orientation errors in degrees; '
+    'footprint overlap and its shortfall as fractions; footprint area in square millimetres. '
+    'SE(3) translation and rotation are separate numbers. No tolerance normalization or '
+    'combined score across conditioning types is used. '
+    'Contact conditions use the worst eligible contact point, not the contact centroid. '
+    'Means and medians include only independently reproduced observations. Missing events '
+    'are N/A, never zero. '
+    'Coverage is observed/declared conditions, including optional object candidates. '
+    'Shared-event delta is mean(conditioned measurement − baseline measurement) over identical '
+    'stage/condition identities observed in both arms of a verified pair, in the stated unit. '
+    'Negative error delta is better; positive overlap delta is better. Signed separation '
+    'depends on the requested relation and has no universal improvement direction. '
+    'Different observed populations can change the separate arm means. Summaries group by '
+    'action, condition, modifier and slot, weighting each observed condition equally rather '
+    'than each task equally. '
+    'One episode per arm gives descriptive results, not a statistical steering estimate.'
+)
+
+
+def stats(values):
+    values = list(values)
+    return {'n': len(values), 'mean': statistics.mean(values) if values else None,
+            'median': statistics.median(values) if values else None}
+
+
+def component_values(events, name):
+    values = []
+    for event in events:
+        score = event['score']
+        if score.get('status') != 'reproduced':
+            continue
+        value = score['recorded_result']['components'].get(name)
+        if value is not None:
+            value = float(value)
+            if not math.isfinite(value):
+                raise ValueError('nonfinite recorded geometric component')
+            values.append(value)
+    return values
+
+
+def load_program(case, root):
+    path = Path(case['program'])
+    if path.exists():
+        source = path.read_bytes()
+        if hashlib.sha256(source).hexdigest() != case['program_sha256']:
+            raise ValueError('conditioning program differs from frozen suite: ' + case['id'])
+        return json.loads(source)
+    # Collected directories can be moved without retaining the original program path.
+    run = root / 'runs' / case['id']
+    frozen = json.loads((run / 'prepared_case.json').read_text())
+    overlay = run / 'robodojo-overlay.tar.gz'
+    if hashlib.sha256(overlay.read_bytes()).hexdigest() != frozen['overlay_sha256']:
+        raise ValueError('packaged conditioning differs from frozen preparation')
+    with tarfile.open(overlay, 'r:gz') as archive:
+        return json.load(archive.extractfile('task/atomic/inputs/program.json'))
+
+
+def collect_events(row):
+    events = {}
+    for stage in row.get('atomic_scores', []):
+        for ident, score in stage['conditions'].items():
+            key = (stage['stage_id'], ident)
+            if key in events:
+                raise ValueError('duplicate stage/condition event identity')
+            events[key] = {'family': stage.get('family', 'unknown'), 'score': score}
+    return events
+
+
+def arm_summary(events):
+    events = list(events)
+    reproduced = [e['score']['recorded_result'] for e in events
+                  if e['score'].get('status') == 'reproduced']
+    components = defaultdict(list)
+    for result in reproduced:
+        for name, value in result['components'].items():
+            if name.endswith(('_m', '_rad', '_m2', '_fraction')) and name not in (
+                    'required_overlap_fraction', 'vertical_tolerance_m'):
+                components[name].append(float(value))
+    return {'declared': len(events), 'observed': len(reproduced),
+            'statuses': dict(Counter(e['score']['status'] for e in events)),
+            'components': {name: stats(values) for name, values in sorted(components.items())}}
+
+
+def shared_summary(baseline, conditioned, matched):
+    common = []
+    if matched:
+        for key in sorted(baseline.keys() & conditioned.keys()):
+            a, b = baseline[key], conditioned[key]
+            if a['score']['status'] == b['score']['status'] == 'reproduced':
+                common.append((a, b))
+    names = {name for a, b in common for name in arm_summary([a])['components']}
+    components = {}
+    for name in sorted(names):
+        values = [(component_values([a], name), component_values([b], name)) for a, b in common]
+        values = [(a[0], b[0]) for a, b in values if a and b]
+        components[name] = {'n': len(values), 'baseline': stats(a for a, b in values),
+                            'conditioned': stats(b for a, b in values),
+                            'delta': stats(b - a for a, b in values)}
+    return {'n_events': len(common), 'components': components}
+
+
+def build_report(manifest, result, matrix, root):
+    cases = {c['id']: c for c in manifest['cases']}
+    rows = {r['case_id']: r for r in result['cases']}
+    tasks, pooled = [], defaultdict(lambda: {'baseline': {}, 'conditioned': {}})
+    for pair in matrix['pairs']:
+        a, b = (cases[pair[k]] for k in ('baseline_case', 'conditioned_case'))
+        ra, rb = rows[a['id']], rows[b['id']]
+        programs = [load_program(c, root) for c in (a, b)]
+        # Read the actual frozen targets even if the physical event was absent.
+        definitions = defaultdict(list)
+        for stage in programs[0]['stages']:
+            for condition in stage.get('geometry', []):
+                key = (stage['family'], condition['id'], condition['kind'], condition['slot'])
+                definition = {'stage_id': stage['id'], 'condition': condition}
+                if definition not in definitions[key]:
+                    definitions[key].append(definition)
+        events = {'baseline': collect_events(ra), 'conditioned': collect_events(rb)}
+        groups = set(definitions)
+        for arm in events.values():
+            groups.update((e['family'], key[1], e['score'].get('kind', 'unknown'), e['score'].get('slot', 'unknown'))
+                          for key, e in arm.items())
+        conditions = []
+        for key in sorted(groups):
+            selected = {mode: {identity: e for identity, e in arm.items()
+                        if (e['family'], identity[1], e['score'].get('kind', 'unknown'),
+                            e['score'].get('slot', 'unknown')) == key}
+                        for mode, arm in events.items()}
+            conditions.append({'family': key[0], 'condition_id': key[1], 'kind': key[2], 'slot': key[3],
+                'definitions': definitions.get(key, []),
+                'baseline': arm_summary(selected['baseline'].values()),
+                'conditioned': arm_summary(selected['conditioned'].values()),
+                'shared': shared_summary(selected['baseline'], selected['conditioned'], pair['matched'])})
+        task = dict(pair) | {'conditions': conditions, 'conditioning_prompt': b.get('geometric_prompt_append'),
+            'program_sha256': {mode: cases[c]['program_sha256'] for mode, c in (
+                ('baseline', a['id']), ('conditioned', b['id']))},
+            'delivered_prompts': {mode: sorted({p['instruction'] for episode in row.get('policy_prompt_history', [])
+                                               for p in episode}) for mode, row in (
+                ('baseline', ra), ('conditioned', rb))},
+            'actual_layouts': {mode: sorted({s['layout_id'] for s in row.get('atomic_scores', [])})
+                               for mode, row in (('baseline', ra), ('conditioned', rb))},
+            'baseline': arm_summary(events['baseline'].values()),
+            'conditioned': arm_summary(events['conditioned'].values()),
+            'shared_event_count': shared_summary(events['baseline'], events['conditioned'], pair['matched'])['n_events']}
+        for mode in ('baseline', 'conditioned'):
+            task[mode].pop('components')  # No task-wide mixture of conditioning types.
+        tasks.append(task)
+        if pair['matched']:
+            for mode, arm in events.items():
+                for identity, e in arm.items():
+                    global_key = (pair['checkpoint_id'], pair['task'], *identity)
+                    score = e['score']
+                    group = (pair['checkpoint_id'], e['family'], identity[1], score.get('kind'), score.get('slot'))
+                    pooled[group][mode][global_key] = e
+    summary = [{'checkpoint_id': checkpoint, 'family': family, 'condition_id': ident, 'kind': kind, 'slot': slot,
+                'baseline': arm_summary(arms['baseline'].values()),
+                'conditioned': arm_summary(arms['conditioned'].values()),
+                'shared': shared_summary(arms['baseline'], arms['conditioned'], True)}
+               for (checkpoint, family, ident, kind, slot), arms in sorted(pooled.items())]
+    return {'schema_version': 1, 'updated_at': result['updated_at'], 'method': METHOD,
+            'included_tasks': sum(c['included'] for c in manifest['coverage']),
+            'catalog_tasks': len(manifest['coverage']), 'valid_episodes': matrix['valid_episodes'],
+            'matched_pairs': matrix['matched_pairs'], 'total_pairs': matrix['total_pairs'],
+            'reproduced_event_scores': result.get('reproduced_event_scores'),
+            'score_mismatches': result.get('score_mismatches'), 'checkpoints': manifest['checkpoints'],
+            'summary': summary, 'tasks': tasks, 'coverage': manifest['coverage'],
+            'limitations': manifest['limitations'], 'scope': manifest['scope']}
+
+
+def number(value):
+    return 'N/A' if value is None else f'{value:.3f}'
+
+
+def coverage(summary):
+    return f"{summary['observed']}/{summary['declared']}"
+
+
+def component_unit(name):
+    if name.endswith('_rad'):
+        return name[:-4].replace('_', ' ') + ' (deg)', 180 / math.pi
+    if name.endswith('_m2'):
+        return name[:-3].replace('_', ' ') + ' (mm²)', 1e6
+    if name.endswith('_m'):
+        return name[:-2].replace('_', ' ') + ' (mm)', 1000
+    return name.replace('_', ' ') + ' (fraction)', 1
+
+
+def raw_scalar(summary, name):
+    _, scale = component_unit(name)
+    s = summary['components'].get(name)
+    return 'N/A' if not s else f"{s['mean'] * scale:.3f} / {s['median'] * scale:.3f}"
+
+
+def component_names(condition):
+    # Keep a row with N/A for every tested measurement even if no event occurred.
+    expected = {'point': ['position_m'], 'relative_displacement': ['displacement_m'],
+                'pose': ['position_m', 'orientation_rad'], 'relative_orientation': ['orientation_rad'],
+                'spatial_relation': ['relation_error_m']}[condition['kind']]
+    if condition['kind'] == 'spatial_relation':
+        expected += ['signed_separation_m', 'footprint_gap_m', 'footprint_overlap_fraction',
+                     'footprint_overlap_m2', 'overlap_shortfall_fraction']
+    return sorted(set(expected) | condition['baseline']['components'].keys() |
+                  condition['conditioned']['components'].keys())
+
+
+def measurement_row(condition, name):
+    a, b = condition['baseline'], condition['conditioned']
+    shared = condition['shared']['components'].get(name)
+    scale = component_unit(name)[1]
+    return [condition['family'] + ' / ' + condition['condition_id'], condition['kind'],
+            component_unit(name)[0], raw_scalar(a, name), a['components'].get(name, {}).get('n', 0),
+            raw_scalar(b, name), b['components'].get(name, {}).get('n', 0), shared['n'] if shared else 0,
+            number(shared['delta']['mean'] * scale) if shared and shared['delta']['mean'] is not None else 'N/A']
+
+
+def md_cell(value):
+    return str(value).replace('|', '\\|').replace('\n', '<br>')
+
+
+def table(headers, rows):
+    return ['| ' + ' | '.join(headers) + ' |', '| ' + ' | '.join('---' for h in headers) + ' |',
+            *('| ' + ' | '.join(md_cell(v) for v in row) + ' |' for row in rows)]
+
+
+def condition_parameters(condition):
+    definitions = condition['definitions']
+    if not definitions:
+        return [('Definition', 'See bound condition evidence in benchmark_results.json')]
+    fields = [('measurement', 'Measurement'), ('reference', 'Reference frame / landmark'),
+              ('expected', 'Target'), ('axes', 'Position axes'), ('orientation_axes', 'Orientation axes'),
+              ('tolerance', 'Tolerance'), ('angle_tolerance_rad', 'Angle tolerance (rad)'),
+              ('event', 'Measurement event'), ('relation_scope', 'Relation scope'),
+              ('min_overlap_fraction', 'Minimum footprint overlap'), ('margin', 'Ordering margin (m)')]
+    result = [('Action / modifier / slot', f"{condition['family']} / {condition['kind']} / {condition['slot']}")]
+    for field, label in fields:
+        converted = []
+        for definition in definitions:
+            c = definition['condition']
+            if field not in c:
+                continue
+            value = c[field]
+            if field == 'tolerance':
+                angular = condition['kind'] == 'relative_orientation'
+                label = 'Tolerance (deg)' if angular else 'Tolerance (mm)'
+                value *= 180 / math.pi if angular else 1000
+            elif field == 'angle_tolerance_rad':
+                label, value = 'Angle tolerance (deg)', value * 180 / math.pi
+            elif field == 'margin':
+                label, value = 'Ordering margin (mm)', value * 1000
+            elif field == 'expected' and condition['kind'] in ('point', 'relative_displacement'):
+                label, value = 'Target displacement (mm)', [v * 1000 for v in value]
+            elif field == 'expected' and condition['kind'] == 'pose':
+                value = {'position_mm': [v * 1000 for v in value['position']],
+                         'orientation_wxyz': value['orientation']}
+            elif field == 'expected' and condition['kind'] == 'relative_orientation':
+                label = 'Target relative orientation (wxyz quaternion)'
+            elif field == 'event' and value.get('kind') == 'first_lift' and 'threshold' in value:
+                value = {k: v for k, v in value.items() if k != 'threshold'} | {'threshold_mm': value['threshold'] * 1000}
+            converted.append(json.dumps(value, ensure_ascii=False, sort_keys=True))
+        values = sorted(set(converted))
+        if values:
+            result.append((label, '; '.join(values)))
+    result.append(('Program stages', ', '.join(d['stage_id'] for d in definitions)))
+    return result
+
+
+def summary_rows(data):
+    return [[r['checkpoint_id'], *measurement_row(r, name)]
+            for r in data['summary'] for name in component_names(r)]
+
+
+CONDITION_HEADERS = ['Action / condition', 'Modifier', 'Measurement / unit',
+                     'Baseline mean / median', 'B n', 'Conditioned mean / median',
+                     'C n', 'Shared n', 'Shared Δ(C−B)']
+SUMMARY_HEADERS = ['Checkpoint', *CONDITION_HEADERS]
+TASK_HEADERS = ['Task', 'Conditioning tested', 'A/B comparison', 'B coverage', 'C coverage']
+
+
+def task_rows(data):
+    return [[t['task'], '; '.join(sorted({c['family'] + ': ' + c['condition_id'] for c in t['conditions']})),
+             'verified' if t['matched'] else 'EXCLUDED', coverage(t['baseline']),
+             coverage(t['conditioned'])] for t in data['tasks']]
+
+
+def condition_rows(task):
+    return [measurement_row(c, name) for c in task['conditions'] for name in component_names(c)]
+
+
+def report_markdown(data):
+    lines = ['# RoboDojo conditioning: continuous geometric errors', '',
+        f"**{data['valid_episodes']} valid episodes · {data['included_tasks']}/{data['catalog_tasks']} tasks · "
+        f"{data['matched_pairs']}/{data['total_pairs']} verified A/B pairs.**", '',
+        f"Collected: {data['updated_at']}. Offline reproduction: {data['reproduced_event_scores']} "
+        f"event scores, {data['score_mismatches']} mismatches.", '', '## Measurements and units', '', data['method'], '',
+        'Distances below are in millimetres and angles in degrees. Raw components show mean / median. '
+        'Targets and tolerances use the displayed mm/degree units; orientations use wxyz quaternions. '
+        'Selector metadata with explicit `_m`/`_rad` suffixes retains those named units. '
+        'Axes 0/1/2 denote local x/y/z. Raw signed separation/overlap are measurements, not unsigned errors. '
+        'Unmatched episodes remain descriptive and contribute no shared delta or matched summary.', '',
+        '## Matched-pair summary', '', *table(SUMMARY_HEADERS, summary_rows(data)), '',
+        '## Task index', '', *table(TASK_HEADERS, task_rows(data)), '', '## Conditioning and results by task', '']
+    for task in data['tasks']:
+        lines += [f"### {task['task']} ({task['checkpoint_id']})", '',
+                  '**A/B comparison:** ' + ('verified' if task['matched'] else 'EXCLUDED: ' + '; '.join(task['exclusions'])), '',
+                  '**Actual layouts:** baseline ' + str(task['actual_layouts']['baseline']) +
+                  '; conditioned ' + str(task['actual_layouts']['conditioned']) + '.', '',
+                  '**Conditioning supplied to the policy:**', '', '> ' + (task['conditioning_prompt'] or 'No append recorded.'), '',
+                  *table(CONDITION_HEADERS, condition_rows(task)), '']
+        if not task['baseline']['observed'] and not task['conditioned']['observed']:
+            lines += ['No geometric event was observed; continuous error is N/A for both arms.', '']
+        for c in task['conditions']:
+            lines += [f"**{c['family']} / {c['condition_id']} — tested definition:**", '',
+                      *table(['Field', 'Value'], condition_parameters(c)), '',
+                      'Observation statuses: baseline `' + json.dumps(c['baseline']['statuses'], sort_keys=True) +
+                      '`; conditioned `' + json.dumps(c['conditioned']['statuses'], sort_keys=True) + '`.', '']
+        lines += ['<details><summary>Exact delivered policy prompts</summary>', '']
+        for mode in ('baseline', 'conditioned'):
+            lines += [f'**{mode}:**', '', *('> ' + p.replace('\n', '\n> ') for p in task['delivered_prompts'][mode]), '']
+        lines += ['</details>', '']
+        unbound = next(c['unbound_families'] for c in data['coverage'] if c['task'] == task['task'])
+        if unbound:
+            lines += ['**Actions not conditioned/measured in this task:** ' + ', '.join(unbound) + '.', '']
+    lines += ['## Eval tasks not run', '', *table(['Task', 'Reason', 'Conditioning tested'],
+              [[c['task'], c.get('blocker') or 'Not selected', 'None; no episodes']
+               for c in data['coverage'] if not c['included']]), '',
+              '## Scope and limitations', '', data['scope'], '',
+              *('- ' + x for x in data['limitations']), '',
+              '- Missing events are not scores. A measured release error does not establish successful placement.',
+              '- Source-audited recognizers without observed events do not establish live recognition accuracy.', '',
+              'Inputs: `suite.json`, frozen conditioning programs and `benchmark_results.json`. '
+              'Machine-readable continuous values: `eval-matrix-continuous.json`. '
+              'Raw results and binary action outcomes remain in `benchmark_results.json`.', '']
+    return '\n'.join(lines)
+
+
+def html_table(headers, rows):
+    esc = html.escape
+    return '<div class="table-wrap"><table><thead><tr>' + ''.join('<th scope="col">' + esc(str(h)) + '</th>' for h in headers) + \
+           '</tr></thead><tbody>' + ''.join('<tr>' + ''.join('<td>' + esc(str(v)) + '</td>' for v in row) + '</tr>' for row in rows) + \
+           '</tbody></table></div>'
+
+
+def report_html(data):
+    esc = html.escape
+    cards = []
+    for task in data['tasks']:
+        content = '<p class="status">' + esc('Verified A/B pair' if task['matched'] else 'Excluded: ' + '; '.join(task['exclusions'])) + '</p>'
+        content += '<p>Actual layouts: baseline ' + esc(str(task['actual_layouts']['baseline'])) + '; conditioned ' + esc(str(task['actual_layouts']['conditioned'])) + '.</p>'
+        content += '<h3>Conditioning supplied to the policy</h3><blockquote>' + esc(task['conditioning_prompt'] or 'No append recorded.') + '</blockquote>'
+        content += html_table(CONDITION_HEADERS, condition_rows(task))
+        if not task['baseline']['observed'] and not task['conditioned']['observed']:
+            content += '<p>No geometric event observed. Error is N/A for both arms.</p>'
+        for c in task['conditions']:
+            content += '<details class="definition"><summary>' + esc(c['family'] + ' / ' + c['condition_id'] + ' — tested definition') + '</summary>'
+            content += html_table(['Field', 'Value'], condition_parameters(c))
+            content += '<p>Observation statuses: baseline <code>' + esc(json.dumps(c['baseline']['statuses'], sort_keys=True)) + '</code>; conditioned <code>' + esc(json.dumps(c['conditioned']['statuses'], sort_keys=True)) + '</code>.</p></details>'
+        content += '<details class="prompts"><summary>Exact delivered policy prompts</summary>'
+        for mode in ('baseline', 'conditioned'):
+            content += '<h4>' + mode.capitalize() + '</h4>' + ''.join('<blockquote>' + esc(p) + '</blockquote>' for p in task['delivered_prompts'][mode])
+        content += '</details>'
+        unbound = next(c['unbound_families'] for c in data['coverage'] if c['task'] == task['task'])
+        if unbound:
+            content += '<p>Actions not conditioned/measured in this task: <strong>' + esc(', '.join(unbound)) + '</strong>.</p>'
+        families = sorted({c['family'] for c in task['conditions']})
+        searchable = ' '.join([task['task'], task['checkpoint_id'], *families, task['conditioning_prompt'] or ''])
+        cards.append('<details class="task" data-search="' + esc(searchable.lower(), quote=True) + '" data-matched="' + str(task['matched']).lower() + '"><summary><span>' + esc(task['task']) + '</span><span class="badge">' + esc('verified' if task['matched'] else 'excluded') + '</span></summary><div class="task-body">' + content + '</div></details>')
+    css = '''
+    :root{color-scheme:light;--ink:#172d43;--muted:#526475;--line:#dbe4eb;--accent:#096d80}
+    *{box-sizing:border-box}body{margin:0;background:#f3f6f8;color:var(--ink);font:15px/1.6 system-ui,sans-serif}
+    main{max-width:1440px;margin:auto;padding:36px 28px 70px}header{padding:24px 30px;background:#12324b;color:white;border-radius:16px}
+    h1{font-size:30px;line-height:1.2;margin:0 0 12px}h2{margin:32px 0 12px}h3{font-size:17px;margin:22px 0 10px}
+    .eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:1.3px;color:#b6dae6;margin-bottom:10px}
+    .method{background:white;padding:22px 26px;border:1px solid var(--line);border-radius:12px;margin-top:22px}
+    .method p{margin:8px 0}blockquote{margin:10px 0;padding:14px 18px;border-left:4px solid var(--accent);background:#edf7f9;white-space:pre-wrap}
+    .table-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px;background:white;margin:12px 0}
+    table{border-collapse:collapse;width:100%;font-size:13px}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+    th{background:#eaf0f4;white-space:nowrap;color:#23415a}tr:last-child td{border-bottom:0}tbody tr:nth-child(even){background:#f8fafb}
+    .controls{display:flex;gap:14px;flex-wrap:wrap;align-items:center;background:white;padding:16px;border:1px solid var(--line);border-radius:10px}
+    input[type=search]{padding:10px;border:1px solid #a9bcc8;border-radius:6px;flex:1;min-width:240px;font:inherit}
+    button{font:inherit;padding:8px 13px;border:1px solid #b2c4cf;background:#fff;border-radius:6px;cursor:pointer}button:hover{background:#edf7f9}
+    .task{border:1px solid var(--line);background:white;border-radius:10px;margin:13px 0}.task>summary{padding:16px 20px;cursor:pointer;display:flex;justify-content:space-between;gap:15px;font-weight:650}
+    .task-body{padding:0 20px 22px}.badge{font-size:12px;color:var(--accent);font-weight:500}.status{color:var(--muted)}
+    .definition,.prompts{margin:10px 0}.definition>summary,.prompts>summary{cursor:pointer;color:var(--accent)}
+    code{font-size:12px;overflow-wrap:anywhere}.definition td:last-child{overflow-wrap:anywhere}.muted{color:var(--muted)}
+    footer{margin-top:30px;font-size:13px;color:var(--muted)}[hidden]{display:none!important}
+    @media(max-width:650px){main{padding:15px}header{padding:20px}h1{font-size:24px}.task-body{padding:0 12px 15px}}
+    @media print{body{background:white}main{padding:0}.controls,button{display:none}header{color:black;background:white;padding:0}.eyebrow{color:#526475}.task,.table-wrap{break-inside:avoid}details>summary{font-weight:bold}}
+    '''
+    javascript = '''
+    const cards=[...document.querySelectorAll('.task')],search=document.getElementById('search'),matched=document.getElementById('matched');
+    function filter(){const q=search.value.toLowerCase().trim();let n=0;cards.forEach(c=>{c.hidden=!(c.dataset.search.includes(q)&&(!matched.checked||c.dataset.matched==='true'));if(!c.hidden)n++;});document.getElementById('count').textContent=n+' tasks shown';}
+    search.addEventListener('input',filter);matched.addEventListener('change',filter);
+    document.getElementById('expand').addEventListener('click',()=>cards.filter(c=>!c.hidden).forEach(c=>c.open=true));
+    document.getElementById('collapse').addEventListener('click',()=>cards.forEach(c=>c.open=false));filter();
+    let printOpen=[];window.addEventListener('beforeprint',()=>{printOpen=[...document.querySelectorAll('details')].map(d=>[d,d.open]);printOpen.forEach(([d])=>d.open=true)});
+    window.addEventListener('afterprint',()=>printOpen.forEach(([d,open])=>d.open=open));
+    '''
+    excluded = [[c['task'], c.get('blocker') or 'Not selected', 'None; no episodes'] for c in data['coverage'] if not c['included']]
+    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoboDojo · Continuous conditioning errors</title><style>' + css + '</style></head><body><main><header><div class="eyebrow">RoboDojo · Geometric conditioning benchmark</div><h1>Continuous conditioning errors</h1><p>' + esc(f"{data['valid_episodes']} valid episodes · {data['included_tasks']}/{data['catalog_tasks']} tasks · {data['matched_pairs']}/{data['total_pairs']} verified A/B pairs") + '</p><p>Collected ' + esc(data['updated_at']) + ' · ' + esc(str(data['reproduced_event_scores'])) + ' event scores reproduced · ' + esc(str(data['score_mismatches'])) + ' mismatches</p></header><section class="method"><h2 style="margin-top:0">Measurements and units</h2><p>' + esc(data['method']) + '</p><p class="muted">Distances: mm. Angles: degrees. Components: mean / median. Targets and tolerances use mm/degrees; orientations use wxyz quaternions. Selector metadata keeps named _m/_rad units. Axes 0/1/2 mean local x/y/z. Signed separation and footprint overlap are measurements, not unsigned errors.</p></section><h2>Matched-pair summary</h2>' + html_table(SUMMARY_HEADERS, summary_rows(data)) + '<h2>Task index</h2>' + html_table(TASK_HEADERS, task_rows(data)) + '<h2>Conditioning and results by task</h2><div class="controls"><label for="search">Find task / action</label><input id="search" type="search" placeholder="Search tasks, actions or conditioning"><label><input id="matched" type="checkbox"> Verified pairs only</label><button id="expand">Expand tasks</button><button id="collapse">Collapse tasks</button><span id="count" aria-live="polite"></span></div>' + ''.join(cards) + '<h2>Eval tasks not run</h2>' + html_table(['Task', 'Reason', 'Conditioning tested'], excluded) + '<h2>Scope and limitations</h2><p>' + esc(data['scope']) + '</p><ul>' + ''.join('<li>' + esc(x) + '</li>' for x in data['limitations']) + '<li>Missing events are not scores. A release error does not establish successful placement.</li><li>Recognizers without observed events do not establish live recognition accuracy.</li></ul><footer>Generated from suite.json, frozen conditioning programs and benchmark_results.json. Exact continuous values: eval-matrix-continuous.json. Raw action outcomes remain in benchmark_results.json. This HTML is self-contained and needs no network connection.</footer></main><script>' + javascript + '</script></body></html>\n'
+
+
+def write_continuous_report(manifest, result, matrix, root):
+    data = build_report(manifest, result, matrix, root)
+    atomic_write_json(root / 'eval-matrix-continuous.json', data)
+    atomic_write_text(root / 'EVAL_MATRIX_REPORT.md', report_markdown(data))
+    atomic_write_text(root / 'EVAL_MATRIX_REPORT.html', report_html(data))
+    return data

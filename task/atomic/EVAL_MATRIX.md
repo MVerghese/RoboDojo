@@ -22,19 +22,22 @@ admission failures, **all 98 replacement/current episode allocations passed GPU
 admission**, with no new existing-memory incidents. Native task success was
 **6/49 baseline and 6/49 conditioned** (6/48 each within matched pairs).
 
-The table sums observer instances and conditions over the **48 matched pairs**.
-Counts include optional object candidates; they are not required native action
-counts. Geometry is evaluated only when the relevant physical event is observed.
+The table reports continuous physical errors over the **48 matched pairs**.
+Each conditioning type retains its units. Means use observed events only;
+missing events are N/A. A/B deltas compare the same stage/condition events
+observed in both arms, so they can differ from the difference of all-event means.
 
-| Family | Action successes / observers: baseline | Conditioned | Geometry passes / observed: baseline | Conditioned |
-| --- | ---: | ---: | ---: | ---: |
-| Pick | 105/162 | 110/162 | 56/111 | 55/116 |
-| Place | 0/117 | 0/117 | 13/21 | 13/20 |
-| Push | 0/2 | 0/2 | 1/2 | 0/0 |
-| Push with tool | 0/11 | 0/11 | 0/0 | 0/0 |
-| Handover | 3/14 | 3/14 | 2/3 | 3/3 |
-| Actuate | 5/12 | 4/12 | 5/5 | 3/4 |
-| Touch with tool | 0/8 | 0/8 | 0/0 | 0/0 |
+| Action / conditioning | Unit | Baseline mean | Conditioned mean | Observed events B / C | Shared-event mean Δ(C−B) |
+| --- | --- | ---: | ---: | --- | ---: |
+| Pick / grasp local-z error | mm | 14.468 | 14.635 | 111 / 116 | -0.044 |
+| Place / preserved local-z direction error | degrees | 26.623 | 42.656 | 21 / 20 | 6.631 |
+| Handover / preserved local-z direction error | degrees | 25.153 | 8.973 | 3 / 3 | -5.661 |
+| Actuate / button contact planar error | mm | 3.252 | 4.033 | 5 / 4 | 0.412 |
+| Push / contact offset error | mm | 19.782 | N/A | 2 / 0 | N/A |
+| Push / goal position error | mm | N/A | N/A | 0 / 0 | N/A |
+| Push / goal rotation error | degrees | N/A | N/A | 0 / 0 | N/A |
+| Push with tool / contact height error | mm | N/A | N/A | 0 / 0 | N/A |
+| Touch with tool / key contact planar error | mm | N/A | N/A | 0 / 0 | N/A |
 
 There is no consistent observed improvement from adding geometric instructions
 in this single-episode screen. Release geometry can be measured without a
@@ -165,7 +168,25 @@ their original placement constraints; frozen policy inputs are unchanged.
 
 ## Outputs and validity
 
-- `EVAL_MATRIX_REPORT.md`: compact checkpoint/task/action/prompt counts.
+Regenerate both report formats from collected evidence without simulator reruns:
+
+```bash
+python -m scripts.atomic.report_eval_matrix --run-dir /absolute/path/to/matrix
+```
+
+The reports give separate continuous means and medians for each conditioning
+type: distances in mm, angles in degrees, footprint areas in mm² and overlap
+fractions. They contain no combined tolerance-normalized score. A/B deltas use
+the same stage/condition events observed in both arms of a verified pair.
+Missing events remain N/A. Every task includes its exact conditioning append,
+measurement selectors, reference, target, axes, tolerance, event and delivered
+policy prompts. Tasks not run are listed with the exclusion reason.
+
+- `EVAL_MATRIX_REPORT.md`: per-task continuous geometric measurements in actual
+  units, with the tested conditioning definitions and exact delivered prompts.
+- `EVAL_MATRIX_REPORT.html`: self-contained searchable version of the report.
+- `eval-matrix-continuous.json`: separate means/medians in original measurement
+  units, observation counts and deltas for shared observed action events.
 - `eval-matrix-results.json`: component means/medians, declared/observed counts,
   missing-event statuses and separate matched-only metrics.
 - `REPORT.md`: individual scores, captured prompts, contact health and layouts.
