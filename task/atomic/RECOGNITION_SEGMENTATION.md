@@ -31,7 +31,7 @@ bounded, and how that differs from the source plans for all eval tasks. See
 | Taxonomy | 11 families: pick, place, push, push with tool, pour, actuate, twist, insert, touch with tool, handover, fold. |
 | Source decomposition | Reviewed candidate plans for all 54 task modules, counting random variants separately; [SEGMENTATION.md](SEGMENTATION.md) and [segmentation_plans.json](segmentation_plans.json). |
 | Executable programs | 11 schema-loadable JSON files for ten tasks in [programs/](programs/). A source plan is not automatically compiled into one. |
-| Physical recognition | Special pick/push contact-motion logic plus 13 generic configurations across eleven families. Fold's new observer recognizes material deformation and does not establish a cloth grasp. |
+| Physical recognition | Special pick/push contact-motion logic plus 14 generic configurations across eleven families. Fold's new observer recognizes material deformation and does not establish a cloth grasp. |
 | Observed live coverage | Original 49-task screen plus additional waves in [EXPANSION_STATUS.md](EXPANSION_STATUS.md). Corrected support contacts are live-verified in blocks/bowls. Tool acquisition and constrained-twist rollouts retain missing physical events; material and calibrated fit/flow cases remain pending. |
 | Restart | Whole-action prefix replay for suitable linear programs; no faithful full-state or partial-action restoration. |
 
@@ -365,3 +365,15 @@ not inferred from native reward or selected retrospectively. Source exit,
 first target entry and target dwell are separate physical events. This provides
 one declared pour window; it does not discover repeated pours, full liquid
 cleanup or arbitrary undeclared streams. Live validation is pending.
+
+## Coupled charger observer
+
+`charger_tips` adds one `held_multi_tip_insertion` stage beside pickup. Its two
+calibrated prong/throat pairs are constituents of the **same insertion action**,
+not two counted actions. Outside-entry history is maintained for each leading
+point under one continuous grip; entry/inserted events require all pairs. The
+observer is bound to the middle outlet candidate and runs independently from
+pickup-stage completion, while requiring its own physical grip/contact evidence.
+It records projected-tip overrun/depth/axis errors for diagnosing missing events.
+Geometry uses inserted-event and attempt-end measurements. This extends declared
+observation, not automatic discovery of arbitrary insertions or full-part fit.

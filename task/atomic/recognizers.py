@@ -31,6 +31,8 @@ SCHEMAS = {
     'held_insertion': ('insert', {'label', 'arm', 'min_contact_steps', 'target_label', 'tip',
         'opening', 'entry_clearance_m', 'min_depth_m', 'max_depth_m', 'lateral_tolerance_m',
         'axis_tolerance_rad'}),
+    'held_multi_tip_insertion': ('insert', {'label', 'arm', 'min_contact_steps', 'target_label',
+        'tip_pairs', 'entry_clearance_m', 'min_depth_m', 'max_depth_m', 'axis_tolerance_rad'}),
     'contact_joint_motion': ('actuate', {'label', 'arm', 'min_contact_steps', 'joint_name',
         'min_travel', 'direction'}),
     'button_press_cycle': ('actuate', {'label', 'arm', 'min_contact_steps', 'joint_tag',
@@ -55,7 +57,8 @@ TRANSITIONS = {
     'cloth_landmark_fold': {'folded'},
     'supported_release': {'release', 'settled'}, 'held_tool_push': {'stroke'},
     'held_tool_contact': {'contact'}, 'grip_transfer': {'giver_hold', 'overlap', 'receiver_only'},
-    'held_insertion': {'entry', 'inserted'}, 'contact_joint_motion': {'motion'},
+    'held_insertion': {'entry', 'inserted'}, 'held_multi_tip_insertion': {'entry', 'inserted'},
+    'contact_joint_motion': {'motion'},
     'contact_constrained_twist': {'rotation'},
     'rigid_material_transfer': {'source_exit', 'first_transfer', 'transfer_complete'},
     'button_press_cycle': {'press', 'release', 'cycle'},
@@ -71,6 +74,7 @@ COMPLETION.update(button_press_cycle='cycle', held_tool_landmark_contact='contac
 COMPLETION['held_tool_strike'] = 'strike'
 COMPLETION['fluid_material_transfer'] = 'transfer_complete'
 COMPLETION['cloth_landmark_fold'] = 'folded'
+COMPLETION['held_multi_tip_insertion'] = 'inserted'
 
 
 def validate_recognition(config, family, validate_selector):
@@ -93,7 +97,7 @@ def validate_recognition(config, family, validate_selector):
         if type(config[key]) is not int or config[key] < 2:
             raise ValueError(f'{kind}.{key} must be at least two distinct physics steps')
     numeric = fields - {'kind', 'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label',
-        'joint_name', 'joint_tag', 'fluid_label','tool_point', 'target_point', 'support_labels', 'tip', 'opening', 'pivot', 'axis', 'direction',
+        'joint_name', 'joint_tag', 'fluid_label','tool_point', 'target_point', 'support_labels', 'tip', 'opening', 'tip_pairs', 'pivot', 'axis', 'direction',
         'tool_contact_suffix', 'target_contact_suffix', 'moving','target','moving_frame','stationary_frame','crease_a','crease_b', 'min_contact_steps', 'settle_steps',
         'overlap_steps', 'receiver_steps', 'source_frame', 'target_frame', 'source_half_extents_m',
         'target_half_extents_m', 'material_labels', 'required_count', 'min_retraction_steps', 'max_retraction_steps'}
@@ -111,6 +115,24 @@ def validate_recognition(config, family, validate_selector):
             raise ValueError('support_labels must name distinct supports excluding the supported object')
     if 'target_label' in fields and config['label'] == config['target_label']:
         raise ValueError('recognition requires distinct manipulated and target objects')
+    if kind == 'held_multi_tip_insertion':
+        from task.atomic.fit import aperture_polygon
+        pairs = config['tip_pairs']
+        if not isinstance(pairs, list) or not 2 <= len(pairs) <= 8:
+            raise ValueError('multi-tip insertion requires two to eight explicit tip/opening pairs')
+        import json
+        for pair in pairs:
+            if not isinstance(pair, dict) or set(pair) != {'tip', 'opening', 'aperture_profile'}:
+                raise ValueError('each tip pair needs a tip, opening and reviewed aperture polygon')
+            aperture_polygon(pair['aperture_profile'])
+            for key, label in [('tip', config['label']), ('opening', config['target_label'])]:
+                validate_selector(pair[key], key)
+                if (pair[key]['kind'] not in ('calibrated_frame', 'model_calibrated_frame')
+                        or pair[key].get('time', 'live') != 'live' or pair[key]['label'] != label):
+                    raise ValueError('tip pairs require live calibrated frames on the specified assets')
+        for key in ('tip', 'opening'):
+            if len({json.dumps(p[key], sort_keys=True) for p in pairs}) != len(pairs):
+                raise ValueError('tip pairs must use distinct tips and openings')
     if kind == 'grip_transfer':
         if config['giver_arm'] == config['receiver_arm'] or {config['giver_arm'], config['receiver_arm']} & {'any', 'nearest'}:
             raise ValueError('handover requires two distinct explicit arms')
@@ -564,6 +586,46 @@ class PhysicalRecognizer:
             self._emit(held_contact=hold, insertion_contact=pair, depth_m=depth,
                 initial_depth_m=self.state['initial_depth'], lateral_error_m=lateral,
                 axis_error_rad=angle, opening_pose=opening.tolist(), tip_pose=tip.tolist())
+
+    def _held_multi_tip_insertion(self):
+        from shapely.geometry import Point
+        from task.atomic.fit import aperture_polygon
+        hold = self._hold(self.c['label'], self.c['arm'])
+        raw = self._current_hold()
+        rows = []
+        for pair in self.c['tip_pairs']:
+            tip = self.session._resolve(pair['tip'])
+            opening = self.session._resolve(pair['opening'])
+            rt, ro = _rotation(tip[3:]), _rotation(opening[3:])
+            local = ro.T @ (tip[:3]-opening[:3])
+            point = Point(local[:2]); aperture = aperture_polygon(pair['aperture_profile'])
+            rows.append({'tip_pose': tip.tolist(), 'opening_pose': opening.tolist(),
+                'depth_m': -float(local[2]), 'projected_tip_xy_m': local[:2].tolist(),
+                'tip_aperture_overrun_m': float(point.distance(aperture)),
+                'projected_tip_inside_aperture': bool(aperture.covers(point)),
+                'axis_error_rad': float(np.arccos(np.clip(rt[:,2]@ro[:,2],-1,1)))})
+        self.metrics = {'physics_step': self.contacts.steps, 'tip_pairs': deepcopy(rows),
+                        'currently_held': bool(hold),
+                        'interpretation': 'all declared leading points in reviewed throat polygons; not whole-prong section fit'}
+        if (not raw or any(not r['projected_tip_inside_aperture']
+                or r['axis_error_rad'] > self.c['axis_tolerance_rad']
+                or r['depth_m'] > self.c['max_depth_m'] for r in rows)):
+            self.state.clear()
+            return
+        if self.state.get('arm') != raw['resolved_arm']:
+            self.state.clear()
+            self.state.update(arm=raw['resolved_arm'], outside=[None]*len(rows))
+        for i, row in enumerate(rows):
+            if row['depth_m'] <= -self.c['entry_clearance_m']:
+                self.state['outside'][i] = deepcopy(row)
+        entered = all(self.state['outside']) and all(r['depth_m'] >= 0 for r in rows)
+        if entered:
+            self._event('entry', tip_pairs=rows, outside_tip_pairs=self.state['outside'])
+        contact = self._pair()
+        if (hold and entered and contact
+                and all(self.c['min_depth_m'] <= r['depth_m'] <= self.c['max_depth_m'] for r in rows)):
+            self._emit(held_contact=hold, insertion_contact=contact, tip_pairs=rows,
+                       outside_tip_pairs=self.state['outside'])
 
     def _contact_joint_motion(self):
         adapter = getattr(self.session.env, '_atomic_joint_state', None)

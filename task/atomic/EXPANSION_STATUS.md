@@ -206,3 +206,14 @@ Each linked report states exactly which geometric conditioning was tested,
 retains separate physical units and marks unobserved events explicitly. Frozen
 experimental inputs are unchanged by report rendering. The index includes
 prepared/queued suites as pending rather than claiming measured results.
+
+### Paired charger leading-point entry
+
+Both actual leading prong planes and separate middle-outlet throat apertures
+are now calibrated. `held_multi_tip_insertion` observes the coupled entry under
+continuous grip and physical charger/socket contact, rejecting single-tip entry
+or a regrip after crossing. The `charger_tips` A/B profile scores each actual tip
+frame at recognized insertion and episode end. Local real-asset calibration and
+counterexamples pass; live validation is pending. The open prong meshes still
+cannot support whole-solid cross-section/clearance claims, and tested higher
+socket planes failed closed-trace calibration. These boundaries remain explicit.

@@ -524,3 +524,26 @@ Both arms retain the same initially eligible cohort rule, minimum one-particle
 transfer and five-sample dwell. This is an integration pilot alongside native
 whole-liquid success, not a full-volume transfer claim. Empty initial source
 cohorts fail explicitly; live population and solver readback remain to validate.
+
+### Actual two-prong charger entry
+
+```bash
+python scripts/atomic/generate_expansion_suite.py \
+  --phase charger_tips --tasks plug_in_charger \
+  --checkpoints /path/to/checkpoints.json \
+  --asset-calibration-root /path/to/baked-asset-calibration \
+  --output-dir /path/to/fresh-charger-tip-suite
+```
+
+Calibration evidence includes `asset-summary.json`, `charger-parts.json`,
+`charger-part-0.npz`, `charger-part-4.npz` and `Rigid_socket_00000.npz`.
+Prong parts are the exact root-relative vertex/triangle ranges from the reviewed
+baked `asset-geometry.json`, not fitted boxes or repaired solids. Preserve source
+asset identities. Generation verifies part bounds, derives actual extreme leading
+planes, and checks separate closed aperture traces at socket-root Z=20 mm.
+
+The shared observer requires both leading points to enter the middle outlet
+throats while continuously gripped and in actual charger/socket force contact.
+Only the conditioned arm gets the middle-slot/tip-pose append: [0,0,−10] mm
+relative to each throat, 3 mm and 20° full-orientation tolerances at insertion and
+episode end. Whole-prong clearance and electrical seating remain unverified.

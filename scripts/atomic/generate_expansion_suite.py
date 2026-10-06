@@ -24,6 +24,69 @@ BREADTH_TASKS = ('general_pickup','stack_blocks','press_by_number','play_Xylopho
 CONSTRAINED_TASKS = ('fasten_screws','fold_clothes')
 
 
+def calibrated_charger_profile(base, assets, evidence=None):
+    """Both leading prong points enter reviewed middle-slot throat polygons."""
+    import numpy as np
+    from task.atomic.calibration import opening_section
+    from task.atomic.fit import aperture_polygon
+    summary = json.loads((assets/'asset-summary.json').read_text())
+    source = summary['Rigid/charger/00000']; target = summary['Rigid/socket/00000']
+    parts = json.loads((assets/'charger-parts.json').read_text())
+    if parts['asset_sha256'] != source['asset_sha256']:
+        raise ValueError('charger part calibration differs from reviewed asset identity')
+    socket = np.load(assets/'Rigid_socket_00000.npz')
+    pairs = []; geometry = []; proof = []
+    def frame(label, model, row, pose, meaning):
+        return {'kind':'model_calibrated_frame', 'label':label, 'models':{model:{
+            'local_pose':pose, 'asset_sha256':row['asset_sha256'],
+            'scaled_bounds_m':row['authored_scaled_bounds'],
+            'calibration_id':meaning+':'+row['asset_sha256']}}}
+    for side, index, xy in [('left',4,[0,.007]), ('right',0,[.01387,.007])]:
+        part = np.load(assets/f'charger-part-{index}.npz'); v = part['vertices']
+        if not np.allclose([v.min(0), v.max(0)], parts['parts'][index]['bounds_m'], atol=1e-10, rtol=0):
+            raise ValueError('selected leading part bounds differ from reviewed charger export')
+        leading = v[np.isclose(v[:,1],v[:,1].min(),atol=1e-8,rtol=0)]
+        tip = (leading.min(0)+leading.max(0))/2
+        section = opening_section(socket['vertices'],socket['triangles'],.02,xy)
+        center = list(aperture_polygon(section['aperture_profile']).centroid.coords)[0]
+        profile = deepcopy(section['aperture_profile'])
+        profile['outer'] = (np.asarray(profile['outer'])-center).tolist()
+        profile['holes'] = [(np.asarray(r)-center).tolist() for r in profile['holes']]
+        tip_frame = frame('charger','charger/00000',source,
+                          tip.tolist()+[math.sqrt(.5),-math.sqrt(.5),0,0],
+                          'reviewed-leading-prong-plane-center:'+side)
+        throat = frame('socket','socket/00000',target,[*center,.02,1,0,0,0],
+                       'reviewed-middle-outlet-throat:'+side)
+        pairs.append({'tip':tip_frame,'opening':throat,'aperture_profile':profile})
+        for event, suffix in [({'kind':'recognition_event','name':'inserted'},'at_insert'),
+                              ({'kind':'attempt_end'},'final')]:
+            geometry.append({'id':side+'_leading_tip_'+suffix,'slot':'insertion tip','kind':'pose',
+                'measurement':tip_frame,'reference':throat,
+                'expected':{'position':[0,0,-.01],'orientation':[1,0,0,0]},
+                'tolerance':.003,'angle_tolerance_rad':math.pi/9,'event':event,'track_closest':False})
+        proof.append({'side':side,'material_mesh_path':parts['parts'][index]['path'],
+                      'leading_point_root_m':tip.tolist(),'throat':section,
+                      'solid_preflight':parts['parts'][index]['solid_preflight']})
+    base = deepcopy(base)
+    base['stages'].append({'id':'calibrated_middle_two_tip_insert','family':'insert','required':False,
+        'instruction':'Observe both leading prong points entering the middle outlet throat.',
+        'step_limit':400,'success_checks':[{'name':'is_atomic_interaction','args':{}}],
+        'recognition':{'kind':'held_multi_tip_insertion','label':'charger','target_label':'socket',
+            'arm':'any','min_contact_steps':2,'tip_pairs':pairs,'entry_clearance_m':.002,
+            'min_depth_m':.005,'max_depth_m':.013,'axis_tolerance_rad':math.pi/9},
+        'geometry':geometry})
+    base['stage_dependencies']['calibrated_middle_two_tip_insert'] = []
+    if evidence is not None:
+        evidence.update({'pairs':proof,'scope':'leading-point entry at reviewed throat planes; not whole-prong fit or electrical seating'})
+    text = ('Use the middle pair of power-strip slots. At recognized insertion and at episode end, '
+            'place each actual leading prong-plane center 10 mm below the centroid of its corresponding '
+            'reviewed throat at socket-root Z=20 mm, with zero planar offset, within 3 mm position '
+            'error and 20 degrees full tip-frame orientation error. Both leading points must enter '
+            'their respective actual throat polygons from at least 2 mm above them while continuously '
+            'held, reach 5 to 13 mm depth and have charger/socket force contact.')
+    return base, text
+
+
 def calibrated_liquid_profile(base, assets, evidence=None):
     """Partial persistent-particle transfer through reviewed vessel cores/mouths."""
     import numpy as np
@@ -624,6 +687,12 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             source=Path(asset_calibration_root)/'asset-geometry.json'
             manifest.setdefault('calibration_inputs',{})['cloth_assets']={'path':str(source),
                 'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
+        if phase=='charger_tips':
+            if task!='plug_in_charger' or not asset_calibration_root:
+                raise ValueError('charger tip profile needs reviewed prong and socket evidence')
+            names=['asset-summary.json','charger-parts.json','charger-part-0.npz','charger-part-4.npz','Rigid_socket_00000.npz']
+            manifest.setdefault('calibration_inputs',{})['charger_assets']=[{'path':str(Path(asset_calibration_root)/name),
+                'sha256':hashlib.sha256((Path(asset_calibration_root)/name).read_bytes()).hexdigest()} for name in names]
         if phase=='liquid_core':
             if task!='pour_liquid_into_cup' or not asset_calibration_root:
                 raise ValueError('liquid core profile needs baked vessel calibration evidence')
@@ -646,8 +715,9 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             detail=next(iter(report['native_results'][0]['details'].values()))
             scene=detail['atomic_sequence']['scene_calibration']
             manifest.setdefault('calibration_inputs',{})[task]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
-        liquid_evidence={}
-        base, append = (calibrated_liquid_profile(pair[0],Path(asset_calibration_root),liquid_evidence) if phase=='liquid_core' else
+        binding_evidence={}
+        base, append = (calibrated_charger_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='charger_tips' else
+                        calibrated_liquid_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='liquid_core' else
                         calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry') else
                         calibrated_pour_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='pour_core' else
                         calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
@@ -656,8 +726,8 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                         breadth_expand(pair[0],scene) if phase=='breadth' else
                         pair if task == 'fold_clothes' and phase == 'materials' else
                         (validation_expand if phase == 'validation' else expand)(pair[0]))
-        if liquid_evidence:
-            manifest.setdefault('calibration_bindings',{})['liquid_core']=liquid_evidence
+        if binding_evidence:
+            manifest.setdefault('calibration_bindings',{})[phase]=binding_evidence
         if phase in ('surface_gaps','cloth_geometry'):
             for stage in base['stages']:
                 layer=next(c for c in stage['geometry'] if c['id']=='material_patch_layer')
@@ -674,7 +744,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                     'relation_scope':'segments','measurement':line,'reference':{**line,'time':'stage_start'},
                     'expected':'coincides_with_segment','tolerance':.02,'event':{'kind':'attempt_end'},'track_closest':False})
             append+=' At episode end preserve each finite chord joining the two crease material landmarks within 20 mm symmetric segment Hausdorff distance from its initial chord. This targets both full finite extents, not only the midpoint; it does not measure a curved crease.'
-        if phase in ('validation','breadth','calibrated','pour_core','liquid_core') or (phase=='constrained' and task!='fold_clothes'):
+        if phase in ('validation','breadth','calibrated','pour_core','liquid_core','charger_tips') or (phase=='constrained' and task!='fold_clothes'):
             append = pair[1] + ' ' + append
         manifest['coverage'].append({'task':task,'included':True,
             'families':sorted({s['family'] for s in base['stages']}), 'unbound_families':[],
@@ -706,7 +776,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core','charger_tips'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()

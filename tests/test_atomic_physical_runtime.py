@@ -209,6 +209,37 @@ class PhysicalTests(unittest.TestCase):
         w.release('left'); self.assertFalse(w.tick(s)); self.assertTrue(w.tick(s))
         self.assertEqual(s.interaction_evidence['receiver_only_steps'], 2)
 
+    def test_multi_tip_insertion_requires_both_real_openings_and_continuous_grip(self):
+        def make():
+            w=World();w.hold();w.contacts.pairs=True;w.poses['object'][2]=.003
+            pairs=[]
+            for x in [-.01,.01]:
+                frame=lambda label: {'kind':'calibrated_frame','label':label,
+                    'local_pose':[x,0,0,1,0,0,0],'calibration_id':'reviewed two-tip fixture'}
+                pairs.append({'tip':frame('object'),'opening':frame('target'),
+                    'aperture_profile':{'outer':[[-.002,-.003],[.002,-.003],[.002,.003],[-.002,.003]],'holes':[]}})
+            c={'kind':'held_multi_tip_insertion','label':'object','target_label':'target',
+                'arm':'any','min_contact_steps':2,'tip_pairs':pairs,'entry_clearance_m':.002,
+                'min_depth_m':.005,'max_depth_m':.015,'axis_tolerance_rad':.2}
+            lm=w.env.scene_manager.layout_manager
+            lm.instance_type_by_env=[{'object':'rigid','target':'rigid'}]
+            lm.get_instance_name=lambda env_idx,label:label
+            st=AtomicStage.from_dict({'id':'two-prongs','family':'insert','instruction':'Insert both',
+                'recognition':c,'success_checks':[{'name':'is_atomic_interaction','args':{}}]})
+            return w,AtomicSession(w.env,st,0)
+        w,s=make();w.tick(s,2);w.poses['object'][2]=-.008
+        self.assertTrue(w.tick(s))
+        self.assertEqual(len(s._physical_recognizer.evidence['tip_pairs']),2)
+        # Only one tip fits: a centre/one-tip test would incorrectly pass.
+        w,s=make();w.tick(s,2);w.poses['object'][2]=-.008
+        s._physical_recognizer.c['tip_pairs'][1]['opening']['local_pose'][0]+=.005
+        self.assertFalse(w.tick(s))
+        self.assertGreater(s._physical_recognizer.metrics['tip_pairs'][1]['tip_aperture_overrun_m'],0)
+        # Regripping after crossing cannot inherit the earlier outside evidence.
+        w,s=make();w.tick(s,2);w.release();w.tick(s)
+        w.poses['object'][2]=-.008;w.hold()
+        self.assertFalse(w.tick(s,3))
+
     def test_insertion_small_inside_retreat_preserves_verified_outside_entry(self):
         w=World();w.poses['object'][2]=.02;w.hold()
         s=AtomicSession(w.env,stage('held_insertion'),0)

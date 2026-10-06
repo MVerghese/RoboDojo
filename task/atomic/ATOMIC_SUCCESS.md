@@ -432,3 +432,23 @@ This recognizer certifies a **partial source-core transfer**, not the native
 separately. Mouth/stream conditioning is scored independently of recognition;
 a missed central flow window does not erase an otherwise observed transfer.
 The initial source cohort and actual USD readback still need live validation.
+
+## Contact-held multiple-tip insertion
+
+`held_multi_tip_insertion` binds two to eight distinct calibrated leading frames
+and their separate reviewed throat polygons. Every projected leading point must
+stay within its own aperture, including holes, and each shaft axis must satisfy
+the declared angular bound. Under continuous same-arm physical grip, every tip
+must have an earlier sample above its throat by `entry_clearance_m`; all current
+depths must then fall within the declared positive insertion interval. Completion
+also requires actual manipulated-object/receptacle force contact. Losing grip,
+changing arms, leaving an aperture, excessive axis error or over-insertion clears
+the pending outside-entry history. Sampling gaps also invalidate continuity.
+
+The charger pilot uses 2 mm outside clearance, 5–13 mm insertion depth and 20°
+shaft-angle tolerance. It recognizes both leading points at the middle outlet,
+not arbitrary outlet selection, full-part fit, seating or electrical connection.
+This contact-qualified observer does not certify a clearance insertion with no
+observed object/receptacle force. Counterexamples cover successful dual entry,
+a single-tip false positive and regripping after the boundary was crossed.
+Live confirmation is pending. Native success and conditioning remain separate.

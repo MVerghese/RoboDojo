@@ -539,3 +539,26 @@ These bindings have local real-asset calibration and identity/scale/pose
 counterexample evidence. Live initial population/readback and policy transfer
 are pending; an empty initial source-only cohort is an explicit calibration
 failure, never an invented transfer score.
+
+## Charger leading points and paired throat geometry
+
+The `charger_tips` phase derives each leading point from the actual extreme
+negative-Y prong plane, with a reviewed shaft-aligned frame. Root positions are
+approximately [−5.871, −15.188, 0] and [5.871, −15.188, 0] mm. Calibration uses
+separate actual prong meshes and verifies their source identity/bounds.
+
+Each target is a separate closed wall-trace aperture of the middle outlet at
+socket-root Z=20 mm. This is a **reviewed throat plane**, not the globally
+highest rim: higher tested planes failed the trace preflight. Actual left/right
+areas are 37.633/37.758 mm², with preserved outlines/holes. Projected leading-point
+membership and overrun are intrinsic recognition diagnostics. They do not measure
+whole-prong cross-section fit. Both prong meshes fail the closed-solid preflight;
+no outside-solid volume or whole-prong clearance claim is made.
+
+For each leading frame, first recognized insertion and episode end score
+relative position [0,0,−10] mm and identity orientation in its own throat frame.
+Targets have separate 3 mm translation / 20° full-orientation tolerances. The
+condition reports mm and degrees independently. A missed insertion event stays
+unobserved; its explicit final-state measurement can still be scored.
+Local real-asset calibration and temporal counterexamples pass. Live two-tip
+recognition remains pending.
