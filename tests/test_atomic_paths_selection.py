@@ -64,6 +64,42 @@ def impact(w,s):
 
 
 class TemporalGeometryTests(unittest.TestCase):
+    def test_candidate_query_binds_initial_layout_and_audits_inventory_without_rebinding(self):
+        w=World();w.goal=False;w.poses['other'][0]=.2
+        lm=w.env.scene_manager.layout_manager
+        names=['other','object','ornament']
+        lm.get_labels_by_prefix=lambda prefix,env_idx:list(names)
+        lm.get_instance_name=lambda env_idx,label:label+'_instance'
+        lm.instance_type_by_env=[{l+'_instance':('geometry' if l=='ornament' else 'rigid') for l in names}]
+        lm.get_instance_metadata=lambda env_idx,label:{'model_name':'block','model_id':0}
+        c=selection_definition(candidates={'prefix':'o','category':'rigid','min':2,'max':3,'model_names':['block']})
+        s=AtomicSession(w.env,endpoint_stage(selection=c),0)
+        names.append('object_new')  # Later layout changes do not alter the candidate set.
+        w.poses['other'][0]=0.;w.poses['object'][0]=.2
+        w.hold(label='other');w.tick(s);w.tick(s)
+        row=s.summary()['selection']
+        self.assertEqual(row['candidate_binding']['labels'],['object','other'])
+        self.assertEqual(row['eligible_candidates'],['object'])
+        self.assertFalse(row['passed'])
+        audit=audit_atomic(s.summary())['selection']
+        self.assertEqual(audit['status'],'reproduced')
+        self.assertTrue(audit['candidate_binding_reproduced'])
+        # Valid geometry cannot hide a changed/missing enumeration witness.
+        from scripts.atomic.audit_scores import audit_selection
+        row['candidate_binding']['inventory'].append(deepcopy(row['candidate_binding']['inventory'][0]))
+        self.assertEqual(audit_selection(row)['status'],'score_mismatch')
+
+    def test_candidate_query_rejects_unbounded_duplicate_aliased_or_unknown_model_inventory(self):
+        from task.atomic.selection import candidates_from_inventory
+        query={'prefix':'o','category':'rigid','min':2,'max':2,'model_names':['block']}
+        good=[{'label':l,'instance':l,'category':'rigid','model_name':'block'} for l in ('object','other')]
+        for inventory in (good[:1],good+[deepcopy(good[0])],
+                          [good[0],dict(good[1],instance='object')],
+                          [good[0],dict(good[1],model_name=None)]):
+            with self.assertRaises(ValueError):candidates_from_inventory(query,inventory)
+        bad=selection_definition(candidates=dict(query,max=257))
+        with self.assertRaises(ValueError):endpoint_stage(selection=bad)
+
     def test_before_contact_uses_previous_pose_and_reference_not_contact_pose(self):
         w=World(); w.goal=False
         s=AtomicSession(w.env,endpoint_stage(geometry=[pre_condition()]),0)

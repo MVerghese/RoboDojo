@@ -707,7 +707,9 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                 'path':str(Path(asset_calibration_root)/name),
                 'sha256':hashlib.sha256((Path(asset_calibration_root)/name).read_bytes()).hexdigest()}
                 for name in asset_files]
-        if (phase=='breadth' and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws') or phase in ('calibrated','pour_core'):
+        if phase == 'selection_query' and task != 'stack_blocks':
+            raise ValueError('selection query pilot is calibrated only for stack_blocks')
+        if (phase in ('breadth','selection_query') and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws') or phase in ('calibrated','pour_core'):
             source=Path(calibration_root)/'runs'/f'robodojo_25k_{task}_baseline'/'eval_report.json'
             if phase=='pour_core' and not source.exists():
                 source=source.parent.parent/f'robodojo_25k_{task}_conditioned'/'eval_report.json'
@@ -723,11 +725,18 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                         calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
                         constrained_expand(task,pair[0],scene,
                         manifest.get('calibration_inputs',{}).get(task,{}).get('sha256','actual-material-topology')) if phase=='constrained' else
-                        breadth_expand(pair[0],scene) if phase=='breadth' else
+                        breadth_expand(pair[0],scene) if phase in ('breadth','selection_query') else
                         pair if task == 'fold_clothes' and phase == 'materials' else
                         (validation_expand if phase == 'validation' else expand)(pair[0]))
         if binding_evidence:
             manifest.setdefault('calibration_bindings',{})[phase]=binding_evidence
+        if phase == 'selection_query':
+            selected = next(s for s in base['stages'] if s['id'] == 'initial_selected_block')
+            selected['selection']['candidates'] = {'prefix': 'block_', 'category': 'rigid', 'min': 3, 'max': 3}
+            manifest.setdefault('calibration_bindings', {})['selection_query'] = {
+                'candidate_query': selected['selection']['candidates'],
+                'target': selected['selection']['conditions'][0]['expected'],
+                'scope': 'initial geometric referent among all three actual layout blocks; no language parsing'}
         if phase in ('surface_gaps','cloth_geometry'):
             for stage in base['stages']:
                 layer=next(c for c in stage['geometry'] if c['id']=='material_patch_layer')
@@ -744,7 +753,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                     'relation_scope':'segments','measurement':line,'reference':{**line,'time':'stage_start'},
                     'expected':'coincides_with_segment','tolerance':.02,'event':{'kind':'attempt_end'},'track_closest':False})
             append+=' At episode end preserve each finite chord joining the two crease material landmarks within 20 mm symmetric segment Hausdorff distance from its initial chord. This targets both full finite extents, not only the midpoint; it does not measure a curved crease.'
-        if phase in ('validation','breadth','calibrated','pour_core','liquid_core','charger_tips') or (phase=='constrained' and task!='fold_clothes'):
+        if phase in ('validation','breadth','selection_query','calibrated','pour_core','liquid_core','charger_tips') or (phase=='constrained' and task!='fold_clothes'):
             append = pair[1] + ' ' + append
         manifest['coverage'].append({'task':task,'included':True,
             'families':sorted({s['family'] for s in base['stages']}), 'unbound_families':[],
@@ -776,7 +785,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core','charger_tips'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core','charger_tips','selection_query'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()

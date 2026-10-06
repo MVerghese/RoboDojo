@@ -260,3 +260,15 @@ evidence and invokes the existing collection/cleanup trap. These changes have
 local lifecycle/subprocess tests; live validation is still pending. A fresh
 `geometry-pour-initialization-1006` matched pair retains the calibrated targets
 and checkpoint, with the corrected runtime.
+
+### Bounded initial-layout candidate discovery
+
+Selection now accepts explicit labels or a bounded actual-layout query with
+prefix/category and optional model/exclusion filters. The frozen inventory,
+resolved labels and rejected candidates are retained and reproduced separately
+from geometric values. Unknown required metadata, duplicate/aliased identities
+and count violations fail. It preserves the first sustained contact and original
+activation snapshots even if objects move or new layout labels appear later.
+Local counterexamples pass. A fresh `geometry-selection-query-1006` stack-block
+pair will exercise the calibrated initial XYZ target; live results are pending.
+Language/game roles and arbitrary per-control/material candidates remain gaps.

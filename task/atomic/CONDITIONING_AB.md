@@ -547,3 +547,23 @@ throats while continuously gripped and in actual charger/socket force contact.
 Only the conditioned arm gets the middle-slot/tip-pose append: [0,0,−10] mm
 relative to each throat, 3 mm and 20° full-orientation tolerances at insertion and
 episode end. Whole-prong clearance and electrical seating remain unverified.
+
+### Initial-layout candidate discovery pilot
+
+Generate a fresh stack-block comparison using actual bounded candidate discovery:
+
+```bash
+python scripts/atomic/generate_expansion_suite.py \
+  --output-dir /absolute/path/to/fresh-suite \
+  --checkpoints /absolute/path/to/checkpoints.json \
+  --phase selection_query --tasks stack_blocks \
+  --calibration-root /absolute/path/to/completed-stack-suite
+```
+
+The calibration suite must retain its baseline `eval_report.json` with the actual
+initial stack-block scene. The same XYZ selection, geometry and physical
+recognizers apply to both arms. Discovery uses exactly three rigid `block_`
+labels from the actual layout; only the conditioned arm receives the geometric
+append. Candidate inventories are frozen at activation and independently
+audited. This is an initial referent pilot, not language parsing or automatic
+all-task program compilation.

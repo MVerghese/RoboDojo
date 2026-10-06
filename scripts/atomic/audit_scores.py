@@ -53,6 +53,20 @@ def audit_flow(flow):
 
 def audit_selection(selection):
     if not selection:return None
+    binding_ok = True
+    binding_error = None
+    definition = selection.get('definition', {}).get('candidates')
+    if isinstance(definition, dict):
+        try:
+            from task.atomic.selection import candidates_from_inventory
+            binding = selection['candidate_binding']
+            labels, rejected = candidates_from_inventory(definition, binding['inventory'])
+            binding_ok = (binding['kind'] == 'initial_layout_query' and binding['query'] == definition
+                          and labels == binding['labels'] and rejected == binding['rejected']
+                          and set(labels) == set(selection['snapshot']))
+        except (ValueError, KeyError, TypeError) as error:
+            binding_ok = False
+            binding_error = str(error)
     candidates={}
     for label,rows in selection['snapshot'].items():
         candidates[label]={}
@@ -65,9 +79,10 @@ def audit_selection(selection):
     observed=selection.get('observed');passed=None
     if observed and len(observed['contacts'])==1 and target_status=='resolved':
         passed=observed['contacts'][0]['label']==eligible[0]
-    matches=(eligible==selection['eligible_candidates'] and target_status==selection['target_status']
+    matches=(binding_ok and eligible==selection['eligible_candidates'] and target_status==selection['target_status']
              and passed==selection['passed'] and all(r['status']=='reproduced' for rows in candidates.values() for r in rows.values()))
     return {'status':'reproduced' if matches else 'score_mismatch','candidates':candidates,
+            'candidate_binding_reproduced':binding_ok,'candidate_binding_error':binding_error,
             'eligible_candidates':eligible,'target_status':target_status,'passed':passed,'observed':observed}
 
 

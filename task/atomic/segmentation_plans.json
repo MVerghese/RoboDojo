@@ -7406,7 +7406,7 @@
     },
     {
       "path": "task/atomic/selection.py",
-      "sha256": "5af24b1d06513a65a381802e969ae744c5dd12f0f96b80755bef2af232616f8d"
+      "sha256": "56d91e5d1798949e40501847494276854fb180b0bce8b22013e0a372518cb43b"
     },
     {
       "path": "task/atomic/trajectory.py",

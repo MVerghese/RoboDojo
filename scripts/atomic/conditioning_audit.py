@@ -24,7 +24,7 @@ MD_PATH = REPO / 'task/atomic/CONDITIONING_AUDIT.md'
 # Each slot is reviewed explicitly. Codes describe measurement/event readiness,
 # independently of whether that family's action recognizer exists.
 PROFILES = {
-    'selection': ('S', 'Explicit object-root/mesh-center candidate snapshots, unique geometric target resolution and first sustained contact identity scoring are implemented offline. Arbitrary control/tip/cloth candidate enumeration, categorical role resolution and live validation remain. Moved final poses do not replace initial candidates.'),
+    'selection': ('S', 'Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.'),
     'contact': ('C', 'Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.'),
     'goal': ('G', 'Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.'),
     'approach': ('G', 'before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.'),

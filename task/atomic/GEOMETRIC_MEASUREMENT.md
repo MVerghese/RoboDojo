@@ -584,3 +584,27 @@ independent-body retention. Fresh simulator validation is pending; previously
 frozen support rollouts retain their earlier runtime. A workflow guard records
 an explicit simulator exception and requests cleanup/upload, with a bounded
 cleanup timeout. It does not trigger on ordinary native task failure.
+
+### Bounded candidate discovery
+
+A selection's `candidates` can be an explicit label list or a query such as
+`{"prefix":"block_","category":"rigid","min":3,"max":3}`. Optional distinct
+`model_names` and `exclude_labels` filter the actual layout metadata. Supported
+query categories are rigid, geometry and articulation; cloth/particle contact
+selection remains unsupported. Counts must be explicitly bounded (2–256).
+
+The candidate inventory and geometric states are frozen at **stage activation**.
+A root observer activates before policy actions; a later observer uses its own
+activation state, not a fabricated episode-initial snapshot. Prefix discovery
+records actual label/instance/category/model identities and rejected candidates.
+Duplicate labels, aliases, unresolved identities, count violations and missing
+required model metadata fail. First sustained contacts remain the selected-object
+evidence. Ambiguous geometry or simultaneous contacts remain unscored.
+
+Offline auditing independently reproduces both the retained query binding and
+per-candidate geometry; a changed inventory cannot be hidden by correct position
+math. This checks retained binding consistency, not independent reconstruction
+of an unrecorded simulator scene. It does not parse language roles or enumerate
+multiple controls/tips on the same object. `selection_query` binds the three
+actual stack blocks to the calibrated initial XYZ referent; live validation is
+pending.

@@ -8,6 +8,9 @@ import argparse
 import hashlib
 import json
 import ast
+import re
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 import numpy as np
@@ -30,8 +33,13 @@ def export_asset(asset_root, section, category, model):
     if not root:raise RuntimeError('asset requires an explicit default prim')
     transforms=UsdGeom.XformCache();root_transform=transforms.GetLocalToWorldTransform(root)
     scale=np.asarray(Gf.Transform(root_transform).GetScale(),dtype=float)
-    points=[];triangles=[];meshes=[]
+    points=[];triangles=[];meshes=[];rigid_bodies=[]
     for prim in Usd.PrimRange(root,Usd.TraverseInstanceProxies()):
+        if prim.HasAPI(UsdPhysics.RigidBodyAPI):
+            transform = UsdGeom.Xformable(prim)
+            rigid_bodies.append({'path': str(prim.GetPath()),
+                'enabled': UsdPhysics.RigidBodyAPI(prim).GetRigidBodyEnabledAttr().Get(),
+                'reset_xform_stack': bool(transform and transform.GetResetXformStack())})
         if not prim.IsA(UsdGeom.Mesh):continue
         mesh=UsdGeom.Mesh(prim);raw=mesh.GetPointsAttr().Get()
         if not raw:continue
@@ -54,13 +62,15 @@ def export_asset(asset_root, section, category, model):
         'authored_root_scale':scale.tolist(),'root_relative_mesh':{'vertices':points,'triangles':triangles},
         'unscaled_bounds':[vertices.min(axis=0).tolist(),vertices.max(axis=0).tolist()],
         'authored_scaled_bounds':[(vertices*scale).min(axis=0).tolist(),(vertices*scale).max(axis=0).tolist()],
-        'meshes':meshes,'interpretation':'authored material/outer geometry; no automatic interior or opening inference'}
+        'meshes':meshes,'rigid_body_declarations':rigid_bodies,
+        'interpretation':'authored material/outer geometry; no automatic interior or opening inference'}
 
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--asset-root',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
     p.add_argument('--asset',action='append',help='Explicit section/category/model-id; default is the 24 reviewed rigid assets')
     p.add_argument('--sdk-inventory',action='store_true',help='Read installed cloth/particle API source declarations without SimulationApp')
+    p.add_argument('--native-inventory',action='store_true',help='Retain installed particle/cloth headers and relevant exported PhysX symbols; no SimulationApp')
     args=p.parse_args();rows={}
     selected=[(s,c,int(m)) for s,c,m in (x.split('/') for x in args.asset)] if args.asset else ASSETS
     for section,category,model in selected:
@@ -83,6 +93,31 @@ def main():
             except (OSError,SyntaxError,UnicodeError):continue
         result['sdk_api_inventory']={'package_root':str(package),'files':inventory,
             'scope':'static installed Python declarations; native/binary APIs require separate verification'}
+    if args.native_inventory:
+        package=Path(sys.prefix)/'lib'/f'python{sys.version_info.major}.{sys.version_info.minor}'/'site-packages'/'isaacsim'
+        declarations=[]
+        for path in sorted(set(package.rglob('*particle*.pyi'))|set(package.rglob('*Particle*.h'))|
+                           set(package.rglob('*Cloth*.h'))|set(package.rglob('*PBD*.h')))[:128]:
+            if path.stat().st_size>2*1024**2:continue
+            source=path.read_text(errors='replace')
+            declarations.append({'path':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+                                 'source':source})
+        binaries=[];nm=shutil.which('nm')
+        for path in sorted(package.rglob('*physx*.so'))[:48]:
+            row={'path':str(path),'size_bytes':path.stat().st_size,'tool':nm}
+            if nm:
+                try:
+                    scan=subprocess.run([nm,'-D','-C','--defined-only',str(path)],
+                        capture_output=True,text=True,timeout=20)
+                    relevant=[line for line in scan.stdout.splitlines()
+                        if re.search(r'particle|cloth|contact|impulse|force',line,re.I)]
+                    row.update(returncode=scan.returncode,relevant_symbols=relevant[:500],
+                               symbols_truncated=len(relevant)>500)
+                except subprocess.TimeoutExpired:row['status']='symbol_scan_timeout'
+            else:row['status']='nm_unavailable'
+            binaries.append(row)
+        result['native_api_inventory']={'package_root':str(package),'declarations':declarations,
+            'binaries':binaries,'scope':'installed declaration/exported-symbol inventory only; absence does not prove lack of an internal API or certify particle contact readback'}
     args.output.write_text(json.dumps(result)+'\n')
     print('Exported',sum(r['status']=='exported' for r in rows.values()),'/',len(rows),flush=True)
 

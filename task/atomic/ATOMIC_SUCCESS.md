@@ -473,3 +473,13 @@ existing workflow to clean up and collect artifacts within 120 seconds. Normal
 policy/native task failure does not trigger this infrastructure guard. Local
 subprocess tests verify the cleanup trap and nonzero failure outcome even when
 that trap returns zero. Fresh paired simulator validation remains necessary.
+
+### Candidate-query evidence
+
+Bounded prefix/category/model queries discover actual layout candidates at stage
+activation and retain a frozen identity/geometry inventory. They do not change
+the action recognizer or its required contact motion. Selection success still
+requires a unique geometric target and unique sustained contacted candidate;
+ambiguity has no success value. Offline auditing verifies the binding inventory
+separately from the geometric values. Local identity/movement counterexamples
+pass; the stack-block `selection_query` pilot awaits simulator validation.

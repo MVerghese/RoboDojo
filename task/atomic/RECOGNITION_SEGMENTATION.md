@@ -398,3 +398,15 @@ it requests the existing collection/cleanup trap and bounds cleanup time. It
 does not turn task failure into an infrastructure failure, recognize an action,
 or provide a missing stage boundary. Local tests pass; the corrected matched
 pour comparison still needs simulator evidence.
+
+### Initial-layout candidate query bindings
+
+Selection observers now support bounded layout prefix/category/model queries in
+addition to explicit label lists. Discovery occurs once when the stage activates;
+resolved labels and immutable geometry stay fixed through subsequent motion.
+Actual inventory/rejections and snapshot physics step are retained. Independent
+audit checks binding consistency and the requested initial geometry. Queries do
+not compile source plans, resolve language/game roles, distinguish arbitrary
+controls on one mechanism, or replace physical selected-object contact. The new
+`selection_query` stack-block pair exercises this binding with the same reviewed
+XYZ target in both A/B arms.
