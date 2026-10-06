@@ -37,6 +37,7 @@ DEPENDENCIES = (
     'task/atomic/flow.py',
     'task/atomic/fold.py',
     'task/atomic/layers.py',
+    'task/atomic/cloth_calibration.py',
     'env/scene_manager/objects/fluid.py',
     'env/scene_manager/objects/garment.py',
     'task/atomic/contacts.py',

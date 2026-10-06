@@ -19,9 +19,9 @@ GEOMETRY_KINDS = frozenset(
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "before_contact", "recognition_event", "attempt_end"})
 CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "articulated_link_pose", "joint_link_pose"}) | CONTACT_KINDS
-MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame'}
+MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame'}
 FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS
-OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame','cloth_patch_surface'}
+OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame','cloth_patch_surface','cloth_model_patch'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
                                'near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over'})
 
@@ -67,6 +67,7 @@ def _validate_selector(selector, name):
               'cloth_tag_frame': {'label','tag'},
               'cloth_line_frame': {'label','tag_a','tag_b','normal_tag'},
               'cloth_patch_surface': {'label','origin_id','x_id','y_id','face_ids'},
+              'cloth_model_patch': {'label','models'},
               'cloth_patch_frame': {'label','origin_id','x_id','y_id'}, 'fluid_points': {'label','ids'},
               'object_contact_points': {'label', 'other_label'}}.get(selector['kind'], {'label'})
     if set(selector) - common - fields:
@@ -142,6 +143,19 @@ def _validate_selector(selector, name):
         ids=selector.get('face_ids')
         if not isinstance(ids,list) or not ids or len(set(ids))!=len(ids) or any(type(i) is not int or i<0 for i in ids):
             raise ValueError('cloth patch surface requires distinct explicit persistent topology face IDs')
+    if selector['kind']=='cloth_model_patch':
+        import re
+        models=selector.get('models')
+        if not isinstance(models,dict) or not models:raise ValueError('cloth model patch requires reviewed model alternatives')
+        for model,row in models.items():
+            if not isinstance(model,str) or not re.fullmatch(r'[^/]+/[0-9]{5}',model):
+                raise ValueError('cloth patch alternatives require model-name/5-digit-index keys')
+            if not isinstance(row,dict) or set(row)!={'face_ids','origin_id','x_id','y_id','asset_sha256','topology_sha256'}:
+                raise ValueError('cloth model patch requires explicit faces/frame and asset/topology hashes')
+            if any(not isinstance(row[k],str) or not re.fullmatch('[a-f0-9]{64}',row[k]) for k in ('asset_sha256','topology_sha256')):
+                raise ValueError('cloth model patch hashes must be SHA256 hex')
+            _validate_selector({'kind':'cloth_patch_surface','label':selector['label'],
+                **{k:row[k] for k in ('face_ids','origin_id','x_id','y_id')}},name+'.'+model)
 
 
 def _validate_condition(condition):
@@ -216,7 +230,7 @@ def _validate_condition(condition):
             raise ValueError('objects scope needs object frame selectors; it cannot replace functional landmarks')
         relation = condition['expected']
         if relation == 'layered_over':
-            if scope!='objects' or measurement['kind']!='cloth_patch_surface' or condition['reference']['kind']!='cloth_patch_surface' or condition['reference'].get('time')=='stage_start':
+            if scope!='objects' or measurement['kind'] not in ('cloth_patch_surface','cloth_model_patch') or condition['reference']['kind'] not in ('cloth_patch_surface','cloth_model_patch') or condition['reference'].get('time')=='stage_start':
                 raise ValueError('layered_over requires two live actual material patch surfaces')
             for field in ('min_layer_gap_m','max_layer_gap_m'):_finite_number(condition.get(field),field)
             if condition['min_layer_gap_m']>condition['max_layer_gap_m']:

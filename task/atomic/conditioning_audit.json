@@ -3,15 +3,15 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
-    "task/atomic/spec.py": "8e47a5d45705e0a8ef6407ed34b5534f904592f9b0c78c677beedf04800b7169",
+    "task/atomic/spec.py": "83a5a7e8c853df9d950ce7877e983deea9fbbc463ee3459354f069eff9d8fbc6",
     "task/atomic/geometry.py": "e0fdf755b5fc86be6121d34b1126ed6ed9e6292fd1b22e04985c5f2ba7db5a41",
-    "task/atomic/session.py": "8085977ce3f48d2a3d8044e693ca08e1e00f96ae64aaea7ed6e95d68f419e3e5",
+    "task/atomic/session.py": "55a49dbb91b6caf5d4665342ad52e9e05118089193117caa6be9bca3cad088fd",
     "task/atomic/surfaces.py": "88cd8a95b3071f4b0155b2c352494fff77023fe4bbb450ce21c9b3fbba63053d",
     "task/atomic/contacts.py": "f8890d18794399c4c9d3d436f52afdc9d0cbb03a4429c35795880c69ff7a4b69",
     "task/atomic/recognizers.py": "d098bcf226ac6797587d7c45432d697a7e48fdcef79c640407dd090e0293f027",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
-    "task/atomic/materials.py": "f664b927db4f245b2540cd71a1d6f3a380c081407e1d2e23f3ad88b9284ffced",
+    "task/atomic/materials.py": "86571df770437f28883c74c90d55f5c6de2e6f37b5cfc8c48157eebf2c9d64ec",
     "task/atomic/selection.py": "5af24b1d06513a65a381802e969ae744c5dd12f0f96b80755bef2af232616f8d",
     "task/atomic/trajectory.py": "08e3e5647a643a4af22dd90fb9bb040586a7151cd84abf91f1f6b5712718bc44",
     "task/atomic/regions.py": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753",
@@ -19,6 +19,7 @@
     "task/atomic/flow.py": "2baa50be4af31f17866979fb16a3f650b0533644bee2de31a0790f34a2ce4ff4",
     "task/atomic/fold.py": "5d7de33352ec070c84ad2e2088c2a20baa500acfe1ad648edcb19839db0c4e97",
     "task/atomic/layers.py": "d29f4dadf9aa609579a73fe4750ab6be62bce8f39bc99761d413a04bb736977f",
+    "task/atomic/cloth_calibration.py": "6ffbe90efc09ee674a13205acccf88cedd78b42dd1872483dca4e1a20896209f",
     "task/atomic/calibration.py": "0dd794aeb46db7b5306a08968b282a14f29dffb2e9f2e0b08a69c8952b8e9016",
     "env/scene_manager/objects/fluid.py": "7dd2cfe8b7b7e7fc0051d6b9d887f6151be31588a9abc1f1c88e8d83cabad712",
     "env/scene_manager/objects/garment.py": "b72ff2772598c457260b3ceaeba1078e289f6cd3b0d933ae8e6d755ebc882fd9"
@@ -2061,35 +2062,35 @@
           "kind": "point",
           "concept": "Select garment by initial landmark P.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial garment frame T if defined.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select garment offset from landmark.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select orientation of garment frame relative to table.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select garment left of/on table.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         }
       }
@@ -2103,28 +2104,28 @@
           "kind": "point",
           "concept": "Two P values define crease endpoints.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "T defines crease center and directed line.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Crease offset from seam/hem landmark.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Crease direction relative to garment axis.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "R": {
@@ -2145,35 +2146,35 @@
           "kind": "point",
           "concept": "Name garment point/patch at P.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Patch pose T if local frame exists.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Region offset from seam/landmark.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Patch orientation relative to garment frame.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Left sleeve/region above crease.",
           "status": "G",
-          "audit": "Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; live face bindings remain.",
+          "audit": "Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; 30 mm same-side geodesic patches are bound for all three baked Top_Long models with live asset/topology hash checks; policy validation remains pending.",
           "live_evidence": null
         }
       }
@@ -2187,35 +2188,35 @@
           "kind": "point",
           "concept": "Moving landmark ends at P.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Patch goal pose T if frame exists.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Target offset from chest/shoulder landmark.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Final patch orientation relative to torso.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Sleeve over chest; hem near shoulder.",
           "status": "G",
-          "audit": "Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; live face bindings remain.",
+          "audit": "Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; 30 mm same-side geodesic patches are bound for all three baked Top_Long models with live asset/topology hash checks; policy validation remains pending.",
           "live_evidence": null
         }
       }
@@ -2278,7 +2279,7 @@
           "kind": "pose",
           "concept": "Final patch/garment pose T if defined.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "D": {
@@ -2292,7 +2293,7 @@
           "kind": "relative_orientation",
           "concept": "Folded edge aligned with shoulder line.",
           "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain.",
+          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
           "live_evidence": null
         },
         "R": {

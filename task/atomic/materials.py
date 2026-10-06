@@ -1,5 +1,6 @@
 """Live material coordinates with explicit identities and backend/frame contracts."""
 import numpy as np
+import hashlib
 
 from task.atomic.landmarks import matrix_quaternion
 
@@ -53,11 +54,17 @@ def material_state(env,label,kind,env_idx):
             'triangles': raw.get('triangles'),
             'source':{'label':label,'kind':kind,'backend':raw['backend'],'identity':raw['identity'],
                       'frame':'environment_local_world','mass_semantics':'configured nominal particle mass, not measured density' if kind=='fluid' else None}}
+    if kind=='cloth' and raw.get('triangles') is not None:
+        result['topology_sha256']=hashlib.sha256(np.asarray(raw['triangles'],dtype='<i8').tobytes()).hexdigest()
     if cache is not None:cache[key]=result
     return result
 
 
 def resolve_material(env,selector,env_idx):
+    if selector['kind']=='cloth_model_patch':
+        selected,proof=resolve_model_patch(env,selector,env_idx)
+        value,source=resolve_material(env,selected,env_idx)
+        return value,{**source,'calibrated_model_patch':proof}
     if selector['kind']=='cloth_line_frame':
         label=selector['label']
         a,sa=resolve_material(env,{'kind':'cloth_landmark','label':label,'tag':selector['tag_a']},env_idx)
@@ -110,6 +117,10 @@ def resolve_material(env,selector,env_idx):
 
 def resolve_patch_surface(env,selector,env_idx):
     """Explicit topology faces follow persistent material IDs through deformation."""
+    if selector['kind']=='cloth_model_patch':
+        selected,proof=resolve_model_patch(env,selector,env_idx)
+        surface=resolve_patch_surface(env,selected,env_idx)
+        return {**surface,'calibrated_model_patch':proof}
     state=material_state(env,selector['label'],'cloth',env_idx)
     faces=np.asarray(state.get('triangles'))
     requested=np.asarray(selector['face_ids'])
@@ -125,3 +136,28 @@ def resolve_patch_surface(env,selector,env_idx):
         'vertices':points.tolist(),'triangles':[[remap[int(i)] for i in face] for face in selected],
         'geometry_representation':'explicit persistent material topology faces transformed by live solver vertices',
         'material_vertex_ids':ids.tolist(),'material_face_ids':requested.tolist(),'material_source':source}
+
+
+def resolve_model_patch(env,selector,env_idx):
+    """Choose immutable faces from the actual asset model, never live proximity."""
+    from pathlib import Path
+    lm=env.scene_manager.layout_manager;label=selector['label']
+    metadata=lm.get_instance_metadata(env_idx=env_idx,label=label)
+    model=f"{metadata.get('model_name')}/{int(metadata.get('model_id',-1)):05d}"
+    row=selector['models'].get(model)
+    if row is None:raise RuntimeError('no calibrated cloth patch for actual asset model '+model)
+    state=material_state(env,label,'cloth',env_idx)
+    if state.get('topology_sha256')!=row['topology_sha256']:
+        raise RuntimeError('live cloth topology differs from the calibrated persistent face IDs')
+    obj=lm.get_scene_object(env_idx=env_idx,inst_name=lm.get_instance_name(env_idx=env_idx,label=label))
+    path=getattr(obj,'usd_path',None)
+    if not path:raise RuntimeError('calibrated cloth patch cannot verify the actual asset file')
+    asset=Path(path);stat=asset.stat();identity=(str(asset),stat.st_size,stat.st_mtime_ns)
+    if getattr(obj,'_atomic_verified_asset_file',None)!=identity:
+        obj._atomic_verified_asset_sha256=hashlib.sha256(asset.read_bytes()).hexdigest()
+        obj._atomic_verified_asset_file=identity
+    if obj._atomic_verified_asset_sha256!=row['asset_sha256']:
+        raise RuntimeError('live cloth asset file differs from the reviewed patch calibration')
+    selected={'kind':'cloth_patch_surface','label':label,**{k:row[k] for k in ('face_ids','origin_id','x_id','y_id')}}
+    return selected,{'model':model,'asset_sha256':row['asset_sha256'],'topology_sha256':row['topology_sha256'],
+                    'selection_semantics':'explicit pre-policy model-bound material faces; not nearest live vertices'}

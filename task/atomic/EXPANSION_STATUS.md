@@ -17,10 +17,12 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-validation-1006` | 16 | 16 valid episodes, 54 reproduced scores; no mismatches | Release yaw/full pose, failed push endpoint, pre-contact mallet pose, tool heading, annotated charger insertion |
 | `geometry-support-1006` | 10 | 9 collected cases, 48 reproduced scores; remaining cases submitted | Persistent support, raw body-pair diagnostics, full material mesh export |
 | `geometry-materials-1006` | 4 | Submitted | Real garment landmark destination, tangent normal and crease drift; liquid scene capture/pickup, not calibrated liquid transfer |
-| `geometry-breadth-1006` | 12 | Submitted | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
+| `geometry-breadth-1006` | 12 | 3 collected cases, 15 reproduced scores | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
 | `geometry-body-contacts-1006` | 4 | Submitted | Stack release/settling using contact APIs enabled after task objects load |
 | `geometry-constrained-1006` | 4 | Submitted | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
 | `geometry-tool-contacts-1006` | 4 | Submitted | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
+
+| `geometry-key-fit-1006` | 2 | Submitted | Actual key mouth/tip, closed blade collider section/clearance and shoulder gap |
 
 The bottle retry retained the exact program/checkpoint/runtime package. It ended
 with client code 143 and no completed native episode. Archived logs show a policy
@@ -50,7 +52,7 @@ not a conditioning score or policy action failure.
   source-held/tilted exit provenance and independent offline reproduction.
 - Cloth folding observes newly lifted, closed, bent, layered and settled material
   landmarks. This does not certify finger/cloth contact, global cloth self-intersection. Explicit selected-patch overlap/layer checks
-  now have local counterexample tests; live face bindings are pending.
+  now have local counterexample tests. Model-bound local patch IDs are calibrated for all three baked garments; a fresh matched pair is being prepared for live validation.
 - Bolt-constrained twist uses continuous physical grip and nut/bolt contact,
   pivot radius/depth, unwrapped signed angle and bounded off-axis rotation. It
   does not certify mechanical thread engagement.
@@ -87,10 +89,19 @@ Each suite produces `EVAL_MATRIX_REPORT.md`, `EVAL_MATRIX_REPORT.html`, raw nati
 reports and independently reproduced scores. GPU admission and neighboring-job
 observations remain in separate ledgers outside Git.
 
-A second CPU job exports the three `Top_Long` garment topologies used by
-`fold_clothes` and inventories installed cloth/particle Python APIs. It uses no
-GPU and is counted in the shared 32-job window. Source code now includes physical
-opening trace and conservative interior-core calibration, selected cloth patch
-layering, optional stream direction, and small-retreat insertion handling.
-These later additions have local regression evidence; fresh calibrated bindings
-are prepared separately from already immutable queued packages.
+A second CPU job successfully exported all three `Top_Long` garment models
+(1, 4, 9) and inventoried the installed cloth/particle Python API declarations.
+It used no GPU. Cloth position/velocity methods were found, but no cloth contact-
+force readout was exposed in those declarations. The scope of that inventory
+is retained; native binary APIs are not ruled out by a Python source inspection.
+
+The new `cloth_patches` phase binds local same-side 30 mm geodesic patches to
+actual topology, verifies live model/asset/topology hashes, and measures at
+least 50% moving-patch coverage with 1–30 mm layer gaps (1 mm tolerance).
+Unit/counterexample tests cover disconnected layers and identity mismatches;
+live policy validation remains pending. These are local selected patches,
+not complete garment regions or force-bearing cloth grasps.
+
+Physical opening trace and conservative interior-core calibration, optional
+stream direction, and small-retreat insertion handling also have local regression
+evidence. Fresh bindings are packaged separately from immutable queued runs.

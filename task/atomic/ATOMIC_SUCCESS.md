@@ -344,3 +344,19 @@ actual slot mesh top (~55 mm), correcting the 96 mm annotation. Tip, mouth and
 blade shoulder follow live roots with asset model checks. Cross-section fit uses
 the explicitly selected, closed physical blade collision box, not all visual
 teeth. Shoulder clearance is an 18 mm gap target; it is not flush seating.
+
+### Model-bound fold patch evidence
+
+The `cloth_patches` A/B phase adds three local patch layer conditions to the
+existing left-sleeve, right-sleeve and body fold observers. Each patch is fixed
+from the actual exported garment model before the policy acts and verified
+against live asset and topology hashes. The condition checks coverage and all
+overlap gap extrema at attempt end; it does not add a fold-success event.
+Material deformation recognition, patch geometry, native task success and
+measured grasp evidence remain separate fields.
+
+The installed Isaac Sim 5.1 cloth wrappers and particle-cloth view expose
+position/velocity methods but no contact-force readout in their inspected Python
+declarations. The retained SDK inventory records paths and source checksums.
+That scoped inspection explains the current cloth-grasp evidence gap; it does
+not prove every native binary API lacks cloth contacts.

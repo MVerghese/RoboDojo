@@ -24,6 +24,43 @@ BREADTH_TASKS = ('general_pickup','stack_blocks','press_by_number','play_Xylopho
 CONSTRAINED_TASKS = ('fasten_screws','fold_clothes')
 
 
+def calibrated_fold_profile(assets):
+    """Fixed geodesic material regions for every configured garment model."""
+    from task.atomic.cloth_calibration import material_patch
+    import numpy as np
+    evidence=json.loads((assets/'asset-geometry.json').read_text())['assets']
+    base,text=constrained_expand('fold_clothes',None,None,'actual-material-topology')
+    profiles={}
+    tags={stage['recognition'][key]['tag'] for stage in base['stages'] for key in ('moving','target')}
+    for tag in tags:
+        alternatives={}
+        for key,asset in evidence.items():
+            if not key.startswith('Garment/Top_Long/'):continue
+            if asset['status']!='exported' or len(asset['meshes'])!=1 or asset['meshes'][0]['point_offset']!=0:
+                raise ValueError('cloth patch requires one verified material mesh with persistent solver topology')
+            mesh=asset['root_relative_mesh'];seed=asset['metadata']['passive']['functional'][tag]['id']
+            vertices=np.asarray(mesh['vertices'])*asset['authored_root_scale']
+            alternatives[key.split('/',1)[1]]=material_patch(vertices,mesh['triangles'],seed,.03,asset['asset_sha256'])
+        if set(alternatives)!={'Top_Long/00001','Top_Long/00004','Top_Long/00009'}:
+            raise ValueError('cloth patch calibration must cover every configured garment model')
+        profiles[tag]={'kind':'cloth_model_patch','label':'target','models':alternatives}
+    for stage in base['stages']:
+        c=stage['recognition']
+        stage['geometry'].append({'id':'material_patch_layer','slot':'target region','kind':'spatial_relation',
+            'measurement':profiles[c['moving']['tag']],'reference':profiles[c['target']['tag']],
+            'expected':'layered_over','relation_scope':'objects','min_overlap_fraction':.5,
+            'min_layer_gap_m':.001,'max_layer_gap_m':.03,'tolerance':.001,
+            'event':{'kind':'attempt_end'},'track_closest':False})
+    text+=(' At episode end overlap at least 50 percent of the initially selected 30 mm geodesic '
+           'material patch around each moving sleeve/hem landmark with the corresponding chest/shoulder '
+           'destination patch. The initial patch follows mesh edges and the landmark-side surface normals; '
+           'its material face IDs stay fixed. Across all overlapping triangle pairs, leave the moving '
+           'patch 1 to 30 mm above the target tangent frame with 1 mm gap tolerance. '
+           'The target tangent frame is defined by an initially upward triangle in its calibrated patch. '
+           'Do not count a nearby disconnected cloth layer as the requested material region.')
+    return base,text
+
+
 def calibrated_key_profile(base,scene,assets):
     """Physical key-tip/opening frames and explicit blade-collider section fit."""
     import numpy as np
@@ -432,11 +469,16 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                                 'first-instance observers; partial action coverage',
                                 'new numerical targets are prototype probes; asset feasibility requires live review']}
     for task in tasks:
-        pair, blocker = ((fold_profile(), None) if task == 'fold_clothes' and phase in ('materials','constrained')
+        pair, blocker = ((fold_profile(), None) if task == 'fold_clothes' and phase in ('materials','constrained','cloth_patches')
                          else profile(plans[task]))
         if blocker:
             raise ValueError(f'{task}: {blocker}')
         scene=None
+        if phase=='cloth_patches':
+            if task!='fold_clothes' or not asset_calibration_root:raise ValueError('cloth patch phase needs garment calibration evidence')
+            source=Path(asset_calibration_root)/'asset-geometry.json'
+            manifest.setdefault('calibration_inputs',{})['cloth_assets']={'path':str(source),
+                'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
         if phase=='calibrated':
             if task!='insert_key':raise ValueError('calibrated task profile is not bound yet: '+task)
             if not asset_calibration_root:raise ValueError('calibrated bindings require actual asset evidence')
@@ -451,7 +493,8 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             detail=next(iter(report['native_results'][0]['details'].values()))
             scene=detail['atomic_sequence']['scene_calibration']
             manifest.setdefault('calibration_inputs',{})[task]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
-        base, append = (calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
+        base, append = (calibrated_fold_profile(Path(asset_calibration_root)) if phase=='cloth_patches' else
+                        calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
                         constrained_expand(task,pair[0],scene,
                         manifest.get('calibration_inputs',{}).get(task,{}).get('sha256','actual-material-topology')) if phase=='constrained' else
                         breadth_expand(pair[0],scene) if phase=='breadth' else
@@ -489,7 +532,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()

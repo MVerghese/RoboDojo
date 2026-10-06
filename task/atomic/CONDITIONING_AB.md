@@ -353,7 +353,7 @@ map and the 49-task partial-observer A/B matrix. Retain the controls below.
 `generate_expansion_suite.py` creates matched full-task programs with identical
 scoring/recognizers in both arms. The conditioned arm alone appends the geometric
 instruction. Phases are `feasible`, `validation`, `materials`, `breadth`,
-`constrained`, and `calibrated`. Every added numeric target names its event,
+`constrained`, `calibrated`, and `cloth_patches`. Every added numeric target names its event,
 reference frame, axes, physical units and tolerance.
 
 ```bash
@@ -373,7 +373,8 @@ python scripts/atomic/generate_expansion_suite.py \
   --output-dir /path/to/fresh-key-suite
 ```
 
-These phases require retained actual baseline `eval_report.json` scene evidence.
+The constrained and calibrated-key phases require retained actual baseline
+`eval_report.json` scene evidence.
 The calibrated key phase also requires `asset-summary.json`, `key-geometry.json`
 and the selected slot material mesh NPZ from the baked export. Their hashes are
 recorded in the manifest. It verifies live scaled bounds/model identity; it does
@@ -388,6 +389,23 @@ boxes with `interior_core_box`. Retain raw evidence and hashes. A finite opening
 profile is not a whole cavity. Core-restricted source cohorts must be declared.
 Use `expected_velocity_direction` to condition flow direction; crossing distance,
 angular error, aperture overrun and speed are separate physical measurements.
+
+The model-bound garment phase needs the collected baked garment export,
+including source hashes, ordered mesh topology and authored material tags:
+
+```bash
+python scripts/atomic/generate_expansion_suite.py \
+  --phase cloth_patches --tasks fold_clothes \
+  --checkpoints /path/to/checkpoints.json \
+  --asset-calibration-root /path/to/cloth-asset-calibration \
+  --output-dir /path/to/fresh-cloth-patch-suite
+```
+
+This phase binds 30 mm same-side geodesic patches for `Top_Long` models 1, 4
+and 9 and verifies live model, asset-file hash and topology hash. It requests
+50% moving-patch coverage and 1–30 mm layer gaps (1 mm tolerance) at attempt
+end, alongside the fold landmark and crease conditions. The generator records
+calibration input hashes. Keep source files fixed during runtime packaging.
 
 For cloth patch geometry, `cloth_patch_surface` selects persistent `face_ids`
 and three actual material vertex IDs for its tangent frame. `layered_over`

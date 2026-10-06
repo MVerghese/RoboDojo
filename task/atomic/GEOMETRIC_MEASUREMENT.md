@@ -372,6 +372,26 @@ material vertex IDs defining its live tangent frame (`origin_id`, `x_id`,
 reordering does not change which material is measured. Missing IDs/topology
 fail the measurement; no cached garment root supplies its geometry.
 
+`cloth_model_patch` binds a reviewed patch for each supported garment model.
+The new fold profile exports the actual baked `Top_Long` models 1, 4 and 9;
+selects same-side triangles within **30 mm geodesic distance** of an authored
+material tag; and freezes those face IDs before policy execution. Mesh-edge
+distance excludes nearby disconnected layers. This is a local patch around a
+sleeve/chest/hem/shoulder tag, not the entire named garment region.
+
+At evaluation, the selector checks actual model identity, SHA-256 of the live
+asset file and SHA-256 of the ordered triangle topology before reading deformed
+vertices. An unknown model, mismatched asset/topology or missing face fails
+explicitly. It does not select new faces from their proximity after folding.
+The tangent basis follows three persistent material vertices; it can become
+degenerate during deformation, which is reported as unavailable.
+
+The matched fold-patch profile requests at least **50% moving-patch coverage**
+and signed layer gaps of **1–30 mm**, with **1 mm tolerance**, at `attempt_end`.
+All gaps across overlapping triangle pairs are checked; both A/B arms use
+identical selectors and targets. These are additional endpoint conditions,
+independent of whether the fold recognizer fires.
+
 `layered_over` requires two live material patch surfaces. Project their real
 triangles into the target tangent frame and measure overlap / **moving patch**
 projected area. For every pair of overlapping projected triangles, their height

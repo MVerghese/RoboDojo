@@ -308,3 +308,14 @@ collected or awaiting live evidence. Unit/counterexample tests do not establish
 recognized policy actions. Operational suites and monitors now live under
 `/home/mverghese/robodojo-expansion-state/` after the shared Lustre project hit its
 inode quota; preserved cloud IDs and immutable inputs make resumption auditable.
+
+### Fixed material regions across garment models
+
+`cloth_model_patch` selects precomputed persistent face IDs using the actual
+garment model, then verifies the loaded asset and ordered topology SHA-256.
+The fold-patch phase binds 30 mm same-side geodesic patches on the three baked
+`Top_Long` models. Patch IDs are never reassigned using the deformed garment's
+nearest vertices. Their live tangents and selected triangle surfaces support
+layer geometry; they do not establish finger contact or alter segmentation.
+The existing fold recognizer still needs newly observed lift, closure, bend,
+landmark layering and bounded settling before emitting `folded`.
