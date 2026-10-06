@@ -1,6 +1,7 @@
 # Atomic action success checks
 
-Updated 2026-10-02. Describes implementation commit `46ffcbf`.
+Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
+Frozen runs retain their packaged implementation; consult each runtime hash.
 
 October 6 correction: supported placement preserves an already verified
 two-finger held transport while the same arm releases its jaws one at a time.
@@ -9,7 +10,10 @@ establish the required transport, and another arm cannot inherit that evidence.
 Complete release, upward named support and bounded settling are still required.
 `physical_metrics` records partial release, signed support candidates and
 settling drift for live diagnosis. Counterexample tests cover this transition;
-live confirmation is pending in the new validation suite.
+live confirmation is present in the corrected-contact stack-block and stack-bowl
+baselines. Blocks recognized all three placements; bowls recognized only the
+final placement despite native success. See [EXPANSION_STATUS.md](EXPANSION_STATUS.md)
+for retained evidence and the remaining live validation gaps.
 
 Final-state `attempt_end` measurements do not change action success or native
 success. A failed insertion/push may now have a numerical goal error without a
@@ -397,3 +401,17 @@ The `crease_segments` phase binds the existing garment observers to 20 mm
 endpoint-chord coincidence at attempt end, alongside the model-bound patch
 conditions. This is geometry of declared finite material-endpoint chords, not
 a curved crease, whole-cloth intersection or new fold-success event.
+
+## Current live evidence: constrained screw rotation
+
+The October 6 conditioned `fasten_screws` rollout completed with native success.
+All three nut pickups had verified two-finger lifts. None of the three
+`contact_constrained_twist` observers completed. At episode end nut 0 had actual
+nut/bolt contact and a 0.282 mm shaft radius / 2.722 mm pivot depth, but no current
+verified grip and no qualifying signed rotation interval. Endpoint geometry
+scores do not repair that missing physical rotation evidence. Nine geometric
+scores were independently reproduced, with zero mismatches. This is one arm of
+a pending matched pair, not a steering-effect result.
+
+Raw source:
+`/home/mverghese/robodojo-expansion-state/geometry-constrained-1006/runs/robodojo_25k_fasten_screws_conditioned/eval_report.json`.

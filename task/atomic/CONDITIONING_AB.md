@@ -491,3 +491,12 @@ using one network connection and one model invocation. It checks the protocol
 and array codec with a toy model, not image decoding, the checkpoint or simulator.
 Fresh full-task pairs validate that integration separately. Existing frozen
 suites retain their older image-supplied protocol and are not repackaged.
+
+### Combined garment geometry validation
+
+Use the garment export with `--phase cloth_geometry --tasks fold_clothes` to
+combine calibrated patches/layers, 20 mm selected-boundary proximity and 20 mm
+finite-chord preservation in one fresh A/B pair. Both arms share recognition and
+all measurement targets; only the delivered geometry append differs. This phase
+is useful for checking the complete currently available garment geometry path
+with the pinned transport. It does not add force-bearing cloth grasp evidence.

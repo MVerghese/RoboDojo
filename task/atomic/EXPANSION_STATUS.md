@@ -17,15 +17,16 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-validation-1006` | 16 | 16 valid episodes, 54 reproduced scores; no mismatches | Release yaw/full pose, failed push endpoint, pre-contact mallet pose, tool heading, annotated charger insertion |
 | `geometry-support-1006` | 10 | 9 collected cases, 48 reproduced scores; remaining cases submitted | Persistent support, raw body-pair diagnostics, full material mesh export |
 | `geometry-materials-1006` | 4 | Submitted | Real garment landmark destination, tangent normal and crease drift; liquid scene capture/pickup, not calibrated liquid transfer |
-| `geometry-breadth-1006` | 12 | 3 collected cases, 15 reproduced scores | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
+| `geometry-breadth-1006` | 12 | 4 collected cases, 15 reproduced scores | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
 | `geometry-body-contacts-1006` | 4 | 2 valid baselines, 14 reproduced scores; actual upward support in blocks and bowls | Stack release/settling using contact APIs enabled after task objects load |
-| `geometry-constrained-1006` | 4 | Submitted | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
-| `geometry-tool-contacts-1006` | 4 | Submitted | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
-
+| `geometry-constrained-1006` | 4 | 1 valid conditioned screw episode, 9 reproduced scores; baseline pending | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
+| `geometry-tool-contacts-1006` | 4 | 1 valid align-block baseline; policy never acquired the tool; no tool scores | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
 | `geometry-crease-segments-1006` | 2 | Submitted | Actual finite material-endpoint segment coincidence alongside patch layering |
 | `geometry-cloth-patches-1006` | 2 | Submitted | Model/asset/topology-verified local garment patch coverage and layer gaps |
 | `geometry-pour-cores-1006` | 2 | Submitted | Declared initial whole-ball core cohort, actual mouth pose, crossing XY/direction and final core enclosure |
 | `geometry-key-fit-1006` | 2 | Submitted | Actual key mouth/tip, closed blade collider section/clearance and shoulder gap |
+| `geometry-surface-gaps-1006` | 2 | Submitted after a global slot opened | Actual selected-patch triangle-boundary gap alongside layers |
+| `geometry-bottle-runtime-1006` | 2 | Prepared; monitor awaits two global slots | Original bottle geometry with rigid readback fix and pinned websocket protocol |
 
 The bottle retry retained the exact program/checkpoint/runtime package. It ended
 with client code 143 and no completed native episode. Archived logs show a policy
@@ -59,7 +60,7 @@ not a conditioning score or policy action failure.
   source-held/tilted exit provenance and independent offline reproduction.
 - Cloth folding observes newly lifted, closed, bent, layered and settled material
   landmarks. This does not certify finger/cloth contact, global cloth self-intersection. Explicit selected-patch overlap/layer checks
-  now have local counterexample tests. Model-bound local patch IDs are calibrated for all three baked garments; a fresh matched pair is being prepared for live validation.
+  now have local counterexample tests. Model-bound local patch IDs are calibrated for all three baked garments; a fresh matched pair is submitted and awaits live validation.
 - Bolt-constrained twist uses continuous physical grip and nut/bolt contact,
   pivot radius/depth, unwrapped signed angle and bounded off-axis rotation. It
   does not certify mechanical thread engagement.
@@ -142,7 +143,7 @@ Actual selected-material surface proximity is implemented with exact triangle
 checks and bounding-volume pruning, and has intersection, centre/vertex proxy
 and exhaustive-pruning regression evidence. The `surface_gaps` garment profile
 binds minimum boundary gap independently of patch coverage/layer ordering.
-It awaits a free execution slot; it does not substitute for physical contact.
+It has been submitted after a global execution slot opened; it does not substitute for physical contact.
 
 A costly rigid-centre path was found while investigating the bottle stall:
 centre readback built/serialized full meshes, and initial scene capture did so
@@ -162,3 +163,19 @@ interval and timeout, one connection and one model call. Raw proof is at
 `/home/mverghese/robodojo-expansion-state/pinned-protocol-validation.json`.
 This addresses a demonstrated connection-liveness risk; fresh simulator/policy
 validation is pending and the bottle termination cause is still not established.
+
+### Latest recognition evidence (20:21 UTC snapshot)
+
+The conditioned screw rollout had native success and three recognized nut
+pickups, but no recognized contact-constrained twist. The final nut-0 metric
+showed actual shaft contact, 0.282 mm radius and 2.722 mm depth, with no current
+verified grip or qualifying signed rotation. Nine scores reproduced with zero
+mismatches; its baseline is pending. The align-block tool baseline had healthy
+contact readout but no tool acquisition/contact, so dependent tool pushes never
+started. These are observed policy/recognition outcomes, not successful adapter
+validation or measured steering effects.
+
+A fresh `cloth_geometry` profile combines all currently available calibrated
+local garment geometry in one pair: patch layers/coverage, finite endpoint chords
+and exact boundary proximity. It retains the physical cloth-grasp gap. Its
+execution state will be added when packaging/submission is complete.

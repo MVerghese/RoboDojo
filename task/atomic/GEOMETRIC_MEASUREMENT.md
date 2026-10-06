@@ -1,6 +1,7 @@
 # Geometric conditioning: instrumentation and eval measurements
 
-Updated 2026-10-02. Describes implementation commit `46ffcbf`.
+Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
+Frozen runs retain their packaged implementation; consult each runtime hash.
 
 October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
 landmark or material state immediately before scene reset. It measures goal
@@ -495,3 +496,13 @@ above 100,000 triangles without producing an unused full vertex JSON export.
 It records an explicit mesh-capture status. Full surfaces are still read when
 a geometric condition requires them; the limit is an evidence-export budget,
 not a simplified scoring mesh. Existing frozen suites retain their old runtime.
+
+## Combined garment validation profile
+
+`generate_expansion_suite.py --phase cloth_geometry --tasks fold_clothes`
+combines the already instrumented patch/layer, finite-chord and triangle-boundary
+gap measurements in one fresh matched pair. It reports each distance in mm,
+orientation in degrees and coverage as a fraction; they are not reduced to a
+mixed-unit scalar. The same measurements run in both arms, with geometry text
+appended only in the conditioned arm. Live force-bearing cloth grasp measurement
+remains unavailable and is not inferred from these geometric checks.

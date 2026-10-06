@@ -1,6 +1,7 @@
 # Recognizing and segmenting atomic actions during eval
 
-Updated 2026-10-02. Describes implementation commit `46ffcbf`.
+Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
+Frozen runs retain their packaged implementation; consult each runtime hash.
 
 October 6 extension: completed sessions are retained for explicit episode-end
 geometry sampling before reset. Their original action completion boundary stays
@@ -31,7 +32,7 @@ bounded, and how that differs from the source plans for all eval tasks. See
 | Source decomposition | Reviewed candidate plans for all 54 task modules, counting random variants separately; [SEGMENTATION.md](SEGMENTATION.md) and [segmentation_plans.json](segmentation_plans.json). |
 | Executable programs | 11 schema-loadable JSON files for ten tasks in [programs/](programs/). A source plan is not automatically compiled into one. |
 | Physical recognition | Special pick/push contact-motion logic plus 13 generic configurations across eleven families. Fold's new observer recognizes material deformation and does not establish a cloth grasp. |
-| Observed live coverage | Original 49-task screen plus 31 completed additional policy episodes with 81 reproduced geometric events and zero mismatches. New support, material and breadth batches are queued; their adapters still require live validation. |
+| Observed live coverage | Original 49-task screen plus additional waves in [EXPANSION_STATUS.md](EXPANSION_STATUS.md). Corrected support contacts are live-verified in blocks/bowls. Tool acquisition and constrained-twist rollouts retain missing physical events; material and calibrated fit/flow cases remain pending. |
 | Restart | Whole-action prefix replay for suitable linear programs; no faithful full-state or partial-action restoration. |
 
 The runtime observes **declared actions on bound objects**, rather than searching
@@ -344,3 +345,13 @@ The `crease_segments` phase binds the existing garment observers to 20 mm
 endpoint-chord coincidence at attempt end, alongside the model-bound patch
 conditions. This is geometry of declared finite material-endpoint chords, not
 a curved crease, whole-cloth intersection or new fold-success event.
+
+## Joint garment geometry profile
+
+The fresh `cloth_geometry` generator phase combines model/asset/topology-bound
+local patches, projected coverage and layer gaps, exact selected triangle-boundary
+proximity, and finite material-endpoint chord preservation. The three fold
+observers remain independent and recognition is identical in both arms. Adding
+these measurements neither creates a cloth grasp detector nor recognizes a
+curved crease. The profile uses the current pinned websocket runtime when freshly
+packaged; earlier queued profiles retain their original packages.
