@@ -318,3 +318,20 @@ Live report snapshot at 23:08 UTC: 156 valid episodes, 72 verified matched pairs
 Frozen old cloth-patch logs retain keepalive reconnections; the newer combined
 cloth-runtime and curve packages ship the pinned background-loop websocket
 client/server/codec. These remain distinct comparisons with immutable hashes.
+
+### First live calibrated cloth-patch and chord results
+
+`geometry-cloth-patches-1006` conditioned: valid episode, native failure, only
+partial body-fold recognition. All three final patch overlap fractions are zero;
+measured planar patch gaps are 18.69, 104.78 and 17.69 mm.
+`geometry-crease-segments-1006` baseline: valid episode/native success, no
+qualified fold observers; chord Hausdorff distances are 73.71, 78.77 and 78.77 mm.
+Body patch overlap is 0.0553, with overlapping-pair gaps 13.79–38.70 mm.
+The asset/model/topology material adapters now have retained simulator scores;
+partner cases, curved-path scores and physical cloth contacts remain pending.
+
+Report correction preserves these frozen results and their offline reproduction.
+A retained `gap_observed=false` masks unmeasured vertical gap-error defaults from
+statistics; coverage/separation stay measured. Per-condition component reasons
+explain the resulting N/A. Pending curve/segment/section/selection rows now use
+their actual units and checker fields. The current host suite passes 221 tests.

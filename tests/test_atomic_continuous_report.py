@@ -19,6 +19,44 @@ def event(components=None, status='reproduced'):
 
 
 class ContinuousReportTests(unittest.TestCase):
+    def test_layer_gap_defaults_are_not_measurements_without_projected_overlap(self):
+        a = event({'footprint_overlap_fraction':0.,'footprint_gap_m':.018,
+                   'layer_gap_shortfall_m':0.,'layer_gap_excess_m':0.})
+        a['score']['recorded_result']['observed'] = {'gap_observed':False}
+        b = event({'footprint_overlap_fraction':.7,'footprint_gap_m':0.,
+                   'layer_gap_shortfall_m':0.,'layer_gap_excess_m':.004})
+        b['score']['recorded_result']['observed'] = {'gap_observed':True}
+        sa,sb = arm_summary([a]),arm_summary([b])
+        self.assertEqual(sa['components']['footprint_overlap_fraction']['mean'],0.)
+        self.assertEqual(sa['components']['footprint_gap_m']['mean'],.018)
+        self.assertNotIn('layer_gap_shortfall_m',sa['components'])
+        self.assertEqual(sa['component_unavailable_reasons'],{'no_projected_material_overlap_for_vertical_gap':1})
+        self.assertEqual(sb['components']['layer_gap_excess_m']['mean'],.004)
+        shared = shared_summary({('fold','layer'):a},{('fold','layer'):b},True)
+        self.assertNotIn('layer_gap_excess_m',shared['components'])
+        self.assertEqual(shared['components']['footprint_overlap_fraction']['n'],1)
+
+    def test_pending_relation_rows_name_the_actual_checker_components(self):
+        empty = arm_summary([])
+        for definition,expected in [
+            ({'expected':'coincides_with_curve','relation_scope':'curves'},
+             {'curve_gap_m','curve_hausdorff_m','measurement_curve_length_m','reference_curve_length_m'}),
+            ({'expected':'coincides_with_segment','relation_scope':'segments'},
+             {'segment_gap_m','segment_hausdorff_m','segment_axis_angle_rad','measurement_length_m','reference_length_m'}),
+            ({'expected':'inside_trace_aperture','relation_scope':'objects'},
+             {'section_area_m2','outside_aperture_area_m2','outside_allowed_area_m2','boundary_distance_m'}),
+            ({'expected':'near','relation_scope':'objects'},{'surface_distance_m'})]:
+            c = {'kind':'spatial_relation','definitions':[{'condition':definition}],
+                 'baseline':empty,'conditioned':empty}
+            self.assertEqual(set(component_names(c)),expected)
+        self.assertEqual(component_unit('section_area_m2'),('section area (mm²)',1e6))
+
+    def test_unobserved_selection_still_names_its_requested_physical_factor(self):
+        empty = arm_summary([])
+        c = {'kind':'selection','definitions':[{'condition':{'kind':'pose'}}],
+             'baseline':empty,'conditioned':empty}
+        self.assertEqual(set(component_names(c)),{'position_m','orientation_rad'})
+
     def test_integrated_report_keeps_repeated_tasks_and_runtimes_separate(self):
         from pathlib import Path
         from scripts.atomic.report_integrated import integrate

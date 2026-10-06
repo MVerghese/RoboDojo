@@ -11,7 +11,7 @@
     "task/atomic/recognizers.py": "f0b07b399cf301203269240d8b71e1c881264e3aced79a32124e160a1214140d",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
-    "task/atomic/materials.py": "571bf00e5a6ef6a061b9444aa10cd64d7075349bd70a22eeb30fc0b96e69f652",
+    "task/atomic/materials.py": "0b42ca82fd5101a7b0dd409139181d629b443a8ed62d2253f545a60f5b9241b8",
     "task/atomic/selection.py": "56d91e5d1798949e40501847494276854fb180b0bce8b22013e0a372518cb43b",
     "task/atomic/trajectory.py": "08e3e5647a643a4af22dd90fb9bb040586a7151cd84abf91f1f6b5712718bc44",
     "task/atomic/regions.py": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753",

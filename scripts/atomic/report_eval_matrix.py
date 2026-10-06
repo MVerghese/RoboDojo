@@ -70,8 +70,9 @@ def aggregate(manifest, result):
             for (ident, kind, slot), scores in sorted(conditions.items()):
                 observed = [s['recorded_result'] for s in scores if s['status'] == 'reproduced']
                 components = defaultdict(list)
+                from scripts.atomic.continuous_report import measured_components
                 for score in observed:
-                    for name, value in score['components'].items():
+                    for name, value in measured_components(score).items():
                         components[name].append(value)
                 statuses = defaultdict(int)
                 for s in scores:

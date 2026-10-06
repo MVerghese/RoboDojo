@@ -57,8 +57,8 @@ def material_state(env,label,kind,env_idx):
     if kind=='cloth' and raw.get('triangles') is not None:
         topology = np.asarray(raw['triangles'])
         if (topology.ndim != 2 or topology.shape[1] != 3 or topology.dtype.kind not in 'iu'
-                or not len(topology) or not set(topology.flatten().tolist()) <= set(ids.tolist())
-                or any(len(set(face)) != 3 for face in topology.tolist())):
+                or not len(topology) or not np.isin(topology,ids).all()
+                or np.any((topology[:,0]==topology[:,1]) | (topology[:,1]==topology[:,2]) | (topology[:,0]==topology[:,2]))):
             raise RuntimeError('cloth topology must reference actual distinct integer material vertex IDs')
         result['topology_sha256']=hashlib.sha256(np.asarray(topology,dtype='<i8').tobytes()).hexdigest()
     if cache is not None:cache[key]=result

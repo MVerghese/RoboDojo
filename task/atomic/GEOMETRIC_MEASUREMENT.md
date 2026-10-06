@@ -685,3 +685,21 @@ fails; original leading-point targets still apply with 3 mm/20° tolerances.
 Retained actual-asset evidence is in
 `/home/mverghese/robodojo-expansion-state/asset-calibration-1006/charger-section-validation.json`.
 Live validation remains pending.
+
+### Live cloth validation and component observation
+
+The collected conditioned material-patch episode has native failure, one
+recognized partial body-fold action and zero final projected moving/target patch
+overlap for all three observers. The finite-chord baseline has native success
+without any qualified fold observer; chord Hausdorff errors are 73.7–78.8 mm.
+Actual model/topology-bound patch, tangent and segment measurements are retained
+and independently reproduced. These are separate frozen comparisons; their
+partners remain pending. Neither establishes physical cloth finger contact.
+
+When projected patches do not overlap, coverage and horizontal patch distance
+remain observed, but a vertical overlapping-region gap is undefined. The MD/HTML
+report now honors the retained `gap_observed=false` flag and excludes legacy
+zero gap-error defaults from component means/deltas. It shows N/A and an explicit
+no-overlap reason. Raw frozen scores are preserved. Curve/segment/shaft-fit
+rows now name their actual checker components even before an event is observed,
+without unrelated generic relation-error or footprint fields.

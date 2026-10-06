@@ -20,7 +20,8 @@ METHOD = (
     'combined score across conditioning types is used. '
     'Contact conditions use the worst eligible contact point, not the contact centroid. '
     'Means and medians include only independently reproduced observations. Missing events '
-    'are N/A, never zero. '
+    'are N/A, never zero. Layer gaps need projected material overlap; absent overlap '
+    'still has a measured coverage shortfall, but no measured vertical gap. '
     'Coverage is observed/declared conditions, including optional object candidates. '
     'Shared-event delta is mean(conditioned measurement − baseline measurement) over identical '
     'stage/condition identities observed in both arms of a verified pair, in the stated unit. '
@@ -39,13 +40,23 @@ def stats(values):
             'median': statistics.median(values) if values else None}
 
 
+def measured_components(result):
+    """Honor retained component observation flags without rewriting raw scores."""
+    values = result['components']
+    observed = result.get('observed')
+    if isinstance(observed, dict) and observed.get('gap_observed') is False:
+        return {k:v for k,v in values.items() if k not in (
+            'minimum_layer_gap_m','maximum_layer_gap_m','layer_gap_shortfall_m','layer_gap_excess_m')}
+    return values
+
+
 def component_values(events, name):
     values = []
     for event in events:
         score = event['score']
         if score.get('status') != 'reproduced':
             continue
-        value = score['recorded_result']['components'].get(name)
+        value = measured_components(score['recorded_result']).get(name)
         if value is not None:
             value = float(value)
             if not math.isfinite(value):
@@ -121,13 +132,19 @@ def arm_summary(events):
     reproduced = [e['score']['recorded_result'] for e in events
                   if e['score'].get('status') == 'reproduced']
     components = defaultdict(list)
+    reasons = Counter()
     for result in reproduced:
-        for name, value in result['components'].items():
+        observed = result.get('observed')
+        if isinstance(observed,dict) and observed.get('gap_observed') is False:
+            reasons['no_projected_material_overlap_for_vertical_gap'] += 1
+        for name, value in measured_components(result).items():
             if name.endswith(('_m', '_rad', '_m2', '_m3', '_m_s', '_s', '_fraction')) and name not in (
-                    'required_overlap_fraction', 'vertical_tolerance_m'):
+                    'required_overlap_fraction', 'vertical_tolerance_m', 'required_clearance_m',
+                    'maximum_endpoint_weld_displacement_m'):
                 components[name].append(float(value))
     return {'declared': len(events), 'observed': len(reproduced),
             'statuses': dict(Counter(e['score']['status'] for e in events)),
+            'component_unavailable_reasons': dict(reasons),
             'components': {name: stats(values) for name, values in sorted(components.items())}}
 
 
@@ -264,13 +281,28 @@ def component_names(condition):
         definitions = [d['condition'] for d in condition.get('definitions', [])]
         if definitions and all(d['expected'] == 'inside_region' for d in definitions):
             expected = ['vertex_containment_error_m', 'outside_volume_m3', 'outside_volume_fraction']
-        elif definitions and all(d['expected'] == 'inside_aperture' for d in definitions):
-            expected = ['outside_aperture_area_m2', 'outside_allowed_area_m2', 'boundary_distance_m']
+        elif definitions and all(d['expected'] in ('inside_aperture','inside_trace_aperture') for d in definitions):
+            expected = ['section_area_m2','outside_aperture_area_m2', 'outside_allowed_area_m2', 'boundary_distance_m']
+        elif definitions and all(d['expected'] == 'layered_over' for d in definitions):
+            expected = ['footprint_overlap_fraction','overlap_shortfall_fraction','footprint_gap_m',
+                        'minimum_layer_gap_m','maximum_layer_gap_m','layer_gap_shortfall_m','layer_gap_excess_m']
+        elif definitions and all(d.get('relation_scope') == 'curves' for d in definitions):
+            expected = ['curve_gap_m','curve_hausdorff_m','measurement_curve_length_m','reference_curve_length_m']
+        elif definitions and all(d.get('relation_scope') == 'segments' for d in definitions):
+            expected = ['segment_gap_m','segment_hausdorff_m','segment_axis_angle_rad',
+                        'measurement_length_m','reference_length_m']
+        elif definitions and all(d['expected']=='near' and d.get('relation_scope')=='objects' for d in definitions):
+            expected = ['surface_distance_m']
         elif definitions and all(d['expected'] == 'inside_box' and d.get('relation_scope') == 'objects' for d in definitions):
             expected = ['containment_error_m']
         elif not definitions or any(d.get('relation_scope') == 'objects' for d in definitions):
             expected += ['signed_separation_m', 'footprint_gap_m', 'footprint_overlap_fraction',
                          'footprint_overlap_m2', 'overlap_shortfall_fraction']
+    if condition['kind']=='selection':
+        for definition in condition.get('definitions',[]):
+            underlying = definition['condition']['kind']
+            if underlying != 'selection':
+                expected += component_names(dict(condition,kind=underlying))
     return sorted(set(expected) | condition['baseline']['components'].keys() |
                   condition['conditioned']['components'].keys())
 
@@ -429,7 +461,9 @@ def report_markdown(data):
             lines += [f"**{c['family']} / {c['condition_id']} — tested definition:**", '',
                       *table(['Field', 'Value'], condition_parameters(c)), '',
                       'Observation statuses: baseline `' + json.dumps(c['baseline']['statuses'], sort_keys=True) +
-                      '`; conditioned `' + json.dumps(c['conditioned']['statuses'], sort_keys=True) + '`.', '']
+                      '`; conditioned `' + json.dumps(c['conditioned']['statuses'], sort_keys=True) + '`.',
+                      'Unobserved component reasons: baseline `' + json.dumps(c['baseline'].get('component_unavailable_reasons',{}),sort_keys=True) +
+                      '`; conditioned `' + json.dumps(c['conditioned'].get('component_unavailable_reasons',{}),sort_keys=True) + '`.', '']
         lines += ['<details><summary>Exact delivered policy prompts</summary>', '']
         for mode in ('baseline', 'conditioned'):
             lines += [f'**{mode}:**', '', *('> ' + p.replace('\n', '\n> ') for p in task['delivered_prompts'][mode]), '']
@@ -472,7 +506,8 @@ def report_html(data):
         for c in task['conditions']:
             content += '<details class="definition"><summary>' + esc(c['family'] + ' / ' + c['condition_id'] + ' — tested definition') + '</summary>'
             content += html_table(['Field', 'Value'], condition_parameters(c))
-            content += '<p>Observation statuses: baseline <code>' + esc(json.dumps(c['baseline']['statuses'], sort_keys=True)) + '</code>; conditioned <code>' + esc(json.dumps(c['conditioned']['statuses'], sort_keys=True)) + '</code>.</p></details>'
+            content += '<p>Observation statuses: baseline <code>' + esc(json.dumps(c['baseline']['statuses'], sort_keys=True)) + '</code>; conditioned <code>' + esc(json.dumps(c['conditioned']['statuses'], sort_keys=True)) + '</code>.</p>'
+            content += '<p>Unobserved component reasons: baseline <code>' + esc(json.dumps(c['baseline'].get('component_unavailable_reasons',{}),sort_keys=True)) + '</code>; conditioned <code>' + esc(json.dumps(c['conditioned'].get('component_unavailable_reasons',{}),sort_keys=True)) + '</code>.</p></details>'
         content += '<details class="prompts"><summary>Exact delivered policy prompts</summary>'
         for mode in ('baseline', 'conditioned'):
             content += '<h4>' + mode.capitalize() + '</h4>' + ''.join('<blockquote>' + esc(p) + '</blockquote>' for p in task['delivered_prompts'][mode])

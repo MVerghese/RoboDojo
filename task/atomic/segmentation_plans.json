@@ -7402,7 +7402,7 @@
     },
     {
       "path": "task/atomic/materials.py",
-      "sha256": "571bf00e5a6ef6a061b9444aa10cd64d7075349bd70a22eeb30fc0b96e69f652"
+      "sha256": "0b42ca82fd5101a7b0dd409139181d629b443a8ed62d2253f545a60f5b9241b8"
     },
     {
       "path": "task/atomic/selection.py",
