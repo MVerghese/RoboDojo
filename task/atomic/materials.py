@@ -61,6 +61,10 @@ def material_state(env,label,kind,env_idx):
 
 
 def resolve_material(env,selector,env_idx):
+    if selector['kind'] == 'cloth_model_curve':
+        selected, proof = resolve_model_curve(env, selector, env_idx)
+        value, source = resolve_material(env, selected, env_idx)
+        return value, {**source, 'calibrated_model_curve': proof}
     if selector['kind']=='cloth_model_patch':
         selected,proof=resolve_model_patch(env,selector,env_idx)
         value,source=resolve_material(env,selected,env_idx)
@@ -103,6 +107,18 @@ def resolve_material(env,selector,env_idx):
     if set(ids)-lookup.keys():raise ValueError('requested material IDs are missing from live state')
     points=state['positions'][[lookup[i] for i in ids]]
     source={**state['source'],**selector,'material_kind':kind,'material_ids':list(ids)}
+    if selector['kind'] == 'cloth_curve':
+        triangles = np.asarray(state.get('triangles'))
+        if triangles.ndim != 2 or triangles.shape[1] != 3:
+            raise RuntimeError('material curve requires live topology to verify connected edges')
+        edges = {tuple(sorted((int(a), int(b)))) for face in triangles
+                 for a, b in zip(face, np.roll(face, -1))}
+        if any(tuple(sorted((a,b))) not in edges for a,b in zip(ids, ids[1:])):
+            raise RuntimeError('curve IDs are not an ordered connected material-edge path')
+        from task.atomic.curves import curve_points
+        curve_points(points)
+        return {'polyline_m': points.tolist()}, {
+            **source, 'representation': 'ordered persistent mesh-edge material path; not a detected crease'}
     if selector['kind'] in ('cloth_patch_frame', 'cloth_tag_frame','cloth_patch_surface'):
         x,y=points[1]-points[0],points[2]-points[0]
         if np.linalg.norm(x)<=1e-10 or np.linalg.norm(y)<=1e-10:
@@ -141,12 +157,26 @@ def resolve_patch_surface(env,selector,env_idx):
 
 def resolve_model_patch(env,selector,env_idx):
     """Choose immutable faces from the actual asset model, never live proximity."""
+    row, model = _verified_material_model(env, selector, env_idx)
+    selected={'kind':'cloth_patch_surface','label':selector['label'],**{k:row[k] for k in ('face_ids','origin_id','x_id','y_id')}}
+    return selected,{'model':model,'asset_sha256':row['asset_sha256'],'topology_sha256':row['topology_sha256'],
+                    'selection_semantics':'explicit pre-policy model-bound material faces; not nearest live vertices'}
+
+
+def resolve_model_curve(env, selector, env_idx):
+    row, model = _verified_material_model(env, selector, env_idx)
+    return {'kind': 'cloth_curve', 'label': selector['label'], 'ids': row['ids']}, {
+        'model': model, 'asset_sha256': row['asset_sha256'], 'topology_sha256': row['topology_sha256'],
+        'selection_semantics': 'explicit pre-policy model-bound ordered material edges; not live nearest vertices'}
+
+
+def _verified_material_model(env, selector, env_idx):
     from pathlib import Path
     lm=env.scene_manager.layout_manager;label=selector['label']
     metadata=lm.get_instance_metadata(env_idx=env_idx,label=label)
     model=f"{metadata.get('model_name')}/{int(metadata.get('model_id',-1)):05d}"
     row=selector['models'].get(model)
-    if row is None:raise RuntimeError('no calibrated cloth patch for actual asset model '+model)
+    if row is None:raise RuntimeError('no calibrated cloth material region for actual asset model '+model)
     state=material_state(env,label,'cloth',env_idx)
     if state.get('topology_sha256')!=row['topology_sha256']:
         raise RuntimeError('live cloth topology differs from the calibrated persistent face IDs')
@@ -159,6 +189,4 @@ def resolve_model_patch(env,selector,env_idx):
         obj._atomic_verified_asset_file=identity
     if obj._atomic_verified_asset_sha256!=row['asset_sha256']:
         raise RuntimeError('live cloth asset file differs from the reviewed patch calibration')
-    selected={'kind':'cloth_patch_surface','label':label,**{k:row[k] for k in ('face_ids','origin_id','x_id','y_id')}}
-    return selected,{'model':model,'asset_sha256':row['asset_sha256'],'topology_sha256':row['topology_sha256'],
-                    'selection_semantics':'explicit pre-policy model-bound material faces; not nearest live vertices'}
+    return row, model

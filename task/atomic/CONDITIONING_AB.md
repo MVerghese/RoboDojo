@@ -567,3 +567,14 @@ labels from the actual layout; only the conditioned arm receives the geometric
 append. Candidate inventories are frozen at activation and independently
 audited. This is an initial referent pilot, not language parsing or automatic
 all-task program compilation.
+
+### Anchored cloth-curve pair
+
+`generate_expansion_suite.py --phase material_curves --tasks fold_clothes
+--asset-calibration-root <cloth asset export directory>` adds continuous
+polyline preservation to the existing material landmark, patch and surface-gap
+conditions. The export directory must contain `asset-geometry.json` with all
+three configured garment models and actual material topology. Calibration binds
+ordered mesh-edge IDs before the policy acts. Both arms score the same initial
+paths at episode end; only the conditioned arm receives the geometric append.
+These are explicit anchored material lines, not inferred physical creases.

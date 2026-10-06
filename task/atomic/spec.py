@@ -19,11 +19,12 @@ GEOMETRY_KINDS = frozenset(
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "before_contact", "recognition_event", "attempt_end"})
 CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "articulated_link_pose", "joint_link_pose"}) | CONTACT_KINDS
-MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame','model_calibrated_frame'}
-FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS
+CURVE_KINDS = frozenset({'cloth_curve', 'cloth_model_curve'})
+MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame','model_calibrated_frame'} | CURVE_KINDS
+FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS - CURVE_KINDS
 OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame','model_calibrated_frame','cloth_patch_surface','cloth_model_patch'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
-                               'near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment'})
+                               'near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment','intersects_curve','coincides_with_curve'})
 
 
 def _finite_number(value, name, positive=False):
@@ -65,6 +66,7 @@ def _validate_selector(selector, name):
               'articulated_link_pose': {'label', 'link'},
               'joint_link_pose': {'label', 'joint_tag'},
               'cloth_points': {'label','ids'}, 'cloth_landmark': {'label','tag'},
+              'cloth_curve': {'label','ids'}, 'cloth_model_curve': {'label','models'},
               'cloth_tag_frame': {'label','tag'},
               'cloth_line_frame': {'label','tag_a','tag_b','normal_tag'},
               'cloth_patch_surface': {'label','origin_id','x_id','y_id','face_ids'},
@@ -75,7 +77,7 @@ def _validate_selector(selector, name):
         raise ValueError(f'{name} has unsupported selector fields: {set(selector) - common - fields}')
     if selector.get('time', 'live') not in ('live', 'stage_start'):
         raise ValueError(f'{name}.time must be live or stage_start')
-    if selector.get('time') == 'stage_start' and selector['kind'] not in FRAME_KINDS:
+    if selector.get('time') == 'stage_start' and selector['kind'] not in FRAME_KINDS | CURVE_KINDS:
         raise ValueError('a frozen reference requires an actual landmark frame')
     if selector["kind"] == "robot_ee_pose":
         if not selector.get("arm"):
@@ -152,6 +154,11 @@ def _validate_selector(selector, name):
         ids=selector.get('ids')
         if not isinstance(ids,list) or not ids or any(type(i) is not int or i<0 for i in ids) or len(set(ids))!=len(ids):
             raise ValueError('material points require distinct explicit nonnegative IDs')
+    if selector['kind'] == 'cloth_curve':
+        ids = selector.get('ids')
+        if (not isinstance(ids, list) or not 2 <= len(ids) <= 128
+                or any(type(i) is not int or i < 0 for i in ids) or len(set(ids)) != len(ids)):
+            raise ValueError('cloth curve needs 2–128 distinct ordered persistent vertex IDs')
     if selector['kind'] in ('cloth_landmark','cloth_tag_frame') and (not isinstance(selector.get('tag'),str) or not selector['tag']):
         raise ValueError('cloth landmark requires an annotated material tag')
     if selector['kind']=='cloth_line_frame':
@@ -178,6 +185,20 @@ def _validate_selector(selector, name):
                 raise ValueError('cloth model patch hashes must be SHA256 hex')
             _validate_selector({'kind':'cloth_patch_surface','label':selector['label'],
                 **{k:row[k] for k in ('face_ids','origin_id','x_id','y_id')}},name+'.'+model)
+    if selector['kind'] == 'cloth_model_curve':
+        import re
+        models = selector.get('models')
+        if not isinstance(models, dict) or not models:
+            raise ValueError('cloth model curve requires reviewed model alternatives')
+        for model, row in models.items():
+            if not isinstance(model, str) or not re.fullmatch(r'[^/]+/[0-9]{5}', model):
+                raise ValueError('cloth curve alternatives require model-name/5-digit-index keys')
+            if not isinstance(row, dict) or set(row) != {'ids', 'asset_sha256', 'topology_sha256'}:
+                raise ValueError('cloth model curve needs ordered IDs and asset/topology hashes')
+            if any(not isinstance(row[k], str) or not re.fullmatch('[a-f0-9]{64}', row[k])
+                   for k in ('asset_sha256', 'topology_sha256')):
+                raise ValueError('cloth model curve hashes must be SHA256 hex')
+            _validate_selector({'kind': 'cloth_curve', 'label': selector['label'], 'ids': row['ids']}, name+'.'+model)
 
 
 def _validate_condition(condition):
@@ -220,6 +241,8 @@ def _validate_condition(condition):
             raise ValueError(f'{field} only applies to spatial_relation')
     _validate_selector(condition.get("measurement"), f"condition {condition['id']}.measurement")
     measurement = condition['measurement']
+    if measurement['kind'] in CURVE_KINDS and (kind != 'spatial_relation' or condition.get('relation_scope') != 'curves'):
+        raise ValueError('material curves support explicit curves-scope relations, not a fabricated pose')
     if measurement.get('time', 'live') != 'live':
         raise ValueError('measurements must be live; stage_start is a reference snapshot, not a referent-selection adapter')
     if kind in ('pose', 'relative_orientation') and measurement['kind'] not in FRAME_KINDS:
@@ -237,18 +260,24 @@ def _validate_condition(condition):
             raise ValueError('object position relations require explicit points scope; they do not measure whole objects')
     if condition.get("reference") is not None:
         _validate_selector(condition["reference"], f"condition {condition['id']}.reference")
-        if condition['reference']['kind'] not in FRAME_KINDS:
+        if condition['reference']['kind'] not in FRAME_KINDS and not (
+                kind == 'spatial_relation' and condition.get('relation_scope') == 'curves'
+                and condition['reference']['kind'] in CURVE_KINDS):
             raise ValueError('reference must identify an oriented landmark frame')
     elif kind in ('relative_displacement', 'relative_orientation', 'spatial_relation'):
         raise ValueError('relative geometry needs an explicit reference landmark frame')
     if kind == 'spatial_relation':
         scope = condition.get('relation_scope', 'points')
-        if scope not in ('points', 'objects','segments'):
-            raise ValueError('relation_scope must be points, objects or segments')
+        if scope not in ('points', 'objects','segments','curves'):
+            raise ValueError('relation_scope must be points, objects, segments or curves')
         if scope == 'objects' and (measurement['kind'] not in OBJECT_FRAME_KINDS or
                                    (condition['reference']['kind'] not in OBJECT_FRAME_KINDS and condition['expected'] != 'inside_aperture')):
             raise ValueError('objects scope needs object frame selectors; it cannot replace functional landmarks')
         relation = condition['expected']
+        if scope == 'curves' or relation in ('intersects_curve', 'coincides_with_curve'):
+            if (scope != 'curves' or relation not in ('intersects_curve', 'coincides_with_curve')
+                    or any(s['kind'] not in CURVE_KINDS for s in (measurement, condition['reference']))):
+                raise ValueError('material curve relations require two persistent cloth curves and curves scope')
         if scope=='objects' and relation=='near':
             for selected in (measurement,condition['reference']):
                 if selected['kind'] not in ('cloth_patch_surface','cloth_model_patch') and not (selected['kind']=='object_pose' and selected.get('mesh_paths')):
@@ -266,7 +295,7 @@ def _validate_condition(condition):
             raise ValueError('layer gap bounds apply only to layered_over')
         if relation == 'on_top' and condition['reference'].get('time') == 'stage_start':
             raise ValueError('supported-on requires a live support frame and contact, not historical geometry')
-        if 'margin' in condition and relation in ('near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment'):
+        if 'margin' in condition and relation in ('near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment','intersects_curve','coincides_with_curve'):
             raise ValueError('margin only applies to directional separation relations')
         if 'half_extents' in condition and not (relation == 'inside_box' or (scope == 'points' and relation == 'on_top')):
             raise ValueError('half_extents requires a box relation')

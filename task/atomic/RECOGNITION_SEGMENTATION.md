@@ -410,3 +410,13 @@ not compile source plans, resolve language/game roles, distinguish arbitrary
 controls on one mechanism, or replace physical selected-object contact. The new
 `selection_query` stack-block pair exercises this binding with the same reviewed
 XYZ target in both A/B arms.
+
+### Material curves do not infer action boundaries
+
+The `material_curves` test scores pre-policy, model-bound material-edge paths in
+three independent fold observers. Each starts under the existing dependency
+rules and freezes the entire initial polyline; end sampling follows every
+persistent vertex and edge through deformation. Continuous Hausdorff scoring
+covers edge interiors. It does not discover a new crease, add a fold segment,
+certify a grasp, or change recognition. The physical fold state machine and
+observation windows remain identical between baseline and conditioned prompts.

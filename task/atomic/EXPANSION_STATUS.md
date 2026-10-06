@@ -272,3 +272,24 @@ activation snapshots even if objects move or new layout labels appear later.
 Local counterexamples pass. A fresh `geometry-selection-query-1006` stack-block
 pair will exercise the calibrated initial XYZ target; live results are pending.
 Language/game roles and arbitrary per-control/material candidates remain gaps.
+
+### Continuous material-curve implementation and calibration
+
+Added ordered persistent mesh-edge curve selectors with actual model/file/topology
+binding and continuous polyline distance. Counterexamples reject endpoint and
+vertex-set proxies, disconnected nearby layers and changed asset/topology
+identities; dense independent Lipschitz bounds cover numerical scales.
+All nine anchor/model combinations calibrate to actual authored routes of
+15–69 vertices. Retained evidence is
+`/home/mverghese/robodojo-expansion-state/cloth-asset-calibration-1006/material-curve-validation.json`.
+The new `material_curves` phase adds three 20 mm initial path-preservation
+conditions to the cloth landmark/patch/surface tests. Live validation is pending.
+These anchored material routes do not locate a newly formed curved crease.
+
+A completed CPU inventory inspected sphere/charger baked body declarations,
+22 installed particle/cloth declarations and symbol records from 29 PhysX
+binaries. The sphere root, visual and collision children all declare enabled
+rigid bodies without transform resets. No verified per-material finger contact
+force/identity readout was found in this inspected API subset. Declaration and
+symbol inventory is not a proof that no internal API exists. Evidence:
+`/home/mverghese/robodojo-expansion-state/physics-asset-calibration-1006/physics-inventory-summary.json`.

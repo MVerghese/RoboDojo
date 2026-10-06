@@ -101,6 +101,14 @@ def evaluate_geometry(condition: dict, measured, reference=None) -> GeometryResu
     tolerance = float(condition.get("tolerance", 0.0))
     if tolerance < 0 or not np.isfinite(tolerance):
         raise ValueError("tolerance must be finite and nonnegative")
+    if kind == 'spatial_relation' and condition.get('relation_scope') == 'curves':
+        from task.atomic.curves import curve_metrics
+        relation = condition['expected']
+        if relation not in ('intersects_curve', 'coincides_with_curve'):
+            raise ValueError('unsupported material curve relation')
+        components = curve_metrics(measured, reference)
+        error = components['curve_gap_m' if relation == 'intersects_curve' else 'curve_hausdorff_m']
+        return GeometryResult(error <= tolerance, error, tolerance, components, components)
     point, orientation = _observed_pose(measured)
     ref_pos, ref_rot = _pose(reference, "reference")
     ref_matrix = _rotation(ref_rot)

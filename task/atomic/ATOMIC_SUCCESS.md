@@ -483,3 +483,13 @@ requires a unique geometric target and unique sustained contacted candidate;
 ambiguity has no success value. Offline auditing verifies the binding inventory
 separately from the geometric values. Local identity/movement counterexamples
 pass; the stack-block `selection_query` pilot awaits simulator validation.
+
+### Anchored material paths and fold success
+
+Continuous curve intersection/coincidence conditions measure explicitly selected
+material-edge paths. They retain asset/topology identity, every edge and a full
+initial reference. Episode-end curve errors do not change fold recognition or
+native task success, even if a path is preserved exactly. Fold completion still
+requires the configured lift, closure, bend, layer and settling evidence. A
+material curve does not prove a cloth grasp, force contact or physical crease.
+The paired `material_curves` test keeps these recognition rules identical.

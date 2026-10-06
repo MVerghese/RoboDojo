@@ -127,7 +127,7 @@ class AtomicSession:
             if metadata.get('uuid') != selector['asset_uuid']:
                 raise RuntimeError('calibrated frame/mesh asset identity differs from the reviewed asset')
             source['verified_asset_uuid']=metadata['uuid']
-        if kind in ('cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','fluid_points'):
+        if kind in ('cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','cloth_curve','cloth_model_curve','fluid_points'):
             from task.atomic.materials import resolve_material
             return resolve_material(self.env,selector,self.env_idx)
         if kind == 'model_calibrated_frame':

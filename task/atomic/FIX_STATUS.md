@@ -1,8 +1,25 @@
 # Audit fixes and remaining implementation
 
-Updated 2026-10-02. This page distinguishes implemented fixes from source plans
+Updated 2026-10-06. This page distinguishes implemented fixes from source plans
 and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 [slot/factor coverage](CONDITIONING_AUDIT.md), and [all-task plans](SEGMENTATION.md).
+
+## Current verification snapshot (October 6)
+
+The current source passes **210 offline atomic tests**. Dated sections below
+retain earlier checkpoints of implementation and verification. Current work adds
+model-bound ordered material curves, continuous edge-interior Hausdorff distance,
+bounded initial-layout candidate discovery, early contact API installation and
+bounded cleanup after simulator exceptions. Cloth path calibration covers all
+three configured garment models. Fresh curve, selection-query and corrected pour
+pairs require simulator validation; host tests and baked assets do not supply it.
+
+Corrected support recognition has live stack-block/stack-bowl evidence. See
+[EXPANSION_STATUS.md](EXPANSION_STATUS.md) for frozen suite provenance and the
+integrated report. Physical cloth finger contact/force remains unresolved;
+anchored material curves do not locate a newly formed physical crease. Source
+plans cover all 54 task modules, but arbitrary language/game binding and faithful
+full-state replay remain implementation gaps.
 
 ## Implemented before the expanded audit
 

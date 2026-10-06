@@ -608,3 +608,32 @@ of an unrecorded simulator scene. It does not parse language roles or enumerate
 multiple controls/tips on the same object. `selection_query` binds the three
 actual stack blocks to the calibrated initial XYZ referent; live validation is
 pending.
+
+### Continuous anchored material curves (October 6)
+
+`cloth_curve` selects 2–128 ordered persistent cloth vertex IDs; every adjacent
+pair must be an actual live topology edge. `cloth_model_curve` additionally
+binds these IDs to the actual garment model, reviewed asset-file SHA256 and
+live topology SHA256. Invalid, disconnected, missing or degenerate paths fail
+explicitly. These selectors supply a polyline, with no invented orientation.
+
+Use `kind: spatial_relation`, `relation_scope: curves` with either
+`intersects_curve` or `coincides_with_curve`. Intersection scores minimum
+finite segment-pair distance. Coincidence scores symmetric **continuous**
+polyline Hausdorff distance: the maximum nearest-curve distance over all edge
+interiors in both directions. Endpoint-only and vertex-set comparisons can
+miss deviations; tests include fixed endpoints with a bent interior and two
+routes through the same vertex set. Distances and both path lengths are
+reported separately in metres internally and millimetres in the report.
+
+Stage-start references retain the complete initial world-space polyline.
+Live measurement follows the same material IDs, without selecting nearer
+vertices after deformation. The `material_curves` fold A/B phase adds three
+20 mm path-preservation conditions at episode end, alongside the existing
+landmark, patch-layer and surface-gap conditions. Before execution, deterministic
+shortest authored mesh-edge routes are calibrated between left shoulder/chest,
+right shoulder/chest and left/right chest for all three configured garment
+models. The routes contain 15–69 vertices. This measures explicit anchored
+material paths; identifying the newly formed physical crease remains a gap.
+No cloth contact force or grasp is inferred. Numerical and model-binding tests
+pass; live curve measurements remain pending.

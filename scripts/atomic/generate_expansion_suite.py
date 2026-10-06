@@ -197,6 +197,53 @@ def calibrated_fold_profile(assets):
     return base,text
 
 
+def calibrated_curve_profile(assets, evidence=None):
+    """Explicit anchored material-edge paths, not inferred physical creases."""
+    import numpy as np
+    from task.atomic.cloth_calibration import material_edge_path
+    base, text = calibrated_fold_profile(assets)
+    rows = json.loads((assets/'asset-geometry.json').read_text())['assets']
+    bindings = {}
+    for stage in base['stages']:
+        tags = [stage['recognition'][key]['tag'] for key in ('crease_a', 'crease_b')]
+        models = {}; reviewed = {}
+        for key, asset in sorted(rows.items()):
+            if not key.startswith('Garment/Top_Long/'):
+                continue
+            if asset['status'] != 'exported' or len(asset['meshes']) != 1 or asset['meshes'][0]['point_offset'] != 0:
+                raise ValueError('material curve requires one verified persistent-topology mesh')
+            anchors = [asset['metadata']['passive']['functional'][tag]['id'] for tag in tags]
+            if any(len(ids) != 1 for ids in anchors):
+                raise ValueError('material curve anchors must be explicit single material vertices')
+            mesh = asset['root_relative_mesh']
+            vertices = np.asarray(mesh['vertices'])*asset['authored_root_scale']
+            model = key.split('/', 1)[1]
+            row = material_edge_path(vertices, mesh['triangles'], anchors[0][0], anchors[1][0], asset['asset_sha256'])
+            models[model] = row
+            reviewed[model] = {**row, 'anchor_tags': tags,
+                'authored_scaled_length_m': float(np.linalg.norm(np.diff(vertices[row['ids']], axis=0), axis=1).sum())}
+        if set(models) != {'Top_Long/00001', 'Top_Long/00004', 'Top_Long/00009'}:
+            raise ValueError('curve calibration must cover every configured garment model')
+        selector = {'kind': 'cloth_model_curve', 'label': 'target', 'models': models}
+        stage['geometry'].append({'id': 'anchored_material_curve_preservation', 'slot': 'crease',
+            'kind': 'spatial_relation', 'relation_scope': 'curves', 'measurement': selector,
+            'reference': {**deepcopy(selector), 'time': 'stage_start'},
+            'expected': 'coincides_with_curve', 'tolerance': .02,
+            'event': {'kind': 'attempt_end'}, 'track_closest': False})
+        bindings[stage['id']] = reviewed
+    if evidence is not None:
+        evidence.update({'paths': bindings,
+            'scope': 'pre-policy shortest authored mesh-edge paths between declared anchors; not detected creases'})
+    text += (' At episode end preserve the initial material-edge path from left shoulder to left chest, '
+             'the path from right shoulder to right chest, and the path from left chest to right chest, '
+             'each within 20 mm symmetric continuous polyline Hausdorff distance. Each path is the '
+             'shortest authored mesh-edge route between the named single-vertex anchors, selected '
+             'before policy execution; every material vertex on that route stays fixed in identity. '
+             'The distance includes all edge interiors and uses the initial world-space path as its '
+             'reference. These anchored material paths do not locate a newly formed physical crease.')
+    return base, text
+
+
 def calibrated_pour_profile(base,scene,assets):
     """Whole-ball source-core cohort and measured target mouth crossings."""
     import numpy as np
@@ -677,12 +724,12 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                                 'first-instance observers; partial action coverage',
                                 'new numerical targets are prototype probes; asset feasibility requires live review']}
     for task in tasks:
-        pair, blocker = ((fold_profile(), None) if task == 'fold_clothes' and phase in ('materials','constrained','cloth_patches','crease_segments','surface_gaps','cloth_geometry')
+        pair, blocker = ((fold_profile(), None) if task == 'fold_clothes' and phase in ('materials','constrained','cloth_patches','crease_segments','surface_gaps','cloth_geometry','material_curves')
                          else profile(plans[task]))
         if blocker:
             raise ValueError(f'{task}: {blocker}')
         scene=None
-        if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry'):
+        if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry','material_curves'):
             if task!='fold_clothes' or not asset_calibration_root:raise ValueError('cloth patch phase needs garment calibration evidence')
             source=Path(asset_calibration_root)/'asset-geometry.json'
             manifest.setdefault('calibration_inputs',{})['cloth_assets']={'path':str(source),
@@ -720,7 +767,8 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
         binding_evidence={}
         base, append = (calibrated_charger_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='charger_tips' else
                         calibrated_liquid_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='liquid_core' else
-                        calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry') else
+                        calibrated_curve_profile(Path(asset_calibration_root),binding_evidence) if phase=='material_curves' else
+                        calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry','material_curves') else
                         calibrated_pour_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='pour_core' else
                         calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
                         constrained_expand(task,pair[0],scene,
@@ -737,7 +785,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                 'candidate_query': selected['selection']['candidates'],
                 'target': selected['selection']['conditions'][0]['expected'],
                 'scope': 'initial geometric referent among all three actual layout blocks; no language parsing'}
-        if phase in ('surface_gaps','cloth_geometry'):
+        if phase in ('surface_gaps','cloth_geometry','material_curves'):
             for stage in base['stages']:
                 layer=next(c for c in stage['geometry'] if c['id']=='material_patch_layer')
                 stage['geometry'].append({'id':'selected_patch_boundary_gap','slot':'target region','kind':'spatial_relation',
@@ -785,7 +833,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core','charger_tips','selection_query'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core','charger_tips','selection_query','material_curves'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()
