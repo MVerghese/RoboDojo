@@ -377,3 +377,9 @@ pickup-stage completion, while requiring its own physical grip/contact evidence.
 It records projected-tip overrun/depth/axis errors for diagnosing missing events.
 Geometry uses inserted-event and attempt-end measurements. This extends declared
 observation, not automatic discovery of arbitrary insertions or full-part fit.
+
+A corrected-contact `stack_bowls` A/B pair is now verified. Only physically
+transported, released and settled bowls acquire placement completion boundaries;
+the stationary base candidate does not. Different event coverage is retained
+when comparing the two arms. This confirms those declared support windows,
+not automatic labeling of undeclared manipulations.

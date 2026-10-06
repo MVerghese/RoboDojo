@@ -18,7 +18,7 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-support-1006` | 10 | 9 collected cases, 48 reproduced scores; remaining cases submitted | Persistent support, raw body-pair diagnostics, full material mesh export |
 | `geometry-materials-1006` | 4 | Submitted | Real garment landmark destination, tangent normal and crease drift; liquid scene capture/pickup, not calibrated liquid transfer |
 | `geometry-breadth-1006` | 12 | 5 collected cases, 17 reproduced scores | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
-| `geometry-body-contacts-1006` | 4 | 2 valid baselines, 14 reproduced scores; actual upward support in blocks and bowls | Stack release/settling using contact APIs enabled after task objects load |
+| `geometry-body-contacts-1006` | 4 | 3 valid episodes, 20 reproduced scores; verified bowl A/B pair with actual upward support | Stack release/settling using contact APIs enabled after task objects load |
 | `geometry-constrained-1006` | 4 | 1 valid conditioned screw episode, 9 reproduced scores; baseline pending | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
 | `geometry-tool-contacts-1006` | 4 | 1 valid align-block baseline; policy never acquired the tool; no tool scores | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
 | `geometry-crease-segments-1006` | 2 | Submitted | Actual finite material-endpoint segment coincidence alongside patch layering |
@@ -223,3 +223,16 @@ The charger matched pair is frozen under `geometry-charger-tips-1006` and its
 capacity monitor is running. The current suite/source checks include 198 passing
 atomic tests, including wrong model/file/scale rejection and coupled insertion
 counterexamples. These test results do not replace pending simulator validation.
+
+### First matched pair with corrected support contacts
+
+`geometry-body-contacts-1006` now has a verified `stack_bowls` A/B pair: both
+arms reached native success, delivered prompting/runtime/checkpoint/layout match,
+and geometric scores have zero audit mismatches. Baseline recognized bowl-2
+placement; the conditioned arm recognized bowl-1 and bowl-2 release/settling.
+The base bowl had no verified held transport in either arm, so its optional
+placement observer stays unrecognized. Actual upward support was recorded;
+conditioned settling drift was 0.436/0.174 mm for bowls 1/2. This is descriptive
+single-episode evidence, not a statistical steering effect. Per-condition angles,
+missing events and shared-event comparisons are in the automatically refreshed
+`geometry-body-contacts-1006/EVAL_MATRIX_REPORT.html` and Markdown counterpart.

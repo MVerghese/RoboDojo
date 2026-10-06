@@ -452,3 +452,9 @@ This contact-qualified observer does not certify a clearance insertion with no
 observed object/receptacle force. Counterexamples cover successful dual entry,
 a single-tip false positive and regripping after the boundary was crossed.
 Live confirmation is pending. Native success and conditioning remain separate.
+
+The corrected-contact bowl A/B pair has now completed with native success in
+both arms. Baseline recognizes one transported placement (bowl 2); conditioned
+recognizes two (bowls 1/2). The untouched base bowl's optional observer remains
+unrecognized. Retained contact/settling evidence and each condition's physical
+measurements are linked from [EXPANSION_STATUS.md](EXPANSION_STATUS.md).
