@@ -352,3 +352,11 @@ takes precedence over collector exit. Both stopped old pour-core attempts are
 now terminal in the ledger; the queued corrected pair remains distinct.
 Reconciliation runs only after every collection worker has finished and stops
 only the matching obsolete controller. Current source passes 224 atomic tests.
+
+A host watchdog now checks retained explicit simulator exceptions on older
+frozen packages. It gives the original cleanup five minutes, rechecks job
+identity/running state, uses the existing proof-gated stop helper, and records
+every action. Normal task failure/reconnect/quiet contact cannot trigger it.
+Collection-only failures are reconciled after all workers finish. The report
+monitor and all active suite controllers were verified in the host PID namespace.
+Current source passes 226 atomic tests; GPU validation remains in progress.

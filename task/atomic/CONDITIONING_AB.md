@@ -595,3 +595,15 @@ unavailable rollout outcome and no native/action/geometric result. It is exclude
 from matched comparisons. Zero retained episodes does not infer that the worker
 executed no policy actions. Keep stop requests, collector exit and failure logs
 for diagnosis; never fill missing outcomes with policy failure or zero error.
+
+### Watch older workers for retained simulator exceptions
+
+`python -m scripts.atomic.watch_failed_workers --root <suite parent directory>
+--helper <operational expansion helper>` checks running authorized suites every
+120 seconds. It uses the existing helper to retain/redact cloud logs and stop
+only a worker with an explicit simulator exception after five minutes for
+normal cleanup. The current job ID and running state are rechecked before the
+stop. Policy/native failure, reconnects and quiet contact scenes cannot trigger
+it. Stop evidence is retained in `failed-worker-watch-events.jsonl`. Terminal
+collections with unavailable reports are reconciled after every worker in that
+suite finishes. New packages also have the faster in-container cleanup guard.
