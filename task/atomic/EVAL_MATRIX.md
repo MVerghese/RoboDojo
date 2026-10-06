@@ -59,6 +59,49 @@ This sweep covers one checkpoint, one episode per arm and partial first-instance
 observers. It does not cover additional checkpoints, every taxonomy factor,
 complete task segmentation, or uncalibrated insertion/twist/pour/fold bindings.
 
+## Integrated original and expansion report: October 6
+
+The original `EVAL_MATRIX_REPORT.md`, `EVAL_MATRIX_REPORT.html` and
+`eval-matrix-continuous.json` paths now include the original screen and all 17
+additional-conditioning suites. At the 20:59 UTC snapshot this is 93 frozen task
+comparisons, 50 unique eval tasks represented, 149 valid episodes, 68 verified
+A/B pairs, 471 independently reproduced event scores and zero mismatches.
+Pending comparisons remain visible. Counts change as controllers collect results.
+
+Each task entry includes its suite, evidence directory, collection outcome,
+native task success, actual delivered prompts, runtime/source hashes, tested
+definitions and separate physical measurements. Matched summaries retain a
+suite column; different targets or runtimes are never averaged across suites.
+The historical October 5 screen results above describe only `eval-matrix-1004`.
+
+The combined report also lives on writable home storage:
+
+```text
+/home/mverghese/robodojo-expansion-state/integrated-report/EVAL_MATRIX_REPORT.html
+/home/mverghese/robodojo-expansion-state/integrated-report/EVAL_MATRIX_REPORT.md
+```
+
+The report monitor refreshes those files and the original report paths when
+collected evidence changes. The initial original report is preserved in
+`integrated-report/original-report-backup/`; raw manifests/results and immutable
+programs remain in their original evidence directories. The expansion index
+links this combined report and retains individual suite links.
+
+To regenerate the combined report without running the simulator:
+
+```bash
+python -m scripts.atomic.report_integrated \
+  --original /absolute/path/to/original-matrix \
+  --expansion-root /absolute/path/to/expansion-state \
+  --output-dir /absolute/path/to/integrated-report
+```
+
+Add `--publish-original` to update the original report paths after preserving
+their initial contents under the output directory. Publication prefers atomic
+replacement. If Lustre rejects new inodes with `EDQUOT`, it updates only the
+three existing report files; the original backup and complete new copy remain
+on the output filesystem. Permission and other errors are not bypassed.
+
 ## Coverage
 
 `generate_eval_matrix.py` reads reviewed object roles from

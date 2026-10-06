@@ -356,7 +356,7 @@ def condition_parameters(condition):
 
 
 def summary_rows(data):
-    return [[r['checkpoint_id'], *measurement_row(r, name)]
+    return [[*([r['suite']] if data.get('runs') else []), r['checkpoint_id'], *measurement_row(r, name)]
             for r in data['summary'] for name in component_names(r)]
 
 
@@ -368,9 +368,33 @@ TASK_HEADERS = ['Task', 'Conditioning tested', 'A/B comparison', 'B coverage', '
 
 
 def task_rows(data):
-    return [[t['task'], '; '.join(sorted({c['family'] + ': ' + c['condition_id'] for c in t['conditions']})),
+    return [[t['task'], *([t['suite']] if data.get('runs') else []), '; '.join(sorted({c['family'] + ': ' + c['condition_id'] for c in t['conditions']})),
              'verified' if t['matched'] else 'EXCLUDED', coverage(t['baseline']),
              coverage(t['conditioned'])] for t in data['tasks']]
+
+
+RUN_HEADERS = ['Suite', 'Cases', 'Collected', 'Completed episodes', 'Valid episodes',
+               'Verified pairs', 'Reproduced events', 'Reproduced flow', 'Mismatches', 'Updated']
+
+
+def run_rows(data):
+    return [[r[k] for k in ('suite', 'cases', 'collected', 'completed_episodes', 'valid_episodes',
+                           'matched_pairs', 'reproduced_event_scores', 'reproduced_flow_scores',
+                           'score_mismatches', 'updated_at')] for r in data.get('runs', [])]
+
+
+def provenance_rows(task):
+    if 'suite' not in task:
+        return []
+    rows = [['Suite', task['suite']], ['Evidence directory', task['evidence_directory']]]
+    for mode in ('baseline', 'conditioned'):
+        row = task['provenance'][mode]
+        rows += [[mode + ' case', row['case_id']], [mode + ' collection status', row['status']],
+                 [mode + ' completed episodes', row.get('completed_episodes')],
+                 [mode + ' native success', row.get('full_task_success')],
+                 [mode + ' runtime SHA256', row.get('runtime_sha256')],
+                 [mode + ' source archive SHA256', row.get('source_archive_sha256')]]
+    return rows
 
 
 def condition_rows(task):
@@ -388,10 +412,12 @@ def report_markdown(data):
         'Selector metadata with explicit `_m`/`_rad` suffixes retains those named units. '
         'Axes 0/1/2 denote local x/y/z. Raw signed separation/overlap are measurements, not unsigned errors. '
         'Unmatched episodes remain descriptive and contribute no shared delta or matched summary.', '',
-        '## Matched-pair summary', '', *table(SUMMARY_HEADERS, summary_rows(data)), '',
-        '## Task index', '', *table(TASK_HEADERS, task_rows(data)), '', '## Conditioning and results by task', '']
+        *(['## Original screen and expansion suites', '', *table(RUN_HEADERS, run_rows(data)), ''] if data.get('runs') else []),
+        '## Matched-pair summary', '', *table((['Suite'] if data.get('runs') else []) + SUMMARY_HEADERS, summary_rows(data)), '',
+        '## Task index', '', *table(([TASK_HEADERS[0], 'Suite', *TASK_HEADERS[1:]] if data.get('runs') else TASK_HEADERS), task_rows(data)), '', '## Conditioning and results by task', '']
     for task in data['tasks']:
-        lines += [f"### {task['task']} ({task['checkpoint_id']})", '',
+        lines += [f"### {task['task']} ({task['checkpoint_id']})" + (' — ' + task['suite'] if 'suite' in task else ''), '',
+                  *([*table(['Provenance', 'Value'], provenance_rows(task)), ''] if 'suite' in task else []),
                   '**A/B comparison:** ' + ('verified' if task['matched'] else 'EXCLUDED: ' + '; '.join(task['exclusions'])), '',
                   '**Actual layouts:** baseline ' + str(task['actual_layouts']['baseline']) +
                   '; conditioned ' + str(task['actual_layouts']['conditioned']) + '.', '',
@@ -408,7 +434,7 @@ def report_markdown(data):
         for mode in ('baseline', 'conditioned'):
             lines += [f'**{mode}:**', '', *('> ' + p.replace('\n', '\n> ') for p in task['delivered_prompts'][mode]), '']
         lines += ['</details>', '']
-        unbound = next((c['unbound_families'] for c in data['coverage'] if c['task'] == task['task']), [])
+        unbound = task.get('unbound_families', next((c['unbound_families'] for c in data['coverage'] if c['task'] == task['task']), []))
         if unbound:
             lines += ['**Actions not conditioned/measured in this task:** ' + ', '.join(unbound) + '.', '']
     lines += ['## Eval tasks not run', '', *table(['Task', 'Reason', 'Conditioning tested'],
@@ -436,6 +462,8 @@ def report_html(data):
     cards = []
     for task in data['tasks']:
         content = '<p class="status">' + esc('Verified A/B pair' if task['matched'] else 'Excluded: ' + '; '.join(task['exclusions'])) + '</p>'
+        if 'suite' in task:
+            content += html_table(['Provenance', 'Value'], provenance_rows(task))
         content += '<p>Actual layouts: baseline ' + esc(str(task['actual_layouts']['baseline'])) + '; conditioned ' + esc(str(task['actual_layouts']['conditioned'])) + '.</p>'
         content += '<h3>Conditioning supplied to the policy</h3><blockquote>' + esc(task['conditioning_prompt'] or 'No append recorded.') + '</blockquote>'
         content += html_table(CONDITION_HEADERS, condition_rows(task))
@@ -449,12 +477,13 @@ def report_html(data):
         for mode in ('baseline', 'conditioned'):
             content += '<h4>' + mode.capitalize() + '</h4>' + ''.join('<blockquote>' + esc(p) + '</blockquote>' for p in task['delivered_prompts'][mode])
         content += '</details>'
-        unbound = next((c['unbound_families'] for c in data['coverage'] if c['task'] == task['task']), [])
+        unbound = task.get('unbound_families', next((c['unbound_families'] for c in data['coverage'] if c['task'] == task['task']), []))
         if unbound:
             content += '<p>Actions not conditioned/measured in this task: <strong>' + esc(', '.join(unbound)) + '</strong>.</p>'
         families = sorted({c['family'] for c in task['conditions']})
-        searchable = ' '.join([task['task'], task['checkpoint_id'], *families, task['conditioning_prompt'] or ''])
-        cards.append('<details class="task" data-search="' + esc(searchable.lower(), quote=True) + '" data-matched="' + str(task['matched']).lower() + '"><summary><span>' + esc(task['task']) + '</span><span class="badge">' + esc('verified' if task['matched'] else 'excluded') + '</span></summary><div class="task-body">' + content + '</div></details>')
+        searchable = ' '.join([task['task'], task['checkpoint_id'], task.get('suite', ''), *families, task['conditioning_prompt'] or ''])
+        label = task['task'] + (' · ' + task['suite'] if 'suite' in task else '')
+        cards.append('<details class="task" data-search="' + esc(searchable.lower(), quote=True) + '" data-matched="' + str(task['matched']).lower() + '"><summary><span>' + esc(label) + '</span><span class="badge">' + esc('verified' if task['matched'] else 'excluded') + '</span></summary><div class="task-body">' + content + '</div></details>')
     css = '''
     :root{color-scheme:light;--ink:#172d43;--muted:#526475;--line:#dbe4eb;--accent:#096d80}
     *{box-sizing:border-box}body{margin:0;background:#f3f6f8;color:var(--ink);font:15px/1.6 system-ui,sans-serif}
@@ -487,7 +516,7 @@ def report_html(data):
     window.addEventListener('afterprint',()=>printOpen.forEach(([d,open])=>d.open=open));
     '''
     excluded = [[c['task'], c.get('blocker') or 'Not selected', 'None; no episodes'] for c in data['coverage'] if not c['included']]
-    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoboDojo · Continuous conditioning errors</title><style>' + css + '</style></head><body><main><header><div class="eyebrow">RoboDojo · Geometric conditioning benchmark</div><h1>Continuous conditioning errors</h1><p>' + esc(f"{data['valid_episodes']} valid episodes · {data['included_tasks']}/{data['catalog_tasks']} tasks · {data['matched_pairs']}/{data['total_pairs']} verified A/B pairs") + '</p><p>Collected ' + esc(data['updated_at']) + ' · ' + esc(str(data['reproduced_event_scores'])) + ' event scores reproduced · ' + esc(str(data['score_mismatches'])) + ' mismatches</p></header><section class="method"><h2 style="margin-top:0">Measurements and units</h2><p>' + esc(data['method']) + '</p><p class="muted">Distances: mm. Angles: degrees. Components: mean / median. Targets and tolerances use mm/degrees; orientations use wxyz quaternions. Selector metadata keeps named _m/_rad units. Axes 0/1/2 mean local x/y/z. Signed separation and footprint overlap are measurements, not unsigned errors.</p></section><h2>Matched-pair summary</h2>' + html_table(SUMMARY_HEADERS, summary_rows(data)) + '<h2>Task index</h2>' + html_table(TASK_HEADERS, task_rows(data)) + '<h2>Conditioning and results by task</h2><div class="controls"><label for="search">Find task / action</label><input id="search" type="search" placeholder="Search tasks, actions or conditioning"><label><input id="matched" type="checkbox"> Verified pairs only</label><button id="expand">Expand tasks</button><button id="collapse">Collapse tasks</button><span id="count" aria-live="polite"></span></div>' + ''.join(cards) + '<h2>Eval tasks not run</h2>' + html_table(['Task', 'Reason', 'Conditioning tested'], excluded) + '<h2>Scope and limitations</h2><p>' + esc(data['scope']) + '</p><ul>' + ''.join('<li>' + esc(x) + '</li>' for x in data['limitations']) + '<li>Missing events are not scores. A release error does not establish successful placement.</li><li>Recognizers without observed events do not establish live recognition accuracy.</li></ul><footer>Generated from suite.json, frozen conditioning programs and benchmark_results.json. Exact continuous values: eval-matrix-continuous.json. Raw action outcomes remain in benchmark_results.json. This HTML is self-contained and needs no network connection.</footer></main><script>' + javascript + '</script></body></html>\n'
+    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoboDojo · Continuous conditioning errors</title><style>' + css + '</style></head><body><main><header><div class="eyebrow">RoboDojo · Geometric conditioning benchmark</div><h1>Continuous conditioning errors</h1><p>' + esc(f"{data['valid_episodes']} valid episodes · {data['included_tasks']}/{data['catalog_tasks']} tasks · {data['matched_pairs']}/{data['total_pairs']} verified A/B pairs") + '</p><p>Collected ' + esc(data['updated_at']) + ' · ' + esc(str(data['reproduced_event_scores'])) + ' event scores reproduced · ' + esc(str(data['score_mismatches'])) + ' mismatches</p></header><section class="method"><h2 style="margin-top:0">Measurements and units</h2><p>' + esc(data['method']) + '</p><p class="muted">Distances: mm. Angles: degrees. Components: mean / median. Targets and tolerances use mm/degrees; orientations use wxyz quaternions. Selector metadata keeps named _m/_rad units. Axes 0/1/2 mean local x/y/z. Signed separation and footprint overlap are measurements, not unsigned errors.</p></section>' + ('<h2>Original screen and expansion suites</h2>' + html_table(RUN_HEADERS, run_rows(data)) if data.get('runs') else '') + '<h2>Matched-pair summary</h2>' + html_table((['Suite'] if data.get('runs') else []) + SUMMARY_HEADERS, summary_rows(data)) + '<h2>Task index</h2>' + html_table(([TASK_HEADERS[0], 'Suite', *TASK_HEADERS[1:]] if data.get('runs') else TASK_HEADERS), task_rows(data)) + '<h2>Conditioning and results by task</h2><div class="controls"><label for="search">Find task / action</label><input id="search" type="search" placeholder="Search tasks, actions or conditioning"><label><input id="matched" type="checkbox"> Verified pairs only</label><button id="expand">Expand tasks</button><button id="collapse">Collapse tasks</button><span id="count" aria-live="polite"></span></div>' + ''.join(cards) + '<h2>Eval tasks not run</h2>' + html_table(['Task', 'Reason', 'Conditioning tested'], excluded) + '<h2>Scope and limitations</h2><p>' + esc(data['scope']) + '</p><ul>' + ''.join('<li>' + esc(x) + '</li>' for x in data['limitations']) + '<li>Missing events are not scores. A release error does not establish successful placement.</li><li>Recognizers without observed events do not establish live recognition accuracy.</li></ul><footer>Generated from suite.json, frozen conditioning programs and benchmark_results.json. Exact continuous values: eval-matrix-continuous.json. For integrated reports, raw action outcomes remain in each listed evidence directory’s benchmark_results.json. This HTML is self-contained and needs no network connection.</footer></main><script>' + javascript + '</script></body></html>\n'
 
 
 def write_continuous_report(manifest, result, matrix, root):

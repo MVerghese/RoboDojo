@@ -19,6 +19,56 @@ def event(components=None, status='reproduced'):
 
 
 class ContinuousReportTests(unittest.TestCase):
+    def test_integrated_report_keeps_repeated_tasks_and_runtimes_separate(self):
+        from pathlib import Path
+        from scripts.atomic.report_integrated import integrate
+        empty = arm_summary([])
+        task = {'task': 'same_task', 'checkpoint_id': 'cp', 'matched': True,
+                'exclusions': [], 'conditions': [], 'baseline': empty, 'conditioned': empty,
+                'baseline_case': 'a', 'conditioned_case': 'b',
+                'actual_layouts': {'baseline': [0], 'conditioned': [0]},
+                'conditioning_prompt': 'original target',
+                'delivered_prompts': {'baseline': ['native'], 'conditioned': ['native original target']}}
+        condition = {'family': 'pick', 'condition_id': 'offset', 'kind': 'relative_displacement',
+                     'slot': 'grasp_region', 'baseline': empty, 'conditioned': empty,
+                     'shared': {'n_events': 0, 'components': {}}, 'checkpoint_id': 'cp'}
+        data = {'valid_episodes': 2, 'included_tasks': 1, 'catalog_tasks': 2, 'matched_pairs': 1,
+                'total_pairs': 1, 'updated_at': '2026-10-06', 'reproduced_event_scores': 0,
+                'score_mismatches': 0, 'method': 'Physical units.', 'summary': [condition],
+                'tasks': [task], 'coverage': [
+                    {'task': 'same_task', 'included': True, 'unbound_families': []},
+                    {'task': 'not_run', 'included': False, 'blocker': 'unsupported'}],
+                'limitations': [], 'scope': 'partial', 'checkpoints': {'cp': {}}}
+        result = {'completed_cases': 2, 'cases': [
+            {'case_id': c, 'status': 'passed', 'completed_episodes': 1,
+             'full_task_success': [True], 'runtime_sha256': 'old-runtime'} for c in ('a', 'b')]}
+        second = deepcopy(data)
+        second['tasks'][0]['conditioning_prompt'] = 'new target <unsafe>'
+        second['valid_episodes'] = second['matched_pairs'] = 0
+        second['tasks'][0]['matched'] = False
+        second['tasks'][0]['exclusions'] = ['pending']
+        pending = {'completed_cases': 0, 'cases': [
+            {'case_id': c, 'status': 'pending', 'completed_episodes': 0,
+             'runtime_sha256': 'new-runtime'} for c in ('a', 'b')]}
+        suites = [('original', Path('/original'), {'cases': [{}, {}]}, result, data),
+                  ('expansion', Path('/expansion'), {'cases': [{}, {}]}, pending, second)]
+        combined = integrate(suites)
+        self.assertEqual(combined['included_tasks'], 1)
+        self.assertEqual(combined['total_pairs'], 2)
+        self.assertEqual(combined['matched_pairs'], 1)
+        self.assertEqual(combined['valid_episodes'], 2)
+        self.assertEqual(len(combined['tasks']), 2)
+        self.assertEqual([r['suite'] for r in combined['summary']], ['original', 'expansion'])
+        self.assertEqual(combined['tasks'][1]['provenance']['baseline']['runtime_sha256'], 'new-runtime')
+        self.assertEqual(data['tasks'][0]['conditioning_prompt'], 'original target')
+        md, page = report_markdown(combined), report_html(combined)
+        self.assertIn('original target', md)
+        self.assertIn('new target <unsafe>', md)
+        self.assertIn('new target &lt;unsafe&gt;', page)
+        self.assertIn('new-runtime', page)
+        self.assertIn('Original screen and expansion suites', page)
+        self.assertIn('not_run', md)
+
     def test_flow_path_and_selected_referent_keep_units_and_exclude_unscored_crossing(self):
         rows={'atomic_scores':[{'stage_id':'s','family':'pour','conditions':{},
             'material_flow':{'crossings':{

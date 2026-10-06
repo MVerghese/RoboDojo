@@ -4,6 +4,14 @@ Updated October 6, 2026. Kernel tests, live measurements and matched policy
 comparisons are separate evidence levels. Reports retain missing-event statuses
 and separate physical units; one episode per arm makes no statistical claim.
 
+The original screen and all expansion results are now integrated into the same
+searchable MD/HTML report. The original report paths are refreshed automatically,
+and the combined home copy is at
+`/home/mverghese/robodojo-expansion-state/integrated-report/`.
+Suite-specific summaries and runtime provenance keep repeated tasks distinct.
+See [EVAL_MATRIX.md](EVAL_MATRIX.md#integrated-original-and-expansion-report-october-6)
+for regeneration commands and preserved original backups.
+
 ## Execution ledger
 
 All pairs use the 25k checkpoint, layout/seed 0, one episode per arm, reservation
