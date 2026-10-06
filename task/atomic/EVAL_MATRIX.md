@@ -5,6 +5,57 @@ L40S workflow. Each checkpoint gets 98 full-task episodes: baseline and
 conditioned, both seed/layout 0. One episode per arm is an initial baseline
 screen, not a statistically powered estimate of steerability.
 
+## Collected baseline: October 5, 2026
+
+The `eval-matrix-1004` sweep finished at 22:14 PDT (October 6, 05:14 UTC).
+Checkpoint `robodojo_25k` completed all **98 episodes across 49 tasks**.
+All episodes passed collection/contact-health checks; this is pipeline validity,
+not policy action or task success. **48/49 pairs** passed the A/B matching checks.
+`stack_blocks_by_language` is excluded from matched comparisons: the native
+environment chose layout 2 for baseline and layout 1 for conditioned, changing
+the underlying task instruction. The geometric append was delivered to the
+conditioned policy, but these episodes do not establish an A/B comparison.
+
+The offline audit reproduced **287 geometric event scores with zero mismatches**;
+285 belong to matched pairs. After excluding the node responsible for earlier
+admission failures, **all 98 replacement/current episode allocations passed GPU
+admission**, with no new existing-memory incidents. Native task success was
+**6/49 baseline and 6/49 conditioned** (6/48 each within matched pairs).
+
+The table sums observer instances and conditions over the **48 matched pairs**.
+Counts include optional object candidates; they are not required native action
+counts. Geometry is evaluated only when the relevant physical event is observed.
+
+| Family | Action successes / observers: baseline | Conditioned | Geometry passes / observed: baseline | Conditioned |
+| --- | ---: | ---: | ---: | ---: |
+| Pick | 105/162 | 110/162 | 56/111 | 55/116 |
+| Place | 0/117 | 0/117 | 13/21 | 13/20 |
+| Push | 0/2 | 0/2 | 1/2 | 0/0 |
+| Push with tool | 0/11 | 0/11 | 0/0 | 0/0 |
+| Handover | 3/14 | 3/14 | 2/3 | 3/3 |
+| Actuate | 5/12 | 4/12 | 5/5 | 3/4 |
+| Touch with tool | 0/8 | 0/8 | 0/0 | 0/0 |
+
+There is no consistent observed improvement from adding geometric instructions
+in this single-episode screen. Release geometry can be measured without a
+successful supported placement; the placement success counts remain zero.
+Tool push and tool touch have no observed conditioning events, so this sweep
+does not establish their policy steerability or live recognition accuracy.
+Push has sparse event coverage. These limits remain separate from successful
+collection and the independent reproduction of geometric calculations.
+
+Per-task continuous errors, prompts, event coverage and exclusion reasons are in
+`EVAL_MATRIX_REPORT.md`, `REPORT.md`, `eval-matrix-results.json` and
+`benchmark_results.json` under:
+
+```text
+/lustre/fsw/portfolios/cosmos/projects/cosmos_base_cap/users/mverghese/robodojo-atomic-runs/eval-matrix-1004/
+```
+
+This sweep covers one checkpoint, one episode per arm and partial first-instance
+observers. It does not cover additional checkpoints, every taxonomy factor,
+complete task segmentation, or uncalibrated insertion/twist/pour/fold bindings.
+
 ## Coverage
 
 `generate_eval_matrix.py` reads reviewed object roles from
