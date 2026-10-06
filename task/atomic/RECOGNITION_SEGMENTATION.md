@@ -355,3 +355,13 @@ observers remain independent and recognition is identical in both arms. Adding
 these measurements neither creates a cloth grasp detector nor recognizes a
 curved crease. The profile uses the current pinned websocket runtime when freshly
 packaged; earlier queued profiles retain their original packages.
+
+## Liquid transfer binding
+
+The `liquid_core` program adds one independent partial-transfer observer beside
+bottle pickup. Model/file/scale-verified frames choose the actual cup variant.
+Eligibility is fixed from initial live particle IDs in the reviewed source core,
+not inferred from native reward or selected retrospectively. Source exit,
+first target entry and target dwell are separate physical events. This provides
+one declared pour window; it does not discover repeated pours, full liquid
+cleanup or arbitrary undeclared streams. Live validation is pending.

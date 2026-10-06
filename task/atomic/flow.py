@@ -12,7 +12,7 @@ def validate_flow(config, validate_selector):
     if not isinstance(config, dict) or not fields.issubset(config) or set(config)-fields-{'expected_velocity_direction'}:
         raise ValueError('flow needs opening, aperture, XY target and independent position/angular tolerances')
     validate_selector(config['opening'], 'flow.opening')
-    if config['opening']['kind'] not in ('functional_point', 'support_point', 'object_pose','calibrated_frame') or config['opening'].get('time','live') != 'live':
+    if config['opening']['kind'] not in ('functional_point', 'support_point', 'object_pose','calibrated_frame','model_calibrated_frame') or config['opening'].get('time','live') != 'live':
         raise ValueError('flow opening needs a live calibrated frame')
     aperture_polygon(config['aperture_profile'])
     target = np.asarray(config['target_xy_m'], dtype=float)

@@ -24,6 +24,79 @@ BREADTH_TASKS = ('general_pickup','stack_blocks','press_by_number','play_Xylopho
 CONSTRAINED_TASKS = ('fasten_screws','fold_clothes')
 
 
+def calibrated_liquid_profile(base, assets, evidence=None):
+    """Partial persistent-particle transfer through reviewed vessel cores/mouths."""
+    import numpy as np
+    from shapely.geometry import Polygon
+    from task.atomic.calibration import interior_core_box, opening_section
+    from task.atomic.fit import aperture_polygon
+    summary = json.loads((assets/'asset-summary.json').read_text())
+    cores = {}; mouths = {}; calibration = {}
+    for category, index, z in [('wuliangye', 0, .0275), ('mug', 15, .001),
+                                ('mug', 16, .001), ('goblet', 6, .06)]:
+        key = f'Rigid/{category}/{index:05d}'
+        model = f'{category}/{index:05d}'
+        row = summary[key]
+        mesh = np.load(assets/(key.replace('/', '_')+'.npz'))
+        v, t = mesh['vertices'], mesh['triangles']
+        plane = opening_section(v, t, z)
+        center = list(aperture_polygon(plane['aperture_profile']).centroid.coords)[0]
+        mouth_z = float(v[:, 2].max()-.0005)
+        core = interior_core_box(v, t, [*center, z], [.015, .015, .015], mouth_z)
+        mouth = opening_section(v, t, mouth_z)
+        xy = list(aperture_polygon(mouth['aperture_profile']).centroid.coords)[0]
+        if category != 'wuliangye':
+            square = Polygon([(xy[0]+x, xy[1]+y) for x,y in
+                              [(-.01,-.01),(.01,-.01),(.01,.01),(-.01,.01)]])
+            if not aperture_polygon(mouth['aperture_profile']).covers(square):
+                raise ValueError('central flow window exceeds the actual target mouth')
+        identity = {'asset_sha256': row['asset_sha256'],
+                    'scaled_bounds_m': row['authored_scaled_bounds']}
+        cores[model] = {**identity, 'local_pose': core['center']+[1,0,0,0],
+                       'calibration_id': 'reviewed-material-free-fluid-core:'+row['asset_sha256']}
+        mouths[model] = {**identity, 'local_pose': [*xy, mouth_z, 1,0,0,0],
+                        'calibration_id': 'closed-wall-mouth-plane:'+row['asset_sha256']}
+        calibration[model] = {'core': core, 'mouth': mouth}
+    def frame(label, rows, source=False):
+        return {'kind': 'model_calibrated_frame', 'label': label,
+                'models': {k:v for k,v in rows.items() if (k.startswith('wuliangye/')) == source}}
+    source = frame('bottle', cores, True); target = frame('cup', cores)
+    source_mouth = frame('bottle', mouths, True); target_mouth = frame('cup', mouths)
+    base = deepcopy(base)
+    base['stages'].append({'id': 'calibrated_fluid_core_pour', 'family': 'pour', 'required': False,
+        'instruction': 'Observe a partial source-core particle transfer into a reviewed target core.',
+        'step_limit': 400, 'success_checks': [{'name': 'is_atomic_interaction', 'args': {}}],
+        'recognition': {'kind': 'fluid_material_transfer', 'label': 'bottle', 'target_label': 'cup',
+            'fluid_label': 'wine', 'arm': 'any', 'min_contact_steps': 2,
+            'source_frame': source, 'target_frame': target,
+            'source_half_extents_m': [.015]*3, 'target_half_extents_m': [.015]*3,
+            'required_count': 1, 'min_tilt_rad': math.pi/6, 'settle_steps': 5,
+            'flow': {'opening': target_mouth,
+                'aperture_profile': {'outer': [[-.01,-.01],[.01,-.01],[.01,.01],[-.01,.01]], 'holes': []},
+                'target_xy_m': [.004,0], 'position_tolerance_m': .008,
+                'expected_velocity_direction': [0,0,-1], 'angle_tolerance_rad': math.pi/9}},
+        'geometry': [{'id': 'bottle_mouth_at_transfer', 'slot': 'source pour pose', 'kind': 'pose',
+            'measurement': source_mouth, 'reference': target_mouth,
+            'expected': {'position': [0,0,.08], 'orientation': [math.sqrt(.5),0,-math.sqrt(.5),0]},
+            'tolerance': .025, 'angle_tolerance_rad': math.pi/6,
+            'event': {'kind': 'recognition_event', 'name': 'first_transfer'}, 'track_closest': False}]})
+    base['stage_dependencies']['calibrated_fluid_core_pour'] = []
+    if evidence is not None:
+        evidence.update(calibration)
+    text = ('At the first qualified particle transfer from the initially populated reviewed bottle '
+            'core, place the actual bottle mouth center 80 mm above the actual cup mouth center '
+            'within 25 mm position error, and rotate its mouth frame minus 90 degrees about cup '
+            'local y within 30 degrees full orientation error. Direct downward source-qualified '
+            'particle crossings through the central 20 by 20 mm square of the measured cup mouth '
+            'toward [4, 0] mm in its frame, within 8 mm XY error and 20 degrees of downward velocity. '
+            'The transfer observer requires at least one initially eligible particle to exit a '
+            'physically held bottle tilted by at least 30 degrees and dwell in the target core for '
+            'five physics samples. Cores are reviewed 30 mm cubes; this partial-cohort observer '
+            'does not replace the native whole-liquid task. Particle IDs and all partition counts '
+            'remain recorded without dropping scattered particles.')
+    return base, text
+
+
 def calibrated_fold_profile(assets):
     """Fixed geodesic material regions for every configured garment model."""
     from task.atomic.cloth_calibration import material_patch
@@ -551,6 +624,12 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             source=Path(asset_calibration_root)/'asset-geometry.json'
             manifest.setdefault('calibration_inputs',{})['cloth_assets']={'path':str(source),
                 'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
+        if phase=='liquid_core':
+            if task!='pour_liquid_into_cup' or not asset_calibration_root:
+                raise ValueError('liquid core profile needs baked vessel calibration evidence')
+            names=['asset-summary.json']+[f'Rigid_{name}_{i:05d}.npz' for name,i in [('wuliangye',0),('mug',15),('mug',16),('goblet',6)]]
+            manifest.setdefault('calibration_inputs',{})['liquid_assets']=[{'path':str(Path(asset_calibration_root)/name),
+                'sha256':hashlib.sha256((Path(asset_calibration_root)/name).read_bytes()).hexdigest()} for name in names]
         if phase in ('calibrated','pour_core'):
             if task!=('insert_key' if phase=='calibrated' else 'pour_balls_into_vase'):raise ValueError('calibrated task profile is not bound yet: '+task)
             if not asset_calibration_root:raise ValueError('calibrated bindings require actual asset evidence')
@@ -567,7 +646,9 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             detail=next(iter(report['native_results'][0]['details'].values()))
             scene=detail['atomic_sequence']['scene_calibration']
             manifest.setdefault('calibration_inputs',{})[task]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
-        base, append = (calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry') else
+        liquid_evidence={}
+        base, append = (calibrated_liquid_profile(pair[0],Path(asset_calibration_root),liquid_evidence) if phase=='liquid_core' else
+                        calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry') else
                         calibrated_pour_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='pour_core' else
                         calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
                         constrained_expand(task,pair[0],scene,
@@ -575,6 +656,8 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                         breadth_expand(pair[0],scene) if phase=='breadth' else
                         pair if task == 'fold_clothes' and phase == 'materials' else
                         (validation_expand if phase == 'validation' else expand)(pair[0]))
+        if liquid_evidence:
+            manifest.setdefault('calibration_bindings',{})['liquid_core']=liquid_evidence
         if phase in ('surface_gaps','cloth_geometry'):
             for stage in base['stages']:
                 layer=next(c for c in stage['geometry'] if c['id']=='material_patch_layer')
@@ -591,7 +674,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                     'relation_scope':'segments','measurement':line,'reference':{**line,'time':'stage_start'},
                     'expected':'coincides_with_segment','tolerance':.02,'event':{'kind':'attempt_end'},'track_closest':False})
             append+=' At episode end preserve each finite chord joining the two crease material landmarks within 20 mm symmetric segment Hausdorff distance from its initial chord. This targets both full finite extents, not only the midpoint; it does not measure a curved crease.'
-        if phase in ('validation','breadth','calibrated','pour_core') or (phase=='constrained' and task!='fold_clothes'):
+        if phase in ('validation','breadth','calibrated','pour_core','liquid_core') or (phase=='constrained' and task!='fold_clothes'):
             append = pair[1] + ' ' + append
         manifest['coverage'].append({'task':task,'included':True,
             'families':sorted({s['family'] for s in base['stages']}), 'unbound_families':[],
@@ -623,7 +706,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()

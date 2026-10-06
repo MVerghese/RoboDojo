@@ -130,6 +130,12 @@ class AtomicSession:
         if kind in ('cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','fluid_points'):
             from task.atomic.materials import resolve_material
             return resolve_material(self.env,selector,self.env_idx)
+        if kind == 'model_calibrated_frame':
+            from task.atomic.model_frames import resolve_model_frame
+            selected, proof = resolve_model_frame(self.env, selector, self.env_idx,
+                                                 self._object_pose(selector['label']))
+            value, physical = self._resolve_with_source(selected)
+            return value, {**source, **physical, 'model_frame_proof': proof}
         if kind == 'calibrated_frame':
             lm = self.env.scene_manager.layout_manager
             name = lm.get_instance_name(env_idx=self.env_idx,label=selector['label'])

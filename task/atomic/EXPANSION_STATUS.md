@@ -177,5 +177,17 @@ validation or measured steering effects.
 
 A fresh `cloth_geometry` profile combines all currently available calibrated
 local garment geometry in one pair: patch layers/coverage, finite endpoint chords
-and exact boundary proximity. It retains the physical cloth-grasp gap. Its
-execution state will be added when packaging/submission is complete.
+and exact boundary proximity. It retains the physical cloth-grasp gap. It is prepared under `geometry-cloth-runtime-1006`; its monitor waits for two
+slots in the global window before submission.
+
+### Calibrated liquid binding
+
+The new `liquid_core` phase has material-checked cores and actual mouth planes
+for the bottle and all three configured cups. Actual file hashes/scaled bounds
+are verified before model-specific frames are used. Mug cavity offsets of
+roughly 14–18 mm are explicitly retained. The pilot conditions bottle-mouth
+pose and source-qualified downward particle crossings through a restricted
+20 × 20 mm mouth window. Local calibration and counterexample validation pass;
+initial live source-cohort population, USD solver readback and policy transfer
+remain pending. Partial transfer success requires at least one particle and is
+reported separately from the native whole-liquid task.

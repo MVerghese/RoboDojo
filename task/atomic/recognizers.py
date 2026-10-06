@@ -116,7 +116,7 @@ def validate_recognition(config, family, validate_selector):
             raise ValueError('handover requires two distinct explicit arms')
     for key in fields & {'tip', 'opening', 'pivot', 'source_frame', 'target_frame', 'tool_point', 'target_point'}:
         validate_selector(config[key], key)
-        if config[key]['kind'] not in ('functional_point', 'support_point', 'object_pose', 'object_center_pose','calibrated_frame') or config[key].get('time', 'live') != 'live':
+        if config[key]['kind'] not in ('functional_point', 'support_point', 'object_pose', 'object_center_pose','calibrated_frame','model_calibrated_frame') or config[key].get('time', 'live') != 'live':
             raise ValueError(f'{key} must select a live oriented object landmark')
         expected_label = config['label'] if key in ('tip', 'source_frame', 'tool_point') else config['target_label']
         if config[key]['label'] != expected_label:

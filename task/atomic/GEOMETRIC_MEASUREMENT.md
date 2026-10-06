@@ -506,3 +506,36 @@ orientation in degrees and coverage as a fraction; they are not reduced to a
 mixed-unit scalar. The same measurements run in both arms, with geometry text
 appended only in the conditioned arm. Live force-bearing cloth grasp measurement
 remains unavailable and is not inferred from these geometric checks.
+
+## Calibrated liquid geometry and model alternatives
+
+`model_calibrated_frame` selects a reviewed `model-name/00000` alternative from
+actual loaded metadata. Each row declares `local_pose`, `calibration_id`,
+`asset_sha256` and `scaled_bounds_m`. The runtime verifies the actual USDZ file
+hash and actual scaled material bounds, then composes the offset with the live
+rigid root once. Missing alternatives, changed assets, deforming/link objects
+or mismatched scale fail closed. File hashes are cached by path/size/mtime;
+live root motion does not change the calibration. This selector does not infer
+an opening from bounds.
+
+The `liquid_core` phase calibrates `wuliangye/00000` and all configured cups
+(`mug/00015`, `mug/00016`, `goblet/00006`) from exported material triangles.
+Each core is a verified material-free 30 mm cube. Bottle core Z is 27.5 mm;
+mug cores Z is 1 mm and goblet core Z is 60 mm, in scaled root coordinates.
+Mug core XY centres are approximately [−13.598, 0.042] and [−17.607, 0.046] mm;
+using the root origin would misplace these cavities. Full reviewed core/mouth
+evidence and calibration input hashes are retained in the suite manifest.
+
+The flow window is the **central 20 × 20 mm square within each measured mouth**,
+verified against its actual aperture. It is a restricted window, not the whole
+mouth. Qualified downward particle crossings target [4, 0] mm with 8 mm XY and
+20° velocity tolerances. At first qualified target-core transfer, bottle mouth
+pose targets [0, 0, 80] mm and −90° local-Y orientation relative to cup mouth,
+with separate 25 mm and 30° tolerances. Crossing distance/aperture overrun,
+angular error and relative speed remain separate mm, degrees and mm/s metrics.
+Persistent particle counts and configured nominal masses are not liquid volume.
+
+These bindings have local real-asset calibration and identity/scale/pose
+counterexample evidence. Live initial population/readback and policy transfer
+are pending; an empty initial source-only cohort is an explicit calibration
+failure, never an invented transfer score.

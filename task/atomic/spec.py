@@ -19,9 +19,9 @@ GEOMETRY_KINDS = frozenset(
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "before_contact", "recognition_event", "attempt_end"})
 CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "articulated_link_pose", "joint_link_pose"}) | CONTACT_KINDS
-MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame'}
+MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame','model_calibrated_frame'}
 FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS
-OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame','cloth_patch_surface','cloth_model_patch'}
+OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame','model_calibrated_frame','cloth_patch_surface','cloth_model_patch'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
                                'near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment'})
 
@@ -56,6 +56,7 @@ def _validate_selector(selector, name):
         raise ValueError(f"{name} must have kind in {sorted(MEASUREMENT_KINDS)}")
     common = {'kind', 'time'}
     fields = {'robot_ee_pose': {'arm', 'label', 'min_finger_bodies'},
+              'model_calibrated_frame': {'label', 'models'},
               'calibrated_frame': {'label', 'local_pose', 'calibration_id', 'asset_uuid','asset_model'},
               'object_pose': {'label', 'mesh_paths', 'calibration_id', 'asset_uuid','asset_model'},
               'functional_point': {'label', 'tag', 'type', 'index'},
@@ -92,6 +93,27 @@ def _validate_selector(selector, name):
             raise ValueError('calibrated frame orientation must be nonzero')
         if not isinstance(selector.get('calibration_id'),str) or not selector['calibration_id']:
             raise ValueError('calibrated frame needs reviewed calibration provenance')
+    if selector['kind'] == 'model_calibrated_frame':
+        import re
+        models = selector.get('models')
+        if not isinstance(models, dict) or not models:
+            raise ValueError('model frame requires reviewed asset alternatives')
+        for model, row in models.items():
+            if not isinstance(model, str) or not re.fullmatch(r'[^/]+/[0-9]{5}', model):
+                raise ValueError('model frame requires model-name/5-digit-index keys')
+            if not isinstance(row, dict) or set(row) != {'local_pose', 'calibration_id', 'asset_sha256', 'scaled_bounds_m'}:
+                raise ValueError('model frame needs explicit pose, provenance, file hash and scaled bounds')
+            if not isinstance(row['asset_sha256'], str) or not re.fullmatch('[a-f0-9]{64}', row['asset_sha256']):
+                raise ValueError('model frame requires a SHA256 asset file hash')
+            bounds = row['scaled_bounds_m']
+            if not isinstance(bounds, list) or len(bounds) != 2:
+                raise ValueError('model frame requires scaled lower/upper bounds')
+            for b in bounds:
+                _geometry_vector(b, 3, 'scaled_bounds_m')
+            if any(a >= b for a, b in zip(*bounds)):
+                raise ValueError('model frame scaled bounds must have positive extent')
+            _validate_selector({'kind': 'calibrated_frame', 'label': selector['label'],
+                'local_pose': row['local_pose'], 'calibration_id': row['calibration_id']}, name + '.' + model)
     if 'asset_uuid' in selector and (not isinstance(selector['asset_uuid'],str) or not selector['asset_uuid']):
         raise ValueError('calibrated asset identity must be a nonempty UUID')
     if 'asset_model' in selector:

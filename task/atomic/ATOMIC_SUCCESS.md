@@ -415,3 +415,20 @@ a pending matched pair, not a steering-effect result.
 
 Raw source:
 `/home/mverghese/robodojo-expansion-state/geometry-constrained-1006/runs/robodojo_25k_fasten_screws_conditioned/eval_report.json`.
+
+## Calibrated partial liquid transfer
+
+The `liquid_core` pilot uses `fluid_material_transfer` on `wine`, with the
+reviewed model-specific bottle/cup interior cores. Initial live persistent IDs
+inside source but outside target form the fixed eligible cohort. At least one
+eligible particle must leave while the bottle has sustained physical grip and
+is tilted ≥30°, then remain in the target core for five physics samples.
+Returning to source resets its transfer interval. Population/nominal-mass
+changes fail; all particles remain in the source-only/target-only/both/outside
+partition diagnostics. Outside includes in-flight particles.
+
+This recognizer certifies a **partial source-core transfer**, not the native
+97% whole-liquid goal or absence of spill. Native task success is reported
+separately. Mouth/stream conditioning is scored independently of recognition;
+a missed central flow window does not erase an otherwise observed transfer.
+The initial source cohort and actual USD readback still need live validation.

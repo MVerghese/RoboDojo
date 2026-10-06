@@ -7382,15 +7382,15 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "729b6bf381f4fd6663ce6935921e630801069c26daef5c179ad885495af32756"
+      "sha256": "04b10b4053d61854112b60736593ce63ae7d94dd72149b33918f345b8e2a2582"
     },
     {
       "path": "task/atomic/spec.py",
-      "sha256": "92b12374aaad7de97c4018c43d9f2c24e0564ceef3cba1218d7cbe1fc020835f"
+      "sha256": "442dc3d3cbf54bb4615aa4189499427617e7d43bdec4dc39c4f0d03150d7adb6"
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "d098bcf226ac6797587d7c45432d697a7e48fdcef79c640407dd090e0293f027"
+      "sha256": "898e65cccfbd38985d0f19c714de5a4348b640673ca6839a082991bd9d4c2682"
     },
     {
       "path": "task/atomic/bindings.py",
@@ -7422,7 +7422,7 @@
     },
     {
       "path": "task/atomic/flow.py",
-      "sha256": "2baa50be4af31f17866979fb16a3f650b0533644bee2de31a0790f34a2ce4ff4"
+      "sha256": "04109ee3310907bf6471a3653b7e7d216d18c50650033ef8b36234c6725552ed"
     },
     {
       "path": "task/atomic/fold.py",

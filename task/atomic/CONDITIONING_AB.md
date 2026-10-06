@@ -500,3 +500,27 @@ finite-chord preservation in one fresh A/B pair. Both arms share recognition and
 all measurement targets; only the delivered geometry append differs. This phase
 is useful for checking the complete currently available garment geometry path
 with the pinned transport. It does not add force-bearing cloth grasp evidence.
+
+### Calibrated partial liquid pour
+
+```bash
+python scripts/atomic/generate_expansion_suite.py \
+  --phase liquid_core --tasks pour_liquid_into_cup \
+  --checkpoints /path/to/checkpoints.json \
+  --asset-calibration-root /path/to/baked-asset-calibration \
+  --output-dir /path/to/fresh-liquid-core-suite
+```
+
+The asset export must include the bottle, mugs 15/16 and goblet 6 with
+`asset-summary.json` and their selected material `.npz` files. Generation checks
+material-free 30 mm cores and a central 20 × 20 mm window inside each actual
+mouth. Model/file/scale checks select the live variant. The program scores
+first-transfer bottle-mouth pose (25 mm/30°) and downward source-qualified
+crossings ([4,0] mm, 8 mm XY tolerance, 20° velocity angle). See
+[GEOMETRIC_MEASUREMENT.md](GEOMETRIC_MEASUREMENT.md) for exact frames and
+[ATOMIC_SUCCESS.md](ATOMIC_SUCCESS.md) for the partial-cohort success contract.
+
+Both arms retain the same initially eligible cohort rule, minimum one-particle
+transfer and five-sample dwell. This is an integration pilot alongside native
+whole-liquid success, not a full-volume transfer claim. Empty initial source
+cohorts fail explicitly; live population and solver readback remain to validate.
