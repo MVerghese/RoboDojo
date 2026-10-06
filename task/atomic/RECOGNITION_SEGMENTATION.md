@@ -420,3 +420,13 @@ persistent vertex and edge through deformation. Continuous Hausdorff scoring
 covers edge interiors. It does not discover a new crease, add a fold segment,
 certify a grasp, or change recognition. The physical fold state machine and
 observation windows remain identical between baseline and conditioned prompts.
+
+### Cleanup guard follow-up
+
+The guard now forwards external TERM/INT to the existing workflow cleanup trap,
+retains interruption evidence in the same node-cache output directory used by
+the workflow, and drains buffered worker output before accepting its exit code.
+A fatal marker without a newline still triggers failure. Ignored termination is
+bounded by the cleanup timeout. Real subprocess tests cover each behavior.
+These are infrastructure outcomes and do not supply atomic action boundaries or
+policy adherence scores. Previously frozen suites keep their original guard.

@@ -493,3 +493,13 @@ native task success, even if a path is preserved exactly. Fold completion still
 requires the configured lift, closure, bend, layer and settling evidence. A
 material curve does not prove a cloth grasp, force contact or physical crease.
 The paired `material_curves` test keeps these recognition rules identical.
+
+### Cleanup guard follow-up
+
+The guard now forwards external TERM/INT to the existing workflow cleanup trap,
+retains interruption evidence in the same node-cache output directory used by
+the workflow, and drains buffered worker output before accepting its exit code.
+A fatal marker without a newline still triggers failure. Ignored termination is
+bounded by the cleanup timeout. Real subprocess tests cover each behavior.
+These are infrastructure outcomes and do not supply atomic action boundaries or
+policy adherence scores. Previously frozen suites keep their original guard.

@@ -637,3 +637,13 @@ models. The routes contain 15–69 vertices. This measures explicit anchored
 material paths; identifying the newly formed physical crease remains a gap.
 No cloth contact force or grasp is inferred. Numerical and model-binding tests
 pass; live curve measurements remain pending.
+
+### Cleanup guard follow-up
+
+The guard now forwards external TERM/INT to the existing workflow cleanup trap,
+retains interruption evidence in the same node-cache output directory used by
+the workflow, and drains buffered worker output before accepting its exit code.
+A fatal marker without a newline still triggers failure. Ignored termination is
+bounded by the cleanup timeout. Real subprocess tests cover each behavior.
+These are infrastructure outcomes and do not supply atomic action boundaries or
+policy adherence scores. Previously frozen suites keep their original guard.

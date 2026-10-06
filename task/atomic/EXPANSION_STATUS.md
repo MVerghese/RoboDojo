@@ -293,3 +293,9 @@ rigid bodies without transform resets. No verified per-material finger contact
 force/identity readout was found in this inspected API subset. Declaration and
 symbol inventory is not a proof that no internal API exists. Evidence:
 `/home/mverghese/robodojo-expansion-state/physics-asset-calibration-1006/physics-inventory-summary.json`.
+
+Failure-cleanup follow-up: forwarded external signals, actual node-cache output
+placement, buffered fatal-marker draining and an ignored-TERM timeout are tested
+with real subprocesses. The current host suite passes 213 atomic tests. Frozen
+pour/selection cases preserve earlier runtimes; new curve cases include this
+cleanup fix.
