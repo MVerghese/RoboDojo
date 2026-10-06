@@ -479,3 +479,19 @@ support or penetration-free placement; crossing/intersecting boundaries have
 zero gap, and fully nested disconnected boundaries can have positive gap.
 The `surface_gaps` garment phase binds a 20 mm endpoint gap condition alongside
 its independent patch coverage and signed layer-order requirements.
+
+### Rigid mesh readback cost and evidence budget
+
+Rigid centre selectors cache bounds from the actual scaled material vertices;
+they no longer construct or serialize an entire world mesh to obtain a centre.
+USD row transforms are vectorized and checked against actual Gf transforms
+at first/middle/last vertex witnesses. Triangle-only authored faces use a
+vectorized index path; polygon faces retain fan triangulation. Both centre and
+full surface caches are cleared when an episode resets. Articulated centres
+continue to follow actual live child bodies; cloth/fluid remain excluded.
+
+Initial scene capture retains actual bounds and triangle counts for meshes
+above 100,000 triangles without producing an unused full vertex JSON export.
+It records an explicit mesh-capture status. Full surfaces are still read when
+a geometric condition requires them; the limit is an evidence-export budget,
+not a simplified scoring mesh. Existing frozen suites retain their old runtime.

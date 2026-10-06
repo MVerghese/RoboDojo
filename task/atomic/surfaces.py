@@ -10,10 +10,42 @@ def _reject_shear(matrix):
         raise RuntimeError('sheared or degenerate body transforms cannot use rotation-plus-scale surface templates')
 
 
+def _transformed_points(mesh,relative,scale):
+    """Vectorized USD row transform, checked against actual Gf witnesses."""
+    from pxr import Gf
+    raw=mesh.GetPointsAttr().Get()
+    if raw is None or not len(raw):return None
+    values=np.asarray(raw,dtype=float);matrix=np.asarray(relative,dtype=float)
+    if values.ndim!=2 or values.shape[1]!=3 or matrix.shape!=(4,4) or not np.isfinite(matrix).all() or not np.allclose(matrix[:,3],[0,0,0,1]):
+        raise RuntimeError('actual material points need a finite affine USD row transform')
+    points=(values@matrix[:3,:3]+matrix[3,:3])*scale
+    for i in sorted(set([0,len(values)//2,len(values)-1])):
+        expected=np.asarray(relative.Transform(Gf.Vec3d(*map(float,values[i]))))*scale
+        if not np.allclose(points[i],expected,atol=1e-10,rtol=1e-12):
+            raise RuntimeError('vectorized USD material transform disagrees with actual Gf witnesses')
+    if not np.isfinite(points).all():raise RuntimeError('nonfinite actual material points')
+    return points
+
+
+def _triangle_faces(mesh,base):
+    counts=np.asarray(mesh.GetFaceVertexCountsAttr().Get(),dtype=np.int64)
+    indices=np.asarray(mesh.GetFaceVertexIndicesAttr().Get(),dtype=np.int64)
+    if counts.ndim!=1 or indices.ndim!=1 or counts.sum()!=len(indices) or (counts<0).any():
+        raise RuntimeError('invalid authored material face counts')
+    if (counts==3).all():return (indices.reshape(-1,3)+base).tolist()
+    faces=[];offset=0
+    for count in counts:
+        face=indices[offset:offset+count];offset+=count
+        faces.extend([[base+int(face[0]),base+int(face[j]),base+int(face[j+1])] for j in range(1,count-1)])
+    return faces
+
+
 class ObjectSurfaces:
     def __init__(self, env):
         self.env = env
         self.cache = {}
+        self.centers = {}
+        self.bounds = {}
 
     def resolve(self, label, env_idx, pose, mesh_paths=None):
         lm=self.env.scene_manager.layout_manager
@@ -44,24 +76,20 @@ class ObjectSurfaces:
                 if mesh_paths is not None and relative_path not in mesh_paths:continue
                 selected.append(relative_path)
                 mesh = UsdGeom.Mesh(prim)
-                values = mesh.GetPointsAttr().Get()
-                if values is None or not len(values):
-                    continue
                 relative, _ = xforms.ComputeRelativeTransform(prim, root)
-                base = len(points)
-                points.extend((np.asarray(relative.Transform(Gf.Vec3d(*map(float, p)))) * scale).tolist() for p in values)
-                indices = list(mesh.GetFaceVertexIndicesAttr().Get())
-                offset = 0
-                for count in mesh.GetFaceVertexCountsAttr().Get():
-                    face = indices[offset:offset + count]
-                    for j in range(1, count - 1):
-                        triangles.append([base + face[0], base + face[j], base + face[j + 1]])
-                    offset += count
+                values = _transformed_points(mesh,relative,scale)
+                if values is None:continue
+                base = len(points);points.extend(values.tolist())
+                triangles.extend(_triangle_faces(mesh,base))
             if mesh_paths is not None and set(selected)!=set(mesh_paths):
                 raise RuntimeError(f'calibrated material mesh missing from {label}: {set(mesh_paths)-set(selected)}')
             if not triangles:
                 raise RuntimeError(f'no mesh surface available for footprint of {label}')
             self.cache[key] = (np.asarray(points), triangles, path)
+            if mesh_paths is None:
+                self.centers[key]=(self.cache[key][0].min(axis=0)+self.cache[key][0].max(axis=0))/2
+                self.bounds[key]={'bounds':[self.cache[key][0].min(axis=0).tolist(),self.cache[key][0].max(axis=0).tolist()],
+                    'triangles':len(triangles),'geometry_representation':'actual scaled root-relative USD mesh vertices'}
         points, triangles, path = self.cache[key]
         vertices = points @ _rotation(pose[3:]).T + pose[:3]
         center = ((points.min(axis=0) + points.max(axis=0)) / 2) @ _rotation(pose[3:]).T + pose[:3]
@@ -75,14 +103,50 @@ class ObjectSurfaces:
         if hasattr(lm,'instance_type_by_env') and lm.instance_type_by_env[env_idx].get(lm.get_instance_name(env_idx,label)) in ('garment','fluid'):
             raise RuntimeError('deforming material cannot use cached rigid mesh centers')
         key = (env_idx, label)
-        if key not in self.cache:
-            self.resolve(label, env_idx, pose)
-        if isinstance(self.cache[key],dict):
+        if key in self.cache:
+            if isinstance(self.cache[key],dict):
+                surface=self._articulated(label,env_idx,pose)
+                return np.concatenate((surface['position'],pose[3:]))
+            if key not in self.centers:
+                points=self.cache[key][0];self.centers[key]=(points.min(axis=0)+points.max(axis=0))/2
+            center=self.centers[key]
+        elif hasattr(lm,'instance_type_by_env') and lm.instance_type_by_env[env_idx].get(lm.get_instance_name(env_idx,label))=='articulation':
             surface=self._articulated(label,env_idx,pose)
             return np.concatenate((surface['position'],pose[3:]))
-        points = self.cache[key][0]
-        center = _rotation(pose[3:]) @ ((points.min(axis=0) + points.max(axis=0)) / 2) + pose[:3]
-        return np.concatenate((center, pose[3:]))
+        else:
+            if key not in self.centers:
+                import omni.usd
+                from pxr import Gf,Usd,UsdGeom
+                obj=lm.get_scene_object(env_idx,lm.get_instance_name(env_idx,label))
+                path=getattr(obj,'usd_prim_path',None) or getattr(obj,'prim_path',None)
+                root=omni.usd.get_context().get_stage().GetPrimAtPath(path);xforms=UsdGeom.XformCache()
+                transform=xforms.GetLocalToWorldTransform(root);_reject_shear(transform)
+                scale=np.asarray(Gf.Transform(transform).GetScale(),dtype=float)
+                low=np.full(3,np.inf);high=np.full(3,-np.inf);face_count=0
+                for prim in Usd.PrimRange(root,Usd.TraverseInstanceProxies()):
+                    if not prim.IsA(UsdGeom.Mesh):continue
+                    mesh=UsdGeom.Mesh(prim);relative,_=xforms.ComputeRelativeTransform(prim,root)
+                    points=_transformed_points(mesh,relative,scale)
+                    if points is None:continue
+                    low=np.minimum(low,points.min(axis=0));high=np.maximum(high,points.max(axis=0))
+                    face_count+=sum(max(int(count)-2,0) for count in mesh.GetFaceVertexCountsAttr().Get())
+                if not face_count or not np.isfinite([low,high]).all():raise RuntimeError('no actual material mesh for object centre')
+                self.centers[key]=(low+high)/2
+                self.bounds[key]={'bounds':[low.tolist(),high.tolist()],'triangles':face_count,
+                    'geometry_representation':'actual scaled root-relative USD mesh vertices'}
+            center=self.centers[key]
+        return np.concatenate((_rotation(pose[3:])@center+pose[:3],pose[3:]))
+
+    def local_mesh_summary(self,label,env_idx,pose):
+        """Actual rigid bounds/count, without a world-vertex JSON export."""
+        self.center_pose(label,env_idx,pose);key=(env_idx,label)
+        if key not in self.bounds:
+            template=self.cache.get(key)
+            if not isinstance(template,tuple):raise RuntimeError('local material summary requires a rigid mesh')
+            points,triangles,_=template
+            self.bounds[key]={'bounds':[points.min(axis=0).tolist(),points.max(axis=0).tolist()],
+                'triangles':len(triangles),'geometry_representation':'actual scaled root-relative USD mesh vertices'}
+        return dict(self.bounds[key])
 
     def resolve_link(self,label,link,env_idx):
         from task.atomic.landmarks import live_link_pose

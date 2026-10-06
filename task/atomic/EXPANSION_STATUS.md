@@ -143,3 +143,11 @@ checks and bounding-volume pruning, and has intersection, centre/vertex proxy
 and exhaustive-pruning regression evidence. The `surface_gaps` garment profile
 binds minimum boundary gap independently of patch coverage/layer ordering.
 It awaits a free execution slot; it does not substitute for physical contact.
+
+A costly rigid-centre path was found while investigating the bottle stall:
+centre readback built/serialized full meshes, and initial scene capture did so
+even for meshes above its retained-evidence budget. Source now caches actual
+vertex bounds, vectorizes USD transforms with Gf witnesses, and avoids unused
+large initial exports. Regression tests verify equivalent centres and explicit
+large-mesh omission. This is a candidate infrastructure fix, not a confirmed
+termination diagnosis; an affected fresh matched pair will validate it.

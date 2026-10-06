@@ -151,16 +151,26 @@ def snapshot_scene(session):
                 pose = session._object_pose(label)
                 row['initial_root_pose'] = pose.tolist()
                 if getattr(env, '_atomic_surfaces', None) is not None:
-                    surface = env._atomic_surfaces.resolve(label, idx, pose)
-                    vertices = np.asarray(surface['vertices'])
-                    from task.atomic.geometry import _rotation
-                    local = (vertices - pose[:3]) @ _rotation(pose[3:])
-                    row['local_mesh_bounds_m'] = [local.min(axis=0).tolist(), local.max(axis=0).tolist()]
-                    row['surface_representation'] = surface['geometry_representation']
-                    if label != 'camera_stand' and len(surface['triangles']) <= 100000:
-                        row['local_mesh'] = {'vertices': local.tolist(), 'triangles': surface['triangles'],
-                                             'frame': 'object_root',
-                                             'interpretation': 'actual outer/material surface; not an interior annotation'}
+                    # Large render meshes need actual bounds, but not an unused
+                    # full world-vertex serialization just to omit it afterward.
+                    summary=(env._atomic_surfaces.local_mesh_summary(label,idx,pose)
+                             if category in ('rigid','geometry') else None)
+                    if summary and (summary['triangles']>100000 or label=='camera_stand'):
+                        row['local_mesh_bounds_m']=summary['bounds']
+                        row['surface_representation']=summary['geometry_representation']
+                        row['mesh_triangle_count']=summary['triangles']
+                        row['mesh_capture_status']='omitted_above_100000_triangle_budget' if label!='camera_stand' else 'excluded_camera_stand'
+                    else:
+                        surface = env._atomic_surfaces.resolve(label, idx, pose)
+                        vertices = np.asarray(surface['vertices'])
+                        from task.atomic.geometry import _rotation
+                        local = (vertices - pose[:3]) @ _rotation(pose[3:])
+                        row['local_mesh_bounds_m'] = [local.min(axis=0).tolist(), local.max(axis=0).tolist()]
+                        row['surface_representation'] = surface['geometry_representation']
+                        if label != 'camera_stand' and len(surface['triangles']) <= 100000:
+                            row['local_mesh'] = {'vertices': local.tolist(), 'triangles': surface['triangles'],
+                                                 'frame': 'object_root',
+                                                 'interpretation': 'actual outer/material surface; not an interior annotation'}
                 for role in ('active', 'passive'):
                     for category_name, kind in (('functional', 'functional_point'), ('support', 'support_point')):
                         for tag, item in metadata.get(role, {}).get(category_name, {}).items():

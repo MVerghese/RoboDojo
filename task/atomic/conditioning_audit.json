@@ -6,7 +6,7 @@
     "task/atomic/spec.py": "92b12374aaad7de97c4018c43d9f2c24e0564ceef3cba1218d7cbe1fc020835f",
     "task/atomic/geometry.py": "18543d83c2003eb6bab56de294060faa8e2d16beb5907a2c1db4dd96f6b6e329",
     "task/atomic/session.py": "729b6bf381f4fd6663ce6935921e630801069c26daef5c179ad885495af32756",
-    "task/atomic/surfaces.py": "88cd8a95b3071f4b0155b2c352494fff77023fe4bbb450ce21c9b3fbba63053d",
+    "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "f8890d18794399c4c9d3d436f52afdc9d0cbb03a4429c35795880c69ff7a4b69",
     "task/atomic/recognizers.py": "d098bcf226ac6797587d7c45432d697a7e48fdcef79c640407dd090e0293f027",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
@@ -22,7 +22,7 @@
     "task/atomic/segments.py": "0db90560f0aca5eae711f56658f5422e42f41c8fdfbfbb83b3885aa4f8e34cb5",
     "task/atomic/surface_distance.py": "3179a7c419d7ebde3e5c5b36eecb946906e32ff21bb7e4a684b26f4901099317",
     "task/atomic/cloth_calibration.py": "6ffbe90efc09ee674a13205acccf88cedd78b42dd1872483dca4e1a20896209f",
-    "task/atomic/calibration.py": "0dd794aeb46db7b5306a08968b282a14f29dffb2e9f2e0b08a69c8952b8e9016",
+    "task/atomic/calibration.py": "89a54cb99e5303c935069cbb2c040da3c627fbf993927646604f576a09dd9f6f",
     "env/scene_manager/objects/fluid.py": "7dd2cfe8b7b7e7fc0051d6b9d887f6151be31588a9abc1f1c88e8d83cabad712",
     "env/scene_manager/objects/garment.py": "b72ff2772598c457260b3ceaeba1078e289f6cd3b0d933ae8e6d755ebc882fd9"
   },
