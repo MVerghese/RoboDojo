@@ -17,7 +17,7 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-validation-1006` | 16 | 16 valid episodes, 54 reproduced scores; no mismatches | Release yaw/full pose, failed push endpoint, pre-contact mallet pose, tool heading, annotated charger insertion |
 | `geometry-support-1006` | 10 | 9 collected cases, 48 reproduced scores; remaining cases submitted | Persistent support, raw body-pair diagnostics, full material mesh export |
 | `geometry-materials-1006` | 4 | Submitted | Real garment landmark destination, tangent normal and crease drift; liquid scene capture/pickup, not calibrated liquid transfer |
-| `geometry-breadth-1006` | 12 | 4 collected cases, 15 reproduced scores | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
+| `geometry-breadth-1006` | 12 | 5 collected cases, 17 reproduced scores | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
 | `geometry-body-contacts-1006` | 4 | 2 valid baselines, 14 reproduced scores; actual upward support in blocks and bowls | Stack release/settling using contact APIs enabled after task objects load |
 | `geometry-constrained-1006` | 4 | 1 valid conditioned screw episode, 9 reproduced scores; baseline pending | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
 | `geometry-tool-contacts-1006` | 4 | 1 valid align-block baseline; policy never acquired the tool; no tool scores | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
@@ -26,7 +26,9 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-pour-cores-1006` | 2 | Submitted | Declared initial whole-ball core cohort, actual mouth pose, crossing XY/direction and final core enclosure |
 | `geometry-key-fit-1006` | 2 | Submitted | Actual key mouth/tip, closed blade collider section/clearance and shoulder gap |
 | `geometry-surface-gaps-1006` | 2 | Submitted after a global slot opened | Actual selected-patch triangle-boundary gap alongside layers |
-| `geometry-bottle-runtime-1006` | 2 | Prepared; monitor awaits two global slots | Original bottle geometry with rigid readback fix and pinned websocket protocol |
+| `geometry-bottle-runtime-1006` | 2 | Submitted; both queued | Original bottle geometry with rigid readback fix and pinned websocket protocol |
+| `geometry-cloth-runtime-1006` | 2 | Prepared; automatic monitor awaits capacity | Combined patch/layer, finite-chord and boundary-gap conditions with pinned protocol |
+| `geometry-liquid-cores-1006` | 2 | Prepared; automatic monitor awaits capacity | Verified model-specific mouth pose and partial-cohort particle crossings |
 
 The bottle retry retained the exact program/checkpoint/runtime package. It ended
 with client code 143 and no completed native episode. Archived logs show a policy
@@ -191,3 +193,16 @@ pose and source-qualified downward particle crossings through a restricted
 initial live source-cohort population, USD solver readback and policy transfer
 remain pending. Partial transfer success requires at least one particle and is
 reported separately from the native whole-liquid task.
+
+### Automatically refreshed report index
+
+The report monitor checks collected result changes every 30 seconds and
+regenerates each suite's Markdown and HTML. A navigation/status index is at:
+
+- `/home/mverghese/robodojo-expansion-state/EXPANSION_REPORT.html`
+- `/home/mverghese/robodojo-expansion-state/EXPANSION_REPORT.md`
+
+Each linked report states exactly which geometric conditioning was tested,
+retains separate physical units and marks unobserved events explicitly. Frozen
+experimental inputs are unchanged by report rendering. The index includes
+prepared/queued suites as pending rather than claiming measured results.
