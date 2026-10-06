@@ -347,3 +347,56 @@ conditioned program's `geometric_instruction`.
 
 See [EVAL_MATRIX.md](EVAL_MATRIX.md) and `generate_eval_matrix.py` for a checkpoint
 map and the 49-task partial-observer A/B matrix. Retain the controls below.
+
+## Additional conditioning suites and current calibration workflow
+
+`generate_expansion_suite.py` creates matched full-task programs with identical
+scoring/recognizers in both arms. The conditioned arm alone appends the geometric
+instruction. Phases are `feasible`, `validation`, `materials`, `breadth`,
+`constrained`, and `calibrated`. Every added numeric target names its event,
+reference frame, axes, physical units and tolerance.
+
+```bash
+# Bolt/nut constrained turns and persistent garment crease poses.
+python scripts/atomic/generate_expansion_suite.py \
+  --phase constrained --tasks fasten_screws fold_clothes \
+  --checkpoints /path/to/checkpoints.json \
+  --calibration-root /path/to/geometry-validation-suite \
+  --output-dir /path/to/fresh-constrained-suite
+
+# Physical key mouth/tip, blade section clearance and shoulder gap.
+python scripts/atomic/generate_expansion_suite.py \
+  --phase calibrated --tasks insert_key \
+  --checkpoints /path/to/checkpoints.json \
+  --calibration-root /path/to/geometry-support-suite \
+  --asset-calibration-root /path/to/baked-asset-calibration \
+  --output-dir /path/to/fresh-key-suite
+```
+
+These phases require retained actual baseline `eval_report.json` scene evidence.
+The calibrated key phase also requires `asset-summary.json`, `key-geometry.json`
+and the selected slot material mesh NPZ from the baked export. Their hashes are
+recorded in the manifest. It verifies live scaled bounds/model identity; it does
+not use the incorrect 96 mm slot annotation. The explicit blade collision box
+is a declared approximation for section fit, not the complete visual key teeth.
+The shoulder target is an 18 mm gap, not flush seating.
+
+For custom cavity/flow work, export actual baked meshes with
+`export_asset_geometry.py`, derive plane profiles with
+`task.atomic.calibration.opening_section`, and validate conservative interior
+boxes with `interior_core_box`. Retain raw evidence and hashes. A finite opening
+profile is not a whole cavity. Core-restricted source cohorts must be declared.
+Use `expected_velocity_direction` to condition flow direction; crossing distance,
+angular error, aperture overrun and speed are separate physical measurements.
+
+For cloth patch geometry, `cloth_patch_surface` selects persistent `face_ids`
+and three actual material vertex IDs for its tangent frame. `layered_over`
+measures moving-patch projected coverage and all triangle-pair layer gaps. Bind
+face IDs from actual garment topology before the policy acts. This geometric
+check does not recognize a grasp or establish successful folding on its own.
+
+Operational controllers/results are now under
+`/home/mverghese/robodojo-expansion-state/`; immutable original evidence remains
+on Lustre. Current execution status and missing evidence are documented in
+[EXPANSION_STATUS.md](EXPANSION_STATUS.md). Per-suite Markdown and self-contained
+HTML reports use separate mm, degrees, mm², mm³, fractions, speed and duration.

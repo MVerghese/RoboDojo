@@ -9,7 +9,7 @@ from task.atomic.fit import aperture_polygon
 
 def validate_flow(config, validate_selector):
     fields = {'opening', 'aperture_profile', 'target_xy_m', 'position_tolerance_m', 'angle_tolerance_rad'}
-    if not isinstance(config, dict) or set(config) != fields:
+    if not isinstance(config, dict) or not fields.issubset(config) or set(config)-fields-{'expected_velocity_direction'}:
         raise ValueError('flow needs opening, aperture, XY target and independent position/angular tolerances')
     validate_selector(config['opening'], 'flow.opening')
     if config['opening']['kind'] not in ('functional_point', 'support_point', 'object_pose','calibrated_frame') or config['opening'].get('time','live') != 'live':
@@ -17,6 +17,9 @@ def validate_flow(config, validate_selector):
     aperture_polygon(config['aperture_profile'])
     target = np.asarray(config['target_xy_m'], dtype=float)
     if target.shape != (2,) or not np.isfinite(target).all(): raise ValueError('flow target must be finite XY metres')
+    direction=np.asarray(config.get('expected_velocity_direction',[0,0,-1]),dtype=float)
+    if direction.shape!=(3,) or not np.isfinite(direction).all() or np.linalg.norm(direction)<=1e-12:
+        raise ValueError('flow velocity direction needs a finite nonzero vector in the opening frame')
     for key in ('position_tolerance_m', 'angle_tolerance_rad'):
         value=config[key]
         if type(value) not in (int,float) or not math.isfinite(value) or value < 0: raise ValueError('flow tolerances must be finite and nonnegative')
@@ -41,7 +44,9 @@ def score_crossing(config, before, after):
     velocity=_rotation(f1[3:]).T@((p1-p0)-(f1[:3]-f0[:3]))/dt
     speed=float(np.linalg.norm(velocity))
     if speed <= 1e-12:return {'status':'unresolved_velocity','passed':None}
-    angle=float(np.arccos(np.clip(-velocity[2]/speed,-1,1)))
+    direction=np.asarray(config.get('expected_velocity_direction',[0,0,-1]),dtype=float)
+    direction=direction/np.linalg.norm(direction)
+    angle=float(np.arccos(np.clip(velocity@direction/speed,-1,1)))
     error=float(np.linalg.norm(point[:2]-np.asarray(config['target_xy_m'])))
     from shapely.geometry import Point
     aperture=aperture_polygon(config['aperture_profile']);cross=Point(point[:2])

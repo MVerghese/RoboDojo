@@ -363,3 +363,42 @@ calibrated frame or mesh; UUID checks are optional only when the runtime retains
 that UUID. The baked export records source checksums, while live calibration
 checks scaled bounds and model identity. These checks do not repair a nonclosed
 or inconsistently oriented solid.
+
+## Selected cloth patch layering
+
+`cloth_patch_surface` names explicit persistent topology `face_ids` and three
+material vertex IDs defining its live tangent frame (`origin_id`, `x_id`,
+`y_id`). Face identities are chosen before the policy acts; live vertex row
+reordering does not change which material is measured. Missing IDs/topology
+fail the measurement; no cached garment root supplies its geometry.
+
+`layered_over` requires two live material patch surfaces. Project their real
+triangles into the target tangent frame and measure overlap / **moving patch**
+projected area. For every pair of overlapping projected triangles, their height
+difference is affine; extrema at intersection-polygon vertices bound the whole
+overlap. Report minimum/maximum gap, gap shortfall/excess (m → mm), overlap area
+(m² → mm²), coverage fraction and planar gap. Required gap bounds and minimum
+coverage are explicit. Disjoint patches fail overlap without inventing a layer
+gap. Degenerate projections are unavailable. This checks the selected material
+regions, including hidden penetration, rather than one landmark separation.
+It does not certify global cloth self-intersection or force-bearing support.
+
+## Opening and conservative interior calibration
+
+`opening_section` intersects actual material triangles with a declared plane.
+Closed nested wall traces define the finite opening; material islands become
+forbidden polygon holes. Open/duplicate/nonmanifold traces are rejected. Endpoint
+welding uses a 1 nm grid and records maximum displacement; zero-area candidate
+faces are counted explicitly. This certifies a plane cross-section, not a whole
+watertight solid or complete receptacle interior.
+
+`interior_core_box` requires a footprint inside the measured enclosed void,
+checks all triangle/box separating axes to reject material touching/intersection,
+and limits height below the verified mouth and above material bounds. Its scope
+is a conservative material-free core. Source cohorts limited to that core must
+be reported explicitly; it must not be described as the whole vessel cavity.
+
+Flow can set `expected_velocity_direction` in the opening frame. Angular error
+is measured against that normalized vector, separately from crossing XY error,
+aperture overrun and relative speed. Opening translation is subtracted; angular
+motion/sampling gaps retain unscored statuses.

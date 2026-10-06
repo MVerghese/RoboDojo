@@ -7,6 +7,8 @@ The caller separately compares it with live scaled mesh bounds/model identity.
 import argparse
 import hashlib
 import json
+import ast
+import sys
 from pathlib import Path
 import numpy as np
 from pxr import Gf, Usd, UsdGeom, UsdPhysics
@@ -57,14 +59,30 @@ def export_asset(asset_root, section, category, model):
 
 def main():
     p=argparse.ArgumentParser();p.add_argument('--asset-root',type=Path,required=True);p.add_argument('--output',type=Path,required=True)
+    p.add_argument('--asset',action='append',help='Explicit section/category/model-id; default is the 24 reviewed rigid assets')
+    p.add_argument('--sdk-inventory',action='store_true',help='Read installed cloth/particle API source declarations without SimulationApp')
     args=p.parse_args();rows={}
-    for section,category,model in ASSETS:
+    selected=[(s,c,int(m)) for s,c,m in (x.split('/') for x in args.asset)] if args.asset else ASSETS
+    for section,category,model in selected:
         key=f'{section}/{category}/{model:05d}'
         try:rows[key]={'status':'exported',**export_asset(args.asset_root,section,category,model)}
         except Exception as error:rows[key]={'status':'unavailable','error':f'{type(error).__name__}: {error}'}
         print(key,rows[key]['status'],flush=True)
     result={'schema_version':1,'assets':rows,'gpu_used':False,
             'scope':'baked asset metadata/mesh export; live frame and cavity calibration remain separate'}
+    if args.sdk_inventory:
+        package=Path(sys.prefix)/'lib'/f'python{sys.version_info.major}.{sys.version_info.minor}'/'site-packages'/'isaacsim'
+        files=set(package.rglob('*cloth*.py'))|set(package.rglob('*particle*.py'))|set(package.glob('**/omni/physics/tensors/impl/api.py'))
+        inventory=[]
+        for path in sorted(files)[:256]:
+            try:
+                source=path.read_text();tree=ast.parse(source)
+                classes=[{'class':n.name,'methods':[m.name for m in n.body if isinstance(m,(ast.FunctionDef,ast.AsyncFunctionDef))]}
+                         for n in ast.walk(tree) if isinstance(n,ast.ClassDef) and any(s in n.name.lower() for s in ('cloth','particle'))]
+                if classes:inventory.append({'path':str(path),'sha256':hashlib.sha256(source.encode()).hexdigest(),'classes':classes})
+            except (OSError,SyntaxError,UnicodeError):continue
+        result['sdk_api_inventory']={'package_root':str(package),'files':inventory,
+            'scope':'static installed Python declarations; native/binary APIs require separate verification'}
     args.output.write_text(json.dumps(result)+'\n')
     print('Exported',sum(r['status']=='exported' for r in rows.values()),'/',len(rows),flush=True)
 

@@ -274,3 +274,37 @@ The four-task source pilot, 11 program schemas and 132 offline tests are differe
 forms of evidence. None establishes complete segmentation or steerability across
 all eval tasks. See [FIX_STATUS.md](FIX_STATUS.md) for the remaining implementation
 boundary and [CONDITIONING_AB.md](CONDITIONING_AB.md) for running matched trials.
+
+## October 6 additions: current source and frozen validation suites
+
+Scene-body contact APIs are enabled **after task assets load**. The initial
+simulator scene contained only robots; construction-time enablement explained
+unobserved object/object support and tool contacts. All per-scene contact, lost
+pair, support and material caches are cleared on episode reset. Fresh stack and
+tool suites validate this lifecycle change; older frozen packages retain their
+original limitation.
+
+Constrained twist observers bind each nut to its matching bolt and a shaft-top
+frame verified against live mesh bounds and the 52.5 mm annotation. They emit
+`rotation` only during continuous two-finger grip, actual nut/bolt contact,
+bounded pivot radius/depth and off-axis motion, after unwrapped signed 90 degree
+rotation. These observers do not certify threaded engagement.
+
+Cloth crease midpoint/direction/tangent pose uses two named persistent material
+landmarks and a material normal. Explicit patch face IDs now support independent
+layer geometry. Patch layering alone does not create a `folded` event or a
+measured cloth grasp; the fold recognizer still requires new lift, closure, bend,
+layer landmark gap and bounded settling.
+
+The calibrated key insertion observer uses actual blade-tip and measured mouth
+frames, outside-to-inside history and actual pair contact. Small retreat inside
+preserves entry; loss of grip, misalignment and over-depth invalidate it. The
+legacy slot annotation at 96 mm is outside its actual 55 mm mesh top and is not
+used as the physical opening. Blade section and shoulder targets have explicit
+scope, separate from generic native key task completion.
+
+See [EXPANSION_STATUS.md](EXPANSION_STATUS.md) for which packages are submitted,
+collected or awaiting live evidence. Unit/counterexample tests do not establish
+recognized policy actions. Operational suites and monitors now live under
+`/home/mverghese/robodojo-expansion-state/` after the shared Lustre project hit its
+inode quota; preserved cloud IDs and immutable inputs make resumption auditable.

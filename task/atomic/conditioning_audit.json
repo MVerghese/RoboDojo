@@ -3,22 +3,23 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
-    "task/atomic/spec.py": "7cf45237d1f811a7c6006c0fb582ae9a408313053dec2d51fd3fa0323c875d8b",
-    "task/atomic/geometry.py": "9465b3da7143dc833f153e1159c8cba34171099c4f25cc8e5c767b8b462cb696",
-    "task/atomic/session.py": "998f55421bcae0b1309c608945426662e366a5faa730f69f6d8f7ac713d0f49f",
+    "task/atomic/spec.py": "8e47a5d45705e0a8ef6407ed34b5534f904592f9b0c78c677beedf04800b7169",
+    "task/atomic/geometry.py": "e0fdf755b5fc86be6121d34b1126ed6ed9e6292fd1b22e04985c5f2ba7db5a41",
+    "task/atomic/session.py": "8085977ce3f48d2a3d8044e693ca08e1e00f96ae64aaea7ed6e95d68f419e3e5",
     "task/atomic/surfaces.py": "88cd8a95b3071f4b0155b2c352494fff77023fe4bbb450ce21c9b3fbba63053d",
     "task/atomic/contacts.py": "f8890d18794399c4c9d3d436f52afdc9d0cbb03a4429c35795880c69ff7a4b69",
-    "task/atomic/recognizers.py": "63bedd02132841d1fe342220f8dccce66e0d26fa935b4af6bf1a38ff676fef9a",
+    "task/atomic/recognizers.py": "d098bcf226ac6797587d7c45432d697a7e48fdcef79c640407dd090e0293f027",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
-    "task/atomic/materials.py": "e8794470c4259c24c988cf44b5c487b187a6fe8ef7aa2f8808980d5f1145e148",
+    "task/atomic/materials.py": "f664b927db4f245b2540cd71a1d6f3a380c081407e1d2e23f3ad88b9284ffced",
     "task/atomic/selection.py": "5af24b1d06513a65a381802e969ae744c5dd12f0f96b80755bef2af232616f8d",
     "task/atomic/trajectory.py": "08e3e5647a643a4af22dd90fb9bb040586a7151cd84abf91f1f6b5712718bc44",
     "task/atomic/regions.py": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753",
     "task/atomic/fit.py": "ec6e40bf1aa3c652ab17fb5945ab0607d88de39e6ae4c4b009224644607aeb99",
-    "task/atomic/flow.py": "2b0fe795a5cd6fc299140522d74f1175a2d042a4d1f8c9f8e6e0fd9cdf2ac913",
+    "task/atomic/flow.py": "2baa50be4af31f17866979fb16a3f650b0533644bee2de31a0790f34a2ce4ff4",
     "task/atomic/fold.py": "5d7de33352ec070c84ad2e2088c2a20baa500acfe1ad648edcb19839db0c4e97",
-    "task/atomic/calibration.py": "dc394307fb39252e01254cbd99c0955959c1112f65b6ba5b6c4f36d3bbac25ee",
+    "task/atomic/layers.py": "d29f4dadf9aa609579a73fe4750ab6be62bce8f39bc99761d413a04bb736977f",
+    "task/atomic/calibration.py": "0dd794aeb46db7b5306a08968b282a14f29dffb2e9f2e0b08a69c8952b8e9016",
     "env/scene_manager/objects/fluid.py": "7dd2cfe8b7b7e7fc0051d6b9d887f6151be31588a9abc1f1c88e8d83cabad712",
     "env/scene_manager/objects/garment.py": "b72ff2772598c457260b3ceaeba1078e289f6cd3b0d933ae8e6d755ebc882fd9"
   },
@@ -28,10 +29,10 @@
   "status_counts": {
     "L": 5,
     "C": 4,
-    "G": 142,
+    "G": 144,
     "F": 8,
     "S": 75,
-    "M": 8,
+    "M": 6,
     "NA": 28
   },
   "rows": [
@@ -2130,7 +2131,7 @@
           "kind": "spatial_relation",
           "concept": "Crease between named garment regions.",
           "status": "M",
-          "audit": "Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer.",
+          "audit": "Actual material crease intersection and whole-line relations need a dedicated geometric predicate.",
           "live_evidence": null
         }
       }
@@ -2171,8 +2172,8 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Left sleeve/region above crease.",
-          "status": "M",
-          "audit": "Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer.",
+          "status": "G",
+          "audit": "Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; live face bindings remain.",
           "live_evidence": null
         }
       }
@@ -2213,8 +2214,8 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Sleeve over chest; hem near shoulder.",
-          "status": "M",
-          "audit": "Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer.",
+          "status": "G",
+          "audit": "Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; live face bindings remain.",
           "live_evidence": null
         }
       }

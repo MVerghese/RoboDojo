@@ -551,7 +551,7 @@ class PhysicalRecognizer:
             return
         if self.state.get('arm') != raw_hold['resolved_arm']:
             self.state.clear()
-        if depth > self.c['max_depth_m'] or depth < self.state.get('last_depth', depth) - 1e-6:
+        if depth > self.c['max_depth_m']:
             self.state.clear()
         if depth <= -self.c['entry_clearance_m']:
             self.state.update(entered_from_outside=True, arm=raw_hold['resolved_arm'], initial_depth=depth)

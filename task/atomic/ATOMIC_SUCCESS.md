@@ -224,8 +224,11 @@ depth `-z`, and the angle between tip/opening local z directions. Require a
 current same-arm two-finger hold, bounded lateral/axis error, and observed
 outside state at least `entry_clearance_m` above the opening.
 
-Then observe crossing to depth `>=0` (`entry`). Retraction exceeding `1e-6` m or
-over-depth resets entry state. Completion emits `inserted` with actual
+Then observe crossing to depth `>=0` (`entry`). Over-depth, loss of physical
+hold or lateral/axis misalignment resets entry state. Small retreat while
+still inside preserves the verified outside-entry history; a strict 1 µm
+monotonicity rule incorrectly rejected solver jitter. A new outside sample
+reanchors the approach. Completion emits `inserted` with actual
 object/target contact and depth within `[min_depth_m,max_depth_m]`, plus any
 endpoint check. Already-inserted objects cannot supply the required outside-to-
 inside history. Tip/opening calibration does not prove arbitrary whole-part
@@ -325,3 +328,19 @@ an `is_*` name alone does not guarantee that an arbitrary new method is safe.
 Use a private physical state machine for historical transitions. Prefix replay's
 `check_success_only()` checks endpoints without recovering physical history;
 see the [restart limitations](RECOGNITION_SEGMENTATION.md#6-starting-at-an-atomic-action).
+
+### Patch layering and physical opening calibration
+
+`layered_over` is a geometric condition, not a fold action recognizer. It checks
+explicit persistent material face IDs, projected coverage of the moving patch,
+and minimum/maximum signed height gaps across every overlapping triangle pair.
+It can reject local penetration and overhang; it supplies no finger force,
+whole-cloth self-intersection or stable release evidence. `cloth_landmark_fold`
+remains the action recognizer and its kinematic limitations still apply.
+
+The calibrated key profile adds a genuine held-insertion observer to the
+pickup/handover observers. Its opening uses closed wall traces 0.5 mm below the
+actual slot mesh top (~55 mm), correcting the 96 mm annotation. Tip, mouth and
+blade shoulder follow live roots with asset model checks. Cross-section fit uses
+the explicitly selected, closed physical blade collision box, not all visual
+teeth. Shoulder clearance is an 18 mm gap target; it is not flush seating.

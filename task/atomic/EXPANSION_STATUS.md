@@ -15,10 +15,12 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | --- | ---: | --- | --- |
 | `geometry-expansion-1006` | 16 | 15 valid episodes, 27 independently reproduced scores; one conditioned bottle case failed twice before episode completion | New grasp band, first-lift displacement/full orientation, push contact side, cap contact offset, handover root pose |
 | `geometry-validation-1006` | 16 | 16 valid episodes, 54 reproduced scores; no mismatches | Release yaw/full pose, failed push endpoint, pre-contact mallet pose, tool heading, annotated charger insertion |
-| `geometry-support-1006` | 10 | 6 collected cases, 34 reproduced scores; remaining cases submitted | Persistent support, raw body-pair diagnostics, full material mesh export |
+| `geometry-support-1006` | 10 | 9 collected cases, 48 reproduced scores; remaining cases submitted | Persistent support, raw body-pair diagnostics, full material mesh export |
 | `geometry-materials-1006` | 4 | Submitted | Real garment landmark destination, tangent normal and crease drift; liquid scene capture/pickup, not calibrated liquid transfer |
 | `geometry-breadth-1006` | 12 | Submitted | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
 | `geometry-body-contacts-1006` | 4 | Submitted | Stack release/settling using contact APIs enabled after task objects load |
+| `geometry-constrained-1006` | 4 | Submitted | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
+| `geometry-tool-contacts-1006` | 4 | Submitted | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
 
 The bottle retry retained the exact program/checkpoint/runtime package. It ended
 with client code 143 and no completed native episode. Archived logs show a policy
@@ -47,8 +49,8 @@ not a conditioning score or policy action failure.
   and first downward opening crossings with position/velocity errors. Flow has
   source-held/tilted exit provenance and independent offline reproduction.
 - Cloth folding observes newly lifted, closed, bent, layered and settled material
-  landmarks. This does not certify finger/cloth contact, whole-patch overlap or
-  self-penetration.
+  landmarks. This does not certify finger/cloth contact, global cloth self-intersection. Explicit selected-patch overlap/layer checks
+  now have local counterexample tests; live face bindings are pending.
 - Bolt-constrained twist uses continuous physical grip and nut/bolt contact,
   pivot radius/depth, unwrapped signed angle and bounded off-axis rotation. It
   does not certify mechanical thread engagement.
@@ -64,7 +66,7 @@ those require reviewed geometric repairs or alternative physical representations
 not weaker acceptance thresholds.
 
 Remaining work includes live validation of the corrected body contact lifecycle,
-calibrated pour/fit bindings, whole cloth patch layer/crease relations, and actual
+calibrated pour/fit bindings, live cloth patch layer bindings and crease intersection relations, and actual
 cloth finger/particle contact instrumentation. Missing physical evidence is reported
 explicitly and is not converted into a zero error.
 
@@ -84,3 +86,11 @@ records the recovery. The original 49-task screen remains at:
 Each suite produces `EVAL_MATRIX_REPORT.md`, `EVAL_MATRIX_REPORT.html`, raw native
 reports and independently reproduced scores. GPU admission and neighboring-job
 observations remain in separate ledgers outside Git.
+
+A second CPU job exports the three `Top_Long` garment topologies used by
+`fold_clothes` and inventories installed cloth/particle Python APIs. It uses no
+GPU and is counted in the shared 32-job window. Source code now includes physical
+opening trace and conservative interior-core calibration, selected cloth patch
+layering, optional stream direction, and small-retreat insertion handling.
+These later additions have local regression evidence; fresh calibrated bindings
+are prepared separately from already immutable queued packages.

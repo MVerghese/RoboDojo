@@ -209,6 +209,15 @@ class PhysicalTests(unittest.TestCase):
         w.release('left'); self.assertFalse(w.tick(s)); self.assertTrue(w.tick(s))
         self.assertEqual(s.interaction_evidence['receiver_only_steps'], 2)
 
+    def test_insertion_small_inside_retreat_preserves_verified_outside_entry(self):
+        w=World();w.poses['object'][2]=.02;w.hold()
+        s=AtomicSession(w.env,stage('held_insertion'),0)
+        w.tick(s,2)
+        w.poses['object'][2]=-.006;w.contacts.pairs=False;w.tick(s)
+        w.poses['object'][2]=-.0055;w.contacts.pairs=True
+        self.assertTrue(w.tick(s))
+        self.assertTrue(s.summary()['interaction_observed'])
+
     def test_insertion_rejects_already_inside_and_misaligned_entry(self):
         w = World(); w.poses['object'][2] = -.01
         s = AtomicSession(w.env, stage('held_insertion'), 0)

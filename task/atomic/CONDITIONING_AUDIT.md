@@ -10,10 +10,10 @@ This is a complete **source/semantics coverage audit**, not a claim that every c
 | --- | --- | --- |
 | **L** | Specific pilot measurement observed and independently reproduced; not universal live validation. | 5 |
 | **C** | Finger contact location checker available; cell-specific live evidence absent. | 4 |
-| **G** | Generic rigid point/frame/relation math and selectors available; calibrated assets/events and family wiring still needed. | 142 |
+| **G** | Generic rigid point/frame/relation math and selectors available; calibrated assets/events and family wiring still needed. | 144 |
 | **F** | Contact point has no orientation: use a separate physical frame and independent contact evidence. | 8 |
 | **S** | Explicit object candidate snapshots/contact identity supported; automatic and landmark-specific selection remain. | 75 |
-| **M** | Required measurement, event, trajectory, initial frame or relation adapter missing. | 8 |
+| **M** | Required measurement, event, trajectory, initial frame or relation adapter missing. | 6 |
 | **NA** | Modifier does not apply to this categorical/intrinsic slot. | 28 |
 
 **L/C/G refer to geometric measurement capability, not completed action recognition.** A native predicate can be true without the interaction. L applies only to the exact contact/event/asset described in its JSON evidence; the five L cells are not five universally validated slots.
@@ -73,9 +73,9 @@ P = 3D point; T = SE(3) pose; D = landmark-relative displacement; O = landmark-r
 | `handover` | `[exchange]` | G | G | G | G | G | grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain. |
 | `handover` | `[object orientation]` | NA | G | NA | G | NA | grip_transfer emits giver_hold, overlap and receiver_only transitions from actual named-arm contacts. Live object frames/positions can be sampled at those events. Offline counterexamples; task arm/frame bindings and live verification remain. |
 | `fold` | `[deformable]` | G | G | G | G | G | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain. |
-| `fold` | `[crease]` | G | G | G | G | M | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain. Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer. |
-| `fold` | `[moving region]` | G | G | G | G | M | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain. Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer. |
-| `fold` | `[target region]` | G | G | G | G | M | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain. Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer. |
+| `fold` | `[crease]` | G | G | G | G | M | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain. Actual material crease intersection and whole-line relations need a dedicated geometric predicate. |
+| `fold` | `[moving region]` | G | G | G | G | G | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain. Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; live face bindings remain. |
+| `fold` | `[target region]` | G | G | G | G | G | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain. Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; live face bindings remain. |
 | `fold` | `[grasp point]` | M | M | M | M | M | Actual finger/cloth-particle contact correspondence is unavailable. Material landmarks, EEF proximity and deformation cannot substitute for a measured cloth grasp contact. |
 | `fold` | `[final orientation]` | NA | G | NA | G | NA | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; live validation and region overlap remain. |
 
@@ -109,36 +109,38 @@ notification occurs. Episode resets clear all history.
 | `in_front_of`, `behind` | Signed local-y point separation and margin. | Signed local-y ordering plus footprint overlap projected along y. | Reference-frame viewpoint must be named; no hidden camera/world convention. |
 | `near` | Point-to-point Euclidean distance; threshold is tolerance. | **Unsupported** surface distance, explicitly rejected. | Object-centre distance must not claim surface proximity. Margin is not a used parameter. |
 | `inside_box` | Point within explicit positive half-extents. | All mesh vertices within that convex finite box. | Not an arbitrary open/nonconvex cavity or a wall-penetration test; `min_overlap_fraction` is irrelevant and rejected. |
+| `inside_region` | Unsupported; a point cannot certify a solid. | Closed oriented material volume outside a calibrated finite box union; vertex error separately. | Explicit conservative interiors; nonclosed solids and outer-bound proxies are rejected. |
+| `inside_aperture` | Unsupported whole-part certification. | Actual solid cross-section outside calibrated polygon/holes, with requested physical clearance. | One-plane fit does not prove full insertion path, seating force or threads. |
+| `layered_over` | Unsupported; one landmark gap cannot certify patch order. | Explicit material faces: moving footprint coverage and all overlapping triangle-pair gap extrema. | Local selected-patch layering; no measured grasp or whole-cloth self-intersection claim. |
 | `on_top` | Point near the upper surface of an explicit box; requires half-extents. | Mesh height gap, projected overlap and force-bearing support-contact evidence. | Object version currently uses global bottom/top extrema, suitable for calibrated planar support; hanging, curved shells and local sloping supports need dedicated geometry. |
 | `inside` arbitrary cavity, `covering`, `around`, `between`, `along`, `through`, `against`, `seated`, `flush`, `centred` | **No generic relation adapter.** Compose supported constraints only when they express the actual requested meaning. | **No generic relation adapter.** Task-specific native predicates remain separate evidence. | A taxonomy phrase is not automatically a runnable `expected` relation name. Paths, topology, holes and crossing often require temporal checks. |
 
 ### Timing, selectors and non-geometric factors
 
-- Available events are `first_lift`, `first_motion`, read-only `first_predicate`
-  and `stage_success`. There is no generic initial-selection, first physical
-  tool impact, release-and-settle, handover, sustained-path or crease event.
-  First-predicate only helps when a correctly grounded independent predicate
-  exists. Lift uses environment z; motion uses 3D root displacement from the
-  session baseline, not necessarily a task-normal or tangential movement.
-- Available selectors are rigid root/centre poses and positions, finger contact
-  points, robot EEF frames and annotated functional/support frames. A tool frame
-  is not a tool contact; an EEF pose cannot replace finger contact. Contact/body
-  membership and event timing are necessary in addition to coordinate math.
-  Position-only object selectors may use explicit `points` scope for a root/centre
-  point relation, which makes no whole-object claim. Historical EEF contact-proxy
-  inputs can opt into the legacy schema flag; that does not meet this audit's
-  contact definition and is excluded from the audited pilot/programs.
-- Cached `ObjectSurfaces` meshes move with a rigid root. They do not update
-  articulated child configurations, garment material vertices or liquid mass.
-  Fold and changing-link geometry remain adapter gaps in every affected cell.
-- Material identity/count/volume/flow rate, desired joint travel/state, twist
-  angle/turn count, force/impulse, dwell/stability duration and categorical arm
-  identity are outside the five geometric modifiers. The family audit specifies
-  where these are required; their recognizers/measurement adapters are not
-  implicitly supplied by a valid P/T/D/O/R condition.
-- The JSON schema accepts custom slot strings; it does not enforce the taxonomy
-  matrix or physical feasibility. The matrix is an audit contract, not a runtime
-  dispatch system that installs missing family adapters.
+- Events include `first_lift`, `first_motion`, read-only `first_predicate`,
+  `first_contact`, synchronized `before_contact`, physical `recognition_event`,
+  `stage_success`, and `attempt_end` before reset. Recognizers emit separate
+  release/settled, impact/retraction, giver/overlap/receiver-only, insertion,
+  rotation, source-exit/transfer and folded transitions. An absent event remains
+  unobserved. Initial selection and trajectory observers have separate schemas.
+- Selectors distinguish rigid root/mesh centre, actual finger and object-pair
+  contacts, named/contacting-arm TCP, live articulated child/joint frames,
+  functional/support annotations, calibrated model-checked root offsets, actual
+  cloth/fluid points, material tangent/crease frames and explicit patch faces.
+  Contact points have no orientation; TCP origins do not measure grasp/contact
+  location. Frozen references use stage-start evidence explicitly.
+- Rigid meshes follow live PhysX root poses; articulated child surfaces follow
+  link tensors. Cached rigid geometry is rejected for cloth/fluid. Deforming
+  material geometry uses synchronized live solver readback and persistent IDs;
+  CPU cloth USD readback additionally requires Fabric disabled and running PhysX.
+  Explicit material meshes avoid duplicate visual/collision representations.
+- Material identity/count/nominal mass, joint travel/state, unwrapped twist angle,
+  contact impulse and dwell/stability duration are intrinsic action metrics,
+  separate from P/T/D/O/R. Fluid nominal mass does not establish measured density
+  or volume. Whole-cloth force contact and crease intersection remain gaps.
+- Custom slot strings remain allowed; preflight validates measurement semantics
+  but does not establish target feasibility. The matrix records the review and
+  binding/evidence level; it does not automatically install missing task bindings.
 
 ### Corrections made during this exhaustive conditioning review
 

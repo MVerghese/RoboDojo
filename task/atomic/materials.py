@@ -88,14 +88,14 @@ def resolve_material(env,selector,env_idx):
             adjacent = [face.tolist() for face in triangles if ids[0] in face]
             if not adjacent: raise ValueError('cloth landmark has no incident material triangle')
             face = adjacent[0]; start = face.index(ids[0]); ids = face[start:]+face[:start]
-    elif selector['kind']=='cloth_patch_frame':
+    elif selector['kind'] in ('cloth_patch_frame','cloth_patch_surface'):
         ids=[selector[k] for k in ('origin_id','x_id','y_id')]
     else:ids=selector['ids']
     lookup={int(ident):i for i,ident in enumerate(state['ids'])}
     if set(ids)-lookup.keys():raise ValueError('requested material IDs are missing from live state')
     points=state['positions'][[lookup[i] for i in ids]]
     source={**state['source'],**selector,'material_kind':kind,'material_ids':list(ids)}
-    if selector['kind'] in ('cloth_patch_frame', 'cloth_tag_frame'):
+    if selector['kind'] in ('cloth_patch_frame', 'cloth_tag_frame','cloth_patch_surface'):
         x,y=points[1]-points[0],points[2]-points[0]
         if np.linalg.norm(x)<=1e-10 or np.linalg.norm(y)<=1e-10:
             raise RuntimeError('cloth tangent frame is degenerate')
@@ -106,3 +106,22 @@ def resolve_material(env,selector,env_idx):
     measured={'position':points.mean(axis=0).tolist(),'points':points.tolist(),'point_kind':kind}
     if kind=='fluid':source['selected_nominal_mass_kg']=len(points)*state['nominal_mass_kg']
     return measured,source
+
+
+def resolve_patch_surface(env,selector,env_idx):
+    """Explicit topology faces follow persistent material IDs through deformation."""
+    state=material_state(env,selector['label'],'cloth',env_idx)
+    faces=np.asarray(state.get('triangles'))
+    requested=np.asarray(selector['face_ids'])
+    if faces.ndim!=2 or faces.shape[1]!=3 or faces.dtype.kind not in 'iu' or requested.max()>=len(faces):
+        raise RuntimeError('material patch requires the explicitly selected live topology faces')
+    selected=faces[requested];ids=np.unique(selected)
+    lookup={int(ident):i for i,ident in enumerate(state['ids'])}
+    if set(ids.tolist())-lookup.keys():raise RuntimeError('material patch topology references missing persistent vertex IDs')
+    remap={int(ident):i for i,ident in enumerate(ids)}
+    points=state['positions'][[lookup[int(i)] for i in ids]]
+    pose,source=resolve_material(env,selector,env_idx)
+    return {'position':pose[:3].tolist(),'orientation':pose[3:].tolist(),
+        'vertices':points.tolist(),'triangles':[[remap[int(i)] for i in face] for face in selected],
+        'geometry_representation':'explicit persistent material topology faces transformed by live solver vertices',
+        'material_vertex_ids':ids.tolist(),'material_face_ids':requested.tolist(),'material_source':source}

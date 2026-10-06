@@ -102,7 +102,7 @@ def build():
             if family == 'fold' and slot == 'grasp point' and concept != '—':
                 status, detail = 'M', 'Actual finger/cloth-particle contact correspondence is unavailable. Material landmarks, EEF proximity and deformation cannot substitute for a measured cloth grasp contact.'
             if family == 'fold' and factor == 'R' and slot in ('moving region','target region','crease') and concept != '—':
-                status, detail = 'M', 'Material point ordering and layer gap are measurable, but whole-patch layer overlap/order, crease intersection and self-penetration are not certified by the current landmark deformation observer.'
+                status, detail = ('M', 'Actual material crease intersection and whole-line relations need a dedicated geometric predicate.') if slot=='crease' else ('G','Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; live face bindings remain.')
             if family == 'pour' and slot == 'tilt' and concept != '—':
                 detail = 'Use source vessel orientation for T/O and a verified spout point for R. Generic rigid math exists; no spout or stream measurement was observed live.'
             live = LIVE.get((family, slot, factor))
@@ -119,7 +119,7 @@ def build():
     fingerprints = {str(p): hashlib.sha256((REPO / p).read_bytes()).hexdigest() for p in (
         Path('task/atomic/TAXONOMY.md'), Path('task/atomic/spec.py'), Path('task/atomic/geometry.py'),
         Path('task/atomic/session.py'), Path('task/atomic/surfaces.py'), Path('task/atomic/contacts.py'),
-        Path('task/atomic/recognizers.py'), Path('task/atomic/bindings.py'), Path('task/atomic/landmarks.py'), Path('task/atomic/materials.py'), Path('task/atomic/selection.py'), Path('task/atomic/trajectory.py'), Path('task/atomic/regions.py'), Path('task/atomic/fit.py'), Path('task/atomic/flow.py'), Path('task/atomic/fold.py'), Path('task/atomic/calibration.py'), Path('env/scene_manager/objects/fluid.py'), Path('env/scene_manager/objects/garment.py'))}
+        Path('task/atomic/recognizers.py'), Path('task/atomic/bindings.py'), Path('task/atomic/landmarks.py'), Path('task/atomic/materials.py'), Path('task/atomic/selection.py'), Path('task/atomic/trajectory.py'), Path('task/atomic/regions.py'), Path('task/atomic/fit.py'), Path('task/atomic/flow.py'), Path('task/atomic/fold.py'), Path('task/atomic/layers.py'), Path('task/atomic/calibration.py'), Path('env/scene_manager/objects/fluid.py'), Path('env/scene_manager/objects/garment.py'))}
     counts = {code: sum(cell['status'] == code for row in rows for cell in row['factors'].values())
               for code in ('L', 'C', 'G', 'F', 'S', 'M', 'NA')}
     return {'schema_version': 1, 'scope': 'source/semantics audit, not universal live validation',

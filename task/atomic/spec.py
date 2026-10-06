@@ -19,11 +19,11 @@ GEOMETRY_KINDS = frozenset(
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "before_contact", "recognition_event", "attempt_end"})
 CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "articulated_link_pose", "joint_link_pose"}) | CONTACT_KINDS
-MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame'}
+MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame'}
 FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS
-OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame'}
+OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame','cloth_patch_surface'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
-                               'near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top'})
+                               'near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over'})
 
 
 def _finite_number(value, name, positive=False):
@@ -66,6 +66,7 @@ def _validate_selector(selector, name):
               'cloth_points': {'label','ids'}, 'cloth_landmark': {'label','tag'},
               'cloth_tag_frame': {'label','tag'},
               'cloth_line_frame': {'label','tag_a','tag_b','normal_tag'},
+              'cloth_patch_surface': {'label','origin_id','x_id','y_id','face_ids'},
               'cloth_patch_frame': {'label','origin_id','x_id','y_id'}, 'fluid_points': {'label','ids'},
               'object_contact_points': {'label', 'other_label'}}.get(selector['kind'], {'label'})
     if set(selector) - common - fields:
@@ -133,10 +134,14 @@ def _validate_selector(selector, name):
     if selector['kind']=='cloth_line_frame':
         if any(not isinstance(selector.get(k),str) or not selector[k] for k in ('tag_a','tag_b','normal_tag')) or selector['tag_a']==selector['tag_b']:
             raise ValueError('cloth crease needs two distinct material tags and a real normal tag')
-    if selector['kind']=='cloth_patch_frame':
+    if selector['kind'] in ('cloth_patch_frame','cloth_patch_surface'):
         ids=[selector.get(k) for k in ('origin_id','x_id','y_id')]
         if any(type(i) is not int or i<0 for i in ids) or len(set(ids))!=3:
             raise ValueError('cloth patch frame requires three distinct material vertex IDs')
+    if selector['kind']=='cloth_patch_surface':
+        ids=selector.get('face_ids')
+        if not isinstance(ids,list) or not ids or len(set(ids))!=len(ids) or any(type(i) is not int or i<0 for i in ids):
+            raise ValueError('cloth patch surface requires distinct explicit persistent topology face IDs')
 
 
 def _validate_condition(condition):
@@ -174,7 +179,7 @@ def _validate_condition(condition):
         if kind != 'pose':
             raise ValueError('angle_tolerance_rad only applies to pose')
         _finite_number(condition['angle_tolerance_rad'], 'angle_tolerance_rad')
-    for field in ('relation_scope', 'margin', 'half_extents', 'min_overlap_fraction', 'interior_boxes', 'aperture_profile', 'required_clearance_m'):
+    for field in ('relation_scope', 'margin', 'half_extents', 'min_overlap_fraction', 'interior_boxes', 'aperture_profile', 'required_clearance_m','min_layer_gap_m','max_layer_gap_m'):
         if field in condition and kind != 'spatial_relation':
             raise ValueError(f'{field} only applies to spatial_relation')
     _validate_selector(condition.get("measurement"), f"condition {condition['id']}.measurement")
@@ -210,9 +215,17 @@ def _validate_condition(condition):
                                    (condition['reference']['kind'] not in OBJECT_FRAME_KINDS and condition['expected'] != 'inside_aperture')):
             raise ValueError('objects scope needs object frame selectors; it cannot replace functional landmarks')
         relation = condition['expected']
+        if relation == 'layered_over':
+            if scope!='objects' or measurement['kind']!='cloth_patch_surface' or condition['reference']['kind']!='cloth_patch_surface' or condition['reference'].get('time')=='stage_start':
+                raise ValueError('layered_over requires two live actual material patch surfaces')
+            for field in ('min_layer_gap_m','max_layer_gap_m'):_finite_number(condition.get(field),field)
+            if condition['min_layer_gap_m']>condition['max_layer_gap_m']:
+                raise ValueError('layer gap bounds are reversed')
+        elif 'min_layer_gap_m' in condition or 'max_layer_gap_m' in condition:
+            raise ValueError('layer gap bounds apply only to layered_over')
         if relation == 'on_top' and condition['reference'].get('time') == 'stage_start':
             raise ValueError('supported-on requires a live support frame and contact, not historical geometry')
-        if 'margin' in condition and relation in ('near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top'):
+        if 'margin' in condition and relation in ('near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over'):
             raise ValueError('margin only applies to directional separation relations')
         if 'half_extents' in condition and not (relation == 'inside_box' or (scope == 'points' and relation == 'on_top')):
             raise ValueError('half_extents requires a box relation')

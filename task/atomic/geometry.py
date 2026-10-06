@@ -229,6 +229,12 @@ def _object_relation(condition, measured, reference, ref_pos, ref_matrix, local_
     relation = condition['expected']
     direction = {'above': (2, 1), 'below': (2, -1), 'right_of': (0, 1), 'left_of': (0, -1),
                  'in_front_of': (1, 1), 'behind': (1, -1), 'on_top': (2, 1)}
+    if relation == 'layered_over':
+        from task.atomic.layers import patch_layers
+        result=patch_layers(a,at,b,bt,condition['min_layer_gap_m'],condition['max_layer_gap_m'],
+            condition.get('min_overlap_fraction',.5),tolerance)
+        return GeometryResult(result['passed'],max(result['layer_gap_shortfall_m'],result['layer_gap_excess_m']),
+            tolerance,{k:v for k,v in result.items() if k.endswith(('_m','_m2','_fraction'))},result)
     if relation == 'inside_region':
         from task.atomic.regions import region_containment
         result = region_containment(a, at, condition['interior_boxes'], tolerance)

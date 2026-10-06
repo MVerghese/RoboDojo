@@ -306,9 +306,11 @@ def condition_parameters(condition):
               ('interior_boxes', 'Calibrated interior-box union (metres)'),
               ('aperture_profile', 'Calibrated aperture rings (metres)'),
               ('required_clearance_m', 'Required material clearance (metres)'),
+              ('min_layer_gap_m','Minimum material layer gap (metres)'),
+              ('max_layer_gap_m','Maximum material layer gap (metres)'),
               ('opening','Opening frame'),('target_xy_m','Crossing XY target (metres)'),
               ('position_tolerance_m','Crossing positional tolerance (metres)'),
-              ('angle_tolerance_rad','Crossing angular tolerance (radians)'),
+              ('expected_velocity_direction','Requested velocity direction in opening frame'),
               ('start_event','Path start event'),('end_event','Path end event'),('min_samples','Required physics samples')]
     result = [('Action / modifier / slot', f"{condition['family']} / {condition['kind']} / {condition['slot']}")]
     for field, label in fields:
@@ -328,6 +330,8 @@ def condition_parameters(condition):
                 label, value = 'Angle tolerance (deg)', value * 180 / math.pi
             elif field == 'position_tolerance_m':
                 label, value = 'Crossing positional tolerance (mm)', value*1000
+            elif field in ('min_layer_gap_m','max_layer_gap_m','required_clearance_m'):
+                label, value = label.replace('(metres)','(mm)'),value*1000
             elif field == 'target_xy_m':
                 label, value = 'Crossing XY target (mm)', [v*1000 for v in value]
             elif field == 'margin':

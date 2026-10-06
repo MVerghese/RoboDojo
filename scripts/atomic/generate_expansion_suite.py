@@ -24,6 +24,80 @@ BREADTH_TASKS = ('general_pickup','stack_blocks','press_by_number','play_Xylopho
 CONSTRAINED_TASKS = ('fasten_screws','fold_clothes')
 
 
+def calibrated_key_profile(base,scene,assets):
+    """Physical key-tip/opening frames and explicit blade-collider section fit."""
+    import numpy as np
+    from task.atomic.calibration import opening_section
+    from task.atomic.geometry import _rotation
+    from task.atomic.regions import validate_solid
+    summary=json.loads((assets/'asset-summary.json').read_text())
+    slot=summary['Geometry/key_slot/00000'];key=json.loads((assets/'key-geometry.json').read_text())
+    for label,name in [('key','key'),('slot','key_slot')]:
+        row=scene['objects'][label]
+        if row['metadata']['model_name']!=name or int(row['metadata']['model_id'])!=0:
+            raise ValueError('key calibration requires the verified model 0 assets')
+        expected=np.asarray((key if label=='key' else slot)['authored_scaled_bounds'])
+        if not np.allclose(row['local_mesh_bounds_m'],expected,atol=1e-7,rtol=0):
+            raise ValueError('live scaled key/slot bounds differ from baked calibration')
+    mesh=np.load(assets/'Geometry_key_slot_00000.npz');mouth_z=float(mesh['vertices'][:,2].max()-.0005)
+    section=opening_section(mesh['vertices'],mesh['triangles'],mouth_z)
+    yaw=-math.pi/3;rotation=[math.cos(yaw/2),0,0,math.sin(yaw/2)]
+    profile=deepcopy(section['aperture_profile'])
+    for field in ('outer','holes'):
+        rings=[profile[field]] if field=='outer' else profile[field]
+        values=[(np.asarray(r)@_rotation(rotation)[:2,:2]).tolist() for r in rings]
+        profile[field]=values[0] if field=='outer' else values
+    vertices=np.asarray(key['root_relative_mesh']['vertices']);visual=key['meshes'][0]
+    physical=vertices[visual['point_offset']:visual['point_offset']+visual['points']]
+    tip=physical[np.isclose(physical[:,2],physical[:,2].min(),atol=1e-8,rtol=0)].mean(0)
+    cube=next(m for m in key['meshes'] if m['path'].endswith('/Scope/Cube'))
+    cv=vertices[cube['point_offset']:cube['point_offset']+cube['points']]
+    start=sum(m['triangles'] for m in key['meshes'][:key['meshes'].index(cube)])
+    ct=np.asarray(key['root_relative_mesh']['triangles'])[start:start+cube['triangles']]-cube['point_offset']
+    validate_solid(cv,ct)
+    proof=slot['asset_sha256']+':visual-mouth-wall-trace:'+str(mouth_z)
+    opening={'kind':'calibrated_frame','label':'slot','local_pose':[0,0,mouth_z,*rotation],
+             'calibration_id':proof,'asset_model':{'name':'key_slot','index':0}}
+    tip_selector={'kind':'calibrated_frame','label':'key','local_pose':[*tip.tolist(),1,0,0,0],
+                  'calibration_id':key['asset_sha256']+':visual-blade-tip','asset_model':{'name':'key','index':0}}
+    shoulder={'kind':'calibrated_frame','label':'key','local_pose':[0,0,float(cv[:,2].max()),1,0,0,0],
+              'calibration_id':key['asset_sha256']+':physical-blade-collider-shoulder','asset_model':{'name':'key','index':0}}
+    blade={'kind':'object_pose','label':'key','mesh_paths':['Scope/Cube'],
+           'calibration_id':key['asset_sha256']+':explicit-closed-blade-collider',
+           'asset_model':{'name':'key','index':0}}
+    base=deepcopy(base);event={'kind':'recognition_event','name':'inserted'}
+    stage={'id':'physical_key_insertion','family':'insert','required':False,
+        'instruction':'Observe held entry into the actual key-slot mouth and check the blade collider section.',
+        'recognition':{'kind':'held_insertion','label':'key','target_label':'slot','arm':'any','min_contact_steps':2,
+            'tip':tip_selector,'opening':opening,'entry_clearance_m':.002,'min_depth_m':.022,'max_depth_m':.035,
+            'lateral_tolerance_m':.007,'axis_tolerance_rad':math.pi/12},
+        'success_checks':[{'name':'is_atomic_interaction','args':{}}],
+        'geometry':[
+            {'id':'key_entry_pose','slot':'opening','kind':'pose','measurement':tip_selector,'reference':opening,
+             'expected':{'position':[0,0,0],'orientation':[1,0,0,0]},'tolerance':.005,
+             'angle_tolerance_rad':math.pi/6,'event':{'kind':'recognition_event','name':'entry'},'track_closest':False},
+            {'id':'key_inserted_pose','slot':'goal','kind':'pose','measurement':tip_selector,'reference':opening,
+             'expected':{'position':[0,0,-.025],'orientation':[1,0,0,0]},'tolerance':.005,
+             'angle_tolerance_rad':math.pi/6,'event':event,'track_closest':False},
+            {'id':'blade_section_clearance','slot':'alignment','kind':'spatial_relation','measurement':blade,
+             'reference':opening,'relation_scope':'objects','expected':'inside_aperture','aperture_profile':profile,
+             'required_clearance_m':.0001,'tolerance':.0002,'event':event,'track_closest':False},
+            {'id':'blade_shoulder_gap','slot':'goal','kind':'relative_displacement','measurement':shoulder,
+             'reference':opening,'expected':[0,0,.018],'axes':[2],'tolerance':.005,'event':event,'track_closest':False},
+            {'id':'final_key_tip_depth','slot':'goal','kind':'relative_displacement','measurement':tip_selector,
+             'reference':opening,'expected':[0,0,-.025],'tolerance':.005,'event':{'kind':'attempt_end'},'track_closest':False}]}
+    base['stages'].append(stage);base['stage_dependencies'][stage['id']]=[]
+    text=('During key insertion, center the actual blade tip on the measured slot mouth within 5 mm '
+          'and align its full root frame within 30 degrees of the slot frame rotated -60 degrees about local z. '
+          'Insert the tip to [0, 0, -25] mm in that mouth frame within 5 mm positional error. '
+          'At insertion, fit the physical blade collider cross-section through the calibrated opening with '
+          '0.1 mm requested clearance and 0.2 mm fit tolerance, and leave its shoulder 18 mm above the mouth '
+          'within 5 mm local-z error. At episode end keep the blade tip within 5 mm of that insertion depth target. '
+          'The opening is measured 0.5 mm below the mesh top, not the legacy 96 mm annotation. '
+          'The section condition uses the explicit blade collision box; it does not certify all visual teeth or flush seating.')
+    return base,text
+
+
 def constrained_expand(task, base, scene, calibration_id):
     """Calibrated bolt-constrained rotation and persistent material crease poses."""
     base=deepcopy(base)
@@ -345,7 +419,7 @@ def validation_expand(base):
     return base, ' '.join(dict.fromkeys(texts))
 
 
-def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibration_root=None):
+def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibration_root=None,asset_calibration_root=None):
     if output.exists() and any(output.iterdir()):
         raise ValueError('use a fresh output directory')
     plans = {p['task']: p for p in json.loads((REPO / 'task/atomic/segmentation_plans.json').read_text())['tasks']}
@@ -363,18 +437,27 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
         if blocker:
             raise ValueError(f'{task}: {blocker}')
         scene=None
-        if (phase=='breadth' and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws'):
+        if phase=='calibrated':
+            if task!='insert_key':raise ValueError('calibrated task profile is not bound yet: '+task)
+            if not asset_calibration_root:raise ValueError('calibrated bindings require actual asset evidence')
+            asset_files=['asset-summary.json','key-geometry.json','Geometry_key_slot_00000.npz']
+            manifest.setdefault('calibration_inputs',{})['assets']=[{
+                'path':str(Path(asset_calibration_root)/name),
+                'sha256':hashlib.sha256((Path(asset_calibration_root)/name).read_bytes()).hexdigest()}
+                for name in asset_files]
+        if (phase=='breadth' and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws') or phase=='calibrated':
             source=Path(calibration_root)/'runs'/f'robodojo_25k_{task}_baseline'/'eval_report.json'
             report=json.loads(source.read_text())
             detail=next(iter(report['native_results'][0]['details'].values()))
             scene=detail['atomic_sequence']['scene_calibration']
             manifest.setdefault('calibration_inputs',{})[task]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
-        base, append = (constrained_expand(task,pair[0],scene,
+        base, append = (calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
+                        constrained_expand(task,pair[0],scene,
                         manifest.get('calibration_inputs',{}).get(task,{}).get('sha256','actual-material-topology')) if phase=='constrained' else
                         breadth_expand(pair[0],scene) if phase=='breadth' else
                         pair if task == 'fold_clothes' and phase == 'materials' else
                         (validation_expand if phase == 'validation' else expand)(pair[0]))
-        if phase in ('validation','breadth') or (phase=='constrained' and task!='fold_clothes'):
+        if phase in ('validation','breadth','calibrated') or (phase=='constrained' and task!='fold_clothes'):
             append = pair[1] + ' ' + append
         manifest['coverage'].append({'task':task,'included':True,
             'families':sorted({s['family'] for s in base['stages']}), 'unbound_families':[],
@@ -406,11 +489,12 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
+    parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()
     tasks = VALIDATION_TASKS if args.phase == 'validation' and tuple(args.tasks) == FEASIBLE_TASKS else args.tasks
     if args.phase == 'materials' and tuple(args.tasks) == FEASIBLE_TASKS: tasks = MATERIAL_TASKS
     if args.phase == 'breadth' and tuple(args.tasks) == FEASIBLE_TASKS: tasks = BREADTH_TASKS
     if args.phase == 'constrained' and tuple(args.tasks) == FEASIBLE_TASKS: tasks = CONSTRAINED_TASKS
-    print(f"Generated {len(generate(args.output_dir, json.loads(args.checkpoints.read_text()), tasks, args.phase,args.calibration_root)['cases'])} cases")
+    print(f"Generated {len(generate(args.output_dir, json.loads(args.checkpoints.read_text()), tasks, args.phase,args.calibration_root,args.asset_calibration_root)['cases'])} cases")

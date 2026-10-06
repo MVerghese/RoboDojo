@@ -127,7 +127,7 @@ class AtomicSession:
             if metadata.get('uuid') != selector['asset_uuid']:
                 raise RuntimeError('calibrated frame/mesh asset identity differs from the reviewed asset')
             source['verified_asset_uuid']=metadata['uuid']
-        if kind in ('cloth_points','cloth_landmark','cloth_patch_frame','cloth_tag_frame','cloth_line_frame','fluid_points'):
+        if kind in ('cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_tag_frame','cloth_line_frame','fluid_points'):
             from task.atomic.materials import resolve_material
             return resolve_material(self.env,selector,self.env_idx)
         if kind == 'calibrated_frame':
@@ -485,7 +485,6 @@ class AtomicSession:
         measured, source = self._resolve_with_source(condition['measurement'])
         reference, reference_source = self._resolve_with_source(condition['reference']) if condition.get('reference') else (None, None)
         if condition.get('relation_scope') == 'objects':
-            surfaces = self.env._atomic_surfaces
             # Attach surface evidence without changing the explicitly selected
             # landmark. A root-frame reference must not become a bounds centre.
             measured_pose, reference_pose = _array(measured), _array(reference)
@@ -518,6 +517,9 @@ class AtomicSession:
         return measured, source, reference, reference_source
 
     def _surface_for_selector(self,selector):
+        if selector['kind']=='cloth_patch_surface':
+            from task.atomic.materials import resolve_patch_surface
+            return resolve_patch_surface(self.env,selector,self.env_idx)
         if selector['kind'] in ('articulated_link_pose','joint_link_pose'):
             link=selector.get('link')
             if link is None:

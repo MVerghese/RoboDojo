@@ -1,5 +1,5 @@
 import unittest
-from task.atomic.flow import FlowObserver, score_crossing
+from task.atomic.flow import FlowObserver, score_crossing,validate_flow
 
 C={'opening':{'kind':'object_pose','label':'vase'},
    'aperture_profile':{'outer':[[-.02,-.02],[.02,-.02],[.02,.02],[-.02,.02]]},
@@ -8,6 +8,16 @@ FRAME=[0,0,0,1,0,0,0]
 
 
 class FlowTests(unittest.TestCase):
+    def test_requested_velocity_direction_has_independent_angle_error(self):
+        a={'position':[-.01,0,.01],'opening':FRAME,'dt_s':.01}
+        b={'position':[.01,0,-.01],'opening':FRAME,'dt_s':.01}
+        c=dict(C,expected_velocity_direction=[1,0,-1])
+        validate_flow(c,lambda *args:None)
+        r=score_crossing(c,a,b);self.assertTrue(r['passed'])
+        self.assertAlmostEqual(r['components']['velocity_angle_rad'],0.,places=7)
+        self.assertFalse(score_crossing(C,a,b)['passed'])
+        with self.assertRaises(ValueError):validate_flow(dict(c,expected_velocity_direction=[0,0,0]),lambda *args:None)
+
     def test_crossing_outside_aperture_is_measured_as_failure(self):
         a={'position':[.03,0,.01],'opening':FRAME,'dt_s':.01}
         b={'position':[.03,0,-.01],'opening':FRAME,'dt_s':.01}
