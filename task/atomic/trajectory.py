@@ -9,17 +9,18 @@ from task.atomic.contacts import ContactUnavailable
 
 
 def validate_trajectory(c, validate_selector, validate_event):
+    from task.atomic.spec import FRAME_KINDS
     required = {'id','slot','measurement','expected','tolerance','axes','min_samples','start_event','end_event'}
     if not isinstance(c, dict) or not required <= set(c) or set(c) - required - {'reference','backtrack_tolerance_m'}:
         raise ValueError('trajectory requires explicit path, axes, tolerance and sampling window')
     if any(not isinstance(c[k], str) or not c[k] for k in ('id','slot')):
         raise ValueError('trajectory requires nonempty id and slot')
     validate_selector(c['measurement'], 'trajectory.measurement')
-    if c['measurement']['kind'] in ('contact_points','object_contact_points','cloth_points','cloth_landmark','fluid_points') or c['measurement'].get('time','live') != 'live':
+    if c['measurement']['kind'] not in FRAME_KINDS | {'object_position','object_center_position'} or c['measurement'].get('time','live') != 'live':
         raise ValueError('path measurement requires a live physical landmark, not a contact centroid')
     if 'reference' in c:
         validate_selector(c['reference'], 'trajectory.reference')
-        if c['reference']['kind'] in ('object_position','object_center_position','contact_points','object_contact_points','cloth_points','cloth_landmark','fluid_points'):
+        if c['reference']['kind'] not in FRAME_KINDS:
             raise ValueError('path reference requires an oriented frame')
     axes = c['axes']
     if not isinstance(axes,list) or not axes or any(type(a) is not int or a not in (0,1,2) for a in axes) or len(set(axes)) != len(axes):

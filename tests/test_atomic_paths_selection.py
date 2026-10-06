@@ -64,6 +64,15 @@ def impact(w,s):
 
 
 class TemporalGeometryTests(unittest.TestCase):
+    def test_material_curve_cannot_be_silently_used_as_a_single_trajectory_landmark(self):
+        curve = {'kind':'cloth_curve','label':'cloth','ids':[0,1,2]}
+        for field in ('measurement','reference'):
+            path = path_definition(**{field:curve})
+            with self.assertRaisesRegex(ValueError,'landmark|frame'):
+                endpoint_stage(trajectories=[path])
+        # Explicit physical point and frame selectors retain their meanings.
+        endpoint_stage(trajectories=[path_definition()])
+
     def test_candidate_query_binds_initial_layout_and_audits_inventory_without_rebinding(self):
         w=World();w.goal=False;w.poses['other'][0]=.2
         lm=w.env.scene_manager.layout_manager

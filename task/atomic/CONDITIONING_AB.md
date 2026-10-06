@@ -589,3 +589,9 @@ all six prong/depth cuts must fit one common reviewed pose with 0.25 mm clearanc
 and lateral counterexamples must fail. Both prompts score the same conditions
 and recognizer. The conditioned append names actual plane cuts and clearance;
 no whole-prong volume or electrical seating is requested.
+
+A finished collection worker with no eval report is an evidence failure, with
+unavailable rollout outcome and no native/action/geometric result. It is excluded
+from matched comparisons. Zero retained episodes does not infer that the worker
+executed no policy actions. Keep stop requests, collector exit and failure logs
+for diagnosis; never fill missing outcomes with policy failure or zero error.

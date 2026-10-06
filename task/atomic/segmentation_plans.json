@@ -7410,7 +7410,7 @@
     },
     {
       "path": "task/atomic/trajectory.py",
-      "sha256": "08e3e5647a643a4af22dd90fb9bb040586a7151cd84abf91f1f6b5712718bc44"
+      "sha256": "93cd1d5388f4ed9bcb76f53cb61e9a29e6e61502c6f45dd0d580394f2ce20056"
     },
     {
       "path": "task/atomic/regions.py",

@@ -14,6 +14,32 @@ from task.atomic.spec import AtomicProgram, AtomicStage
 
 
 class EvalMatrixTests(unittest.TestCase):
+    def test_finished_collection_without_report_is_failed_evidence_not_pending_policy_failure(self):
+        from scripts.atomic.run_suite import summarize
+        manifest = {'task':'task','mode':'test','cases':[{'id':'case','stage':'stage','kind':'point'}]}
+        for code in (0,2):
+            with tempfile.TemporaryDirectory() as temp:
+                root = Path(temp);run = root/'runs'/'case';run.mkdir(parents=True)
+                (run/'collection_finished.json').write_text(json.dumps({'exit_code':code}))
+                result = summarize(manifest,root);row = result['cases'][0]
+                self.assertEqual(row['status'],'failed');self.assertEqual(result['completed_cases'],1)
+                self.assertEqual(row['rollout_outcome'],'unavailable')
+                self.assertEqual(row['completed_episodes'],0)  # Retained episodes, not inferred execution count.
+                self.assertNotIn('full_task_success',row);self.assertNotIn('atomic_scores',row)
+
+    def test_report_takes_precedence_over_collector_exit_and_unfinished_case_stays_pending(self):
+        from scripts.atomic.run_suite import summarize
+        manifest = {'task':'task','mode':'test','cases':[{'id':'case','stage':'stage','kind':'point'}]}
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp);run = root/'runs'/'case';run.mkdir(parents=True)
+            self.assertEqual(summarize(manifest,root)['cases'][0]['status'],'pending')
+            (run/'collection_finished.json').write_text(json.dumps({'exit_code':2}))
+            (run/'eval_report.json').write_text(json.dumps({'status':'passed','completed_episodes':1,
+                'errors':[],'native_results':[]}))
+            row = summarize(manifest,root)['cases'][0]
+            self.assertEqual(row['status'],'passed');self.assertEqual(row['completed_episodes'],1)
+            self.assertNotIn('collection_outcome',row)
+
     def test_quiet_contact_backend_is_unverified_until_a_report_arrives(self):
         from task.atomic.contacts import PhysXContacts
         backend = PhysXContacts.__new__(PhysXContacts)

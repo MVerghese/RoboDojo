@@ -343,6 +343,14 @@ def summarize(manifest, root):
                 for flow in (atomic.get('material_flow') or {}).get('crossings',{}).values():
                     flow_scored += int(flow['status']=='reproduced' and flow['recorded_result']['status']=='scored')
                     mismatches += int(flow['status']=='score_mismatch')
+        elif (run/'collection_finished.json').exists():
+            collection = json.loads((run/'collection_finished.json').read_text())
+            # A finished collector with no retained report cannot remain pending
+            # forever. This is unavailable rollout evidence, never policy failure.
+            row.update(status='failed',completed_episodes=0,
+                rollout_outcome='unavailable',collection_outcome='finished_without_eval_report',
+                collection_exit_code=collection.get('exit_code'),
+                errors=['Collector finished without eval_report.json; no native/action/geometric outcome retained.'])
         rows.append(row)
     result = {"updated_at": datetime.now(timezone.utc).isoformat(), "task": manifest["task"],
               "mode": manifest["mode"], "cases": rows, "reproduced_event_scores": scored,

@@ -703,3 +703,7 @@ zero gap-error defaults from component means/deltas. It shows N/A and an explici
 no-overlap reason. Raw frozen scores are preserved. Curve/segment/shaft-fit
 rows now name their actual checker components even before an event is observed,
 without unrelated generic relation-error or footprint fields.
+
+Material-curve selectors are explicitly excluded from single-landmark trajectory
+measurements and oriented trajectory references. A curve cannot silently become
+a centroid/frame. Physical point/frame trajectory selectors remain supported.

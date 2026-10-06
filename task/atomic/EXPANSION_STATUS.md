@@ -19,25 +19,31 @@ All pairs use the 25k checkpoint, layout/seed 0, one episode per arm, reservatio
 GPU admission guard. The global controller window allows at most 32 queued plus
 executing jobs. Frozen packages never change when source instrumentation changes.
 
+Ledger snapshot: 2026-10-06 23:18 UTC.
+
 | Suite | Cases | Collected evidence at this update | Conditions |
 | --- | ---: | --- | --- |
-| `geometry-expansion-1006` | 16 | 15 valid episodes, 27 independently reproduced scores; one conditioned bottle case failed twice before episode completion | New grasp band, first-lift displacement/full orientation, push contact side, cap contact offset, handover root pose |
-| `geometry-validation-1006` | 16 | 16 valid episodes, 54 reproduced scores; no mismatches | Release yaw/full pose, failed push endpoint, pre-contact mallet pose, tool heading, annotated charger insertion |
-| `geometry-support-1006` | 10 | 9 collected cases, 48 reproduced scores; remaining cases submitted | Persistent support, raw body-pair diagnostics, full material mesh export |
-| `geometry-materials-1006` | 4 | Submitted | Real garment landmark destination, tangent normal and crease drift; liquid scene capture/pickup, not calibrated liquid transfer |
-| `geometry-breadth-1006` | 12 | 5 collected cases, 17 reproduced scores | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
-| `geometry-body-contacts-1006` | 4 | 3 valid episodes, 20 reproduced scores; verified bowl A/B pair with actual upward support | Stack release/settling using contact APIs enabled after task objects load |
-| `geometry-constrained-1006` | 4 | 1 valid conditioned screw episode, 9 reproduced scores; baseline pending | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
-| `geometry-tool-contacts-1006` | 4 | 1 valid align-block baseline; policy never acquired the tool; no tool scores | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
-| `geometry-crease-segments-1006` | 2 | Submitted | Actual finite material-endpoint segment coincidence alongside patch layering |
-| `geometry-cloth-patches-1006` | 2 | Submitted | Model/asset/topology-verified local garment patch coverage and layer gaps |
-| `geometry-pour-cores-1006` | 2 | Baseline reset failed before an episode; both arms stopped and retained | Declared initial whole-ball core cohort, actual mouth pose, crossing XY/direction and final core enclosure |
-| `geometry-key-fit-1006` | 2 | Submitted | Actual key mouth/tip, closed blade collider section/clearance and shoulder gap |
-| `geometry-surface-gaps-1006` | 2 | Submitted after a global slot opened | Actual selected-patch triangle-boundary gap alongside layers |
-| `geometry-bottle-runtime-1006` | 2 | Submitted; both queued | Original bottle geometry with rigid readback fix and pinned websocket protocol |
-| `geometry-cloth-runtime-1006` | 2 | Submitted; queued | Combined patch/layer, finite-chord and boundary-gap conditions with pinned protocol |
-| `geometry-liquid-cores-1006` | 2 | Prepared; automatic monitor awaits capacity | Verified model-specific mouth pose and partial-cohort particle crossings |
-| `geometry-charger-tips-1006` | 2 | Prepared; automatic monitor awaits capacity | Both actual leading-tip frames and middle-slot throat entry |
+| `geometry-expansion-1006` | 16 | 16 collected; 15 valid episodes; 27 reproduced scores; 0 mismatches; 0 pending | New grasp band, first-lift displacement/full orientation, push contact side, cap contact offset, handover root pose |
+| `geometry-validation-1006` | 16 | 16 collected; 16 valid episodes; 54 reproduced scores; 0 mismatches; 0 pending | Release yaw/full pose, failed push endpoint, pre-contact mallet pose, tool heading, annotated charger insertion |
+| `geometry-support-1006` | 10 | 9 collected; 9 valid episodes; 48 reproduced scores; 0 mismatches; 1 pending | Persistent support, raw body-pair diagnostics, full material mesh export |
+| `geometry-materials-1006` | 4 | 3 collected; 3 valid episodes; 20 reproduced scores; 0 mismatches; 1 pending | Real garment landmark destination, tangent normal and crease drift; liquid scene capture/pickup, not calibrated liquid transfer |
+| `geometry-breadth-1006` | 12 | 8 collected; 8 valid episodes; 19 reproduced scores; 0 mismatches; 4 pending | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
+| `geometry-body-contacts-1006` | 4 | 4 collected; 4 valid episodes; 29 reproduced scores; 0 mismatches; 0 pending | Stack release/settling using contact APIs enabled after task objects load |
+| `geometry-constrained-1006` | 4 | 2 collected; 2 valid episodes; 21 reproduced scores; 0 mismatches; 2 pending | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
+| `geometry-tool-contacts-1006` | 4 | 2 collected; 2 valid episodes; 10 reproduced scores; 0 mismatches; 2 pending | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
+| `geometry-crease-segments-1006` | 2 | 1 collected; 1 valid episodes; 18 reproduced scores; 0 mismatches; 1 pending | Actual finite material-endpoint segment coincidence alongside patch layering |
+| `geometry-cloth-patches-1006` | 2 | 1 collected; 1 valid episodes; 15 reproduced scores; 0 mismatches; 1 pending | Model/asset/topology-verified local garment patch coverage and layer gaps |
+| `geometry-pour-cores-1006` | 2 | 2 terminal collection attempts; 0 valid episodes; 0 reproduced scores; 0 mismatches; no pending jobs | Declared initial whole-ball core cohort, actual mouth pose, crossing XY/direction and final core enclosure |
+| `geometry-key-fit-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 0 mismatches; 2 pending | Actual key mouth/tip, closed blade collider section/clearance and shoulder gap |
+| `geometry-surface-gaps-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 0 mismatches; 2 pending | Actual selected-patch triangle-boundary gap alongside layers |
+| `geometry-bottle-runtime-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 0 mismatches; 2 pending | Original bottle geometry with rigid readback fix and pinned websocket protocol |
+| `geometry-cloth-runtime-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 0 mismatches; 2 pending | Combined patch/layer, finite-chord and boundary-gap conditions with pinned protocol |
+| `geometry-liquid-cores-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 0 mismatches; 2 pending | Verified model-specific mouth pose and partial-cohort particle crossings |
+| `geometry-charger-tips-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 0 mismatches; 2 pending | Both actual leading-tip frames and middle-slot throat entry |
+| `geometry-pour-initialization-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 2 pending | Corrected early contact API setup and guarded reset; actual ball cohort/mouth/flow conditions |
+| `geometry-selection-query-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 2 pending | Actual three-block bounded initial-layout candidate query and first sustained selected-object contact |
+| `geometry-material-curves-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 2 pending | Model-bound ordered material-edge path preservation, patch layers and surface gaps |
+| `geometry-charger-sections-1006` | 2 | 0 collected; 0 valid episodes; 0 reproduced scores; 2 pending | Both actual leading tips plus closed local shaft-section fit/clearance |
 
 The bottle retry retained the exact program/checkpoint/runtime package. It ended
 with client code 143 and no completed native episode. Archived logs show a policy
@@ -87,7 +93,8 @@ those require reviewed geometric repairs or alternative physical representations
 not weaker acceptance thresholds.
 
 Remaining work includes live validation of the corrected body contact lifecycle,
-broader calibrated pour/fit bindings, live cloth patch/finite-segment validation, curved crease relations, and actual
+broader calibrated pour/fit bindings, matched cloth patch/finite-segment and
+new material-curve validation, discovery of newly formed physical creases, and actual
 cloth finger/particle contact instrumentation. Missing physical evidence is reported
 explicitly and is not converted into a zero error.
 
@@ -335,3 +342,13 @@ A retained `gap_observed=false` masks unmeasured vertical gap-error defaults fro
 statistics; coverage/separation stay measured. Per-condition component reasons
 explain the resulting N/A. Pending curve/segment/section/selection rows now use
 their actual units and checker fields. The current host suite passes 221 tests.
+
+### Terminal collection reconciliation
+
+A finished collector without `eval_report.json` now has failed evidence status,
+zero retained episodes and `rollout_outcome=unavailable`. It is not left pending
+forever and does not become a native/policy failure. An actual retained report
+takes precedence over collector exit. Both stopped old pour-core attempts are
+now terminal in the ledger; the queued corrected pair remains distinct.
+Reconciliation runs only after every collection worker has finished and stops
+only the matching obsolete controller. Current source passes 224 atomic tests.
