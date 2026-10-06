@@ -70,12 +70,14 @@ LIVE = {
     ('fold', 'crease', 'R'): 'The geometry-crease-segments-1006 baseline retained finite endpoint-chord Hausdorff errors of 73.7–78.8 mm, independently reproduced. Native success did not imply a qualified fold observer. This validates declared finite material chords, not a curved path or discovery of the newly formed physical crease; curve-pair live evidence is pending.',
     ('fold', 'moving region', 'R'): 'Actual model/topology-bound patches measured coverage and horizontal gap in geometry-cloth-patches-1006 conditioned and geometry-crease-segments-1006 baseline episodes. Zero overlap leaves vertical gaps unobserved; body-patch coverage 0.0553 in the chord baseline had 13.8–38.7 mm overlapping-region gaps. These belong to different frozen comparisons; matched partners remain pending. No whole-garment layering or grasp-force claim.',
     ('fold', 'target region', 'R'): 'Actual fixed-ID target material patches served as the live references in the same patch/chord episodes, with coverage, planar distance and overlapping-region gap reproduction. This applies to these selected material regions; full layer order, force-bearing contact and global self-intersection remain unresolved.',
+    ('fold', 'final orientation', 'O'): 'The geometry-surface-gaps-1006 conditioned episode measured actual material tangent-normal direction errors for all three observers, independently reproduced. This covers the declared local normal axes, not every global cloth orientation or physical grasp. Native task and all fold observers failed; scalar final geometry remained observed.',
 }
 LIVE_EVIDENCE = {
     ('touch_with_tool', 'contact', 'D'): 'task/atomic/EXPANSION_STATUS.md#live-held-strike-witness-validation',
     ('fold', 'crease', 'R'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation',
     ('fold', 'moving region', 'R'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation',
     ('fold', 'target region', 'R'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation',
+    ('fold', 'final orientation', 'O'): 'task/atomic/EXPANSION_STATUS.md#live-selected-surface-gap-validation',
 }
 
 

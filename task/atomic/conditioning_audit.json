@@ -32,9 +32,9 @@
   "slots": 54,
   "factor_cells": 270,
   "status_counts": {
-    "L": 9,
+    "L": 10,
     "C": 4,
-    "G": 141,
+    "G": 140,
     "F": 8,
     "S": 75,
     "M": 5,
@@ -2296,9 +2296,9 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Folded edge aligned with shoulder line.",
-          "status": "G",
-          "audit": "Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-surface-gaps-1006 conditioned episode measured actual material tangent-normal direction errors for all three observers, independently reproduced. This covers the declared local normal axes, not every global cloth orientation or physical grasp. Native task and all fold observers failed; scalar final geometry remained observed.",
+          "live_evidence": "task/atomic/EXPANSION_STATUS.md#live-selected-surface-gap-validation"
         },
         "R": {
           "kind": "spatial_relation",

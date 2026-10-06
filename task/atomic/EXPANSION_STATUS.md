@@ -430,3 +430,21 @@ Calibration, retained input SHA and full population partitions:
 Current source passes 232 offline atomic tests, including transformed-population,
 initial-overlap, empty-core and invalid-ID counterexamples. Fresh runtime
 population/transfer validation is pending.
+
+### Live selected-surface-gap validation
+
+The `geometry-surface-gaps-1006` conditioned garment episode completed with
+native failure and no qualified fold observers. Actual selected triangle-boundary
+distances were 41.52, 290.50 and 15.24 mm for left sleeve, right sleeve and body.
+The body boundary was within its 20 mm target, but projected body-patch coverage
+was only 0.01073 against the independent 0.50 requirement. Its measured overlapping
+region had 15.89–22.86 mm layer gaps. Sleeve vertical gaps remained unobserved
+because their patches had zero projected overlap. Local material-normal errors
+were also measured. These are geometric measurements of a failed attempt;
+they do not supply missing fold events or force-bearing cloth contacts.
+
+All 18 required-event geometry scores reproduced. The baseline partner is pending.
+At 23:39 UTC, the unified MD/HTML report contained 160 valid episodes, 72 verified
+matched pairs and 566 reproduced required-event scores, with zero mismatches.
+Both corrected `geometry-liquid-populated-1006` cases were submitted at high-9000
+after the two-case batch fitted the existing global window.

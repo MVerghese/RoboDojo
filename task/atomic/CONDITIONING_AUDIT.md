@@ -8,15 +8,15 @@ This is a complete **source/semantics coverage audit**, not a claim that every c
 
 | Code | Meaning | Cells |
 | --- | --- | --- |
-| **L** | Specific retained simulator measurement observed and independently reproduced; not universal live validation. | 9 |
+| **L** | Specific retained simulator measurement observed and independently reproduced; not universal live validation. | 10 |
 | **C** | Finger contact location checker available; cell-specific live evidence absent. | 4 |
-| **G** | Generic rigid point/frame/relation math and selectors available; calibrated assets/events and family wiring still needed. | 141 |
+| **G** | Generic rigid point/frame/relation math and selectors available; calibrated assets/events and family wiring still needed. | 140 |
 | **F** | Contact point has no orientation: use a separate physical frame and independent contact evidence. | 8 |
 | **S** | Explicit object candidate snapshots/contact identity supported; automatic and landmark-specific selection remain. | 75 |
 | **M** | Required measurement, event, trajectory, initial frame or relation adapter missing. | 5 |
 | **NA** | Modifier does not apply to this categorical/intrinsic slot. | 28 |
 
-**L/C/G refer to geometric measurement capability, not completed action recognition.** A native predicate can be true without the interaction. L applies only to the exact contact/event/asset described in its JSON evidence; the 9 L cells are not universally validated slots.
+**L/C/G refer to geometric measurement capability, not completed action recognition.** A native predicate can be true without the interaction. L applies only to the exact contact/event/asset described in its JSON evidence; the 10 L cells are not universally validated slots.
 
 ## Exhaustive slot × factor matrix
 
@@ -77,7 +77,7 @@ P = 3D point; T = SE(3) pose; D = landmark-relative displacement; O = landmark-r
 | `fold` | `[moving region]` | G | G | G | G | L | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending. Actual model/topology-bound patches measured coverage and horizontal gap in geometry-cloth-patches-1006 conditioned and geometry-crease-segments-1006 baseline episodes. Zero overlap leaves vertical gaps unobserved; body-patch coverage 0.0553 in the chord baseline had 13.8–38.7 mm overlapping-region gaps. These belong to different frozen comparisons; matched partners remain pending. No whole-garment layering or grasp-force claim. |
 | `fold` | `[target region]` | G | G | G | G | L | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending. Actual fixed-ID target material patches served as the live references in the same patch/chord episodes, with coverage, planar distance and overlapping-region gap reproduction. This applies to these selected material regions; full layer order, force-bearing contact and global self-intersection remain unresolved. |
 | `fold` | `[grasp point]` | M | M | M | M | M | Actual finger/cloth-particle contact correspondence is unavailable. Material landmarks, EEF proximity and deformation cannot substitute for a measured cloth grasp contact. |
-| `fold` | `[final orientation]` | NA | G | NA | G | NA | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending. |
+| `fold` | `[final orientation]` | NA | G | NA | L | NA | Stable material IDs support actual cloth points, tagged tangent frames and two-landmark crease frames. CPU readback requires running cloth and Fabric disabled; GPU tensors require initialized PhysX views. cloth_landmark_fold recognizes newly lifted/bent/closed/stable material deformation, not finger contact or full layer/self-intersection correctness. Offline counterexamples passed; selected material patch layer geometry is implemented, with live validation pending. The geometry-surface-gaps-1006 conditioned episode measured actual material tangent-normal direction errors for all three observers, independently reproduced. This covers the declared local normal axes, not every global cloth orientation or physical grasp. Native task and all fold observers failed; scalar final geometry remained observed. |
 
 ## Factor-level checker audit
 

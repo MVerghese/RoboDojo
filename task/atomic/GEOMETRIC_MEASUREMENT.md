@@ -719,3 +719,12 @@ without unrelated generic relation-error or footprint fields.
 Material-curve selectors are explicitly excluded from single-landmark trajectory
 measurements and oriented trajectory references. A curve cannot silently become
 a centroid/frame. Physical point/frame trajectory selectors remain supported.
+
+The subsequently collected surface-gap conditioned episode measured actual
+boundary distances of 41.52, 290.50 and 15.24 mm. The body boundary met its 20 mm
+target while material coverage was only 1.07% against the independent 50%
+requirement. Body overlapping-region gaps were 15.89–22.86 mm; sleeve gaps were
+unobserved for zero projected overlap. Native and atomic fold success were false,
+while these final-state geometry scores were retained and reproduced. Its
+matched baseline is pending. A passing boundary-distance score alone cannot
+establish a correct fold or patch alignment.
