@@ -119,7 +119,7 @@ def build():
     fingerprints = {str(p): hashlib.sha256((REPO / p).read_bytes()).hexdigest() for p in (
         Path('task/atomic/TAXONOMY.md'), Path('task/atomic/spec.py'), Path('task/atomic/geometry.py'),
         Path('task/atomic/session.py'), Path('task/atomic/surfaces.py'), Path('task/atomic/contacts.py'),
-        Path('task/atomic/recognizers.py'), Path('task/atomic/bindings.py'), Path('task/atomic/landmarks.py'), Path('task/atomic/materials.py'), Path('task/atomic/selection.py'), Path('task/atomic/trajectory.py'), Path('task/atomic/regions.py'), Path('task/atomic/fit.py'), Path('task/atomic/flow.py'), Path('task/atomic/fold.py'), Path('task/atomic/layers.py'), Path('task/atomic/segments.py'), Path('task/atomic/cloth_calibration.py'), Path('task/atomic/calibration.py'), Path('env/scene_manager/objects/fluid.py'), Path('env/scene_manager/objects/garment.py'))}
+        Path('task/atomic/recognizers.py'), Path('task/atomic/bindings.py'), Path('task/atomic/landmarks.py'), Path('task/atomic/materials.py'), Path('task/atomic/selection.py'), Path('task/atomic/trajectory.py'), Path('task/atomic/regions.py'), Path('task/atomic/fit.py'), Path('task/atomic/flow.py'), Path('task/atomic/fold.py'), Path('task/atomic/layers.py'), Path('task/atomic/segments.py'), Path('task/atomic/surface_distance.py'), Path('task/atomic/cloth_calibration.py'), Path('task/atomic/calibration.py'), Path('env/scene_manager/objects/fluid.py'), Path('env/scene_manager/objects/garment.py'))}
     counts = {code: sum(cell['status'] == code for row in rows for cell in row['factors'].values())
               for code in ('L', 'C', 'G', 'F', 'S', 'M', 'NA')}
     return {'schema_version': 1, 'scope': 'source/semantics audit, not universal live validation',

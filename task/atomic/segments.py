@@ -4,7 +4,7 @@ import numpy as np
 
 def endpoints(value):
     p=np.asarray(value.get('endpoints_m') if isinstance(value,dict) else value,dtype=float)
-    if p.shape!=(2,3) or not np.isfinite(p).all() or np.linalg.norm(p[1]-p[0])<=1e-10:
+    if p.shape!=(2,3) or not np.isfinite(p).all() or np.linalg.norm(p[1]-p[0])==0:
         raise ValueError('segment requires two distinct finite actual material endpoints')
     return p
 
@@ -18,9 +18,9 @@ def segment_distance(a,b):
     """The constrained quadratic minimum is on a boundary or stationary inside."""
     a,b=endpoints(a),endpoints(b);u=a[1]-a[0];v=b[1]-b[0];w=a[0]-b[0]
     candidates=[point_segment_distance(p,*b) for p in a]+[point_segment_distance(p,*a) for p in b]
-    matrix=np.array([[u@u,-u@v],[-u@v,v@v]])
-    if np.linalg.det(matrix)>1e-14*(u@u)*(v@v):
-        s,t=np.linalg.solve(matrix,[-u@w,v@w])
+    n=np.cross(u,v);n2=n@n
+    if n2>0:
+        r=-w;s=float(np.cross(r,v)@n/n2);t=float(np.cross(r,u)@n/n2)
         if 0<=s<=1 and 0<=t<=1:candidates.append(float(np.linalg.norm(w+s*u-t*v)))
     return min(candidates)
 

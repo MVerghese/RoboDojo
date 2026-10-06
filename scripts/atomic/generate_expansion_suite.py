@@ -541,12 +541,12 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                                 'first-instance observers; partial action coverage',
                                 'new numerical targets are prototype probes; asset feasibility requires live review']}
     for task in tasks:
-        pair, blocker = ((fold_profile(), None) if task == 'fold_clothes' and phase in ('materials','constrained','cloth_patches','crease_segments')
+        pair, blocker = ((fold_profile(), None) if task == 'fold_clothes' and phase in ('materials','constrained','cloth_patches','crease_segments','surface_gaps')
                          else profile(plans[task]))
         if blocker:
             raise ValueError(f'{task}: {blocker}')
         scene=None
-        if phase in ('cloth_patches','crease_segments'):
+        if phase in ('cloth_patches','crease_segments','surface_gaps'):
             if task!='fold_clothes' or not asset_calibration_root:raise ValueError('cloth patch phase needs garment calibration evidence')
             source=Path(asset_calibration_root)/'asset-geometry.json'
             manifest.setdefault('calibration_inputs',{})['cloth_assets']={'path':str(source),
@@ -567,7 +567,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             detail=next(iter(report['native_results'][0]['details'].values()))
             scene=detail['atomic_sequence']['scene_calibration']
             manifest.setdefault('calibration_inputs',{})[task]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
-        base, append = (calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments') else
+        base, append = (calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments','surface_gaps') else
                         calibrated_pour_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='pour_core' else
                         calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
                         constrained_expand(task,pair[0],scene,
@@ -575,6 +575,14 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                         breadth_expand(pair[0],scene) if phase=='breadth' else
                         pair if task == 'fold_clothes' and phase == 'materials' else
                         (validation_expand if phase == 'validation' else expand)(pair[0]))
+        if phase=='surface_gaps':
+            for stage in base['stages']:
+                layer=next(c for c in stage['geometry'] if c['id']=='material_patch_layer')
+                stage['geometry'].append({'id':'selected_patch_boundary_gap','slot':'target region','kind':'spatial_relation',
+                    'relation_scope':'objects','measurement':deepcopy(layer['measurement']),
+                    'reference':deepcopy(layer['reference']),'expected':'near','tolerance':.02,
+                    'event':{'kind':'attempt_end'},'track_closest':False})
+            append+=' At episode end bring the actual selected moving patch triangle boundary within 20 mm of the selected target patch triangle boundary. This is minimum surface distance, independent of required patch coverage and layer ordering.'
         if phase=='crease_segments':
             for stage in base['stages']:
                 line={'kind':'cloth_line_frame','label':'target','tag_a':stage['recognition']['crease_a']['tag'],
@@ -615,7 +623,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()

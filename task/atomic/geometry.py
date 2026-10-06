@@ -259,7 +259,9 @@ def _object_relation(condition, measured, reference, ref_pos, ref_matrix, local_
         error = float(np.linalg.norm(np.maximum(np.abs(a) - half, 0), axis=1).max())
         return GeometryResult(error <= tolerance, error, tolerance, {'containment_error_m': error}, local_point.tolist())
     if relation == 'near':
-        raise ValueError('object near requires a surface distance implementation; centre distance is not accepted')
+        from task.atomic.surface_distance import mesh_surface_gap
+        result=mesh_surface_gap(a,at,b,bt);error=result['surface_distance_m']
+        return GeometryResult(error<=tolerance,error,tolerance,{'surface_distance_m':error},result)
     if relation not in direction:
         raise ValueError(f'unsupported object relation {relation}')
     axis, sign = direction[relation]

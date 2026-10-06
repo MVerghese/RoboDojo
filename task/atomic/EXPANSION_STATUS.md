@@ -22,6 +22,7 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-constrained-1006` | 4 | Submitted | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
 | `geometry-tool-contacts-1006` | 4 | Submitted | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
 
+| `geometry-crease-segments-1006` | 2 | Submitted | Actual finite material-endpoint segment coincidence alongside patch layering |
 | `geometry-cloth-patches-1006` | 2 | Submitted | Model/asset/topology-verified local garment patch coverage and layer gaps |
 | `geometry-pour-cores-1006` | 2 | Submitted | Declared initial whole-ball core cohort, actual mouth pose, crossing XY/direction and final core enclosure |
 | `geometry-key-fit-1006` | 2 | Submitted | Actual key mouth/tip, closed blade collider section/clearance and shoulder gap |
@@ -136,3 +137,9 @@ and actual upward support. Only `place_bowl2` reached release/settled recognitio
 `place_bowl1` recorded release without recognized settling and `place_bowl0`
 recorded support without a release event. Native success is therefore reported
 separately from these stricter atomic events; missing events are retained.
+
+Actual selected-material surface proximity is implemented with exact triangle
+checks and bounding-volume pruning, and has intersection, centre/vertex proxy
+and exhaustive-pruning regression evidence. The `surface_gaps` garment profile
+binds minimum boundary gap independently of patch coverage/layer ordering.
+It awaits a free execution slot; it does not substitute for physical contact.

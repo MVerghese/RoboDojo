@@ -353,7 +353,7 @@ map and the 49-task partial-observer A/B matrix. Retain the controls below.
 `generate_expansion_suite.py` creates matched full-task programs with identical
 scoring/recognizers in both arms. The conditioned arm alone appends the geometric
 instruction. Phases are `feasible`, `validation`, `materials`, `breadth`,
-`constrained`, `calibrated`, `cloth_patches`, `crease_segments`, and `pour_core`. Every added numeric target names its event,
+`constrained`, `calibrated`, `cloth_patches`, `crease_segments`, `surface_gaps`, and `pour_core`. Every added numeric target names its event,
 reference frame, axes, physical units and tolerance.
 
 ```bash
@@ -460,3 +460,10 @@ symmetric Hausdorff coincidence between each actual material-endpoint chord
 and its initial finite segment. Raw endpoints support independent rescoring;
 angles and lengths remain separate physical components. The condition covers
 the declared chords, not an uninstrumented curved crease.
+
+Use `--phase surface_gaps --tasks fold_clothes` with the same garment asset
+export and a fresh output directory to add selected triangle-boundary gap
+conditioning (20 mm at attempt end). Both arms retain identical patch coverage
+and layer-order checks. Minimum boundary distance alone does not certify
+contact, support or absence of penetration. Custom rigid `near` conditions
+require explicit reviewed material `mesh_paths` for both objects.

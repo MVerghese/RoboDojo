@@ -100,8 +100,12 @@ class ConditioningAuditTests(unittest.TestCase):
         self.assertTrue(evaluate_geometry(value, [0, 0, .005], [0, 0, 0, 1, 0, 0, 0]).passed)
         value['measurement']['kind'] = 'object_center_pose'
         value['relation_scope'] = 'objects'
-        with self.assertRaisesRegex(ValueError, 'surface near'):
+        with self.assertRaisesRegex(ValueError, 'material mesh_paths'):
             load(value)
+
+        value['measurement']={'kind':'object_pose','label':'object','mesh_paths':['visual/mesh'],'calibration_id':'reviewed-material'}
+        value['reference']={'kind':'object_pose','label':'landmark','mesh_paths':['visual/mesh'],'calibration_id':'reviewed-material'}
+        load(value)
 
     def test_object_scope_preserves_named_root_frame_instead_of_using_bounds_centre(self):
         roots = {'object': [0, 0, .2, 1, 0, 0, 0], 'landmark': [0, 0, 0, 1, 0, 0, 0]}

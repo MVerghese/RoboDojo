@@ -86,6 +86,7 @@ Quaternions are normalized; `q` and `-q` represent the same rotation.
 | `object_contact_points` | Force-bearing manifold points between two explicit object subtrees, including tool/target pairs. This alone does not prove a held tool. |
 | `cloth_points` | Explicit persistent material vertex IDs from initialized PhysX cloth tensors, or live CPU cloth USD readback with the timeline running and Fabric disabled. |
 | `cloth_landmark` | Material IDs from `passive.functional[tag].id`; each vertex is measured. |
+| `cloth_patch_surface` / `cloth_model_patch` | Explicit persistent material faces plus their live tangent frame; model-bound variants verify asset/topology hashes. |
 | `cloth_patch_frame` | Live frame from `origin_id`, `x_id`, `y_id`: normalize the x tangent, cross it with the second tangent for z, then form y. Degenerate/collinear patches fail. |
 | `cloth_tag_frame` | Tangent frame on the first authored material triangle incident on the tag's first vertex; retains the actual three material IDs. |
 | `cloth_line_frame` | Midpoint and direction of two actual material tags, with a separately defined cloth tangent normal. Coincident endpoints or a parallel normal fail. |
@@ -239,7 +240,7 @@ need not coincide with world axes. Point and whole-object semantics differ:
 | Relation | `relation_scope=points` | `relation_scope=objects` |
 | --- | --- | --- |
 | `above`, `below`, `right_of`, `left_of`, `in_front_of`, `behind` | Signed coordinate along the relation axis. Error is `max(0, margin - signed_distance)`. | Same explicitly selected landmark ordering, plus projected mesh overlap perpendicular to that axis. Above/below projects onto reference xy. |
-| `near` | Euclidean distance to the reference origin. | Unsupported: center distance is not substituted for surface distance. |
+| `near` | Euclidean distance to the reference origin. | Minimum distance between actual selected material triangles (mm); explicit reviewed mesh paths or live cloth patch surfaces are required. |
 | `inside_box` | Euclidean norm of coordinate excess beyond positive `half_extents`. | Maximum such excess across all measured mesh vertices; finite convex box containment. |
 | `on_top` | Distance to the top face of a specified box, including horizontal excess. This is a point/box geometric test, not physical support. | Surface gap, projected footprint overlap, and actual signed force-bearing support contact. |
 
@@ -460,3 +461,21 @@ The `crease_segments` phase binds the existing garment observers to 20 mm
 endpoint-chord coincidence at attempt end, alongside the model-bound patch
 conditions. This is geometry of declared finite material-endpoint chords, not
 a curved crease, whole-cloth intersection or new fold-success event.
+
+### Actual surface proximity
+
+Object-scoped `near` measures minimum triangle-boundary distance. A bounding
+volume hierarchy prunes triangle pairs using a guaranteed AABB distance lower
+bound. The narrow check includes point/triangle, edge/edge and edge-through-face
+intersection, including coplanar overlap. It reports `surface_distance_m` as mm
+and retains pair counts, ignored exactly-zero-area faces and a 1 pm numerical
+intersection tolerance. Tests reject vertex-distance and centre-distance
+proxies and compare tree pruning with exhaustive triangle-pair evaluation.
+
+Schema preflight requires explicit reviewed `object_pose.mesh_paths` or actual
+cloth patch surfaces on both sides. It cannot silently include unreviewed
+collision proxies. Surface proximity does not establish force-bearing contact,
+support or penetration-free placement; crossing/intersecting boundaries have
+zero gap, and fully nested disconnected boundaries can have positive gap.
+The `surface_gaps` garment phase binds a 20 mm endpoint gap condition alongside
+its independent patch coverage and signed layer-order requirements.

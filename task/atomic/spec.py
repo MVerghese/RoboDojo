@@ -210,8 +210,6 @@ def _validate_condition(condition):
     if condition['kind'] == 'spatial_relation' and measurement['kind'] in OBJECT_FRAME_KINDS:
         if condition.get('relation_scope') != 'objects':
             raise ValueError('object spatial relations must explicitly use geometry-aware objects scope')
-        if condition.get('expected') == 'near':
-            raise ValueError('object surface near is not implemented; centre distance is not accepted')
     if kind == 'spatial_relation' and measurement['kind'] in ('object_position', 'object_center_position'):
         if condition.get('relation_scope') != 'points':
             raise ValueError('object position relations require explicit points scope; they do not measure whole objects')
@@ -229,6 +227,10 @@ def _validate_condition(condition):
                                    (condition['reference']['kind'] not in OBJECT_FRAME_KINDS and condition['expected'] != 'inside_aperture')):
             raise ValueError('objects scope needs object frame selectors; it cannot replace functional landmarks')
         relation = condition['expected']
+        if scope=='objects' and relation=='near':
+            for selected in (measurement,condition['reference']):
+                if selected['kind'] not in ('cloth_patch_surface','cloth_model_patch') and not (selected['kind']=='object_pose' and selected.get('mesh_paths')):
+                    raise ValueError('object near requires explicit reviewed material mesh_paths or actual cloth patch surfaces')
         if scope=='segments' or relation in ('intersects_segment','coincides_with_segment'):
             if scope!='segments' or relation not in ('intersects_segment','coincides_with_segment') or any(c['kind']!='cloth_line_frame' for c in (measurement,condition['reference'])):
                 raise ValueError('finite segment relations require actual cloth_line_frame endpoints and segments scope')
