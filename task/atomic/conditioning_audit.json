@@ -8,7 +8,7 @@
     "task/atomic/session.py": "22eaa5b926c3711d20383588843dce678ec72aa038385aa8f2cf2d986c08c669",
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "339e541fec06115da306593def4f592f4220385df03763fb497c87bbffa110ca",
-    "task/atomic/recognizers.py": "f0b07b399cf301203269240d8b71e1c881264e3aced79a32124e160a1214140d",
+    "task/atomic/recognizers.py": "c2d10272722d22a9a6e5df5d9aa9681ca739196f0e8eff2c420d1956bba7c4e8",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
     "task/atomic/materials.py": "0b42ca82fd5101a7b0dd409139181d629b443a8ed62d2253f545a60f5b9241b8",
@@ -23,7 +23,7 @@
     "task/atomic/curves.py": "1f9192a9d689617e68819ef996a591b62759dd0a4fd67cfe5e69388d01fad4cb",
     "task/atomic/surface_distance.py": "3179a7c419d7ebde3e5c5b36eecb946906e32ff21bb7e4a684b26f4901099317",
     "task/atomic/cloth_calibration.py": "3cf223d1139d2ed9a45d233c5343ee1dc5b2ba449c36211a15159aa2f950e903",
-    "task/atomic/calibration.py": "89a54cb99e5303c935069cbb2c040da3c627fbf993927646604f576a09dd9f6f",
+    "task/atomic/calibration.py": "0d7ee58e0106d273bccbcd2314f126e540cafff69eba5fbe28ef6336d2e5f747",
     "task/atomic/model_frames.py": "b14ad157c616a8074ecd1ec92f79c7fb590814ce2a06c273b529c83b9b4322f6",
     "env/scene_manager/objects/fluid.py": "7dd2cfe8b7b7e7fc0051d6b9d887f6151be31588a9abc1f1c88e8d83cabad712",
     "env/scene_manager/objects/garment.py": "b72ff2772598c457260b3ceaeba1078e289f6cd3b0d933ae8e6d755ebc882fd9"
@@ -32,9 +32,9 @@
   "slots": 54,
   "factor_cells": 270,
   "status_counts": {
-    "L": 5,
+    "L": 9,
     "C": 4,
-    "G": 145,
+    "G": 141,
     "F": 8,
     "S": 75,
     "M": 5,
@@ -106,7 +106,7 @@
           "kind": "relative_displacement",
           "concept": "Grasp at offset from handle/center.",
           "status": "L",
-          "audit": "Cup and charger grasp-band scores observed; scissors lift event unobserved. Applies to these finger contacts, not every pick/asset.",
+          "audit": "Cup/charger pilot and later mallet grasp-band scores observed. The tool-contact mallet baseline retained a contact-held lift and 2.30 mm worst-point height error. Scissors lift event remained unobserved. Applies to these finger contacts, not every pick/asset.",
           "live_evidence": "task/atomic/PILOT_RESULTS.md"
         },
         "O": {
@@ -1701,9 +1701,9 @@
         "D": {
           "kind": "relative_displacement",
           "concept": "Strike offset from target center.",
-          "status": "G",
-          "audit": "Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact provide held stroke/contact evidence offline. held_tool_strike adds pre-impact approach speed and held retraction after impact; active-part calibration, musical timing and live verification remain. Contacts have no orientation.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-tool-contacts-1006 xylophone baseline retained eight held impacts/retractions and actual mallet/xylophone contact-location errors of 1.23\u20136.33 mm. Raw contact, approach-speed and retraction-pose witnesses passed a separate consistency validator. Native task failed; the conditioned partner is pending. This covers these impacts, not every tool/asset or musical timing.",
+          "live_evidence": "task/atomic/EXPANSION_STATUS.md#live-held-strike-witness-validation"
         },
         "O": {
           "kind": "relative_orientation",
@@ -2135,9 +2135,9 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Crease between named garment regions.",
-          "status": "G",
-          "audit": "Finite endpoint chords and ordered persistent mesh-edge paths support intersection gap and symmetric Hausdorff coincidence. Curve Hausdorff includes every edge interior; endpoint/vertex-set proxies fail counterexamples. Model-bound authored paths are calibrated for all three garment models with actual file/topology hash checks. This measures declared material curves, not discovery of a new physical crease or whole-cloth self-intersection; live validation remains.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-crease-segments-1006 baseline retained finite endpoint-chord Hausdorff errors of 73.7\u201378.8 mm, independently reproduced. Native success did not imply a qualified fold observer. This validates declared finite material chords, not a curved path or discovery of the newly formed physical crease; curve-pair live evidence is pending.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation"
         }
       }
     },
@@ -2177,9 +2177,9 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Left sleeve/region above crease.",
-          "status": "G",
-          "audit": "Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; 30 mm same-side geodesic patches are bound for all three baked Top_Long models with live asset/topology hash checks; policy validation remains pending.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "Actual model/topology-bound patches measured coverage and horizontal gap in geometry-cloth-patches-1006 conditioned and geometry-crease-segments-1006 baseline episodes. Zero overlap leaves vertical gaps unobserved; body-patch coverage 0.0553 in the chord baseline had 13.8\u201338.7 mm overlapping-region gaps. These belong to different frozen comparisons; matched partners remain pending. No whole-garment layering or grasp-force claim.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation"
         }
       }
     },
@@ -2219,9 +2219,9 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Sleeve over chest; hem near shoulder.",
-          "status": "G",
-          "audit": "Explicit persistent material topology faces support projected moving-patch coverage and all triangle-pair layer gap extrema. Overhang and penetrations hidden by a single landmark are rejected. This certifies selected-patch layering, not finger force or global cloth self-intersection; 30 mm same-side geodesic patches are bound for all three baked Top_Long models with live asset/topology hash checks; policy validation remains pending.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "Actual fixed-ID target material patches served as the live references in the same patch/chord episodes, with coverage, planar distance and overlapping-region gap reproduction. This applies to these selected material regions; full layer order, force-bearing contact and global self-intersection remain unresolved.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation"
         }
       }
     },

@@ -25,10 +25,15 @@ docs cover [atomic success](ATOMIC_SUCCESS.md) and
 factors; a working mathematical checker does not imply that every slot has a
 calibrated physical landmark or a verified action event.
 
-The current implementation has 132 offline atomic tests. Historical live pilot
+The current implementation has 232 offline atomic tests. Historical live pilot
 evidence is in [PILOT_RESULTS.md](PILOT_RESULTS.md); it does not validate every
 adapter added later. Cloth, liquid, articulated mesh extraction and new physical
 recognizers still need task-specific simulator validation.
+
+Current retained simulator evidence includes contact-held xylophone impacts and
+retraction paths, signed resting support, cloth tangent/patch and finite-chord
+measurements. See [expansion status](EXPANSION_STATUS.md) for exact frozen suites
+and pending matched partners. These examples do not establish all-family coverage.
 
 ## 1. Condition contract
 
@@ -520,7 +525,7 @@ an opening from bounds.
 
 The `liquid_core` phase calibrates `wuliangye/00000` and all configured cups
 (`mug/00015`, `mug/00016`, `goblet/00006`) from exported material triangles.
-Each core is a verified material-free 30 mm cube. Bottle core Z is 27.5 mm;
+Each core is a verified material-free 30 mm cube. Corrected bottle core Z is −40 mm;
 mug cores Z is 1 mm and goblet core Z is 60 mm, in scaled root coordinates.
 Mug core XY centres are approximately [−13.598, 0.042] and [−17.607, 0.046] mm;
 using the root origin would misplace these cavities. Full reviewed core/mouth
@@ -536,9 +541,16 @@ angular error and relative speed remain separate mm, degrees and mm/s metrics.
 Persistent particle counts and configured nominal masses are not liquid volume.
 
 These bindings have local real-asset calibration and identity/scale/pose
-counterexample evidence. Live initial population/readback and policy transfer
-are pending; an empty initial source-only cohort is an explicit calibration
-failure, never an invented transfer score.
+counterexample evidence. The first live calibrated pair exposed an empty source
+cohort: its old material-free +27.5 mm bottle core was above the settled fluid.
+Retained initial simulator positions show 1,498 of 6,072 particles in the newly
+material-checked −40 mm core. Population preflight preserves every initial ID
+and all source/target/overlap/outside partitions, and requires a source-only
+cohort before packaging. It does not fit a region around particles or filter
+scatter. Fresh live transfer/crossing validation remains pending; an empty
+runtime source cohort is still an explicit calibration failure. Its error now
+includes actual population counts, source/target frames and world bounds in
+metres. No transfer score or policy outcome is invented.
 
 ## Charger leading points and paired throat geometry
 

@@ -137,15 +137,18 @@ def calibrated_charger_sections_profile(base, assets, evidence=None):
     return base,text
 
 
-def calibrated_liquid_profile(base, assets, evidence=None):
+def calibrated_liquid_profile(base, assets, scene, evidence=None):
     """Partial persistent-particle transfer through reviewed vessel cores/mouths."""
     import numpy as np
     from shapely.geometry import Polygon
-    from task.atomic.calibration import interior_core_box, opening_section
+    from task.atomic.calibration import interior_core_box, opening_section, initial_fluid_core_cohort
     from task.atomic.fit import aperture_polygon
     summary = json.loads((assets/'asset-summary.json').read_text())
     cores = {}; mouths = {}; calibration = {}
-    for category, index, z in [('wuliangye', 0, .0275), ('mug', 15, .001),
+    # Retained live particles settle below the bottle root. The previous
+    # +27.5 mm core was material-free but initially empty. This -40 mm core
+    # is independently certified against physical triangles before population.
+    for category, index, z in [('wuliangye', 0, -.04), ('mug', 15, .001),
                                 ('mug', 16, .001), ('goblet', 6, .06)]:
         key = f'Rigid/{category}/{index:05d}'
         model = f'{category}/{index:05d}'
@@ -194,8 +197,12 @@ def calibrated_liquid_profile(base, assets, evidence=None):
             'tolerance': .025, 'angle_tolerance_rad': math.pi/6,
             'event': {'kind': 'recognition_event', 'name': 'first_transfer'}, 'track_closest': False}]})
     base['stage_dependencies']['calibrated_fluid_core_pour'] = []
+    cohort = initial_fluid_core_cohort(scene, base['stages'][-1]['recognition'])
+    if cohort['initial_source_only_count'] < base['stages'][-1]['recognition']['required_count']:
+        raise ValueError('reviewed fluid source core is empty in retained initial simulator positions')
     if evidence is not None:
         evidence.update(calibration)
+        evidence['initial_cohort_preflight'] = cohort
     text = ('At the first qualified particle transfer from the initially populated reviewed bottle '
             'core, place the actual bottle mouth center 80 mm above the actual cup mouth center '
             'within 25 mm position error, and rotate its mouth frame minus 90 degrees about cup '
@@ -806,7 +813,9 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                 for name in asset_files]
         if phase == 'selection_query' and task != 'stack_blocks':
             raise ValueError('selection query pilot is calibrated only for stack_blocks')
-        if (phase in ('breadth','selection_query') and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws') or phase in ('calibrated','pour_core'):
+        if (phase in ('breadth','selection_query') and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws') or phase in ('calibrated','pour_core','liquid_core'):
+            if not calibration_root:
+                raise ValueError('calibrated task binding requires retained initial simulator evidence')
             source=Path(calibration_root)/'runs'/f'robodojo_25k_{task}_baseline'/'eval_report.json'
             if phase=='pour_core' and not source.exists():
                 source=source.parent.parent/f'robodojo_25k_{task}_conditioned'/'eval_report.json'
@@ -817,7 +826,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
         binding_evidence={}
         base, append = (calibrated_charger_sections_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='charger_sections' else
                         calibrated_charger_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='charger_tips' else
-                        calibrated_liquid_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='liquid_core' else
+                        calibrated_liquid_profile(pair[0],Path(asset_calibration_root),scene,binding_evidence) if phase=='liquid_core' else
                         calibrated_curve_profile(Path(asset_calibration_root),binding_evidence) if phase=='material_curves' else
                         calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry','material_curves') else
                         calibrated_pour_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='pour_core' else

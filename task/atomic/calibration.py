@@ -19,6 +19,55 @@ def primitive(value):
     return str(value)
 
 
+def initial_fluid_core_cohort(scene, recognition):
+    """Read-only cohort preflight against retained initial simulator positions.
+
+    The physical cores must be calibrated independently from actual vessel
+    material. This function neither selects a core around particles nor removes
+    scattered particles. All population partitions remain explicit.
+    """
+    from task.atomic.geometry import _rotation
+    objects = scene['objects']; material = objects[recognition['fluid_label']]['material']
+    positions = np.asarray(material['initial_positions'], dtype=float)
+    ids = np.asarray(material['ids'])
+    if (positions.shape != (len(ids), 3) or not len(ids) or not np.isfinite(positions).all()
+            or ids.dtype.kind not in 'iu' or len(set(ids.tolist())) != len(ids)):
+        raise ValueError('initial fluid cohort requires finite positions and distinct integer particle IDs')
+    result = {'total_particle_count': len(ids), 'coordinate_frame': 'environment_local_world',
+              'world_bounds_m': [positions.min(0).tolist(), positions.max(0).tolist()],
+              'material_source': material['source'], 'frames': {}}
+    masks = {}
+    for role, label in (('source', recognition['label']), ('target', recognition['target_label'])):
+        row = objects[label]; metadata = row['metadata']
+        model = f"{metadata['model_name']}/{int(metadata['model_id']):05d}"
+        selector = recognition[f'{role}_frame']
+        if selector['kind'] != 'model_calibrated_frame' or selector['label'] != label:
+            raise ValueError('cohort preflight requires explicit model-bound physical core frames')
+        definition = selector['models'][model]
+        root = np.asarray(row['initial_root_pose'], dtype=float)
+        local = np.asarray(definition['local_pose'], dtype=float)
+        half = np.asarray(recognition[f'{role}_half_extents_m'], dtype=float)
+        if (root.shape != (7,) or local.shape != (7,) or half.shape != (3,)
+                or not np.isfinite(root).all() or not np.isfinite(local).all()
+                or not np.isfinite(half).all() or np.any(half <= 0)):
+            raise ValueError('cohort preflight requires finite rigid poses and positive physical half-extents')
+        root_points = (positions-root[:3]) @ _rotation(root[3:])
+        core_points = (root_points-local[:3]) @ _rotation(local[3:])
+        masks[role] = np.all(np.abs(core_points) <= half, axis=1)
+        result['frames'][role] = {'model': model, 'initial_root_pose': root.tolist(),
+            'local_pose': local.tolist(), 'half_extents_m': half.tolist(),
+            'calibration_id': definition['calibration_id'],
+            'particle_bounds_in_root_m': [root_points.min(0).tolist(), root_points.max(0).tolist()],
+            'particle_quantiles_in_root_m': np.quantile(root_points, [0,.1,.5,.9,1], axis=0).tolist()}
+    source, target = masks['source'], masks['target']
+    result.update(source_particle_count=int(source.sum()), target_particle_count=int(target.sum()),
+        source_target_overlap_count=int((source & target).sum()),
+        outside_both_count=int((~source & ~target).sum()),
+        initial_source_only_count=int((source & ~target).sum()),
+        initial_source_only_ids=ids[source & ~target].tolist())
+    return result
+
+
 def opening_section(vertices,triangles,z_m,xy_m=(0.,0.)):
     """Calibrate a finite void from closed wall traces at one physical plane.
 

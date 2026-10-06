@@ -312,6 +312,24 @@ the generic held-insertion transition sequence.
 
 ## 5. Reporting and failure interpretation
 
+### Live strike evidence validation (October 6)
+
+The `geometry-tool-contacts-1006` baseline recognized the mallet pickup and all
+eight declared held strike/retraction actions. Its frozen recognizer requires
+15 mm retraction, while the base prototype above declares 25 mm. Native task
+success was false. Native reward history also requires its own ordered bbox,
+height and repeated 25 mm lift checks; physical strike completion does not
+certify that history. Retain both outcomes.
+
+`scripts/atomic/validate_strike_evidence.py` checks recorded impact/completion
+contacts and independently reconstructs approach velocity and retraction rise
+from saved poses. All eight witnesses were consistent: approach speeds were
+0.252–0.574 m/s and rises 15.17–15.93 mm. The validator rejects altered velocity,
+broken hold intervals, wrong retraction poses and sampling gaps. Missing event
+or trajectory evidence remains unobserved/partial. This validates retained
+boundary evidence and sampled kinematics; it cannot independently reconstruct
+the unrecorded intermediate force contacts. It does not rewrite action success.
+
 Session summaries save `recognition_status`, configured checks/recognizer,
 `goal_success`, `action_success`, `interaction_evidence`, `physical_events`,
 `physical_metrics` and maintained-hold failures. Unactivated sequence stages
@@ -431,7 +449,10 @@ This recognizer certifies a **partial source-core transfer**, not the native
 97% whole-liquid goal or absence of spill. Native task success is reported
 separately. Mouth/stream conditioning is scored independently of recognition;
 a missed central flow window does not erase an otherwise observed transfer.
-The initial source cohort and actual USD readback still need live validation.
+Retained initial simulator state now supplies population preflight for the
+corrected lower bottle core (1,498/6,072 source-only IDs). Fresh runtime cohort
+and transfer validation remain pending. An empty cohort still fails explicitly
+before policy evaluation; it cannot become a policy failure or zero error.
 
 ## Contact-held multiple-tip insertion
 

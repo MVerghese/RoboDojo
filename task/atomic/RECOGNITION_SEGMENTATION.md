@@ -3,6 +3,13 @@
 Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
+Current live segmentation evidence includes the contact-held mallet pickup and
+eight held impact/retraction intervals in the `geometry-tool-contacts-1006`
+xylophone baseline. A separate raw-witness validator checks retained contact
+boundaries and sampled kinematics. Native task success remained false; the
+declared strike intervals do not prove native reward-history completion or
+musical timing. See [atomic success](ATOMIC_SUCCESS.md#live-strike-evidence-validation-october-6).
+
 October 6 extension: completed sessions are retained for explicit episode-end
 geometry sampling before reset. Their original action completion boundary stays
 unchanged. End sampling does not activate successors, advance recognition or

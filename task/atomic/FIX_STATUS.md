@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 6)
 
-The current source passes **226 offline atomic tests**. Dated sections below
+The current source passes **232 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -21,6 +21,19 @@ integrated report. Physical cloth finger contact/force remains unresolved;
 anchored material curves do not locate a newly formed physical crease. Source
 plans cover all 54 task modules, but arbitrary language/game binding and faithful
 full-state replay remain implementation gaps.
+
+Eight held xylophone strikes now have retained live impact/retraction evidence,
+including a separate raw-witness consistency validator. The native task failed;
+its stricter reward-history requirements are separate from these physical atomic
+events. The conditioned partner is pending. Selected cloth patch and finite-chord
+geometry also has specific live reproduction evidence; material curves remain
+queued. The conditioning audit now cites these exact observations.
+
+The calibrated liquid baseline exposed an initially empty upper bottle core.
+The corrected lower core is independently material-free and contains 1,498
+particles in retained initial simulator evidence. Initial population preflight
+and diagnostic runtime cohort errors are implemented; a fresh matched pair is
+required. The stopped original pair supplies no policy adherence results.
 
 ## Implemented before the expanded audit
 

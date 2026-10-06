@@ -360,3 +360,73 @@ every action. Normal task failure/reconnect/quiet contact cannot trigger it.
 Collection-only failures are reconciled after all workers finish. The report
 monitor and all active suite controllers were verified in the host PID namespace.
 Current source passes 226 atomic tests; GPU validation remains in progress.
+
+### Live held-strike witness validation
+
+The collected `geometry-tool-contacts-1006` xylophone baseline recognized a
+contact-held mallet pickup and all eight held strike/retraction intervals.
+Native task success remained false. Its frozen physical recognizer uses a
+15 mm retraction threshold; native reward history retains separate ordered bbox,
+height and repeated 25 mm lift requirements. These outcomes are kept separate.
+
+Actual mallet/xylophone force-contact XY errors were 1.23–6.33 mm; pickup contact
+height error was 2.30 mm. Actual retraction-path maximum deviations were
+3.38–32.88 mm. Only one of eight paths satisfied every declared path criterion;
+some trajectories failed waypoint/start/backtracking constraints despite small
+maximum deviation. The conditioned partner remains queued, so these observations
+do not establish a conditioning effect.
+
+`scripts/atomic/validate_strike_evidence.py` independently reconstructs pre-impact
+relative velocity and retraction rise from retained poses, checks sample
+continuity, impact force/landmark distances and same-arm boundary hold evidence.
+All eight witnesses passed those consistency checks. Speeds were 0.252–0.574 m/s,
+and rises 15.17–15.93 mm. It does not reconstruct unrecorded intermediate force
+contacts or rewrite action outcomes. Altered speeds, hold intervals, retraction
+poses and sample gaps fail; missing evidence remains unobserved/partial.
+
+The retained validation, input report SHA256 and validator SHA256 are at:
+
+`/home/mverghese/robodojo-expansion-state/geometry-tool-contacts-1006/strike-evidence-validation.json`
+
+Reproduce using the benchmark Python environment:
+
+```bash
+python scripts/atomic/validate_strike_evidence.py \
+  --report /home/mverghese/robodojo-expansion-state/geometry-tool-contacts-1006/runs/robodojo_25k_play_Xylophone_baseline/eval_report.json \
+  --output /tmp/robodojo-strike-validation.json
+```
+
+The conditioning audit now cites specific live tool-contact and cloth patch/chord
+measurements rather than leaving them marked as awaiting any simulator evidence.
+New curve/shaft-fit/selection-query and corrected pour pairs remain pending.
+Current source passes 229 offline atomic tests.
+
+### Liquid initialization calibration correction
+
+The first calibrated liquid baseline repeatedly failed before policy evaluation:
+its source-only particle cohort was empty. The host watchdog retained the
+explicit simulator exception and stopped that worker after the cleanup grace;
+the queued same-runtime conditioned partner was also stopped using retained
+proof. These are calibration failures with policy outcomes unavailable.
+
+The prior +27.5 mm bottle core was material-free but above the settled liquid.
+Review of the earlier valid `geometry-materials-1006` initial simulator snapshot
+places the central population near bottle-root Z=−41.1 mm. A new 30 mm cube at
+Z=−40 mm, XY=[0.309,−0.202] mm passes actual wall-trace and triangle/box material
+exclusion. It contains 1,498 source-only particles of all 6,072 initial IDs.
+Outside-core and scattered particles remain explicitly accounted for.
+
+The generator now requires retained initial scene evidence for liquid cores and
+checks population after independent material calibration. Runtime empty-cohort
+errors retain population counts, real source/target poses and particle world
+bounds. The fresh corrected comparison is `geometry-liquid-populated-1006`;
+the failed frozen pair is preserved separately. Full native-liquid success and
+physical partial-core transfer remain distinct.
+
+Calibration, retained input SHA and full population partitions:
+
+`/home/mverghese/robodojo-expansion-state/asset-calibration-1006/liquid-populated-core-validation.json`
+
+Current source passes 232 offline atomic tests, including transformed-population,
+initial-overlap, empty-core and invalid-ID counterexamples. Fresh runtime
+population/transfer validation is pending.

@@ -507,6 +507,7 @@ with the pinned transport. It does not add force-bearing cloth grasp evidence.
 python scripts/atomic/generate_expansion_suite.py \
   --phase liquid_core --tasks pour_liquid_into_cup \
   --checkpoints /path/to/checkpoints.json \
+  --calibration-root /path/to/retained-material-suite \
   --asset-calibration-root /path/to/baked-asset-calibration \
   --output-dir /path/to/fresh-liquid-core-suite
 ```
@@ -519,6 +520,15 @@ first-transfer bottle-mouth pose (25 mm/30°) and downward source-qualified
 crossings ([4,0] mm, 8 mm XY tolerance, 20° velocity angle). See
 [GEOMETRIC_MEASUREMENT.md](GEOMETRIC_MEASUREMENT.md) for exact frames and
 [ATOMIC_SUCCESS.md](ATOMIC_SUCCESS.md) for the partial-cohort success contract.
+
+The retained material suite must contain
+`runs/robodojo_25k_pour_liquid_into_cup_baseline/eval_report.json` with actual
+initial particle positions/IDs and vessel root poses. Generation checks that
+the independently material-checked source core is initially populated, and
+retains the full input SHA and population partitions. Current source uses the
+reviewed bottle core at root Z=−40 mm. The earlier +27.5 mm core was empty after
+settling, so its failed frozen pair supplies no policy results. Do not reuse its
+packaged runtime for the corrected comparison.
 
 Both arms retain the same initially eligible cohort rule, minimum one-particle
 transfer and five-sample dwell. This is an integration pilot alongside native

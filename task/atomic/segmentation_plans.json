@@ -7390,7 +7390,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "f0b07b399cf301203269240d8b71e1c881264e3aced79a32124e160a1214140d"
+      "sha256": "c2d10272722d22a9a6e5df5d9aa9681ca739196f0e8eff2c420d1956bba7c4e8"
     },
     {
       "path": "task/atomic/bindings.py",

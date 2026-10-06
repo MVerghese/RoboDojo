@@ -235,7 +235,12 @@ class PhysicalRecognizer:
                 self.fluid[int(ident)]={'eligible':bool(s and not t),'previous_in_source':bool(s),
                     'exited_while_held_and_tilted':False,'target_steps':0}
             if sum(m['eligible'] for m in self.fluid.values())<self.c['required_count']:
-                raise ValueError('fluid required_count exceeds the initial source-only cohort; calibrate interior volumes')
+                raise ValueError('fluid required_count exceeds the initial source-only cohort; calibrate interior volumes; '
+                    f'initial_total={len(fluid["ids"])} source={int(source.sum())} target={int(target.sum())} '
+                    f'source_only={sum(m["eligible"] for m in self.fluid.values())} '
+                    f'source_frame={self.session._resolve(self.c["source_frame"]).tolist()} '
+                    f'target_frame={self.session._resolve(self.c["target_frame"]).tolist()} '
+                    f'particle_world_bounds_m={[fluid["positions"].min(0).tolist(), fluid["positions"].max(0).tolist()]}')
 
     def _hold(self, label, arm, fingers=2, body_path=None):
         selector = {'kind': 'contact_points', 'label': label, 'arm': arm, 'min_finger_bodies': fingers}

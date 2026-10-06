@@ -61,11 +61,21 @@ SLOTS = {
              'target region': 'deformable', 'grasp point': 'deformable', 'final orientation': 'deformable'},
 }
 LIVE = {
-    ('pick', 'grasp region', 'D'): 'Cup and charger grasp-band scores observed; scissors lift event unobserved. Applies to these finger contacts, not every pick/asset.',
+    ('pick', 'grasp region', 'D'): 'Cup/charger pilot and later mallet grasp-band scores observed. The tool-contact mallet baseline retained a contact-held lift and 2.30 mm worst-point height error. Scissors lift event remained unobserved. Applies to these finger contacts, not every pick/asset.',
     ('push', 'contact', 'D'): 'Baseline T first-motion finger-contact score observed; conditioned run lacked finger evidence at that event.',
     ('push', 'goal', 'T'): 'Conditioned T goal pose scored; push interaction remained unverified. Goal geometry is not action recognition.',
     ('pour', 'source pour pose', 'O'): 'Cup local-z direction relative to vase observed at first whole-ball entry in conditioned run.',
     ('pour', 'source pour pose', 'R'): 'Cup/vase height and projected footprint overlap observed at first whole-ball entry in conditioned run.',
+    ('touch_with_tool', 'contact', 'D'): 'The geometry-tool-contacts-1006 xylophone baseline retained eight held impacts/retractions and actual mallet/xylophone contact-location errors of 1.23–6.33 mm. Raw contact, approach-speed and retraction-pose witnesses passed a separate consistency validator. Native task failed; the conditioned partner is pending. This covers these impacts, not every tool/asset or musical timing.',
+    ('fold', 'crease', 'R'): 'The geometry-crease-segments-1006 baseline retained finite endpoint-chord Hausdorff errors of 73.7–78.8 mm, independently reproduced. Native success did not imply a qualified fold observer. This validates declared finite material chords, not a curved path or discovery of the newly formed physical crease; curve-pair live evidence is pending.',
+    ('fold', 'moving region', 'R'): 'Actual model/topology-bound patches measured coverage and horizontal gap in geometry-cloth-patches-1006 conditioned and geometry-crease-segments-1006 baseline episodes. Zero overlap leaves vertical gaps unobserved; body-patch coverage 0.0553 in the chord baseline had 13.8–38.7 mm overlapping-region gaps. These belong to different frozen comparisons; matched partners remain pending. No whole-garment layering or grasp-force claim.',
+    ('fold', 'target region', 'R'): 'Actual fixed-ID target material patches served as the live references in the same patch/chord episodes, with coverage, planar distance and overlapping-region gap reproduction. This applies to these selected material regions; full layer order, force-bearing contact and global self-intersection remain unresolved.',
+}
+LIVE_EVIDENCE = {
+    ('touch_with_tool', 'contact', 'D'): 'task/atomic/EXPANSION_STATUS.md#live-held-strike-witness-validation',
+    ('fold', 'crease', 'R'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation',
+    ('fold', 'moving region', 'R'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation',
+    ('fold', 'target region', 'R'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation',
 }
 
 
@@ -110,7 +120,7 @@ def build():
                 status, detail = 'L', live
             factors[factor] = {'kind': FACTORS[factor], 'concept': concept,
                                'status': status, 'audit': detail,
-                               'live_evidence': 'task/atomic/PILOT_RESULTS.md' if live else None}
+                               'live_evidence': LIVE_EVIDENCE.get((family, slot, factor), 'task/atomic/PILOT_RESULTS.md') if live else None}
         rows.append({'family': family, 'slot': slot, 'profile': profile, 'factors': factors})
     actual = {(row['family'], row['slot']) for row in rows}
     expected = {(family, slot) for family, slots in SLOTS.items() for slot in slots}
@@ -137,7 +147,7 @@ def render(data):
              'working adapter or live experiment. See [family recognition audit](ACTION_AUDIT.md), '
              '[all task examples](TASK_MAP.md) and [taxonomy matrices](TAXONOMY.md).', '',
              '## Status meanings', '', '| Code | Meaning | Cells |', '| --- | --- | --- |']
-    meanings = {'L': 'Specific pilot measurement observed and independently reproduced; not universal live validation.',
+    meanings = {'L': 'Specific retained simulator measurement observed and independently reproduced; not universal live validation.',
                 'C': 'Finger contact location checker available; cell-specific live evidence absent.',
                 'G': 'Generic rigid point/frame/relation math and selectors available; calibrated assets/events and family wiring still needed.',
                 'F': 'Contact point has no orientation: use a separate physical frame and independent contact evidence.',
@@ -148,7 +158,7 @@ def render(data):
         lines.append(f"| **{code}** | {meaning} | {data['status_counts'][code]} |")
     lines += ['', '**L/C/G refer to geometric measurement capability, not completed action recognition.** '
               'A native predicate can be true without the interaction. L applies only to the exact contact/event/asset '
-              'described in its JSON evidence; the five L cells are not five universally validated slots.', '',
+              f"described in its JSON evidence; the {data['status_counts']['L']} L cells are not universally validated slots.", '',
               '## Exhaustive slot × factor matrix', '',
               'P = 3D point; T = SE(3) pose; D = landmark-relative displacement; '
               'O = landmark-relative orientation; R = spatial relation.', '',
