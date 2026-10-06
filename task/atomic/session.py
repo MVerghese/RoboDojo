@@ -484,6 +484,11 @@ class AtomicSession:
     def _resolve_condition(self, condition):
         measured, source = self._resolve_with_source(condition['measurement'])
         reference, reference_source = self._resolve_with_source(condition['reference']) if condition.get('reference') else (None, None)
+        if condition.get('relation_scope')=='segments':
+            measured={'position':_array(measured)[:3].tolist(),'orientation':_array(measured)[3:].tolist(),
+                      'endpoints_m':deepcopy(source['endpoints_m'])}
+            reference={'position':_array(reference)[:3].tolist(),'orientation':_array(reference)[3:].tolist(),
+                       'endpoints_m':deepcopy(reference_source['endpoints_m'])}
         if condition.get('relation_scope') == 'objects':
             # Attach surface evidence without changing the explicitly selected
             # landmark. A root-frame reference must not become a bounds centre.

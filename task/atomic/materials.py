@@ -79,7 +79,8 @@ def resolve_material(env,selector,env_idx):
         z=z/np.linalg.norm(z);y=np.cross(z,x)
         return np.concatenate(((a+b)/2,matrix_quaternion(np.column_stack((x,y,z))))),{
             **selector,'frame':'environment_local_world','crease_length_m':float(np.linalg.norm(b-a)),
-            'endpoint_sources':[sa,sb],'normal_source':sn,'material_kind':'cloth'}
+            'endpoint_sources':[sa,sb],'endpoints_m':[a.tolist(),b.tolist()],
+            'line_representation':'finite chord between persistent material-tag mean endpoints; not a curved crease','normal_source':sn,'material_kind':'cloth'}
     kind='fluid' if selector['kind']=='fluid_points' else 'cloth'
     state=material_state(env,selector['label'],kind,env_idx)
     if selector['kind'] in ('cloth_landmark', 'cloth_tag_frame'):

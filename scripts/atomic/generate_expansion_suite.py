@@ -546,7 +546,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
         if blocker:
             raise ValueError(f'{task}: {blocker}')
         scene=None
-        if phase=='cloth_patches':
+        if phase in ('cloth_patches','crease_segments'):
             if task!='fold_clothes' or not asset_calibration_root:raise ValueError('cloth patch phase needs garment calibration evidence')
             source=Path(asset_calibration_root)/'asset-geometry.json'
             manifest.setdefault('calibration_inputs',{})['cloth_assets']={'path':str(source),
@@ -567,7 +567,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             detail=next(iter(report['native_results'][0]['details'].values()))
             scene=detail['atomic_sequence']['scene_calibration']
             manifest.setdefault('calibration_inputs',{})[task]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
-        base, append = (calibrated_fold_profile(Path(asset_calibration_root)) if phase=='cloth_patches' else
+        base, append = (calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments') else
                         calibrated_pour_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='pour_core' else
                         calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
                         constrained_expand(task,pair[0],scene,
@@ -575,6 +575,14 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                         breadth_expand(pair[0],scene) if phase=='breadth' else
                         pair if task == 'fold_clothes' and phase == 'materials' else
                         (validation_expand if phase == 'validation' else expand)(pair[0]))
+        if phase=='crease_segments':
+            for stage in base['stages']:
+                line={'kind':'cloth_line_frame','label':'target','tag_a':stage['recognition']['crease_a']['tag'],
+                      'tag_b':stage['recognition']['crease_b']['tag'],'normal_tag':stage['recognition']['crease_a']['tag']}
+                stage['geometry'].append({'id':'finite_crease_preservation','slot':'crease','kind':'spatial_relation',
+                    'relation_scope':'segments','measurement':line,'reference':{**line,'time':'stage_start'},
+                    'expected':'coincides_with_segment','tolerance':.02,'event':{'kind':'attempt_end'},'track_closest':False})
+            append+=' At episode end preserve each finite chord joining the two crease material landmarks within 20 mm symmetric segment Hausdorff distance from its initial chord. This targets both full finite extents, not only the midpoint; it does not measure a curved crease.'
         if phase in ('validation','breadth','calibrated','pour_core') or (phase=='constrained' and task!='fold_clothes'):
             append = pair[1] + ' ' + append
         manifest['coverage'].append({'task':task,'included':True,
@@ -607,7 +615,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()

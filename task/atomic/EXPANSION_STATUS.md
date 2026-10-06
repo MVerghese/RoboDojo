@@ -18,11 +18,12 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-support-1006` | 10 | 9 collected cases, 48 reproduced scores; remaining cases submitted | Persistent support, raw body-pair diagnostics, full material mesh export |
 | `geometry-materials-1006` | 4 | Submitted | Real garment landmark destination, tangent normal and crease drift; liquid scene capture/pickup, not calibrated liquid transfer |
 | `geometry-breadth-1006` | 12 | 3 collected cases, 15 reproduced scores | Actual contacting-arm TCP orientation, initial object selection, returned button cap, receiving-hand offset, tool heading and strike retraction path |
-| `geometry-body-contacts-1006` | 4 | Submitted | Stack release/settling using contact APIs enabled after task objects load |
+| `geometry-body-contacts-1006` | 4 | 2 valid baselines, 14 reproduced scores; actual upward support in blocks and bowls | Stack release/settling using contact APIs enabled after task objects load |
 | `geometry-constrained-1006` | 4 | Submitted | Matching nut/bolt constrained signed rotation, pivot/contact/axis endpoints; actual cloth crease midpoint/full tangent pose |
 | `geometry-tool-contacts-1006` | 4 | Submitted | Fresh mallet strike/retraction and align-block tool heading with task-body contact enablement |
 
 | `geometry-cloth-patches-1006` | 2 | Submitted | Model/asset/topology-verified local garment patch coverage and layer gaps |
+| `geometry-pour-cores-1006` | 2 | Submitted | Declared initial whole-ball core cohort, actual mouth pose, crossing XY/direction and final core enclosure |
 | `geometry-key-fit-1006` | 2 | Submitted | Actual key mouth/tip, closed blade collider section/clearance and shoulder gap |
 
 The bottle retry retained the exact program/checkpoint/runtime package. It ended
@@ -36,8 +37,10 @@ not a conditioning score or policy action failure.
 
 - Contact APIs are enabled after each scene load, including task object bodies.
   Earlier packages enabled only robot bodies; grasps worked but object/object
-  tool and support contacts were not observable. Fresh stack pairs validate the
-  corrected lifecycle. All contact/support history is cleared on episode reset.
+  tool and support contacts were not observable. The first fresh stack-block baseline validates actual block/block and
+  block/table force contacts: native success, all three place observers successful,
+  release/settled events and 36/27/65 support-seen samples. Other pair cases remain
+  pending. All contact/support history is cleared on episode reset.
 - Supported release retains verified transport through gradual same-arm jaw
   opening. One finger cannot establish transport and another arm cannot inherit
   it. Quiet support requires an earlier upward force contact, no lost event and
@@ -71,7 +74,7 @@ those require reviewed geometric repairs or alternative physical representations
 not weaker acceptance thresholds.
 
 Remaining work includes live validation of the corrected body contact lifecycle,
-calibrated pour/fit bindings, live cloth patch layer bindings and crease intersection relations, and actual
+broader calibrated pour/fit bindings, live cloth patch/finite-segment validation, curved crease relations, and actual
 cloth finger/particle contact instrumentation. Missing physical evidence is reported
 explicitly and is not converted into a zero error.
 
@@ -114,3 +117,22 @@ cores select the whole initial meshes of `sphere_1` and `sphere_6`. Mouth pose,
 downward crossing XY/velocity direction and final convex-core enclosure are
 bound. Sphere volume preflight fails closed, so the endpoint condition reports
 whole-mesh box enclosure rather than a fabricated solid outside volume.
+
+The first corrected-contact baseline evidence is retained at
+`/home/mverghese/robodojo-expansion-state/geometry-body-contacts-1006/runs/robodojo_25k_stack_blocks_baseline/eval_report.json`.
+Each place observer reported four current force contacts at settling completion,
+with positive upward axial impulses. Recorded settling drift was 0.018, 0.191
+and 0.548 mm for blocks 0, 1 and 2 respectively. This demonstrates the corrected
+scene contact lifecycle in that rollout; it does not establish all tools or
+receptacle bindings or a conditioned-versus-baseline effect.
+
+Finite material-endpoint segment intersection and coincidence are implemented
+and counterexample tested. The `crease_segments` garment phase adds initial
+finite-chord preservation (20 mm symmetric Hausdorff distance). Curved creases
+and force-bearing finger/cloth contact remain distinct gaps.
+
+The corrected-contact stack-bowl baseline also completed with native success
+and actual upward support. Only `place_bowl2` reached release/settled recognition;
+`place_bowl1` recorded release without recognized settling and `place_bowl0`
+recorded support without a release event. Native success is therefore reported
+separately from these stricter atomic events; missing events are retained.

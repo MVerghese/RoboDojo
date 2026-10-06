@@ -353,7 +353,7 @@ map and the 49-task partial-observer A/B matrix. Retain the controls below.
 `generate_expansion_suite.py` creates matched full-task programs with identical
 scoring/recognizers in both arms. The conditioned arm alone appends the geometric
 instruction. Phases are `feasible`, `validation`, `materials`, `breadth`,
-`constrained`, `calibrated`, `cloth_patches`, and `pour_core`. Every added numeric target names its event,
+`constrained`, `calibrated`, `cloth_patches`, `crease_segments`, and `pour_core`. Every added numeric target names its event,
 reference frame, axes, physical units and tolerance.
 
 ```bash
@@ -453,3 +453,10 @@ lies in that convex box. Flow tracks the ball's measured mesh centre and
 reports its crossing distance, aperture overrun, relative speed and direction
 separately. It does not certify liquid volume, continuous stream shape or
 transfer of material outside the declared source-core cohort.
+
+For finite crease geometry, run the garment command above with
+`--phase crease_segments` and a fresh output directory. This adds 20 mm
+symmetric Hausdorff coincidence between each actual material-endpoint chord
+and its initial finite segment. Raw endpoints support independent rescoring;
+angles and lengths remain separate physical components. The condition covers
+the declared chords, not an uninstrumented curved crease.

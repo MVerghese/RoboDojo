@@ -3,15 +3,15 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
-    "task/atomic/spec.py": "83a5a7e8c853df9d950ce7877e983deea9fbbc463ee3459354f069eff9d8fbc6",
-    "task/atomic/geometry.py": "e0fdf755b5fc86be6121d34b1126ed6ed9e6292fd1b22e04985c5f2ba7db5a41",
-    "task/atomic/session.py": "55a49dbb91b6caf5d4665342ad52e9e05118089193117caa6be9bca3cad088fd",
+    "task/atomic/spec.py": "e5b02088fc3c39e9b0f5967cda6248014b439662f71c14bddf81a3e553486437",
+    "task/atomic/geometry.py": "98d0c00480cad3d0aa80e3f799a13dd6f1ea7cdc12b99599aa9d10ffac6ec452",
+    "task/atomic/session.py": "729b6bf381f4fd6663ce6935921e630801069c26daef5c179ad885495af32756",
     "task/atomic/surfaces.py": "88cd8a95b3071f4b0155b2c352494fff77023fe4bbb450ce21c9b3fbba63053d",
     "task/atomic/contacts.py": "f8890d18794399c4c9d3d436f52afdc9d0cbb03a4429c35795880c69ff7a4b69",
     "task/atomic/recognizers.py": "d098bcf226ac6797587d7c45432d697a7e48fdcef79c640407dd090e0293f027",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
-    "task/atomic/materials.py": "86571df770437f28883c74c90d55f5c6de2e6f37b5cfc8c48157eebf2c9d64ec",
+    "task/atomic/materials.py": "80792ce1722f511264069ee92399cc59b4e99c9e06135bcc6a1e50997a13df4e",
     "task/atomic/selection.py": "5af24b1d06513a65a381802e969ae744c5dd12f0f96b80755bef2af232616f8d",
     "task/atomic/trajectory.py": "08e3e5647a643a4af22dd90fb9bb040586a7151cd84abf91f1f6b5712718bc44",
     "task/atomic/regions.py": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753",
@@ -19,6 +19,7 @@
     "task/atomic/flow.py": "2baa50be4af31f17866979fb16a3f650b0533644bee2de31a0790f34a2ce4ff4",
     "task/atomic/fold.py": "5d7de33352ec070c84ad2e2088c2a20baa500acfe1ad648edcb19839db0c4e97",
     "task/atomic/layers.py": "d29f4dadf9aa609579a73fe4750ab6be62bce8f39bc99761d413a04bb736977f",
+    "task/atomic/segments.py": "23f82663f6afbe6adcc0d0a35c9bad5da51c4e324fb09e11f85b91235650eddc",
     "task/atomic/cloth_calibration.py": "6ffbe90efc09ee674a13205acccf88cedd78b42dd1872483dca4e1a20896209f",
     "task/atomic/calibration.py": "0dd794aeb46db7b5306a08968b282a14f29dffb2e9f2e0b08a69c8952b8e9016",
     "env/scene_manager/objects/fluid.py": "7dd2cfe8b7b7e7fc0051d6b9d887f6151be31588a9abc1f1c88e8d83cabad712",
@@ -30,10 +31,10 @@
   "status_counts": {
     "L": 5,
     "C": 4,
-    "G": 144,
+    "G": 145,
     "F": 8,
     "S": 75,
-    "M": 6,
+    "M": 5,
     "NA": 28
   },
   "rows": [
@@ -2131,8 +2132,8 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Crease between named garment regions.",
-          "status": "M",
-          "audit": "Actual material crease intersection and whole-line relations need a dedicated geometric predicate.",
+          "status": "G",
+          "audit": "Finite actual material-endpoint chords support intersection gap and symmetric Hausdorff coincidence, with separate axis angle. This certifies the declared segment, not a curved crease or whole-cloth self-intersection; live bindings remain.",
           "live_evidence": null
         }
       }

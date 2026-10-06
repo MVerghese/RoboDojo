@@ -435,3 +435,28 @@ measurements. The retained sphere meshes fail closed-solid validation, so the
 final condition uses vertex enclosure in a convex box with mm error, not mm³
 outside volume. Convex enclosure bounds the triangles as well as their vertices.
 The source core covers only the declared cohort, not the full vessel cavity.
+
+### Live validation of scene body contact enablement
+
+The fresh `geometry-body-contacts-1006` stack-block baseline completed with
+native success and three successful place observers. Actual block/block and
+block/table upward force contacts produced release and settled events for each
+block (36, 27 and 65 support-seen samples). Each observer had four current force
+contacts at settling completion. This validates task-body contact enablement
+after scene load in that rollout; tool and other asset validation are separate.
+See [EXPANSION_STATUS.md](EXPANSION_STATUS.md) for the retained raw report path.
+
+### Finite material crease segments
+
+`cloth_line_frame` now retains its two actual material-tag endpoint positions
+in raw evidence. In `relation_scope: segments`, `intersects_segment` measures
+the exact minimum distance between two finite chords; `coincides_with_segment`
+measures symmetric segment Hausdorff distance. These reject an intersection
+of infinite line extensions or a shared midpoint with different extents.
+Axis angle (degrees), chord lengths and gap/extent error (mm) are independent
+components. Stage-start references retain their original endpoints.
+
+The `crease_segments` phase binds the existing garment observers to 20 mm
+endpoint-chord coincidence at attempt end, alongside the model-bound patch
+conditions. This is geometry of declared finite material-endpoint chords, not
+a curved crease, whole-cloth intersection or new fold-success event.

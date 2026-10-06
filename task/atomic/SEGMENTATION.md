@@ -448,7 +448,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Sleeve folds may overlap in time or be sequential; hem fold may use both hands. Native trigger predicates provide phase candidates, not a physical crease recognizer.
-- Native material-point ranges, line angle, gripper release and arm-return events provide useful phase evidence. Add live deformable selectors, material contact locations, fold-line error, material-region overlap and stable final-layer tests; rigid-root geometry is invalid.
+- Native material-point ranges, line angle, gripper release and arm-return events provide useful phase evidence. Live persistent material selectors, kinematic lift/closure/bend/settling observers, model-bound local patch layering and finite crease-chord geometry are implemented. Force-bearing cloth grasp contacts, curved crease geometry and whole-cloth self-intersection remain gaps; rigid-root geometry is invalid.
 - Additional restart state: All deformable vertex positions/velocities, material IDs, grasp constraints, fold layer state.
 - Canonical count: 3 canonical fold phases; actual bimanual segmentation needs traces.
 
@@ -473,7 +473,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 **Ordering, recognition and restart gaps:**
 
 - Sleeve folds may overlap in time or be sequential; hem fold may use both hands. Native trigger predicates provide phase candidates, not a physical crease recognizer.
-- Native material-point ranges, line angle, gripper release and arm-return events provide useful phase evidence. Add live deformable selectors, material contact locations, fold-line error, material-region overlap and stable final-layer tests; rigid-root geometry is invalid. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
+- Native material-point ranges, line angle, gripper release and arm-return events provide useful phase evidence. Live persistent material selectors, kinematic lift/closure/bend/settling observers, model-bound local patch layering and finite crease-chord geometry are implemented. Force-bearing cloth grasp contacts, curved crease geometry and whole-cloth self-intersection remain gaps; rigid-root geometry is invalid. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited.
 - Additional restart state: All deformable vertex positions/velocities, material IDs, grasp constraints, fold layer state.
 - Canonical count: 3 canonical fold phases; actual bimanual segmentation needs traces.
 

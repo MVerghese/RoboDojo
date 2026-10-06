@@ -1198,7 +1198,7 @@
         }
       ],
       "audit_gaps": [
-        "Native material-point ranges, line angle, gripper release and arm-return events provide useful phase evidence. Add live deformable selectors, material contact locations, fold-line error, material-region overlap and stable final-layer tests; rigid-root geometry is invalid."
+        "Native material-point ranges, line angle, gripper release and arm-return events provide useful phase evidence. Live persistent material selectors, kinematic lift/closure/bend/settling observers, model-bound local patch layering and finite crease-chord geometry are implemented. Force-bearing cloth grasp contacts, curved crease geometry and whole-cloth self-intersection remain gaps; rigid-root geometry is invalid."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/fold_clothes.py",
@@ -1307,7 +1307,7 @@
         }
       ],
       "audit_gaps": [
-        "Native material-point ranges, line angle, gripper release and arm-return events provide useful phase evidence. Add live deformable selectors, material contact locations, fold-line error, material-region overlap and stable final-layer tests; rigid-root geometry is invalid. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
+        "Native material-point ranges, line angle, gripper release and arm-return events provide useful phase evidence. Live persistent material selectors, kinematic lift/closure/bend/settling observers, model-bound local patch layering and finite crease-chord geometry are implemented. Force-bearing cloth grasp contacts, curved crease geometry and whole-cloth self-intersection remain gaps; rigid-root geometry is invalid. Re-resolve asset geometry, labels and counts for the random layout; base-target calibration is not inherited."
       ],
       "evidence": {
         "path": "task/RoboDojo/tasks/fold_clothes_random.py",

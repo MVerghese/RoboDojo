@@ -179,6 +179,13 @@ def evaluate_geometry(condition: dict, measured, reference=None) -> GeometryResu
         margin = float(condition.get("margin", 0.0))
         if not np.isfinite(margin) or margin < 0:
             raise ValueError("margin must be finite and nonnegative")
+        if condition.get('relation_scope')=='segments':
+            from task.atomic.segments import segment_metrics
+            components=segment_metrics(measured,reference)
+            if relation not in ('intersects_segment','coincides_with_segment'):
+                raise ValueError('unsupported finite material segment relation')
+            error=components['segment_gap_m' if relation=='intersects_segment' else 'segment_hausdorff_m']
+            return GeometryResult(error<=tolerance,error,tolerance,components,components)
         if condition.get('relation_scope') == 'objects':
             return _object_relation(condition, measured, reference, ref_pos, ref_matrix, local_point, tolerance)
         direction = {

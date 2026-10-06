@@ -60,7 +60,8 @@ Native `is_*` calls delegate to the reward parser and must return at least `1`.
 The schema requires explicit recognition for pick/push. Other families can
 currently omit it; those stages report `recognition_status=endpoint_checks_only`.
 Their success does not claim contact, release, source provenance or a physical
-action sequence. Fold has no physical recognizer.
+action sequence. Fold has a material-deformation observer; it does not certify
+a physical cloth grasp or force-bearing release.
 
 ### Shared contact and continuity rules
 
@@ -371,3 +372,28 @@ material, unheld exits and material outside the source cohort cannot satisfy
 that observer. Native full-task completion still checks all seven balls.
 Qualified centre crossings of the actual vase mouth are independent geometric
 measurements; their absence is not replaced by final target containment.
+
+### Live validation of scene body contact enablement
+
+The fresh `geometry-body-contacts-1006` stack-block baseline completed with
+native success and three successful place observers. Actual block/block and
+block/table upward force contacts produced release and settled events for each
+block (36, 27 and 65 support-seen samples). Each observer had four current force
+contacts at settling completion. This validates task-body contact enablement
+after scene load in that rollout; tool and other asset validation are separate.
+See [EXPANSION_STATUS.md](EXPANSION_STATUS.md) for the retained raw report path.
+
+### Finite material crease segments
+
+`cloth_line_frame` now retains its two actual material-tag endpoint positions
+in raw evidence. In `relation_scope: segments`, `intersects_segment` measures
+the exact minimum distance between two finite chords; `coincides_with_segment`
+measures symmetric segment Hausdorff distance. These reject an intersection
+of infinite line extensions or a shared midpoint with different extents.
+Axis angle (degrees), chord lengths and gap/extent error (mm) are independent
+components. Stage-start references retain their original endpoints.
+
+The `crease_segments` phase binds the existing garment observers to 20 mm
+endpoint-chord coincidence at attempt end, alongside the model-bound patch
+conditions. This is geometry of declared finite material-endpoint chords, not
+a curved crease, whole-cloth intersection or new fold-success event.
