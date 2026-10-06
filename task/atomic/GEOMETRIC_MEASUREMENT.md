@@ -2,6 +2,20 @@
 
 Updated 2026-10-02. Describes implementation commit `46ffcbf`.
 
+October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
+landmark or material state immediately before scene reset. It measures goal
+error even if the action fails, and samples episode end for stages completed
+earlier. It cannot measure a historical contact and does not recover missed
+interaction events. Unstarted stages remain unobserved. SE(3) errors retain
+separate position (metres, displayed in millimetres) and orientation (radians,
+displayed in degrees) components. Full orientation includes yaw unless
+`orientation_axes` explicitly requests a partial direction.
+
+`atomic_sequence.scene_calibration` retains initial metadata, resolved annotated
+landmarks, live root poses, mesh bounds and persistent material IDs. These are
+asset evidence, not a claim that an outer mesh bounds a cavity or that an
+annotation is a verified spout. Calibration errors are recorded per asset.
+
 This document explains how the five taxonomy modifiers are measured, where the
 state comes from, when it is sampled, and what the saved scores mean. Companion
 docs cover [atomic success](ATOMIC_SUCCESS.md) and

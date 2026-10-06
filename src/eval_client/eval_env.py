@@ -1018,8 +1018,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     "score": episode_score,
                 }
                 if self.atomic_stage is not None:
+                    self._atomic_sessions[env_idx].finalize()
                     self.eval_result["details"][index]["atomic"] = self._atomic_sessions[env_idx].summary()
                 if env_idx in self._atomic_sequences:
+                    self._atomic_sequences[env_idx].finalize()
                     self.eval_result["details"][index]["atomic_sequence"] = self._atomic_sequences[env_idx].summary()
                     self.eval_result['details'][index]['policy_prompt_history'] = deepcopy(self._policy_prompt_history)
                     if self._atomic_contacts is not None:

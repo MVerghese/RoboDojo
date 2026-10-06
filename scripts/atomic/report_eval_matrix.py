@@ -87,10 +87,10 @@ def aggregate(manifest, result):
                 'candidate_instances': sum(not s.get('required', True) for s in selected),
                 'reached_instances': sum(s.get('reached', True) for s in selected),
                 'successful_actions': sum(s['action_success'] for s in selected), 'geometry': metrics})
-    return {'updated_at': result['updated_at'], 'coverage': manifest['coverage'], 'pairs': pairs,
+    return {'updated_at': result['updated_at'], 'coverage': manifest.get('coverage', []), 'pairs': pairs,
             'valid_episodes': sum(valid_episode(r) for r in rows.values()),
             'matched_pairs': sum(p['matched'] for p in pairs), 'total_pairs': len(pairs), 'metrics': output,
-            'limitations': manifest['limitations'], 'scope': manifest['scope']}
+            'limitations': manifest.get('limitations', []), 'scope': manifest.get('scope', 'partial action observers')}
 
 
 def write_matrix_report(manifest, result, root):

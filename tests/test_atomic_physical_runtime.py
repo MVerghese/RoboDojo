@@ -138,12 +138,19 @@ class PhysicalTests(unittest.TestCase):
         self.assertTrue(w.tick(s))
         self.assertEqual(s.summary()['interaction_evidence']['stable_steps'], 3)
 
-    def test_one_finger_still_touching_is_not_release_and_late_goal_cannot_reuse_release(self):
+    def test_gradual_jaw_release_preserves_verified_transport_but_is_not_yet_release(self):
         w = World(); s = AtomicSession(w.env, stage('supported_release'), 0)
         w.hold(); w.tick(s, 2); w.poses['object'][0] = .03; w.tick(s)
         w.hold(fingers=1)
         self.assertFalse(w.tick(s, 5))
-        w.release(); self.assertFalse(w.tick(s, 5))  # Lost sustained grasp before release.
+        self.assertNotIn('release', s.summary()['physical_events'])
+        w.release(); self.assertTrue(w.tick(s, 3))
+        self.assertIn('release', s.summary()['physical_events'])
+
+    def test_one_finger_cannot_establish_transport_and_late_goal_cannot_reuse_release(self):
+        w = World(); s = AtomicSession(w.env, stage('supported_release'), 0)
+        w.hold(fingers=1); w.tick(s, 2); w.poses['object'][0] = .03; w.tick(s)
+        w.release(); self.assertFalse(w.tick(s, 5))
         w.hold(); w.tick(s, 2); w.poses['object'][0] += .03; w.tick(s)
         w.release(); w.goal = False
         self.assertFalse(w.tick(s, 3))

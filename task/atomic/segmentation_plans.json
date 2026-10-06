@@ -7378,19 +7378,19 @@
     },
     {
       "path": "task/atomic/sequence.py",
-      "sha256": "536d86cf8167b3278bec548fda01ebd2b743b343cd1959a4aeddc7c0b1af5c30"
+      "sha256": "37c01d55402a5adde2fb51905f3d028e92dda6cd5e6f99f243732c865c3e33b9"
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "02c01c1d0b994a171141fe1bb13b8c0bb94f4a57bf9761517eb4bba90edf8c79"
+      "sha256": "91abff69c7a97af31981d24c54337e3194063e0dba822f7837dc24c2456352ae"
     },
     {
       "path": "task/atomic/spec.py",
-      "sha256": "32c6ef9f54c9cab599d2fbf0b6178e87bc9d0ee67bce12bfde5902a9b161f58b"
+      "sha256": "abe7adcb3429da5d28f986a6db0653d441af5ee295cf5f487570d62ae32f0668"
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "df349d2f1d7d1e1897404ada257ccce5d54203504cfaf8837c3286182b347be5"
+      "sha256": "4075e84f3b49af28d5c333d84c30f754af83563315891ba7ae866b9b1ee4eb19"
     },
     {
       "path": "task/atomic/bindings.py",
@@ -7410,7 +7410,7 @@
     },
     {
       "path": "task/atomic/trajectory.py",
-      "sha256": "5a895753229a4d4736487df0f5877e41113801c18ffca7742b765d57a9c9f658"
+      "sha256": "08e3e5647a643a4af22dd90fb9bb040586a7151cd84abf91f1f6b5712718bc44"
     },
     {
       "path": "env/scene_manager/objects/fluid.py",
@@ -7422,7 +7422,7 @@
     },
     {
       "path": "task/atomic/contacts.py",
-      "sha256": "4abda1615a24568dae4d283d2ac85e9583b1146cd01f2d6ffeeb87aa63a6ddce"
+      "sha256": "061f0bbf140f15d3e2f40ac7e57e58841a91d9b0e56eb9cebbfda4068f2a2173"
     },
     {
       "path": "task/atomic/replay.py",
@@ -7430,7 +7430,7 @@
     },
     {
       "path": "src/eval_client/eval_env.py",
-      "sha256": "209550ba0b8f94a54b152d1dd7064bc294e16eeb9507662f109f3b068ff7b7a1"
+      "sha256": "300f48a588e66e2fa8177f2fc7be0b858ebcf4011880b2f7e4836a2d6cee7b07"
     }
   ]
 }

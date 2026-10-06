@@ -53,6 +53,9 @@ class AtomicSession:
         self._precontact_samples = {}
         self._precontact_consumed = set()
         self.sample_index = 0
+        self.finalized = False
+        self._finalizing = False
+        self.finalization_evidence = None
         self.initial_positions = {}
         if stage.recognition is not None:
             label = stage.recognition['label']
@@ -323,6 +326,10 @@ class AtomicSession:
 
     def _event_fired(self, event, success_now):
         kind = event["kind"]
+        if kind == 'attempt_end':
+            if self._finalizing:
+                self._event_evidence[self._selector_key(event)] = deepcopy(self.finalization_evidence)
+            return self._finalizing
         if kind == "stage_success":
             return success_now
         if kind == 'recognition_event':
@@ -365,6 +372,8 @@ class AtomicSession:
             if condition_id in self.results or condition_id in self.measurement_failures:
                 continue
             event = condition.get("event", {"kind": "stage_success"})
+            if self._finalizing != (event['kind'] == 'attempt_end'):
+                continue
             before = event['kind'] == 'before_contact'
             historic = self._before_contact(condition) if before else None
             if before:
@@ -488,6 +497,29 @@ class AtomicSession:
         self._observe_interaction()
         self._sample(success_now=False)
 
+    def finalize(self, reason='episode_end'):
+        """Sample final-state conditions once, without advancing recognition.
+
+        The caller must invoke this before resetting the scene. This is the
+        episode endpoint, including for a stage completed earlier; it is not
+        a substitute for a missing grasp, release, strike or entry event.
+        """
+        if self.finalized:
+            return
+        self.finalization_evidence = {
+            'context': reason, 'policy_action_index': self._action_index(),
+            'physics_step': getattr(getattr(self.env, '_atomic_contacts', None), 'steps', None),
+            'action_success_at_end': bool(self.success),
+        }
+        self._finalizing = True
+        try:
+            self._sample(success_now=False)
+            if self._trajectory_observer:
+                self._trajectory_observer.finalize()
+        finally:
+            self._finalizing = False
+        self.finalized = True
+
     def step(self, diagnostics=True):
         """Latch success at a physical sample; optionally score chunk diagnostics."""
         self._observe_interaction()
@@ -567,6 +599,7 @@ class AtomicSession:
             'maintained_holds': deepcopy(list(self.stage.maintained_holds)),
             'maintained_hold_failures': deepcopy(self.maintained_hold_failures),
             'goal_success': self.goal_success,
+            'finalization_evidence': deepcopy(self.finalization_evidence),
             'recognition_checks': deepcopy(list(self.stage.success_checks)),
             'initial_object_positions': {k: v.tolist() for k, v in self.initial_positions.items()},
         }

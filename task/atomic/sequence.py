@@ -10,6 +10,7 @@ class AtomicSequence:
         self.env, self.program, self.env_idx = env, program, env_idx
         self.completed = {}
         self.sessions = {}
+        self._finished_sessions = {}
         self.gate_sessions = {}
         self._not_selected = {}
         self._choice_states = {}
@@ -17,6 +18,8 @@ class AtomicSequence:
         self.stage_boundaries = {}
         self._dependencies = program.dependencies()
         self._activate(0, at_action_boundary=True)
+        from task.atomic.calibration import snapshot_scene
+        self.calibration = snapshot_scene(self.session) if self.session else {'status': 'no_active_action', 'objects': {}}
 
     @property
     def index(self):
@@ -72,6 +75,7 @@ class AtomicSequence:
             }
             done.append(stage_id)
         for stage_id in done:
+            self._finished_sessions[stage_id] = self.sessions[stage_id]
             del self.sessions[stage_id]
         for gate_id, session in list(self.gate_sessions.items()):
             if session._check_success():
@@ -116,6 +120,15 @@ class AtomicSequence:
     def step(self, action_count):
         self._advance(action_count, at_action_boundary=True)
 
+    def finalize(self, reason='episode_end'):
+        """Measure endpoints for every started stage before scene reset."""
+        for session in list(self.sessions.values()) + list(self._finished_sessions.values()):
+            session.finalize(reason)
+        for ident, session in self._finished_sessions.items():
+            # Preserve the original completion boundary; final-state scores
+            # describe episode end rather than that earlier action boundary.
+            self.completed[ident].update(session.summary())
+
     def summary(self):
         rows = []
         for stage in self.program.stages:
@@ -145,6 +158,7 @@ class AtomicSequence:
                      'choice_branch':skipped['branch_index']}
             rows.append(deepcopy(row))
         return {'task_name': self.program.task_name, 'instruction': self.program.instruction,
+                'scene_calibration': deepcopy(self.calibration),
                 'geometric_instruction': self.program.geometric_instruction,
                 'stage_dependencies': deepcopy(self._dependencies),
                 'active_stages': sorted(self.sessions),

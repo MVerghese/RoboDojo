@@ -2,6 +2,19 @@
 
 Updated 2026-10-02. Describes implementation commit `46ffcbf`.
 
+October 6 correction: supported placement preserves an already verified
+two-finger held transport while the same arm releases its jaws one at a time.
+One remaining finger is not full release; motion with one finger cannot
+establish the required transport, and another arm cannot inherit that evidence.
+Complete release, upward named support and bounded settling are still required.
+`physical_metrics` records partial release, signed support candidates and
+settling drift for live diagnosis. Counterexample tests cover this transition;
+live confirmation is pending in the new validation suite.
+
+Final-state `attempt_end` measurements do not change action success or native
+success. A failed insertion/push may now have a numerical goal error without a
+recognized physical action.
+
 This document specifies how each of the 11 action families is checked, including
 implemented physical recognizers and endpoint-only exceptions. See
 [geometric measurements](GEOMETRIC_MEASUREMENT.md) for conditioning scores and

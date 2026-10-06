@@ -42,6 +42,8 @@ def validate_trajectory(c, validate_selector, validate_event):
         validate_event(event)
         if event['kind']=='before_contact':
             raise ValueError('path window events must occur in the current physical sample')
+        if field == 'start_event' and event['kind'] == 'attempt_end':
+            raise ValueError('attempt_end can close a path, not start one')
 
 
 def path_sample(c, measured, reference=None):
@@ -149,3 +151,13 @@ class TrajectoryObserver:
     def summary(self):
         return {ident:{**deepcopy(row),'result':aggregate_path(row['condition'],row['samples'],row['failures'],row['complete'])}
                 for ident,row in self.rows.items()}
+
+    def finalize(self):
+        """Close an attempt-end window without duplicating a physics sample."""
+        contacts = self.session.env._atomic_contacts
+        if contacts.steps != self.last_step:
+            self.observe(False)
+        for row in self.rows.values():
+            if (row['started'] and not row['complete'] and
+                    row['condition']['end_event']['kind'] == 'attempt_end'):
+                row.update(complete=True, end_physics_step=contacts.steps)

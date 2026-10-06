@@ -2,6 +2,14 @@
 
 Updated 2026-10-02. Describes implementation commit `46ffcbf`.
 
+October 6 extension: completed sessions are retained for explicit episode-end
+geometry sampling before reset. Their original action completion boundary stays
+unchanged. End sampling does not activate successors, advance recognition or
+fabricate lift/contact events. Started failed stages receive final-state scores;
+stages whose dependencies never enabled them remain unobserved. A trajectory
+may end at `attempt_end`, but sample gaps and insufficient samples still prevent
+certified path adherence.
+
 October 4 extension: [EVAL_MATRIX.md](EVAL_MATRIX.md) adds independent candidate
 observers and bounded layout-prefix templates. `required: false` labels
 candidate observers in reports; it does not change recognition or native task

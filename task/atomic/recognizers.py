@@ -152,6 +152,7 @@ class PhysicalRecognizer:
         self.holds = {}
         self.current_contacts = {}
         self.events = {}
+        self.metrics = {}
         self.material = {}
         self.fluid = {}
         lm = session.env.scene_manager.layout_manager
@@ -265,6 +266,10 @@ class PhysicalRecognizer:
         hold = self._hold(self.c['label'], self.c['arm'])
         raw_hold = self._current_hold()
         touch = self._touching()
+        self.metrics.update(physics_step=self.contacts.steps,
+                            current_pose=pose.tolist(),
+                            contacting_fingers=len(touch.get('finger_bodies', [])) if touch else 0,
+                            transported_while_held=bool(self.state.get('transported')))
         if touch:
             self.state.pop('settling', None)
             if raw_hold:
@@ -274,15 +279,24 @@ class PhysicalRecognizer:
                 moved = np.linalg.norm(pose[:3] - self.state['anchor'][:3])
                 if hold and moved >= self.c['transport_threshold_m']:
                     self.state.update(transported=True, hold=deepcopy(hold), transport_m=float(moved))
+                    self.metrics['phase'] = 'transported_held'
+            elif self.state.get('transported') and touch['resolved_arm'] == self.state.get('arm'):
+                # Opening a gripper commonly loses one jaw before the other.
+                # Preserve already verified two-finger transport until the last
+                # finger releases. One-finger motion cannot establish transport.
+                self.metrics['phase'] = 'partial_release'
             else:
                 # A one-finger push is not a prior grasp; require sustained hold again.
                 self.state.clear()
+                self.metrics['phase'] = 'touch_without_verified_transport'
             return
         if not self.state.get('transported'):
             self.state.clear()
             return
         self._event('release', held_contact=self.state['hold'], pose=pose.tolist())
         support = self.contacts.support_evidence(self.c['label'], self.c['support_labels'], self.session.env_idx)
+        self.metrics.update(phase='released', support_contacts=len(support['contacts']),
+                            support_diagnostics=deepcopy({k: v for k, v in support.items() if k != 'contacts'}))
         old = self.state.get('settling')
         if not support['contacts']:
             self.state.pop('settling', None)
@@ -294,6 +308,9 @@ class PhysicalRecognizer:
         count = old[1] + 1 if stable else 1
         anchor = old[2] if stable else pose.copy()
         self.state['settling'] = (pose.copy(), count, anchor)
+        self.metrics.update(phase='settling', stable_steps=count,
+                            settle_displacement_m=float(np.linalg.norm(pose[:3] - anchor[:3])),
+                            settle_angle_rad=_angular_error(pose[3:], anchor[3:]))
         if count >= self.c['settle_steps']:
             self._emit(held_contact=self.state['hold'], released=True, stable_steps=count,
                 transport_m=self.state['transport_m'], support=support, pose=pose.tolist(),

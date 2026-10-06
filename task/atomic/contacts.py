@@ -228,6 +228,7 @@ class PhysXContacts:
             return any(p == root or p.startswith(root + '/') for p in
                        (row[f'actor{index}'], row[f'collider{index}']))
         selected = []
+        candidates = []
         for row in self.rows:
             for index, other in ((0, 1), (1, 0)):
                 if not matches(row, index, object_scope):
@@ -235,13 +236,18 @@ class PhysXContacts:
                 normal = np.asarray(row['normal_world']) * (1 if index == 0 else -1)
                 impulse = np.asarray(row['impulse']) * (1 if index == 0 else -1)
                 for support_label, support_root in support_scopes.items():
-                    if matches(row, other, support_root) and normal @ axis > .5 and impulse @ axis > 1e-9:
-                        selected.append({**row, 'support_label': support_label,
-                                         'normal_on_object_world': normal.tolist(),
-                                         'impulse_on_object_world': impulse.tolist()})
+                    if matches(row, other, support_root):
+                        normal_dot, impulse_dot = float(normal @ axis), float(impulse @ axis)
+                        candidates.append({'support_label': support_label,
+                                           'normal_axis_dot': normal_dot, 'axial_impulse_ns': impulse_dot})
+                        if normal_dot > .5 and impulse_dot > 1e-9:
+                            selected.append({**row, 'support_label': support_label,
+                                             'normal_on_object_world': normal.tolist(),
+                                             'impulse_on_object_world': impulse.tolist()})
         return {'object': label, 'object_root': root, 'support_roots': supports,
                 'object_contact_scope': object_scope, 'support_contact_scopes': support_scopes,
                 'normal_axis_world': axis.tolist(), 'physics_step': self.steps, 'contacts': selected,
+                'candidate_contact_diagnostics': candidates,
                 'normal_convention': 'shape1 to shape0, reversed for supported object in slot1'}
 
     def close(self):

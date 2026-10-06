@@ -61,6 +61,12 @@ historical ball-pouring program, whose cavity calibration remains to verify.
 
 ## Physical transitions and continuous constraints
 
+October 6: `attempt_end` is an explicit episode-end state sampling event. It is
+independent of action success and is not a physical recognizer transition.
+The evaluator finalizes started and earlier-completed sessions before reset;
+unstarted stages retain missing scores. Completed action boundaries remain
+unchanged. Initial live calibration evidence appears in `scene_calibration`.
+
 A condition can use an actual physical transition:
 
 ```json

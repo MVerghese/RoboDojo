@@ -16,7 +16,7 @@ FAMILIES = frozenset(
 GEOMETRY_KINDS = frozenset(
     {"point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"}
 )
-EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "before_contact", "recognition_event"})
+EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "before_contact", "recognition_event", "attempt_end"})
 CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "articulated_link_pose", "joint_link_pose"}) | CONTACT_KINDS
 MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','fluid_points'}
@@ -202,6 +202,8 @@ def _validate_condition(condition):
     _validate_event(event)
     if event['kind'] == 'before_contact' and measurement['kind'] in CONTACT_KINDS:
         raise ValueError('before_contact needs an independently measurable approach point/frame, not a nonexistent contact')
+    if event['kind'] == 'attempt_end' and measurement['kind'] in CONTACT_KINDS:
+        raise ValueError('attempt_end measures final state, not a past interaction contact')
 
 
 def _validate_event(event):
