@@ -541,7 +541,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                                 'first-instance observers; partial action coverage',
                                 'new numerical targets are prototype probes; asset feasibility requires live review']}
     for task in tasks:
-        pair, blocker = ((fold_profile(), None) if task == 'fold_clothes' and phase in ('materials','constrained','cloth_patches')
+        pair, blocker = ((fold_profile(), None) if task == 'fold_clothes' and phase in ('materials','constrained','cloth_patches','crease_segments')
                          else profile(plans[task]))
         if blocker:
             raise ValueError(f'{task}: {blocker}')
