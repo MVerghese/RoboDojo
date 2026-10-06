@@ -55,7 +55,12 @@ def material_state(env,label,kind,env_idx):
             'source':{'label':label,'kind':kind,'backend':raw['backend'],'identity':raw['identity'],
                       'frame':'environment_local_world','mass_semantics':'configured nominal particle mass, not measured density' if kind=='fluid' else None}}
     if kind=='cloth' and raw.get('triangles') is not None:
-        result['topology_sha256']=hashlib.sha256(np.asarray(raw['triangles'],dtype='<i8').tobytes()).hexdigest()
+        topology = np.asarray(raw['triangles'])
+        if (topology.ndim != 2 or topology.shape[1] != 3 or topology.dtype.kind not in 'iu'
+                or not len(topology) or not set(topology.flatten().tolist()) <= set(ids.tolist())
+                or any(len(set(face)) != 3 for face in topology.tolist())):
+            raise RuntimeError('cloth topology must reference actual distinct integer material vertex IDs')
+        result['topology_sha256']=hashlib.sha256(np.asarray(topology,dtype='<i8').tobytes()).hexdigest()
     if cache is not None:cache[key]=result
     return result
 

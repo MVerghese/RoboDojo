@@ -11,9 +11,9 @@ def material_edge_path(vertices, triangles, start_id, end_id, asset_sha256):
     not infer the location of a physical fold or crease.
     """
     v = np.asarray(vertices, dtype=float)
-    t = np.asarray(triangles, dtype=np.int64)
+    t = np.asarray(triangles)
     if (v.ndim != 2 or v.shape[1] != 3 or not np.isfinite(v).all()
-            or t.ndim != 2 or t.shape[1] != 3 or not len(t) or t.min() < 0 or t.max() >= len(v)
+            or t.ndim != 2 or t.shape[1] != 3 or t.dtype.kind not in 'iu' or not len(t) or t.min() < 0 or t.max() >= len(v)
             or type(start_id) is not int or type(end_id) is not int
             or not 0 <= start_id < len(v) or not 0 <= end_id < len(v) or start_id == end_id):
         raise ValueError('material path needs actual authored mesh and two distinct valid vertex anchors')

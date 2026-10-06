@@ -7382,11 +7382,11 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "07d442d2cdeff1c3be3d70b52e48e7ba77c7b0c5135f958af7bcdb7cd7d36fa0"
+      "sha256": "22eaa5b926c3711d20383588843dce678ec72aa038385aa8f2cf2d986c08c669"
     },
     {
       "path": "task/atomic/spec.py",
-      "sha256": "76f1ba21637e3ca2e75d8ca1564e4aec90515ec6b43b7a9dac5914c756708555"
+      "sha256": "5057b76841176ad74a43bc6dfcb3eb00f728c1457532328868035d6fad704cab"
     },
     {
       "path": "task/atomic/recognizers.py",
@@ -7402,7 +7402,7 @@
     },
     {
       "path": "task/atomic/materials.py",
-      "sha256": "2bc0b708021b3261cd66cc68bc5c3d3bac70b8c67ba4966b840792631362b7ca"
+      "sha256": "571bf00e5a6ef6a061b9444aa10cd64d7075349bd70a22eeb30fc0b96e69f652"
     },
     {
       "path": "task/atomic/selection.py",
@@ -7418,7 +7418,7 @@
     },
     {
       "path": "task/atomic/fit.py",
-      "sha256": "ec6e40bf1aa3c652ab17fb5945ab0607d88de39e6ae4c4b009224644607aeb99"
+      "sha256": "9b92e845e0309301ff083d61b5ccdf7d666855d2490a6ec43c6e8254c73ed509"
     },
     {
       "path": "task/atomic/flow.py",
@@ -7434,7 +7434,7 @@
     },
     {
       "path": "task/atomic/cloth_calibration.py",
-      "sha256": "0086eb2fe31a99a3a2f57d574a874510760af0194b274ac6f4f5e3190a9c3382"
+      "sha256": "3cf223d1139d2ed9a45d233c5343ee1dc5b2ba449c36211a15159aa2f950e903"
     },
     {
       "path": "task/atomic/segments.py",

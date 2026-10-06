@@ -578,3 +578,14 @@ three configured garment models and actual material topology. Calibration binds
 ordered mesh-edge IDs before the policy acts. Both arms score the same initial
 paths at episode end; only the conditioned arm receives the geometric append.
 These are explicit anchored material lines, not inferred physical creases.
+
+### Charger local section pair
+
+`generate_expansion_suite.py --phase charger_sections --tasks plug_in_charger
+--asset-calibration-root <rigid asset export directory>` adds four local shaft
+fit measurements to the two-tip insertion profile. Required exports are the
+asset summary, actual charger part paths/meshes and socket mesh. Before packaging,
+all six prong/depth cuts must fit one common reviewed pose with 0.25 mm clearance,
+and lateral counterexamples must fail. Both prompts score the same conditions
+and recognizer. The conditioned append names actual plane cuts and clearance;
+no whole-prong volume or electrical seating is requested.

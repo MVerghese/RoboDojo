@@ -11,6 +11,18 @@ from task.atomic.curves import curve_metrics, directed_hausdorff
 
 
 class CurveTests(unittest.TestCase):
+    def test_fractional_topology_cannot_be_truncated_into_a_valid_material_path(self):
+        from task.atomic.cloth_calibration import material_edge_path
+        from task.atomic.materials import material_state
+        from test_atomic_physical_runtime import World
+        from test_atomic_materials import attach_material
+        w = World();label,data = attach_material(w,'cloth',[0,1,2],[[0,0,0],[1,0,0],[0,1,0]])
+        for topology in ([[0.,1.5,2.]],[[0,1,3]],[[0,1,1]]):
+            data['triangles'] = topology
+            with self.assertRaisesRegex(RuntimeError,'topology'):material_state(w.env,label,'cloth',0)
+        with self.assertRaises(ValueError):
+            material_edge_path(data['positions_world'],[[0.,1.5,2.]],0,2,'a'*64)
+
     def test_material_curve_binding_follows_interior_deformation_and_preserves_frozen_reference(self):
         from task.atomic.cloth_calibration import material_edge_path
         from task.atomic.spec import AtomicStage, _validate_selector

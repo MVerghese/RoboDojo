@@ -233,15 +233,21 @@ def _object_relation(condition, measured, reference, ref_pos, ref_matrix, local_
         if not isinstance(value, dict) or 'vertices' not in value or 'triangles' not in value:
             raise ValueError('object relations require live mesh vertices and triangles for both objects')
         vertices = np.asarray(value['vertices'], dtype=float)
-        triangles = np.asarray(value['triangles'], dtype=int)
+        triangles = np.asarray(value['triangles'])
         if vertices.ndim != 2 or vertices.shape[1] != 3 or not np.isfinite(vertices).all():
             raise ValueError('invalid mesh vertices')
-        if triangles.ndim != 2 or triangles.shape[1] != 3 or not len(triangles) or triangles.min() < 0 or triangles.max() >= len(vertices):
+        if triangles.ndim != 2 or triangles.shape[1] != 3 or triangles.dtype.kind not in 'iu' or not len(triangles) or triangles.min() < 0 or triangles.max() >= len(vertices):
             raise ValueError('invalid mesh triangles')
         return (vertices - ref_pos) @ ref_matrix, triangles
     a, at = surface(measured)
-    b, bt = surface(reference)
     relation = condition['expected']
+    if relation in ('inside_aperture','inside_trace_aperture'):
+        from task.atomic.fit import section_fit, trace_section_fit
+        checker = trace_section_fit if relation=='inside_trace_aperture' else section_fit
+        result = checker(a,at,condition['aperture_profile'],condition.get('required_clearance_m',0.),tolerance)
+        components = {k:v for k,v in result.items() if k.endswith(('_m','_m2'))}
+        return GeometryResult(result['passed'],result['outside_allowed_area_m2'],0.,components,result)
+    b, bt = surface(reference)
     direction = {'above': (2, 1), 'below': (2, -1), 'right_of': (0, 1), 'left_of': (0, -1),
                  'in_front_of': (1, 1), 'behind': (1, -1), 'on_top': (2, 1)}
     if relation == 'layered_over':
@@ -255,11 +261,6 @@ def _object_relation(condition, measured, reference, ref_pos, ref_matrix, local_
         result = region_containment(a, at, condition['interior_boxes'], tolerance)
         components = {k: v for k, v in result.items() if k.endswith(('_m', '_m3', '_fraction'))}
         return GeometryResult(result['passed'], result['outside_volume_fraction'], 0., components, result)
-    if relation == 'inside_aperture':
-        from task.atomic.fit import section_fit
-        result = section_fit(a, at, condition['aperture_profile'], condition.get('required_clearance_m', 0.), tolerance)
-        components = {k: v for k, v in result.items() if k.endswith(('_m', '_m2'))}
-        return GeometryResult(result['passed'], result['outside_allowed_area_m2'], 0., components, result)
     if relation == 'inside_box':
         half = _vector(condition['half_extents'], 3, 'half_extents')
         if np.any(half <= 0):

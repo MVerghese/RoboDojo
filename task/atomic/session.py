@@ -501,7 +501,9 @@ class AtomicSession:
             measured_pose, reference_pose = _array(measured), _array(reference)
             measured = {**self._surface_for_selector(condition['measurement']),
                         'position': measured_pose[:3].tolist(), 'orientation': measured_pose[3:].tolist()}
-            reference_surface=(deepcopy(self._frozen_surfaces[self._selector_key(condition['reference'])])
+            reference_surface=({'geometry_representation':'calibrated aperture frame; plane polygon retained in condition'}
+                               if condition['expected'] in ('inside_aperture','inside_trace_aperture') else
+                               deepcopy(self._frozen_surfaces[self._selector_key(condition['reference'])])
                                if condition['reference'].get('time')=='stage_start' else self._surface_for_selector(condition['reference']))
             reference = {**reference_surface,
                          'position': reference_pose[:3].tolist(), 'orientation': reference_pose[3:].tolist()}

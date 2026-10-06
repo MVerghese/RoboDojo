@@ -503,3 +503,14 @@ A fatal marker without a newline still triggers failure. Ignored termination is
 bounded by the cleanup timeout. Real subprocess tests cover each behavior.
 These are infrastructure outcomes and do not supply atomic action boundaries or
 policy adherence scores. Previously frozen suites keep their original guard.
+
+### Charger shaft section fit
+
+`charger_sections` preserves the held two-tip insertion recognizer: both actual
+leading points must enter their respective live throat polygons while held,
+reach configured depth/alignment and have charger/socket force contact. Added
+local shaft fit conditions score actual closed oriented plane traces with
+0.25 mm clearance at `inserted` and `attempt_end`; they do not supply or relax
+recognition. No cut at the plane is unobserved geometry, not a successful fit.
+Globally open prong meshes remain ineligible for whole-solid volume claims.
+A common actual-asset pose is calibrated to fit both prongs simultaneously.

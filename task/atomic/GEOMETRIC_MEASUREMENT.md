@@ -647,3 +647,41 @@ A fatal marker without a newline still triggers failure. Ignored termination is
 bounded by the cleanup timeout. Real subprocess tests cover each behavior.
 These are infrastructure outcomes and do not supply atomic action boundaries or
 policy adherence scores. Previously frozen suites keep their original guard.
+
+### Closed local shaft sections on meshes with open ends
+
+`inside_trace_aperture` measures the actual material section at a live calibrated
+opening plane. The measurement must select explicitly reviewed rigid
+`object_pose.mesh_paths`; the reference must be a live calibrated/model-bound
+opening frame. All measured material vertices are transformed into this frame,
+and the section is cut at local Z=0. The opening polygon and holes are retained
+in the condition. Its render mesh is not needed as a second footprint.
+
+Every actual cut edge is oriented from its triangle normal. After rounding
+endpoints to 12 decimal metres (maximum displacement retained), each point must
+have exactly one incoming and outgoing edge. Open, duplicate, branching,
+inconsistently oriented, self-crossing, coplanar and ambiguous winding traces
+are unobserved rather than repaired. Exactly zero-area source faces contribute
+no area; faces below the declared 1e−15 m² doubled-area numerical threshold are
+counted as omitted. Polygon interiors are filled by nonzero directed winding,
+with material holes retained. No caps or convex hulls are manufactured.
+
+The fit checker reports section area and outside-aperture/outside-allowed area
+(m² internally, mm² in the report), boundary distance and requested clearance
+(m/mm). Required clearance shrinks the aperture; a positive geometric tolerance
+expands it. This is **local material fit at one plane**. `inside_aperture` still
+requires a globally closed consistently oriented solid; volume checkers keep
+that requirement. Local traces do not prove whole-prong containment, electrical
+seating or contact. No section at the plane leaves this score unobserved, while
+the separately defined leading-point pose can still give a final-state error.
+
+The `charger_sections` A/B phase adds both actual prong shaft sections at first
+recognized insertion and episode end, with 0.25 mm clearance and zero tolerance.
+The baked prong meshes have closed shaft cuts despite failing the whole-solid
+preflight. One common pose at root XY=[7.4,6.2] mm and +90° root X rotation fits
+both measured socket throats at 5/10/13 mm tip depth. Their areas are about
+5.018 mm² and minimum raw clearance is 0.309 mm. A common 4 mm lateral shift
+fails; original leading-point targets still apply with 3 mm/20° tolerances.
+Retained actual-asset evidence is in
+`/home/mverghese/robodojo-expansion-state/asset-calibration-1006/charger-section-validation.json`.
+Live validation remains pending.

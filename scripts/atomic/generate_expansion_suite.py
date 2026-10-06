@@ -87,6 +87,56 @@ def calibrated_charger_profile(base, assets, evidence=None):
     return base, text
 
 
+def calibrated_charger_sections_profile(base, assets, evidence=None):
+    """Local prong material section fit; whole-solid preflight stays required elsewhere."""
+    import numpy as np
+    from task.atomic.fit import trace_section_fit
+    from task.atomic.geometry import _rotation
+    proof = {}
+    base,text = calibrated_charger_profile(base,assets,proof)
+    stage = next(s for s in base['stages'] if s['id']=='calibrated_middle_two_tip_insert')
+    checks = []
+    for pair,row in zip(stage['recognition']['tip_pairs'],proof['pairs']):
+        side = row['side'];index = 4 if side=='left' else 0
+        mesh = np.load(assets/f'charger-part-{index}.npz')
+        tip = pair['tip']['models']['charger/00000']['local_pose']
+        opening = pair['opening']['models']['socket/00000']['local_pose']
+        for depth in (.005,.01,.013):
+            # One common rigid pose for both parts, reviewed before policy output.
+            position = np.array([.0074,.0062,.02-depth-tip[1]])
+            local = mesh['vertices']@_rotation(tip[3:])+position-opening[:3]
+            result = trace_section_fit(local,mesh['triangles'],pair['aperture_profile'],.00025)
+            if not result['passed']:
+                raise ValueError('reviewed common charger pose cannot fit both shaft sections with 0.25 mm clearance')
+            blocked = trace_section_fit(local+[.004,0,0],mesh['triangles'],pair['aperture_profile'],.00025)
+            if blocked['passed']:
+                raise ValueError('charger section counterexample did not expose lateral overrun')
+            checks.append({'side':side,'tip_depth_m':depth,'charger_root_in_socket_m':position.tolist(),
+                'charger_root_orientation_wxyz':[math.sqrt(.5),math.sqrt(.5),0,0],
+                'nominal':result,'lateral_4mm_counterexample':blocked})
+        measurement = {'kind':'object_pose','label':'charger','mesh_paths':[row['material_mesh_path']],
+                       'calibration_id':'reviewed-actual-prong-section:'+pair['tip']['models']['charger/00000']['asset_sha256']}
+        for event,suffix in [({'kind':'recognition_event','name':'inserted'},'at_insert'),({'kind':'attempt_end'},'final')]:
+            stage['geometry'].append({'id':side+'_shaft_section_'+suffix,'slot':'opening',
+                'kind':'spatial_relation','relation_scope':'objects','measurement':deepcopy(measurement),
+                'reference':deepcopy(pair['opening']),'expected':'inside_trace_aperture',
+                'aperture_profile':deepcopy(pair['aperture_profile']),'required_clearance_m':.00025,
+                'tolerance':0.,'event':event,'track_closest':False})
+    proof['section_preflight'] = checks
+    proof['scope'] = 'two leading-point entry plus closed oriented shaft sections at each live throat; not whole-prong volume/seating'
+    if evidence is not None:
+        evidence.update(proof)
+    text += (' At recognized insertion and at episode end, fit the actual material shaft cross-section '
+             'of each prong entirely inside its reviewed throat polygon with 0.25 mm planar clearance. '
+             'The section is cut from that prong mesh at the live socket throat plane, retaining its '
+             'outline and any forbidden aperture holes. A common reviewed example at 10 mm leading-tip '
+             'depth places the charger root at [7.4, 6.2, 25.188] mm in socket-root coordinates and rotates '
+             'the charger root plus 90 degrees about socket x. This example demonstrates joint feasibility '
+             'within the specified 3 mm leading-point position tolerances. Section fit is a geometric '
+             'condition at one plane, not whole-prong volume containment or electrical seating.')
+    return base,text
+
+
 def calibrated_liquid_profile(base, assets, evidence=None):
     """Partial persistent-particle transfer through reviewed vessel cores/mouths."""
     import numpy as np
@@ -734,7 +784,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             source=Path(asset_calibration_root)/'asset-geometry.json'
             manifest.setdefault('calibration_inputs',{})['cloth_assets']={'path':str(source),
                 'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
-        if phase=='charger_tips':
+        if phase in ('charger_tips','charger_sections'):
             if task!='plug_in_charger' or not asset_calibration_root:
                 raise ValueError('charger tip profile needs reviewed prong and socket evidence')
             names=['asset-summary.json','charger-parts.json','charger-part-0.npz','charger-part-4.npz','Rigid_socket_00000.npz']
@@ -765,7 +815,8 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             scene=detail['atomic_sequence']['scene_calibration']
             manifest.setdefault('calibration_inputs',{})[task]={'path':str(source),'sha256':hashlib.sha256(source.read_bytes()).hexdigest()}
         binding_evidence={}
-        base, append = (calibrated_charger_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='charger_tips' else
+        base, append = (calibrated_charger_sections_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='charger_sections' else
+                        calibrated_charger_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='charger_tips' else
                         calibrated_liquid_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='liquid_core' else
                         calibrated_curve_profile(Path(asset_calibration_root),binding_evidence) if phase=='material_curves' else
                         calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry','material_curves') else
@@ -801,7 +852,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                     'relation_scope':'segments','measurement':line,'reference':{**line,'time':'stage_start'},
                     'expected':'coincides_with_segment','tolerance':.02,'event':{'kind':'attempt_end'},'track_closest':False})
             append+=' At episode end preserve each finite chord joining the two crease material landmarks within 20 mm symmetric segment Hausdorff distance from its initial chord. This targets both full finite extents, not only the midpoint; it does not measure a curved crease.'
-        if phase in ('validation','breadth','selection_query','calibrated','pour_core','liquid_core','charger_tips') or (phase=='constrained' and task!='fold_clothes'):
+        if phase in ('validation','breadth','selection_query','calibrated','pour_core','liquid_core','charger_tips','charger_sections') or (phase=='constrained' and task!='fold_clothes'):
             append = pair[1] + ' ' + append
         manifest['coverage'].append({'task':task,'included':True,
             'families':sorted({s['family'] for s in base['stages']}), 'unbound_families':[],
@@ -833,7 +884,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core','charger_tips','selection_query','material_curves'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core','charger_tips','selection_query','material_curves','charger_sections'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()

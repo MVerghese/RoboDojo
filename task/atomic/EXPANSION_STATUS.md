@@ -299,3 +299,22 @@ placement, buffered fatal-marker draining and an ignored-TERM timeout are tested
 with real subprocesses. The current host suite passes 213 atomic tests. Frozen
 pour/selection cases preserve earlier runtimes; new curve cases include this
 cleanup fix.
+
+### Charger local shaft fit: former whole-solid blocker narrowed
+
+Implemented `inside_trace_aperture` with explicitly selected actual prong meshes,
+closed directed plane traces, winding/holes and clearance. It rejects missing,
+reversed, duplicate, branching, crossing and coplanar traces. Global solid/volume
+requirements are unchanged. One pre-policy common rigid pose fits both baked
+prong cuts at 5/10/13 mm depth with 0.309 mm raw boundary clearance; each section
+is about 5.018 mm². Six 4 mm lateral counterexamples fail. Thus local shaft fit
+is now calibrated, while whole-prong volume/seating remains unsupported.
+Actual evidence: `/home/mverghese/robodojo-expansion-state/asset-calibration-1006/charger-section-validation.json`.
+The `charger_sections` phase adds four plane-fit conditions to the existing
+leading-point A/B test; simulator validation is pending.
+
+Live report snapshot at 23:08 UTC: 156 valid episodes, 72 verified matched pairs,
+505 independently reproduced required-event scores and zero score mismatches.
+Frozen old cloth-patch logs retain keepalive reconnections; the newer combined
+cloth-runtime and curve packages ship the pinned background-loop websocket
+client/server/codec. These remain distinct comparisons with immutable hashes.

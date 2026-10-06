@@ -430,3 +430,13 @@ A fatal marker without a newline still triggers failure. Ignored termination is
 bounded by the cleanup timeout. Real subprocess tests cover each behavior.
 These are infrastructure outcomes and do not supply atomic action boundaries or
 policy adherence scores. Previously frozen suites keep their original guard.
+
+### Local shaft-cut observation
+
+The `charger_sections` pair keeps the existing two-tip held-entry observer and
+its physical boundaries unchanged. Each actual prong mesh is cut at its live
+socket throat plane when insertion is recognized and at episode end. A missing
+or malformed cut has no certified local fit value; it cannot fabricate entry,
+contact or completion. Closed local traces allow a plane measurement on meshes
+whose remote ends fail the globally closed-solid preflight. They do not make
+source plans executable or provide new segment boundaries.

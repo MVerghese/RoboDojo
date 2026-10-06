@@ -24,7 +24,7 @@ MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth
 FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS - CURVE_KINDS
 OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame','model_calibrated_frame','cloth_patch_surface','cloth_model_patch'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
-                               'near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment','intersects_curve','coincides_with_curve'})
+                               'near', 'inside_box', 'inside_region', 'inside_aperture', 'inside_trace_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment','intersects_curve','coincides_with_curve'})
 
 
 def _finite_number(value, name, positive=False):
@@ -271,7 +271,7 @@ def _validate_condition(condition):
         if scope not in ('points', 'objects','segments','curves'):
             raise ValueError('relation_scope must be points, objects, segments or curves')
         if scope == 'objects' and (measurement['kind'] not in OBJECT_FRAME_KINDS or
-                                   (condition['reference']['kind'] not in OBJECT_FRAME_KINDS and condition['expected'] != 'inside_aperture')):
+                                   (condition['reference']['kind'] not in OBJECT_FRAME_KINDS and condition['expected'] not in ('inside_aperture','inside_trace_aperture'))):
             raise ValueError('objects scope needs object frame selectors; it cannot replace functional landmarks')
         relation = condition['expected']
         if scope == 'curves' or relation in ('intersects_curve', 'coincides_with_curve'):
@@ -295,7 +295,7 @@ def _validate_condition(condition):
             raise ValueError('layer gap bounds apply only to layered_over')
         if relation == 'on_top' and condition['reference'].get('time') == 'stage_start':
             raise ValueError('supported-on requires a live support frame and contact, not historical geometry')
-        if 'margin' in condition and relation in ('near', 'inside_box', 'inside_region', 'inside_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment','intersects_curve','coincides_with_curve'):
+        if 'margin' in condition and relation in ('near', 'inside_box', 'inside_region', 'inside_aperture', 'inside_trace_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment','intersects_curve','coincides_with_curve'):
             raise ValueError('margin only applies to directional separation relations')
         if 'half_extents' in condition and not (relation == 'inside_box' or (scope == 'points' and relation == 'on_top')):
             raise ValueError('half_extents requires a box relation')
@@ -307,9 +307,12 @@ def _validate_condition(condition):
             validate_boxes(condition.get('interior_boxes'))
         elif 'interior_boxes' in condition:
             raise ValueError('interior_boxes only applies to inside_region')
-        if relation == 'inside_aperture':
+        if relation in ('inside_aperture','inside_trace_aperture'):
             if scope != 'objects' or condition['reference'].get('time') == 'stage_start':
                 raise ValueError('inside_aperture requires a whole object and a live calibrated opening frame')
+            if relation == 'inside_trace_aperture' and (measurement['kind']!='object_pose' or not measurement.get('mesh_paths')
+                    or condition['reference']['kind'] not in ('calibrated_frame','model_calibrated_frame')):
+                raise ValueError('trace section fit needs reviewed material mesh paths and a calibrated live opening')
             from task.atomic.fit import aperture_polygon
             aperture_polygon(condition.get('aperture_profile'))
             _finite_number(condition.get('required_clearance_m', 0.), 'required_clearance_m')
@@ -321,7 +324,7 @@ def _validate_condition(condition):
                 if any(x <= 0 for x in condition['half_extents']):
                     raise ValueError('half_extents must be positive')
         if 'min_overlap_fraction' in condition:
-            if scope != 'objects' or relation in ('inside_box', 'inside_region', 'inside_aperture'):
+            if scope != 'objects' or relation in ('inside_box', 'inside_region', 'inside_aperture','inside_trace_aperture'):
                 raise ValueError('min_overlap_fraction only applies to projected object relations')
             _finite_number(condition['min_overlap_fraction'], 'min_overlap_fraction', positive=True)
             if condition['min_overlap_fraction'] > 1:
