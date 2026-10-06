@@ -29,6 +29,7 @@ executing jobs. Frozen packages never change when source instrumentation changes
 | `geometry-bottle-runtime-1006` | 2 | Submitted; both queued | Original bottle geometry with rigid readback fix and pinned websocket protocol |
 | `geometry-cloth-runtime-1006` | 2 | Prepared; automatic monitor awaits capacity | Combined patch/layer, finite-chord and boundary-gap conditions with pinned protocol |
 | `geometry-liquid-cores-1006` | 2 | Prepared; automatic monitor awaits capacity | Verified model-specific mouth pose and partial-cohort particle crossings |
+| `geometry-charger-tips-1006` | 2 | Prepared; automatic monitor awaits capacity | Both actual leading-tip frames and middle-slot throat entry |
 
 The bottle retry retained the exact program/checkpoint/runtime package. It ended
 with client code 143 and no completed native episode. Archived logs show a policy
@@ -217,3 +218,8 @@ frame at recognized insertion and episode end. Local real-asset calibration and
 counterexamples pass; live validation is pending. The open prong meshes still
 cannot support whole-solid cross-section/clearance claims, and tested higher
 socket planes failed closed-trace calibration. These boundaries remain explicit.
+
+The charger matched pair is frozen under `geometry-charger-tips-1006` and its
+capacity monitor is running. The current suite/source checks include 198 passing
+atomic tests, including wrong model/file/scale rejection and coupled insertion
+counterexamples. These test results do not replace pending simulator validation.
