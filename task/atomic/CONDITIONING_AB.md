@@ -467,3 +467,27 @@ conditioning (20 mm at attempt end). Both arms retain identical patch coverage
 and layer-order checks. Minimum boundary distance alone does not certify
 contact, support or absence of penetration. Custom rigid `near` conditions
 require explicit reviewed material `mesh_paths` for both objects.
+
+### Pinned websocket runtime
+
+Initialize the protocol submodule before preparing a fresh suite:
+
+```bash
+git submodule update --init --depth 1 XPolicyLab
+```
+
+The runtime overlay now verifies the checkout against the parent repository's
+pinned Git link and ships the websocket client/server/codec plus required shared
+observation helpers and license. Dirty or missing protocol source fails before
+submission. `task/atomic/pinned-protocol.json` in each overlay records its commit
+and per-file SHA-256; protocol files enter the A/B runtime hash. Compiled
+simulator dependencies and assets still come from the baked image.
+
+The pinned client runs its event loop on a background thread while simulation
+blocks; the pinned server runs blocking model calls outside its event loop.
+This keeps websocket heartbeats active. The local real-transport probe survived
+a 650 ms caller pause and 400 ms model pause with 50 ms heartbeat interval/timeout,
+using one network connection and one model invocation. It checks the protocol
+and array codec with a toy model, not image decoding, the checkpoint or simulator.
+Fresh full-task pairs validate that integration separately. Existing frozen
+suites retain their older image-supplied protocol and are not repackaged.

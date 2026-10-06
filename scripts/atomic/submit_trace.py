@@ -23,7 +23,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 # Keep the evaluator and its dependencies from the same checkout. Replacing
 # only main.py/eval_env.py can leave newer imports absent in the baked image.
-# Assets and third-party/submodule installations remain supplied by the image.
+# Assets and compiled dependencies remain supplied by the image. The pinned
+# websocket protocol is overlaid on both policy and simulator import paths.
 RUNTIME_PATHS = ("env", "env_cfg", "src", "task", "utils", "scripts")
 
 
@@ -50,6 +51,30 @@ def verify_checkpoint(checkpoint: str, credentials: dict) -> None:
         ) from error
 
 
+def protocol_overlay_entries(fork: Path):
+    """Ship the parent-pinned protocol, never an image's unspecified old copy."""
+    entry=subprocess.check_output(['git','-C',str(fork),'ls-files','--stage','--','XPolicyLab'],text=True).strip()
+    if not entry:return {},None
+    fields=entry.split()
+    if fields[0]!='160000':raise ValueError('XPolicyLab must be a pinned Git submodule')
+    expected=fields[1];sub=fork/'XPolicyLab'
+    try:actual=subprocess.check_output(['git','-C',str(sub),'rev-parse','HEAD'],text=True,stderr=subprocess.DEVNULL).strip()
+    except subprocess.CalledProcessError as error:raise ValueError('initialize pinned protocol with git submodule update --init XPolicyLab') from error
+    if actual!=expected:raise ValueError('XPolicyLab checkout differs from the parent-pinned protocol commit')
+    scopes=['client_server/ws','client_server/__init__.py','utils/process_data.py','utils/load_file.py','utils/__init__.py','__init__.py','LICENSE']
+    tracked=subprocess.check_output(['git','-C',str(sub),'ls-files','-z','--',*scopes]).decode().split('\0')
+    paths=[r for r in tracked if r and (sub/r).is_file()]
+    required={'client_server/ws/model_client.py','client_server/ws/model_server.py','client_server/ws/protocol/client.py',
+              'client_server/ws/protocol/codec.py','utils/process_data.py','utils/load_file.py','LICENSE'}
+    if not required<=set(paths):raise ValueError('pinned websocket protocol checkout is incomplete')
+    if subprocess.run(['git','-C',str(sub),'diff','--quiet','HEAD','--',*scopes]).returncode:
+        raise ValueError('pinned websocket protocol source has uncommitted changes')
+    files={'XPolicyLab/'+r:sub/r for r in paths}
+    manifest={'xpolicylab_commit':expected,'scope':'pinned websocket client/server/codec and shared observation helpers',
+              'files':{r:hashlib.sha256(path.read_bytes()).hexdigest() for r,path in sorted(files.items())}}
+    return files,(json.dumps(manifest,sort_keys=True,indent=2)+'\n').encode()
+
+
 def build_overlay(fork: Path, output: Path, extra_files: dict[str, Path] | None = None) -> str:
     # Tracked files exclude caches, generated output, and unrelated local data.
     tracked = subprocess.check_output(
@@ -58,6 +83,9 @@ def build_overlay(fork: Path, output: Path, extra_files: dict[str, Path] | None 
     entries = {relative: fork / relative for relative in tracked if relative}
     if "src/eval_client/main.py" not in entries:
         raise ValueError("--fork must be a RoboDojo Git checkout with its runtime files tracked")
+    protocol,proof=protocol_overlay_entries(fork)
+    entries.update(protocol)
+    if proof:entries['task/atomic/pinned-protocol.json']=proof
     for relative, path in (extra_files or {}).items():
         if Path(relative).is_absolute() or ".." in Path(relative).parts or relative in entries:
             raise ValueError(f"invalid or conflicting overlay path: {relative}")
@@ -66,10 +94,10 @@ def build_overlay(fork: Path, output: Path, extra_files: dict[str, Path] | None 
         with gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0) as compressed:
             with tarfile.open(fileobj=compressed, mode="w") as archive:
                 for relative, path in sorted(entries.items()):
-                    data = path.read_bytes()
+                    data = path if isinstance(path,bytes) else path.read_bytes()
                     info = tarfile.TarInfo(relative)
                     info.size = len(data)
-                    info.mode = 0o755 if path.stat().st_mode & 0o111 else 0o644
+                    info.mode = 0o755 if not isinstance(path,bytes) and path.stat().st_mode & 0o111 else 0o644
                     archive.addfile(info, io.BytesIO(data))
     return hashlib.sha256(output.read_bytes()).hexdigest()
 

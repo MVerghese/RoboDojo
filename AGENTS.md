@@ -22,3 +22,9 @@ This fork's work is on `benchmark/atomic-geometry`.
 - Keep bulky rollout evidence, credentials and operational job specs outside
   Git. A source audit, schema test or pipeline completion does not establish
   observed action recognition or policy steerability.
+
+- Fresh runtime packaging requires `git submodule update --init --depth 1 XPolicyLab`.
+  Ship the parent-pinned websocket client/server/codec together. The overlay
+  validates commit/cleanliness and records `task/atomic/pinned-protocol.json`;
+  do not fall back to an unspecified older image client. Existing frozen cases
+  retain their runtime; protocol changes require fresh matched A/B packages.

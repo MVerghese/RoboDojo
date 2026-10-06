@@ -151,3 +151,14 @@ vertex bounds, vectorizes USD transforms with Gf witnesses, and avoids unused
 large initial exports. Regression tests verify equivalent centres and explicit
 large-mesh omission. This is a candidate infrastructure fix, not a confirmed
 termination diagnosis; an affected fresh matched pair will validate it.
+
+The baked image's older websocket client omits the newer heartbeat options.
+The parent repository already pins XPolicyLab `bb9a0b5f5136a74503b679af830bfd0a3a837d5c`,
+whose synchronous client has a background event loop and whose server keeps
+blocking model calls off its loop. New runtime packages now ship that verified
+protocol on both sides instead of inheriting the older image copy. A real local
+transport probe passed 650 ms/400 ms caller/model pauses with 50 ms heartbeat
+interval and timeout, one connection and one model call. Raw proof is at
+`/home/mverghese/robodojo-expansion-state/pinned-protocol-validation.json`.
+This addresses a demonstrated connection-liveness risk; fresh simulator/policy
+validation is pending and the bottle termination cause is still not established.

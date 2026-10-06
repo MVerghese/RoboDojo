@@ -1,5 +1,6 @@
 import ast
 import json
+import hashlib
 import math
 import os
 from pathlib import Path
@@ -155,6 +156,12 @@ class SubmissionTests(unittest.TestCase):
                 names = set(archive.getnames())
                 # Regression: main.py imported this module, but the older
                 # image did not contain it and the partial overlay omitted it.
+                self.assertIn('XPolicyLab/client_server/ws/model_client.py',names)
+                self.assertIn('XPolicyLab/client_server/ws/protocol/client.py',names)
+                proof=json.loads(archive.extractfile('task/atomic/pinned-protocol.json').read())
+                self.assertEqual(len(proof['xpolicylab_commit']),40)
+                data=archive.extractfile('XPolicyLab/client_server/ws/model_client.py').read()
+                self.assertEqual(hashlib.sha256(data).hexdigest(),proof['files']['XPolicyLab/client_server/ws/model_client.py'])
                 self.assertIn("env/camera_manager/capture/render_sync.py", names)
                 self.assertIn("env_cfg/arx_x5.yml", names)
                 self.assertIn("task/RoboDojo/config/pour_balls_into_vase.yml", names)
