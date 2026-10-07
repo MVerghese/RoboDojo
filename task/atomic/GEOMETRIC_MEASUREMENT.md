@@ -3,7 +3,7 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 353 host tests; completed bowl, multiple-boundary button
+Current verification: 356 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
@@ -55,6 +55,16 @@ mm/degree/relation errors are excluded even when a cached initial-geometry audit
 reproduces. Native flags and recorded selection outcomes remain retained. Missing
 historical root/contact metadata remains partial; no selection contact is
 unobserved. MD/HTML show the selection witness status in the contact audit.
+
+The block-language referent generator now binds pose, relative displacement,
+relative orientation and spatial-center relation to actual pre-policy cube
+centers/root axes and an independent named block frame. Each factor resolves
+one unique candidate in retained scene preflight; ambiguous orientations,
+uncomparable coordinates, wrong models and bad bounds are rejected. Four
+separate A/B suites isolate the prompted factor. Fresh snapshots must reproduce
+target uniqueness and the first selected force witness before scoring adherence.
+These prototypes do not extend live L coverage until their GPU evidence is
+collected and audited.
 
 October 7 transport repair: the actual demo runner now explicitly bridges local
 observation updates to checkpoint `infer`, preserving one request per chunk and

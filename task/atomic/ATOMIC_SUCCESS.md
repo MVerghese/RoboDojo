@@ -3,7 +3,7 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 353 host tests; completed bowl, multiple-boundary button
+Current verification: 356 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
@@ -33,6 +33,12 @@ arm/count and recorded physics timing. Root aliases fail during activation.
 Contradictions exclude selection adherence as `invalid_selection_witness`,
 without rewriting recorded native/action/selection flags. The last retained
 contact snapshot does not independently establish unsaved sustained contact.
+
+The four initial referent-factor comparisons retain the original native/physical
+recognizers. They add an optional selection observer active from the initial
+scene. Its target pickup is not a new native task requirement; geometric
+selection success remains separate from the full native task and atomic lift.
+Only the new initial selection geometry is scored in these isolated pairs.
 
 October 7: checkpoint API failures before rollout have no atomic success result.
 The local observation/inference bridge fixes that transport contract without

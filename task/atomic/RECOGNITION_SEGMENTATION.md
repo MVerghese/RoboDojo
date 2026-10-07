@@ -3,7 +3,7 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 353 host tests; completed bowl, multiple-boundary button
+Current verification: 356 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
@@ -35,6 +35,13 @@ environment at activation. First sustained contact segmentation is unchanged.
 Independent validation checks its retained force snapshot/count and physical
 identity; it does not synthesize a boundary when contact is missing or infer
 unsaved contiguous contact from a recorded count.
+
+The initial referent-factor suites add one independent optional root observer
+for first sustained candidate selection. The existing graph dependencies and
+physical completion predicates remain intact. Candidate frames are sampled at
+activation, not when pickup or task completion occurs. A different selected
+object is recorded with its own initial pose; it cannot borrow the calibrated
+target's pose or a later object orientation.
 
 October 7: the checkpoint transport bridge preserves action-chunk inference
 cadence and intermediate simulator observations; it does not create action

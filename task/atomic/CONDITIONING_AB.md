@@ -118,6 +118,36 @@ Both arms must be prepared and frozen together before submission using the
 run commands below. An absent qualifying contact/action remains unobserved.
 Frame adapter source validation is separate from live policy adherence.
 
+### Calibrated initial referent factors
+
+`generate_referent_factor_suite.py` creates four separate paired suites for
+`stack_blocks_by_language`: SE(3) pose, landmark displacement, full orientation
+and a spatial center relation. It uses an actual seed-0/layout-0 pre-policy scene
+from a retained report, including object-root rotations and mesh bounds. All
+three candidates must be rigid cubes. Preflight evaluates each candidate and
+requires exactly one match per factor; ambiguous orientation is rejected.
+
+```bash
+python scripts/atomic/generate_referent_factor_suite.py \
+  --output-dir /path/to/new-referent-factor-suites \
+  --source-suite /path/to/matched-block-language-suite/suite.json \
+  --calibration-report /path/to/block-language-baseline/eval_report.json
+```
+
+Run each generated directory separately with the suite runner. Native and
+physical success definitions are retained in both arms. Other geometric scores
+and paths are omitted so the prompted conditioning is explicit: only the new
+initial referent constraint. The policy receives its native task instruction,
+with this constraint appended in the conditioned arm. Candidate geometry and
+the named reference are frozen at observer activation; later moved poses cannot
+repair a wrong initial selection. The selected candidate's initial distance or
+orientation error is reported in mm/deg, with separate contact witness checks.
+The spatial probe explicitly compares centers toward negative reference x;
+it does not claim whole-object footprint overlap. Fresh runtime target
+resolution must still agree with calibration; a no-match/ambiguous layout stays
+unscored. Suites retain calibration and source-program hashes and every
+candidate preflight result.
+
 Use the [per-slot modifier matrices](TAXONOMY.md) and
 [implemented checker audit](INSTRUMENTATION_AUDIT.md). A geometric condition names:
 
