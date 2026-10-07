@@ -4,6 +4,7 @@
     {
       "id": "pick_target",
       "family": "pick",
+      "required": false,
       "instruction": "Pick up target.",
       "recognition": {
         "kind": "finger_contact_motion",
@@ -185,14 +186,8 @@
   ],
   "stage_dependencies": {
     "pick_target": [],
-    "tool_push_cube0": [
-      "pick_target"
-    ],
-    "tool_push_cube1": [
-      "pick_target"
-    ],
-    "tool_push_cube2": [
-      "pick_target"
-    ]
+    "tool_push_cube0": [],
+    "tool_push_cube1": [],
+    "tool_push_cube2": []
   }
 }

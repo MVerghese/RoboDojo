@@ -144,14 +144,14 @@
         }
       },
       "flow": {
-        "type": "sequence",
+        "type": "independent",
         "children": [
           {
             "type": "action",
             "id": "pick_3",
             "family": "pick",
             "binding": "tool",
-            "goal": "Grasp the set square target.",
+            "goal": "Optionally observe a lifted set-square pickup; a table-level hold is part of the tool-push witness.",
             "basis": "proposed_decomposition",
             "recognition": "pick"
           },
@@ -166,9 +166,10 @@
           }
         ]
       },
-      "canonical_action_count": "1 tool pick + one or more tool pushes",
+      "canonical_action_count": "one or more contact-held tool pushes, with optional lifted-tool pickup",
       "constraints": [
-        "One stroke may move several blocks; do not create one action per block just from final alignment."
+        "One stroke may move several blocks; do not create one action per block just from final alignment.",
+        "A lifted-tool pickup must not gate table-level contact-held tool pushes; each stroke independently verifies the held tool and target support."
       ],
       "restart_state": [],
       "additional_blockers": [],

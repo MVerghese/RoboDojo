@@ -41,6 +41,18 @@ adjacent-face bending candidates, with invalid topology/stretch exclusions and
 explicit angles/lengths. These remain diagnostics rather than unique physical
 crease or action-success claims. A fresh matched cloth validation is being prepared.
 
+At 17:27 UTC both cloth endpoint cases were Running: `rb-cloth-bend-1007-000-000-cwzf`
+and `rb-cloth-bend-1007-001-000-8289`, frozen at `b8cf398`. Programs/prompts exactly
+match the prior material-curve pair; the new flag captures full garment endpoints.
+All four mouth cases were also Running. No new GPU-memory rejection was reported
+by those admission monitors at this snapshot.
+
+The next task activation fix removes the unnecessary lifted-tool prerequisite
+from `align_blocks`. Tool strokes keep their own strict hold/contact/support/motion
+checks and can start at table level. Lifted-tool pickup is optional, and direct
+finger/block pushing does not qualify. The current source passes 279 host tests;
+a new matched tool-push comparison is being prepared.
+
 October 7 snapshot, 16:07 UTC: all twenty repaired-runtime episodes have
 been collected after recovering local NFS quota failures. The integrated MD/HTML
 contains **195 valid episodes, 96 verified A/B pairs and 861 usable reproduced

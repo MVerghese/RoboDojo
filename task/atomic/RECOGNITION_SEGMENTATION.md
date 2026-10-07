@@ -22,6 +22,12 @@ topology and bending, preserving ambiguous branching and excluded hinge counts.
 They do not turn an anchored material path or one bent edge into a recognized
 physical crease. Temporal ridge persistence and crease-to-task binding remain.
 
+The `align_blocks` lifted-tool pickup is optional. Its three per-block tool-push
+observers now start independently and verify their own force-bearing tool hold,
+tool/block contact, support and motion. A table-level tool stroke need not follow
+a vertical pickup. These observers may share a stroke interval and do not imply
+one distinct action per block. The native row/no-block-lift reward stays separate.
+
 ### Interrupted physical attempts (October 7)
 
 Strikes, handovers, single/multiple-tip insertions and supported releases now

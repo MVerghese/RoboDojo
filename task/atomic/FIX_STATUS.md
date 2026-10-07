@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **277 offline atomic tests**. Dated sections below
+The current source passes **279 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -35,6 +35,18 @@ exclusions. Components remain diagnostic bending candidates; unique physical
 crease recognition, temporal settling and task-specific binding are unresolved.
 Five new host tests verify real hinge geometry, rigid-motion/preexisting-bend
 counterexamples, reordered IDs, mesh capture before reset and failure visibility.
+
+The matched full-endpoint cloth pair is now Running from frozen `b8cf398` at
+high-9000; programs and prompts match the earlier material-curve pair exactly.
+All three authored garment models also passed unchanged and 1 mm rigid-motion
+counterexamples, with 30,832 / 27,765 / 28,334 usable hinges and no false candidates.
+
+`align_blocks` tool-push observers now start independently. The native task does
+not require lifting the tool, so a vertical pickup cannot gate a table-level
+stroke. Pick remains an optional observation; force-bearing tool hold/contact,
+support and planar motion are still required. New tests recognize a held stroke
+with zero lift and reject direct finger/block pushing. Per-block witnesses can
+belong to one shared stroke. A new matched comparison is being prepared.
 
 The fresh core-only liquid pair supplies **144 consistent source witnesses**,
 with no inconsistent source evidence (native false/true). The cloth callback

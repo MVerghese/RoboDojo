@@ -169,7 +169,7 @@ For deformables, a `T` condition is valid only when the specified patch has a re
 
 - **Pick vs. place:** Pick ends with retained control of a lifted object. Place ends with release and stable support.
 - **Place vs. insert:** Use insert when a constrained opening, entry axis, and depth are essential. A bottle dropped into a bin is place; a plug seated in a socket is insert.
-- **Push vs. push with tool:** The effective contact body is the robot hand in the first case and a held tool in the second. Tool acquisition is a separate pick.
+- **Push vs. push with tool:** The effective contact body is the robot hand in the first case and a held tool in the second. A lifted-tool acquisition is a separate pick. A supported tool may be grasped in place; its sustained force-bearing hold is checked within the tool action without requiring a prior lift.
 - **Actuate vs. twist:** Actuate changes a mechanism's joint state, typically with one contact motion; twist specifically requires rotation about an axis and can be evaluated by angular change. A key turn can be tagged both `twist` and `actuate` if it also changes a lock state, but use `twist` as its primary primitive.
 - **Touch with tool vs. push with tool:** A strike or tap is scored by a contact event; a sweep is scored by sustained contact plus object displacement.
 - **Place vs. fold:** Fold changes shape and landmark relationships within a deformable object. Placing a rigid cup over a block is a place action with a `covers` relation.

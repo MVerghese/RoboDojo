@@ -54,7 +54,7 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 | Task | Candidate action plan | Canonical count |
 | --- | --- | --- |
-| [align_blocks](#task-align-blocks) | (pick[tool] → push_with_tool[tool]) | 1 tool pick + one or more tool pushes |
+| [align_blocks](#task-align-blocks) | (pick[tool] ∥ push_with_tool[tool]) | one or more contact-held tool pushes, with optional lifted-tool pickup |
 | [arrange_largest_number](#task-arrange-largest-number) | repeat[digits; all; any]{(pick[digits] → place[digits])} | 2N canonical actions, N=4–5 |
 | [arrange_largest_number_random](#task-arrange-largest-number-random) | repeat[digits; all; any]{(pick[digits] → place[digits])} | 2N canonical actions, N=4–5 |
 | [build_tower](#task-build-tower) | (repeat[uprights; base_pair; any]{(pick[uprights] → place[uprights])} → (pick[board0] → place[board0]) → repeat[uprights; middle_pair; any]{(pick[uprights] → place[uprights])} → (pick[board7] → place[board7]) → (pick[top3] → place[top3]) → (pick[top4] → place[top4])) | 16 canonical actions if all eight pieces are repositioned; fewer if supports already valid |
@@ -124,17 +124,18 @@ See [the complete slot/factor audit](CONDITIONING_AUDIT.md) before assigning geo
 
 **Candidate control flow:**
 
-- **Sequence**
-  - **`pick_3` / pick[tool]** (proposed_decomposition): Grasp the set square target.
+- **Independent branches (may overlap)**
+  - **`pick_3` / pick[tool]** (proposed_decomposition): Optionally observe a lifted set-square pickup; a table-level hold is part of the tool-push witness.
   - **`push_with_tool_4` / push_with_tool[tool]** (explicit_instruction): Set-square edge contacts cube0/cube1/cube2, aligning the row without lifting blocks.
 
 **Ordering, recognition and restart gaps:**
 
 - One stroke may move several blocks; do not create one action per block just from final alignment.
-- Prototype program now recognizes held set-square/target contact-coupled supported motion independently for cube0/cube1/cube2. Native row alignment/no-lift remains separate. Calibrate active edges and validate live. Tool reset placement is proposed cleanup, not a native stage.
+- A lifted-tool pickup must not gate table-level contact-held tool pushes; each stroke independently verifies the held tool and target support.
+- Tool-push observers are independent roots and require contact-held tool/block motion plus block support. Lifted-tool pickup is optional and does not gate a table-level stroke. Native row alignment/block no-lift remains separate. Calibrate active edges and validate live. Per-block observers may witness the same shared stroke and do not imply three separate actions.
 - Generic physical adapters now exist offline for push_with_tool. Task-specific bindings/calibration and live validation remain; see RUNTIME.md. Source plans do not automatically instantiate them.
 - Additional restart state: Common state plus resolved bindings and action/support history.
-- Canonical count: 1 tool pick + one or more tool pushes.
+- Canonical count: one or more contact-held tool pushes, with optional lifted-tool pickup.
 
 <a id="task-arrange-largest-number"></a>
 

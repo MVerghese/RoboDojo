@@ -82,7 +82,12 @@ def main():
     if a.action=='monitor':
         subprocess.run([sys.executable,'scripts/atomic/monitor_trace.py','--run-dir',str(run),
             '--credentials-file',str(a.credentials_file),'--gpu-memory-ledger',str(a.gpu_memory_ledger)],cwd=REPO,check=True)
-        collect_proof(root,case);return
+        collect_proof(root,case)
+        atomic_write_json(run/'collection_finished.json',{
+            'completed_at':datetime.now(timezone.utc).isoformat(),
+            'scope':'selected-stage replay proof; excluded from full-task A/B aggregates',
+            'status':'collected'})
+        return
     lock=(root.parent/'geometry-global-window.lock').open('a+');fcntl.flock(lock,fcntl.LOCK_EX)
     pending=0
     for directory in root.parent.glob('geometry-*-1006'):

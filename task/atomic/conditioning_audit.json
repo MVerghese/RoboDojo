@@ -2,7 +2,7 @@
   "schema_version": 1,
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
-    "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
+    "task/atomic/TAXONOMY.md": "7dc2ba4b19bd2f697c315db850db5b3bb27b0f1027132a8e69b7acc9e4db04a4",
     "task/atomic/spec.py": "5057b76841176ad74a43bc6dfcb3eb00f728c1457532328868035d6fad704cab",
     "task/atomic/geometry.py": "db5ac89eedd928e69ba03f47cc660f6c5688e48a3f467d49dfb6fb41d9b9afea",
     "task/atomic/session.py": "9f179ce2ec36f72103331fa3c13ab7be706a2718ab341bd802e759bf2617a128",

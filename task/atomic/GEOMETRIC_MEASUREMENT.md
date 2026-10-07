@@ -114,6 +114,18 @@ thresholds with:
 python scripts/atomic/analyze_cloth_bending.py --report /path/eval_report.json --output /tmp/bending.json --min-bend-deg 45 --min-increase-deg 30 --min-component-mm 10
 ```
 
+All three configured authored garment meshes passed unchanged/rigid-translation
+counterexamples: 30,832 / 27,765 / 28,334 usable interior hinges for models 1/4/9,
+zero newly bent candidates at the declared thresholds, including after 1 mm
+translation. No degenerate, inconsistent-winding or nonmanifold hinges occurred
+in these authored assets; boundary edges remain excluded. This is an asset/kernel
+proof, not live cloth endpoint validation.
+
+Tool-push geometry for `align_blocks` now has independent observer activation;
+a lifted-tool pickup is optional. Contact/heading/path events still require the
+same physical held-tool stroke. This avoids an unrelated lift gate hiding a
+table-level sweep without creating tool-contact geometry from direct finger push.
+
 October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
 landmark or material state immediately before scene reset. It measures goal
 error even if the action fails, and samples episode end for stages completed

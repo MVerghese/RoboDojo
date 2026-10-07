@@ -205,6 +205,14 @@ recognizes contact-coupled supported motion. It does not identify a calibrated
 broom edge, certify an entire sweep path or prove every swept item reached a
 dustpan; those require separate bindings, path geometry and endpoint checks.
 
+`align_blocks` now observes these strokes as independent roots. Its lifted-tool
+pickup remains optional: the native instruction does not require lifting the
+set square, and a real table-level grasp/slide can satisfy the stroke gates.
+Removing the pickup prerequisite does not weaken the stroke hold/contact/support
+requirements or allow direct finger/block pushing to count as tool use. Separate
+per-block witnesses can belong to one shared physical stroke; they do not prove
+three distinct actions. Historical frozen comparisons keep their original gate.
+
 ### Pour — `rigid_material_transfer`
 
 Bind the source vessel, target vessel, explicit rigid contents, source/target

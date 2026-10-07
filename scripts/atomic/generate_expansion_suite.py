@@ -572,7 +572,7 @@ def breadth_expand(base, scene=None):
                          'with start/end error at most 15 mm and total backtracking at most 5 mm. '
                          'The path is measured from physical impact until held retraction is recognized.')
         elif family == 'push_with_tool':
-            stage['geometry'].append({'id':'active_tool_heading','slot':'tool tip orientation',
+            stage['geometry'].append({'id':'active_tool_heading','slot':'tool frame orientation',
                 'kind':'relative_orientation','measurement':{'kind':'object_pose','label':label},
                 'reference':{'kind':'object_pose','label':c['target_label'],'time':'stage_start'},
                 'orientation_axes':[0],'expected':[1,0,0,0],'tolerance':math.pi/6,
