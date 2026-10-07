@@ -487,6 +487,7 @@ def main():
         print(f"Prepared {len(manifest['cases'])} cases; maximum concurrent GPUs: {args.max_concurrent}")
         return
     monitors = {}
+    stop_submissions = False
     while True:
         active = 0
         pending = []
@@ -533,8 +534,14 @@ def main():
             json.loads((Path(r['run_dir']) / 'eval_report.json').read_text()).get('failure_kind') == 'gpu_admission_rejected')
             for r in result['cases'])
         if infrastructure_failures >= 2:
-            print("Stopping new submissions after two infrastructure/collection failures; inspect per-case evidence.", flush=True)
-            return
+            if not stop_submissions:
+                print("Stopping new submissions after two infrastructure/collection failures; collecting already submitted jobs.", flush=True)
+            stop_submissions = True
+        if stop_submissions:
+            if not monitors:
+                return
+            time.sleep(30)
+            continue
         for case in pending[:max(0, args.max_concurrent - active)]:
             run = root / "runs" / case["id"]
             submit_frozen_case(run, case['program'], case.get('task', manifest['task']), args.credentials_file,

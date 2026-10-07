@@ -20,11 +20,28 @@ def _array(value):
     return np.asarray(value, dtype=float).reshape(-1)
 
 
+def _native_check(manager, check):
+    """Use RoboDojo's predicate constructor to preserve its argument defaults."""
+    name, args = check['name'], deepcopy(check['args'])
+    builder = getattr(manager, name, None)
+    if callable(builder):
+        resolved = builder(**args)
+        if (not isinstance(resolved, tuple) or len(resolved) != 2
+                or resolved[0] != name or not isinstance(resolved[1], dict)):
+            raise ValueError('native predicate constructor returned an invalid definition')
+        args = deepcopy(resolved[1])
+    if args.get('update'):
+        raise ValueError('atomic native predicates must not update parser state')
+    return {'name': name, 'args': args}
+
+
 class AtomicSession:
     def __init__(self, env, stage, env_idx):
         self.env = env
         self.stage = stage
         self.env_idx = env_idx
+        self._resolved_success_checks = tuple(_native_check(env.reward_manager, check)
+                                             for check in stage.success_checks)
         self.success = False
         self.results = {}
         self.closest_approach = {}
@@ -42,7 +59,7 @@ class AtomicSession:
         self._recognition_contact_steps = 0
         self._recognition_current_displacement = np.zeros(3)
         self._contact_motion_metrics = {}
-        self._held_lift_required = max([float(check['args']['z_threshold']) for check in stage.success_checks
+        self._held_lift_required = max([float(check['args']['z_threshold']) for check in self._resolved_success_checks
                                        if stage.family == 'pick' and check['name'] == 'is_lift']
                                       + ([stage.recognition['motion_threshold_m']]
                                          if stage.family == 'pick' and stage.recognition else [0.]))
@@ -395,7 +412,8 @@ class AtomicSession:
                         and angle <= np.deg2rad(args.get('angle_tolerance_deg', 30))):
                     return True
             return False
-        return self.env.reward_manager.call_func_parser((check['name'], deepcopy(check['args'])), self.env_idx) >= 1
+        resolved = _native_check(self.env.reward_manager, check)
+        return self.env.reward_manager.call_func_parser((resolved['name'], resolved['args']), self.env_idx) >= 1
 
     def _event_fired(self, event, success_now):
         kind = event["kind"]
@@ -674,6 +692,7 @@ class AtomicSession:
             "family": self.stage.family,
             "instruction": self.stage.instruction,
             "conditions": deepcopy(list(self.stage.geometry)),
+            "resolved_success_checks": deepcopy(list(self._resolved_success_checks)),
             "coordinate_frame": "environment_local_world",
             "quaternion_order": "wxyz",
             "distance_unit": "metres",

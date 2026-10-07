@@ -734,3 +734,17 @@ the last single-finger recontact. Offline checks verify interval timing, contact
 identity, transport and settling bounds. Historical missing separation intervals
 remain partial. Host counterexamples cover brushes, two-finger regrasp and altered
 interval/drift claims; a fresh bowl/block pair is needed for live validation.
+
+### Native predicate defaults and collection recovery
+
+Atomic native predicates now pass through the actual `RewardManager.is_*`
+constructor before calling the parser. This preserves RoboDojo's default arguments
+and explicit overrides. Resolved success-check arguments are retained as
+`resolved_success_checks`. Private atomic predicates remain private, and parser
+updates are rejected. Pick's schema still requires an explicit lift threshold.
+This fixes a fresh block-language crash: its optional `is_stacked.z_threshold`
+was omitted from the program, but the parser required the native constructor's
+`None` default. That failed run had no completed episode and supplies no policy
+outcome; a fresh matched pair is required. The suite controller also drains its
+already submitted collection workers after the infrastructure failure limit stops
+new submissions, so successful sibling evidence receives a terminal marker.

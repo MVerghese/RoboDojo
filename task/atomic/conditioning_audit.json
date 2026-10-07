@@ -5,7 +5,7 @@
     "task/atomic/TAXONOMY.md": "7dc2ba4b19bd2f697c315db850db5b3bb27b0f1027132a8e69b7acc9e4db04a4",
     "task/atomic/spec.py": "a6aebe2a48af629aee6526bc31915bb1624b5cf59bd6092aa580b9db0f9c930b",
     "task/atomic/geometry.py": "db5ac89eedd928e69ba03f47cc660f6c5688e48a3f467d49dfb6fb41d9b9afea",
-    "task/atomic/session.py": "21fae65e8d6b1961717aa48df8b474f354d08425ec9be22019ddb152be6facf1",
+    "task/atomic/session.py": "67277b12560cf239c11d306cba03306ae8192f717d7fcdc0cf96ce4f47b99566",
     "task/atomic/cloth_bending.py": "23c216f775603ae46fe459dfaaf58743f384eb632197ad2e658e0f547d7d1ceb",
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "61def57efb7578083951344a27c31000b6f8b1698a3ecc3d96e04bed8682e77d",

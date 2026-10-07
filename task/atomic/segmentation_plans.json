@@ -7383,7 +7383,7 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "21fae65e8d6b1961717aa48df8b474f354d08425ec9be22019ddb152be6facf1"
+      "sha256": "67277b12560cf239c11d306cba03306ae8192f717d7fcdc0cf96ce4f47b99566"
     },
     {
       "path": "task/atomic/spec.py",

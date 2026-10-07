@@ -678,3 +678,17 @@ the longest qualifying open chain. Multiple qualifying components remain
 `ambiguous_bending_components`; the largest component is not selected as a task
 crease. Both completed endpoint runs are ambiguous (219/207 qualifying components).
 Independent validation artifacts retain raw report hashes.
+
+### Native predicate defaults and collection recovery
+
+Atomic native predicates now pass through the actual `RewardManager.is_*`
+constructor before calling the parser. This preserves RoboDojo's default arguments
+and explicit overrides. Resolved success-check arguments are retained as
+`resolved_success_checks`. Private atomic predicates remain private, and parser
+updates are rejected. Pick's schema still requires an explicit lift threshold.
+This fixes a fresh block-language crash: its optional `is_stacked.z_threshold`
+was omitted from the program, but the parser required the native constructor's
+`None` default. That failed run had no completed episode and supplies no policy
+outcome; a fresh matched pair is required. The suite controller also drains its
+already submitted collection workers after the infrastructure failure limit stops
+new submissions, so successful sibling evidence receives a terminal marker.
