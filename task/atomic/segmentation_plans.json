@@ -7383,7 +7383,7 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "7cc4a650a6292d3a249aaf576c12742e0b60ffe5a17aa1b85a5e27dbd2e0cac1"
+      "sha256": "21fae65e8d6b1961717aa48df8b474f354d08425ec9be22019ddb152be6facf1"
     },
     {
       "path": "task/atomic/spec.py",
@@ -7463,11 +7463,11 @@
     },
     {
       "path": "task/atomic/contacts.py",
-      "sha256": "5cf7aba9d425a976880e49d5f8dd6c3939f4d66eaf1c9dc09014d56de69bbb1c"
+      "sha256": "61def57efb7578083951344a27c31000b6f8b1698a3ecc3d96e04bed8682e77d"
     },
     {
       "path": "task/atomic/replay.py",
-      "sha256": "7583f369818fe912e64a4507e89a5eb36ef6633cfec668353e3ca9e54669d502"
+      "sha256": "26b68bd7e82b52c7ab337ecf72a6f7d9b2a92e8400742787a25958572ee784bc"
     },
     {
       "path": "task/atomic/recognition_validation.py",
@@ -7476,6 +7476,10 @@
     {
       "path": "task/atomic/material_validation.py",
       "sha256": "7143b6590e5d68b3d4c1b09fec3a4fe2dee9181ae97deaf258baaf012d04524b"
+    },
+    {
+      "path": "task/atomic/support_validation.py",
+      "sha256": "5ce41213101b6ed6f373208f8d6aeaac5d17a334f266b45598178bc4e0c7ed9a"
     },
     {
       "path": "src/eval_client/eval_env.py",

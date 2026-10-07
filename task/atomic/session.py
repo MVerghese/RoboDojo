@@ -562,9 +562,11 @@ class AtomicSession:
                     measured['support_contact'] = bool(evidence['contacts'])
                     measured['support_contact_evidence'] = deepcopy(evidence)
                 else:
-                    measured['support_contact'] = self.env._atomic_contacts.has_support_contact(
-                        condition['measurement']['label'], condition['reference']['label'], self.env_idx,
+                    evidence = self.env._atomic_contacts.support_evidence(
+                        condition['measurement']['label'], [condition['reference']['label']], self.env_idx,
                         _rotation(reference['orientation'])[:, 2])
+                    measured['support_contact'] = bool(evidence['contacts'])
+                    measured['support_contact_evidence'] = deepcopy(evidence)
         return measured, source, reference, reference_source
 
     def _surface_for_selector(self,selector):

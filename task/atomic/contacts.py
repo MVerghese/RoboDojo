@@ -419,10 +419,16 @@ class PhysXContacts:
                         normal_dot, impulse_dot = float(normal @ axis), float(impulse @ axis)
                         candidates.append({'support_label': support_label,
                                            'normal_axis_dot': normal_dot, 'axial_impulse_ns': impulse_dot})
-                        if normal_dot > .5 and impulse_dot > 1e-9:
+                        # Oblique rims/inclines carry load too. A fixed 60-degree
+                        # normal cone rejects real upward support. Keep signed
+                        # upward normal and impulse gates; horizontal/downward
+                        # normals and purely tangential impulses still fail.
+                        if normal_dot > 1e-6 and impulse_dot > 1e-9:
                             selected.append({**row, 'support_label': support_label,
                                              'normal_on_object_world': normal.tolist(),
-                                             'impulse_on_object_world': impulse.tolist()})
+                                             'impulse_on_object_world': impulse.tolist(),
+                                             'normal_axis_dot': normal_dot,
+                                             'axial_impulse_ns': impulse_dot})
         if not hasattr(self, 'pair_diagnostics'): self.pair_diagnostics = {}
         if len(self.pair_diagnostics) < 64 or label in self.pair_diagnostics:
             old = self.pair_diagnostics.setdefault(label, {'candidate_steps': 0, 'force_support_steps': 0})
@@ -480,6 +486,7 @@ class PhysXContacts:
         return {'object': label, 'object_root': root, 'support_roots': supports,
                 'object_contact_scope': object_scope, 'support_contact_scopes': support_scopes,
                 'normal_axis_world': axis.tolist(), 'physics_step': self.steps, 'contacts': selected,
+                'support_eligibility': {'min_normal_axis_dot': 1e-6, 'min_axial_impulse_ns': 1e-9},
                 'candidate_contact_diagnostics': candidates,
                 'support_evidence_kind': 'persistent_unchanged_contact' if persistent else 'current_force_report',
                 'normal_convention': 'shape1 to shape0, reversed for supported object in slot1'}

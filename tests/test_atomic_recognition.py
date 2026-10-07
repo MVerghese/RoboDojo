@@ -263,6 +263,28 @@ class ContactBackendTests(unittest.TestCase):
         self.assertEqual(evidence['contacts'][0]['support_label'], '@table')
         self.assertEqual(evidence['contacts'][0]['impulse_on_object_world'], [0, 0, 1])
 
+    def test_oblique_rim_support_keeps_signed_upward_load_for_both_actor_orders(self):
+        backend = self.backend()
+        # Actual bowl diagnostic normal-axis dot was 0.391, below the old cone.
+        for reverse in (False, True):
+            sign = -1 if reverse else 1
+            a, b = ('/env0/support', '/env0/object') if reverse else ('/env0/object', '/env0/support')
+            backend.rows = [{'actor0': a, 'actor1': b, 'collider0': a, 'collider1': b,
+                             'position_world': [0,0,0], 'normal_world': [sign*.920,0,sign*.391],
+                             'impulse': [sign*.0005,0,sign*.0002188]}]
+            evidence = backend.support_evidence('object', ['support'], 0)
+            self.assertEqual(len(evidence['contacts']), 1)
+            self.assertAlmostEqual(evidence['contacts'][0]['normal_axis_dot'], .391)
+            self.assertAlmostEqual(evidence['contacts'][0]['axial_impulse_ns'], .0002188)
+
+    def test_horizontal_or_downward_normal_cannot_use_positive_vertical_friction_as_support(self):
+        backend = self.backend()
+        for normal in ([1,0,0], [1,0,1e-8], [0,0,-1]):
+            backend.rows = [{'actor0':'/env0/object','actor1':'/env0/support',
+                             'collider0':'/env0/object','collider1':'/env0/support',
+                             'position_world':[0,0,0], 'normal_world':normal, 'impulse':[0,0,.001]}]
+            self.assertFalse(backend.support_evidence('object', ['support'], 0)['contacts'])
+
     def test_tool_pair_uses_actual_actor_or_collider_identity_and_both_pair_directions(self):
         backend = self.backend()
         backend.env.sim.scene.env_origins[0] = [1, 2, 3]

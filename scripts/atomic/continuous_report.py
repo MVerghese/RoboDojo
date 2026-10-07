@@ -37,6 +37,9 @@ METHOD = (
     ' Material source/cohort, held-exit and adjacent crossing witnesses are also independently checked. '
     'Partial historical source evidence preserves sampled geometry without certifying missing witnesses; '
     'inconsistent source witnesses are marked invalid_source_witness and excluded.'
+    ' Named-support force signs and body identities are audited separately. Inconsistent raw '
+    'support witnesses are excluded as invalid_support_witness; historical booleans without '
+    'raw forces remain partial physical evidence even when their geometry reproduces.'
 )
 
 
@@ -226,6 +229,9 @@ def build_report(manifest, result, matrix, root):
                 'status': s['recognition_witness']['status'],
                 'failed_checks': s['recognition_witness'].get('failed_checks', [])}
                 for s in row.get('atomic_scores', []) if s.get('recognition_witness', {}).get('status') == 'inconsistent_evidence']
+                for mode, row in (('baseline', ra), ('conditioned', rb))},
+            'support_validation': {mode: [{'stage_id': s['stage_id'], 'condition_id': ident, **c['support_witness']}
+                for s in row.get('atomic_scores', []) for ident, c in s['conditions'].items() if c.get('support_witness')]
                 for mode, row in (('baseline', ra), ('conditioned', rb))},
             'program_sha256': {mode: cases[c]['program_sha256'] for mode, c in (
                 ('baseline', a['id']), ('conditioned', b['id']))},
@@ -511,6 +517,10 @@ def report_markdown(data):
             if witnesses:
                 lines += ['**Material source witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
                           + '`. Partial evidence preserves sampled geometry without certifying missing source contact/cohort witnesses; inconsistent witnesses are excluded.', '']
+        for mode, witnesses in task.get('support_validation', {}).items():
+            if witnesses:
+                lines += ['**Named-support witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
+                    + '`. Force signs/body identity are separate from geometric arithmetic. Missing raw force or sleep-history proof remains partial; inconsistent witnesses are excluded.', '']
         for mode, diagnostics in task.get('cloth_contact_diagnostics',{}).items():
             if diagnostics:
                 lines += ['**Native cloth contact probe ('+mode+'):** `'+json.dumps(diagnostics,sort_keys=True)
@@ -578,6 +588,9 @@ def report_html(data):
         for mode, witnesses in task.get('material_source_validation', {}).items():
             if witnesses:
                 content += '<p><strong>Material source witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. Partial evidence preserves sampled geometry without certifying missing source contact/cohort witnesses; inconsistent witnesses are excluded.</p>'
+        for mode, witnesses in task.get('support_validation', {}).items():
+            if witnesses:
+                content += '<p><strong>Named-support witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. Force signs/body identity are separate from geometric arithmetic. Missing raw force or sleep-history proof remains partial; inconsistent witnesses are excluded.</p>'
         for mode, diagnostics in task.get('cloth_contact_diagnostics',{}).items():
             if diagnostics:
                 content += '<p><strong>Native cloth contact probe ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(diagnostics,sort_keys=True))+'</code>. Diagnostic counts do not establish calibrated cloth grasp force.</p>'

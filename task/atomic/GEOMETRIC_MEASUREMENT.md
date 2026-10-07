@@ -390,11 +390,23 @@ checks do not require complete surface separation or disallow penetration.
 
 Object `on_top` compares the measured mesh's lowest z with the reference mesh's
 highest z, both in the reference frame. It requires gap error within tolerance,
-enough footprint overlap, and an object-side normal dot support-axis `>0.5`
-with signed impulse along that axis `>1e-9`. Contact vectors are reversed when
+enough footprint overlap, and an object-side normal dot support-axis `>1e-6`
+with signed impulse along that axis `>1e-9 N·s`. The normal threshold rejects
+horizontal/downward contacts while permitting oblique load-bearing rims and
+inclines; the previous `>0.5` cone incorrectly rejected such contacts. These
+force gates do not establish total weight balance. Contact vectors are reversed when
 the supported body occupies actor slot 1. Link selectors scope contacts to the
 exact selected body paths and retain raw support evidence. Historical `on_top`
 is rejected because a frozen shape does not establish current support.
+
+Fresh rigid and articulated `on_top` measurements both retain raw named support
+contacts, oriented force vectors, projections and threshold metadata. The offline
+support auditor recomputes body identities and force signs independently of the
+recorded boolean. Inconsistent witnesses are excluded as `invalid_support_witness`
+while numerical reproduction remains recorded separately. Historical booleans
+without force data and slept-contact histories without a complete pose/lifecycle
+record remain partial evidence; their arithmetic is not silently relabeled as
+new physical proof.
 
 Directional object relations and object `on_top` report a normalized combined
 error with tolerance `1`; read component distances/areas for physical units.
@@ -967,3 +979,10 @@ controls and drive targets remain while the unexecuted command tail is removed.
 `atomic_start` separately records replayed/discarded substeps and boundary
 verification. Missing timing, cadence changes and scripted support-arm controls
 are rejected. This path has host validation; simulator validation is pending.
+
+The repaired button pair now retains 5 baseline and 8 conditioned cycles with
+consistent independent raw joint/interval checks; both native tasks failed.
+The temporal cloth pair captured 8 actual meshes over 0.108 s per arm. Its
+diagnostic found 13 baseline and 34 conditioned sampled-stable bending candidates
+under the 2 mm vertex-drift/2 degree bend-change bounds. These remain ambiguous
+candidates, not certified task creases, layering or robot grasp evidence.

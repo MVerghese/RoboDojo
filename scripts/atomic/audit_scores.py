@@ -156,6 +156,22 @@ def validate_cached_recognition(report, scores):
         if stage is not None:
             apply_recognition_validation(stage, score)
             apply_flow_validation(stage, score)
+            apply_support_validation(stage, score)
+
+
+def apply_support_validation(atomic, output):
+    from task.atomic.support_validation import validate_support_witness
+    for ident, raw in atomic.get('geometry', {}).items():
+        if raw.get('condition', {}).get('expected') != 'on_top' or 'measured_state' not in raw:
+            continue
+        row = output['conditions'].get(ident)
+        if row is None: continue
+        witness = validate_support_witness(raw['measured_state'])
+        row['support_witness'] = witness
+        if witness['status'] == 'inconsistent_support_evidence':
+            row['numerical_reproduction_status'] = row.get('numerical_reproduction_status', row['status'])
+            row['status'] = 'invalid_support_witness'
+            row['reason'] = 'retained support body/force signs do not match the recorded support flag'
 
 
 def audit_atomic(atomic, variant=None):
@@ -219,6 +235,7 @@ def audit_atomic(atomic, variant=None):
     }
     apply_recognition_validation(atomic, output)
     apply_flow_validation(atomic, output)
+    apply_support_validation(atomic, output)
     if atomic.get("closest_approach"):
         alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}
         output["closest_approach"] = audit_atomic(alternate, variant)["conditions"]

@@ -696,3 +696,21 @@ command's native endpoint bookkeeping, retains applied controls and drops its
 unexecuted tail. Host counterexamples cover timing gaps and forbidden scripted
 controls. Live capture/replay remains a separate gate; full-state and task-memory
 restoration are not supplied. See [restart constraints](RECOGNITION_SEGMENTATION.md#6-starting-at-an-atomic-action).
+
+### Oblique load-bearing support calibration
+
+Fresh bowl diagnostics retained real upward rim contact with normal-axis dot
+0.391 and upward impulse 0.0002188 N·s, rejected by the old fixed `>0.5` cone.
+Named-support contact now requires a signed positive normal projection `>1e-6`
+and positive axial impulse `>1e-9 N·s`. Horizontal/downward normals and purely
+tangential impulses remain ineligible. Selected contact records retain both
+projections and thresholds. Release still requires verified held transport,
+complete robot separation and the configured settling interval; upward support
+alone does not establish placement success or total weight balance. Host cases
+exercise both actor orders and friction-only counterexamples; fresh paired live
+validation is required for the new threshold.
+
+The repaired button arming path has now completed a matched pair: 5 baseline and
+8 conditioned cycles have independently consistent raw joint/interval witnesses.
+Both native tasks failed. These are observed cycles, not a causal estimate of
+prompt benefit from a single episode.

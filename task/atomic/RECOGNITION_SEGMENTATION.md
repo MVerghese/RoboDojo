@@ -540,6 +540,24 @@ baseline resets. Prefix geometry is omitted from scoring. This supplies selected
 stage execution. Guarded partial joint-command replay is described in section 6;
 physical cloth contact and full simulator snapshots remain separate gaps.
 
+### Additional live validation and support calibration
+
+The repaired moving-cap button observer recorded 5 baseline and 8 conditioned
+cycles with independently consistent raw joint/interval witnesses. Both native
+tasks failed; this establishes observed cycles, not complete task success or a
+statistical prompt benefit. The temporal cloth pair retained eight meshes over
+0.108 s and found 13/34 sampled-stable bending candidates. Multiple candidate
+curves still prevent a unique crease label.
+
+The latest bowl trace also exposed upward oblique rim contact with normal-axis
+dot 0.391 and axial impulse 0.0002188 N·s. The previous fixed `>0.5` normal cone
+rejected it. Named support now requires positive signed normal and axial impulse
+(`>1e-6` and `>1e-9 N·s`); downward/horizontal normals remain ineligible. Placement
+still requires held transport, robot separation and settling. New support
+witness auditing verifies raw body identities and force signs; missing historical
+raw proof remains partial. Fresh matched live validation is required for this
+threshold change.
+
 ### Local shaft-cut observation
 
 The `charger_sections` pair keeps the existing two-tip held-entry observer and
