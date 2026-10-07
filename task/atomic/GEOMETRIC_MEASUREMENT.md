@@ -986,3 +986,12 @@ The temporal cloth pair captured 8 actual meshes over 0.108 s per arm. Its
 diagnostic found 13 baseline and 34 conditioned sampled-stable bending candidates
 under the 2 mm vertex-drift/2 degree bend-change bounds. These remain ambiguous
 candidates, not certified task creases, layering or robot grasp evidence.
+
+The release observer now distinguishes an unfinished placement's single-finger
+brush from two-finger regrasp. A brush preserves verified held transport and the
+original first-release geometry, but restarts the complete separation/settling
+interval. Two-finger recontact and contact after a completed physical placement
+still invalidate its attempt. Raw final separated-step timing and last brush
+identity are retained and independently checked, along with settling displacement
+in metres and angular drift in radians. This repair has host counterexamples;
+fresh paired bowl/block validation is required.

@@ -35,7 +35,7 @@ class Contacts:
         if not arms or selector.get('body_path', self.contact_body) != self.contact_body:
             raise ContactUnavailable('missing eligible fingers')
         return {'position': [0, 0, 0]}, {'resolved_arm': arms[0], 'physics_step': self.steps,
-                                        'contacts': [], 'finger_bodies': ['f0', 'f1']}
+                                        'contacts': [], 'finger_bodies': ['f'+str(i) for i in range(self.holds[(label, arms[0])])]}
 
     def resolve_object_pair(self, selector, env_idx):
         if not self.pairs:
@@ -190,6 +190,27 @@ class PhysicalTests(unittest.TestCase):
         self.assertTrue(s.interaction_observed)
         w.contacts.support = False; w.goal = True
         self.assertFalse(w.tick(s))  # Historical physical event cannot rescue a later unrelated goal.
+
+    def test_single_finger_recontact_preserves_transport_but_restarts_separated_settling(self):
+        w = World(); s = AtomicSession(w.env, stage('supported_release'), 0)
+        w.hold(); w.tick(s,2); w.poses['object'][0] = .03; w.tick(s)
+        w.release(); self.assertFalse(w.tick(s,2))
+        release_step = s.summary()['physical_events']['release']['physics_step']
+        w.hold(fingers=1); self.assertFalse(w.tick(s,4))
+        self.assertTrue(s._physical_recognizer.state['transported'])
+        self.assertEqual(s.summary()['physical_events']['release']['physics_step'], release_step)
+        w.release(); self.assertFalse(w.tick(s,2)); self.assertTrue(w.tick(s))
+        event = s.summary()['physical_events']['settled']
+        self.assertEqual(event['separated_steps'],3)
+        self.assertEqual(event['post_release_recontacts']['sampled_steps'],4)
+        self.assertEqual(event['post_release_recontacts']['last_physics_step']+1,event['separated_since_step'])
+        from task.atomic.recognition_validation import validate_recognition_window
+        self.assertEqual(validate_recognition_window(s.summary())['status'],'consistent_boundary_evidence')
+        event['separated_since_step'] = release_step
+        summary = s.summary(); summary['physical_events']['settled'] = event
+        self.assertEqual(validate_recognition_window(summary)['status'],'inconsistent_evidence')
+        summary = s.summary(); summary['physical_events']['settled']['settle_displacement_m'] = 1
+        self.assertIn('settling_displacement_bound', validate_recognition_window(summary)['failed_checks'])
 
     def test_small_per_step_drift_cannot_accumulate_through_a_settling_window(self):
         w = World(); original = stage('supported_release')

@@ -714,3 +714,17 @@ The repaired button arming path has now completed a matched pair: 5 baseline and
 8 conditioned cycles have independently consistent raw joint/interval witnesses.
 Both native tasks failed. These are observed cycles, not a causal estimate of
 prompt benefit from a single episode.
+
+### Release followed by a single-finger brush
+
+During an unfinished placement, one finger contacting again after first release
+resets the separation and settling interval while preserving the earlier verified
+two-finger transport. That brush cannot establish a new grasp or transport.
+First-release geometry remains tied to its original physical event. Two-finger
+recontact starts a new attempt; touching an already physically completed placement
+also invalidates it before a later native goal can reuse it. The final settled
+witness retains uninterrupted separated-step count/start, robot separation and
+the last single-finger recontact. Offline checks verify interval timing, contact
+identity, transport and settling bounds. Historical missing separation intervals
+remain partial. Host counterexamples cover brushes, two-finger regrasp and altered
+interval/drift claims; a fresh bowl/block pair is needed for live validation.

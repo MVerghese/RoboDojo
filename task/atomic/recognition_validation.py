@@ -67,7 +67,30 @@ def validate_recognition_window(stage):
                   final['held_contact']['contact_interval_start_step'] <= events['release']['physics_step'], ['release'])
             values = [final['transport_m'], final['settle_displacement_m'], final['settle_angle_rad']]
             check('finite_completed_metrics', all(type(v) in (int,float) and math.isfinite(v) for v in values), names)
+            check('nonnegative_completed_metrics', all(v >= 0 for v in values), names)
             check('transport_threshold', final['transport_m'] >= config['transport_threshold_m'], names)
+            check('settling_displacement_bound', final['settle_displacement_m'] <= config['max_settle_displacement_m'], ['settled'])
+            check('settling_angle_bound', final['settle_angle_rad'] <= config['max_settle_angle_rad'], ['settled'])
+            if 'separated_steps' not in final:
+                unavailable.append('settled: separation interval absent')
+            else:
+                count, start = final['separated_steps'], final['separated_since_step']
+                check('settled_separation_interval', type(count) is int and type(start) is int
+                      and count >= final['stable_steps'] >= config['settle_steps']
+                      and start + count - 1 == final['physics_step']
+                      and start >= events['release']['physics_step'], ['settled'])
+                check('settled_robot_separated', final.get('robot_touching') is False, ['settled'])
+                recontacts = final.get('post_release_recontacts', {})
+                if recontacts:
+                    check('recontact_precedes_settling_separation',
+                          events['release']['physics_step'] < recontacts['last_physics_step'] < start,
+                          ['settled'])
+                    contact = recontacts['last_contact']
+                    fingers = contact['finger_bodies']
+                    check('recontact_is_single_finger', isinstance(fingers,list) and len(set(fingers)) == 1
+                          and contact['physics_step'] == recontacts['last_physics_step']
+                          and type(recontacts['sampled_steps']) is int and recontacts['sampled_steps'] > 0,
+                          ['settled'])
         elif kind == 'button_press_cycle':
             press,release=events['press'],events['release']
             check('press_contact_interval',interval(press['moving_link_contact']) == interval(final['press_contact']),['press'])

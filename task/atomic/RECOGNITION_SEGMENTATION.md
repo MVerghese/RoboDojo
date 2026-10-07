@@ -558,6 +558,15 @@ witness auditing verifies raw body identities and force signs; missing historica
 raw proof remains partial. Fresh matched live validation is required for this
 threshold change.
 
+The oblique-support pair has now completed: both bowl native tasks succeeded,
+but neither certified placement's full physical window. Single-finger recontact
+had erased verified transport under the previous observer. The new observer
+preserves that transport only for a single-finger brush during an unfinished
+placement, restarts full separation/settling, and retains original first-release
+geometry. Two-finger recontact or contact after physical completion still resets
+the attempt. Raw separated-step timing and recontact identity are independently
+checked. Fresh bowl/block runs are the remaining live gate for this change.
+
 ### Local shaft-cut observation
 
 The `charger_sections` pair keeps the existing two-tip held-entry observer and

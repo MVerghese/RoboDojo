@@ -7391,7 +7391,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "a82c514c11c760b268a395f8807859adfb481d691325e2a6e19d22ededdfe2df"
+      "sha256": "bac20772c18ac4154b489b0021d06af37c1a769faa3ea00ef4f2874ae4b1122e"
     },
     {
       "path": "task/atomic/diagnostics.py",
@@ -7471,7 +7471,7 @@
     },
     {
       "path": "task/atomic/recognition_validation.py",
-      "sha256": "182a1cadd2885bca8bdb34617b171860e90faa6f2bc2a1e71eec90ed0fd77120"
+      "sha256": "6fd1348b36154ec372b41fcc95209a1480d3eef1f3a1749ce35b64f388c19e6b"
     },
     {
       "path": "task/atomic/material_validation.py",

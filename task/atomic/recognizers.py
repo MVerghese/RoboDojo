@@ -489,9 +489,22 @@ class PhysicalRecognizer:
                             contacting_fingers=len(touch.get('finger_bodies', [])) if touch else 0,
                             transported_while_held=bool(self.state.get('transported')))
         if touch:
-            if 'release' in self.events and not self.session.success:
-                self._reset_attempt('regrasp_after_release')
             self.state.pop('settling', None)
+            self.state.pop('separated_since_step', None)
+            self.state.pop('separated_steps', None)
+            if 'release' in self.events and not self.session.success:
+                if raw_hold is None and 'settled' not in self.events:
+                    # A one-jaw brush is not a new grasp. Keep the proven
+                    # transport and first release, but restart all separation/
+                    # settling duration. Two-jaw recontact still starts a new
+                    # attempt; a completed historical placement cannot be reused.
+                    recontacts = self.state.setdefault('post_release_recontacts', {'sampled_steps': 0})
+                    recontacts['sampled_steps'] += 1
+                    recontacts['last_physics_step'] = self.contacts.steps
+                    recontacts['last_contact'] = deepcopy(touch)
+                    self.metrics['phase'] = 'post_release_single_finger_recontact'
+                    return
+                self._reset_attempt('regrasp_after_release')
             if raw_hold:
                 arm = raw_hold['resolved_arm']
                 if self.state.get('arm') != arm:
@@ -515,6 +528,8 @@ class PhysicalRecognizer:
             self._reset_attempt('physical_interval_invalidated')
             return
         self._event('release', held_contact=self.state['hold'], pose=pose.tolist())
+        self.state.setdefault('separated_since_step', self.contacts.steps)
+        self.state['separated_steps'] = self.state.get('separated_steps', 0) + 1
         self.metrics.update(phase='released', support_contacts=len(support['contacts']),
                             support_diagnostics=deepcopy({k: v for k, v in support.items() if k != 'contacts'}))
         old = self.state.get('settling')
@@ -535,7 +550,10 @@ class PhysicalRecognizer:
             self._emit(held_contact=self.state['hold'], released=True, stable_steps=count,
                 transport_m=self.state['transport_m'], support=support, pose=pose.tolist(),
                 settle_displacement_m=float(np.linalg.norm(pose[:3] - anchor[:3])),
-                settle_angle_rad=_angular_error(pose[3:], anchor[3:]))
+                settle_angle_rad=_angular_error(pose[3:], anchor[3:]),
+                separated_since_step=self.state['separated_since_step'],
+                separated_steps=self.state['separated_steps'], robot_touching=False,
+                post_release_recontacts=deepcopy(self.state.get('post_release_recontacts', {})))
 
     def _held_tool_push(self):
         hold = self._hold(self.c['label'], self.c['arm'])

@@ -52,10 +52,12 @@ class RecognitionValidationTests(unittest.TestCase):
 
     def test_release_from_another_transport_interval_fails_and_missing_metrics_stay_partial(self):
         raw={'recognition':{'kind':'supported_release','min_contact_steps':2,'settle_steps':2,
-                           'transport_threshold_m':.02},'physical_events':{
+                           'transport_threshold_m':.02,'max_settle_displacement_m':.002,
+                           'max_settle_angle_rad':.02},'physical_events':{
             'release':{'physics_step':9,'held_contact':hold('left')},
             'settled':{'physics_step':12,'held_contact':hold('left'),'stable_steps':3,
-                       'transport_m':.03,'settle_displacement_m':.001,'settle_angle_rad':.01}}}
+                       'transport_m':.03,'settle_displacement_m':.001,'settle_angle_rad':.01,
+                       'separated_since_step':10,'separated_steps':3,'robot_touching':False}}}
         self.assertEqual(validate_recognition_window(raw)['status'],'consistent_boundary_evidence')
         raw['physical_events']['release']['held_contact']=hold('right')
         self.assertEqual(validate_recognition_window(raw)['invalid_event_names'],['release'])
