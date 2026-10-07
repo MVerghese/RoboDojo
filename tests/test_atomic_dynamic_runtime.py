@@ -37,6 +37,34 @@ def button_world():
 
 
 class DynamicTests(unittest.TestCase):
+    def test_stage_activation_readback_can_supply_the_adjacent_unpressed_sample(self):
+        w=button_world();w.joint=1.;s=AtomicSession(w.env,button_stage(),0)
+        w.hold(fingers=1);w.joint=.8;w.tick(s)
+        w.joint=.2;w.tick(s);w.release();w.joint=1.;self.assertTrue(w.tick(s))
+        self.assertEqual(s.summary()['physical_events']['press']['initial_unpressed_sample']['context'],
+                         'stage_activation_snapshot')
+
+    def test_first_force_sample_can_be_compressed_after_verified_unpressed_idle(self):
+        w=button_world();s=AtomicSession(w.env,button_stage(),0)
+        w.joint=1.;w.tick(s)
+        w.hold(fingers=1);w.joint=.8;w.tick(s)
+        w.joint=.2;self.assertFalse(w.tick(s))
+        w.release();w.joint=1.;self.assertTrue(w.tick(s))
+        press=s.summary()['physical_events']['press']
+        self.assertEqual(press['initial_unpressed_sample']['physics_step'],1)
+        self.assertEqual(press['arming_contact']['contact_interval_start_step'],2)
+        self.assertFalse(press['initial_unpressed_sample']['robot_touching'])
+
+    def test_old_idle_sample_cannot_bridge_sampling_or_unobserved_pressed_intervals(self):
+        for gap in ('sampling_gap','intervening_press'):
+            w=button_world();s=AtomicSession(w.env,button_stage(),0)
+            w.joint=1.;w.tick(s)
+            if gap=='sampling_gap':w.contacts.steps+=2
+            else:w.joint=.8;w.tick(s)
+            w.hold(fingers=1);w.joint=.2;w.tick(s,2)
+            w.release();w.joint=1.;self.assertFalse(w.tick(s))
+            self.assertNotIn('press',s.summary()['physical_events'])
+
     def test_press_requires_contacted_travel_and_complete_release(self):
         w=button_world(); s=AtomicSession(w.env,button_stage(),0)
         w.joint=1.; w.tick(s); w.joint=.1; self.assertFalse(w.tick(s,3))

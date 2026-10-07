@@ -202,6 +202,7 @@ class PhysicalRecognizer:
         self.attempt_index = 0
         self.metrics = {}
         self.eligibility = {}
+        self.button_unpressed_sample = None
         self.material = {}
         self.fluid = {}
         self.flow_observer = None
@@ -256,6 +257,14 @@ class PhysicalRecognizer:
                     f'source_frame={self.session._resolve(self.c["source_frame"]).tolist()} '
                     f'target_frame={self.session._resolve(self.c["target_frame"]).tolist()} '
                     f'particle_world_bounds_m={[fluid["positions"].min(0).tolist(), fluid["positions"].max(0).tolist()]}')
+        if self.kind == 'button_press_cycle':
+            self.contacts=getattr(session.env,'_atomic_contacts',None)
+            if self.contacts is not None and not getattr(self.contacts,'errors',[]):
+                joint,body,ratio=self._button_joint_state()
+                if ratio > self.c['initial_ratio'] and not self._touching():
+                    self.button_unpressed_sample={'physics_step':self.contacts.steps,'moving_body':body,
+                        'joint_ratio':ratio,'joint_state':joint,'robot_touching':False,
+                        'context':'stage_activation_snapshot'}
 
     def _hold(self, label, arm, fingers=2, body_path=None):
         self.hold_observation_steps[(label, arm, fingers)] = self.contacts.steps
@@ -816,7 +825,7 @@ class PhysicalRecognizer:
             self._emit(moving_link_contact=hold, moving_body=body_path, joint_name=self.c['joint_name'],
                 initial_joint_position=self.state['initial'], joint_position=position, signed_travel=travel)
 
-    def _button_press_cycle(self):
+    def _button_joint_state(self):
         from task.atomic.bindings import joint_from_tag
         if not hasattr(self, '_button_joint'):
             self._button_joint = joint_from_tag(self.session.env, self.c['label'], self.c['joint_tag'], self.session.env_idx)
@@ -829,9 +838,21 @@ class PhysicalRecognizer:
         if not np.isfinite([position, lower, upper]).all() or upper <= lower:
             raise RuntimeError('button cycle requires finite live position and ordered physical joint limits')
         ratio = (position - lower) / (upper - lower)
+        return {'position':position,'lower':lower,'upper':upper},body,ratio
+
+    def _button_press_cycle(self):
+        current_joint,body,ratio=self._button_joint_state()
+        position,lower,upper=(current_joint[k] for k in ('position','lower','upper'))
         hold = self._hold(self.c['label'], self.c['arm'], fingers=1, body_path=body)
         raw = self._current_hold(fingers=1)
         touching = bool(self._touching())
+        previous_unpressed=self.button_unpressed_sample
+        self.button_unpressed_sample=({'physics_step':self.contacts.steps,'moving_body':body,
+            'joint_ratio':ratio,'joint_state':deepcopy(current_joint),'robot_touching':False}
+            if ratio > self.c['initial_ratio'] and not touching else None)
+        preceding_unpressed=(previous_unpressed is not None
+            and previous_unpressed['physics_step']==self.contacts.steps-1
+            and previous_unpressed['moving_body']==body)
         self._diagnose({'moving_link_contact': bool(raw), 'sustained_contact': bool(hold),
             'initial_unpressed': ratio > self.c['initial_ratio'],
             'pressed': ratio < self.c['pressed_ratio'], 'released_position': ratio > self.c['released_ratio'],
@@ -840,22 +861,31 @@ class PhysicalRecognizer:
         if self.state.get('phase') == 'pressed':
             # Require complete robot release, not merely loss of the original finger.
             if not touching and ratio > self.c['released_ratio']:
-                self._event('release', joint_ratio=ratio, moving_body=body)
+                self._event('release', joint_ratio=ratio, moving_body=body,
+                    joint_state=current_joint,robot_touching=False)
                 self._emit(press_contact=self.state['press'], joint_name=self._button_joint,
                     moving_body=body, initial_ratio=self.state['initial'],
-                    pressed_ratio=self.state['pressed'], released_ratio=ratio)
+                    pressed_ratio=self.state['pressed'], released_ratio=ratio,
+                    initial_unpressed_sample=self.state['initial_sample'],
+                    arming_contact=self.state['arming_contact'],joint_state=current_joint,
+                    robot_touching=False)
             return
         if not raw:
             self._reset_attempt('physical_interval_invalidated')
             return
         if self.state.get('arm') != raw['resolved_arm']:
             self._reset_attempt('physical_interval_invalidated')
-        if ratio > self.c['initial_ratio']:
-            self.state.update(phase='armed', arm=raw['resolved_arm'], initial=ratio)
+        if ratio > self.c['initial_ratio'] or (preceding_unpressed and self.state.get('phase') != 'armed'):
+            initial_sample=({'physics_step':self.contacts.steps,'moving_body':body,
+                'joint_ratio':ratio,'joint_state':deepcopy(current_joint),'robot_touching':touching}
+                if ratio > self.c['initial_ratio'] else previous_unpressed)
+            self.state.update(phase='armed',arm=raw['resolved_arm'],initial=initial_sample['joint_ratio'],
+                initial_sample=deepcopy(initial_sample),arming_contact=deepcopy(raw))
         if hold and self.state.get('phase') == 'armed' and ratio < self.c['pressed_ratio']:
             self.state.update(phase='pressed', press=deepcopy(hold), pressed=ratio)
             self._event('press', moving_link_contact=hold, moving_body=body,
-                joint_name=self._button_joint, joint_ratio=ratio)
+                joint_name=self._button_joint, joint_ratio=ratio,joint_state=current_joint,
+                initial_unpressed_sample=self.state['initial_sample'],arming_contact=self.state['arming_contact'])
 
     def _contact_constrained_twist(self):
         hold, pair = self._hold(self.c['label'], self.c['arm']), self._pair()

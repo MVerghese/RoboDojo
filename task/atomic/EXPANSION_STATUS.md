@@ -14,6 +14,26 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
+October 7 snapshot, 18:09 UTC: combined MD/HTML has **213 valid episodes,
+105 verified A/B pairs and 966 usable reproduced event scores**, zero arithmetic
+mismatches and ten separately excluded historical recognition windows. Both
+endpoint cloth arms are collected: native true/false, with new bending candidates
+in both; sampled stability is unavailable in this older frozen pair.
+
+The prerequisite tool/button four-case suite is collected. Both tool arms lack
+recorded grasp and tool/block contact throughout the observed windows; support
+remains measured. The conditioned button arm recognizes its first red cycle;
+other cycles remain missing. A reproduced recognizer blind spot occurs when the
+first force sample has already compressed the cap below the unpressed threshold.
+The fix now retains adjacent unpressed state and independently auditable raw
+cycle witnesses, including an activation snapshot for repeated presses.
+
+All sixteen cases across eight further tasks are submitted at high-9000 from
+`017e523`: bowl release, bottle handover, screw twist, charger insertion, strikes,
+actual-mouth liquid transfer, cloth deformation/history and direct T pushing. At
+18:09 nine jobs were Running, eight Starting and one Queueing, including the two
+previous temporal cloth cases. Collectors/report refresh continue automatically.
+
 October 7 snapshot, 17:58 UTC: the endpoint-only cloth baseline is collected
 with native success true and all three landmark fold observers false. Actual
 9665-vertex/19000-face garment readback produces 2501 selected bend hinges, 149

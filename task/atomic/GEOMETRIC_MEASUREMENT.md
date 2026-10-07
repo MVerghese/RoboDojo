@@ -924,3 +924,27 @@ initial source eligibility, qualified exit and settled target occupancy. Fold
 counters concern material deformation and landmark/chord geometry; they make no
 cloth-finger force or whole-layer certification. None of these counters changes
 action success or geometric scoring thresholds.
+
+## Button start/press/release witnesses (October 7)
+
+A force callback can first arrive after the moving cap has already compressed.
+Button arming now accepts either a same-step unpressed contacted cap, or the
+immediately preceding uncontacted unpressed cap sample. The latter requires the
+same moving body and consecutive physics steps. Older idle states cannot bridge
+a sampling gap or intervening cap motion. Moving-link force contact must still
+persist for the configured minimum before the full press, and the cap must return
+with no robot finger force to complete release.
+
+Raw start, press and release joint positions/limits independently reproduce their
+normalized ratios. Initial contact identity/time, the continuous press-contact
+interval and release observations are retained. The boundary auditor rejects
+incompatible identities, time, raw ratios or release evidence. Historical cycles
+without the new raw witnesses remain partial evidence rather than invented
+proofs. A fresh matched button pair is required to validate the change live.
+
+For a newly activated repeat, a read-only cap/joint snapshot at stage activation
+can supply the immediately preceding uncontacted unpressed sample. It does not
+advance recognition or count a force hold. Its timestamp must still be adjacent
+to the first cap-contact sample; the retained witness labels its activation
+context explicitly. This avoids requiring an extra idle physics step between
+otherwise complete press/release cycles.

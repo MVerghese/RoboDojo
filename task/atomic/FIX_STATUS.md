@@ -311,3 +311,12 @@ and cloth landmark deformation. A completed strike does not reuse stale hold
 evidence; off-axis twist violations retain their measured values. Four additional
 regressions and the full **291-test** gate pass. Source audit fingerprints include
 the shared diagnostic recorder. Fresh matched live coverage is next.
+
+## Button unpressed-start witness (October 7)
+
+Button arming now accepts verified unpressed state immediately before first
+moving-cap force contact, including a read-only stage-activation snapshot. It
+retains raw start/press/release joint limits and positions plus contact interval
+identity. Independent boundary validation checks ratios, time, body/arm and release;
+historical missing witnesses remain partial. Six new regressions and the full
+**297-test** gate pass. A fresh matched button pair is required for live proof.

@@ -594,3 +594,20 @@ initial source eligibility, qualified exit and settled target occupancy. Fold
 counters concern material deformation and landmark/chord geometry; they make no
 cloth-finger force or whole-layer certification. None of these counters changes
 action success or geometric scoring thresholds.
+
+## Button initial-state boundary (October 7)
+
+The unpressed boundary can precede first moving-cap force contact by exactly one
+physics sample. It may also occur during the same contacted sample. Arming retains
+this state and its actual contact interval; the press and returned/released
+boundaries carry raw joint position/limits. A prior unpressed sample separated
+by a gap or intervening depression is rejected. Subsequent stage activation and
+repeat counts are unchanged. The independent validator distinguishes complete,
+inconsistent, partial historical and absent cycle evidence.
+
+For a newly activated repeat, a read-only cap/joint snapshot at stage activation
+can supply the immediately preceding uncontacted unpressed sample. It does not
+advance recognition or count a force hold. Its timestamp must still be adjacent
+to the first cap-contact sample; the retained witness labels its activation
+context explicitly. This avoids requiring an extra idle physics step between
+otherwise complete press/release cycles.

@@ -11,6 +11,7 @@ WINDOWS = {
     'supported_release': ('release', 'settled'),
     'held_insertion': ('entry', 'inserted'),
     'held_multi_tip_insertion': ('entry', 'inserted'),
+    'button_press_cycle': ('press', 'release', 'cycle'),
 }
 
 
@@ -67,6 +68,56 @@ def validate_recognition_window(stage):
             values = [final['transport_m'], final['settle_displacement_m'], final['settle_angle_rad']]
             check('finite_completed_metrics', all(type(v) in (int,float) and math.isfinite(v) for v in values), names)
             check('transport_threshold', final['transport_m'] >= config['transport_threshold_m'], names)
+        elif kind == 'button_press_cycle':
+            press,release=events['press'],events['release']
+            check('press_contact_interval',interval(press['moving_link_contact']) == interval(final['press_contact']),['press'])
+            check('initial_unpressed_ratio',math.isfinite(final['initial_ratio'])
+                  and final['initial_ratio'] > config['initial_ratio'],names)
+            check('pressed_ratio',math.isfinite(press['joint_ratio'])
+                  and press['joint_ratio'] < config['pressed_ratio']
+                  and press['joint_ratio'] == final['pressed_ratio'],['press'])
+            check('released_ratio',math.isfinite(release['joint_ratio'])
+                  and release['joint_ratio'] > config['released_ratio']
+                  and release['joint_ratio'] == final['released_ratio'],['release','cycle'])
+            check('moving_body_identity',press['moving_body'] == release['moving_body'] == final['moving_body'],names)
+            for name in names:
+                event=events[name];joint=event.get('joint_state')
+                if joint is None:
+                    unavailable.append(name+': raw joint state absent')
+                else:
+                    values=[joint[k] for k in ('position','lower','upper')]
+                    valid=all(type(v) in (int,float) and math.isfinite(v) for v in values) and joint['upper'] > joint['lower']
+                    ratio=event['released_ratio'] if name=='cycle' else event['joint_ratio']
+                    check(name+'_raw_joint_ratio',valid and math.isclose(
+                        (joint['position']-joint['lower'])/(joint['upper']-joint['lower']),ratio,
+                        rel_tol=1e-9,abs_tol=1e-9),[name])
+            for name in ('release','cycle'):
+                if 'robot_touching' not in events[name]:unavailable.append(name+': separation observation absent')
+                else:check(name+'_robot_separated',events[name]['robot_touching'] is False,[name])
+            initial=press.get('initial_unpressed_sample');arming=press.get('arming_contact')
+            if initial is None or arming is None:
+                unavailable.append('initial unpressed/arming state absent')
+            else:
+                sample_step=initial['physics_step'];arm_step=arming['physics_step']
+                count=arming['consecutive_contact_steps'];start=arming['contact_interval_start_step']
+                check('arming_within_pressed_hold',type(count) is int and count >= 1
+                    and type(start) is int and type(arm_step) is int
+                    and start+count-1==arm_step
+                    and (arming['resolved_arm'],start) == interval(final['press_contact']),names)
+                check('requested_arm',config['arm']=='any' or arming['resolved_arm']==config['arm'],names)
+                check('unpressed_sample_time',type(sample_step) is int and type(arm_step) is int
+                    and 0 <= sample_step <= arm_step <= press['physics_step']
+                    and arm_step-sample_step in (0,1),names)
+                check('preceding_sample_uncontacted',sample_step==arm_step or initial['robot_touching'] is False,names)
+                check('initial_sample_identity',initial==final['initial_unpressed_sample']
+                    and initial['moving_body']==final['moving_body']
+                    and initial['joint_ratio']==final['initial_ratio'],names)
+                joint=initial['joint_state']
+                values=[joint[k] for k in ('position','lower','upper')]
+                valid=all(type(v) in (int,float) and math.isfinite(v) for v in values) and joint['upper'] > joint['lower']
+                check('initial_raw_joint_ratio',valid and math.isclose(
+                    (joint['position']-joint['lower'])/(joint['upper']-joint['lower']),initial['joint_ratio'],
+                    rel_tol=1e-9,abs_tol=1e-9),names)
         else:
             arm,start = interval(final['held_contact'])
             check('entry_during_completed_hold', start <= events['entry']['physics_step'], ['entry'])

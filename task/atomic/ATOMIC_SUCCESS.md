@@ -661,3 +661,20 @@ initial source eligibility, qualified exit and settled target occupancy. Fold
 counters concern material deformation and landmark/chord geometry; they make no
 cloth-finger force or whole-layer certification. None of these counters changes
 action success or geometric scoring thresholds.
+
+## Button force-onset correction (October 7)
+
+Initial unpressed state may be observed immediately before the first force-bearing
+cap contact. This handles compression during the first collision step without
+borrowing an older unpressed state. The pressed endpoint still requires sustained
+force contact on the actual moving link, followed by returned cap position and
+absence of robot finger force. An already pressed cap, missing initial sample,
+wrong body or skipped physics interval cannot arm the cycle. Raw joint/interval
+witnesses are independently audited; incomplete cycles remain unobserved.
+
+For a newly activated repeat, a read-only cap/joint snapshot at stage activation
+can supply the immediately preceding uncontacted unpressed sample. It does not
+advance recognition or count a force hold. Its timestamp must still be adjacent
+to the first cap-contact sample; the retained witness labels its activation
+context explicitly. This avoids requiring an extra idle physics step between
+otherwise complete press/release cycles.
