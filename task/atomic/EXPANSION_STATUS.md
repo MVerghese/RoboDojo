@@ -14,6 +14,22 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
+Current October 7 snapshot, 17:41 UTC: the actual-source-mouth liquid A/B pair
+is collected. Native task success is false/true and both atomic partial-cohort
+pour observers succeed. All 10 baseline and 3 conditioned destination crossings
+independently reproduce with consistent held/tilted source-mouth evidence. This
+certifies outward particle-center aperture passage, not whole-fluid volume. The
+ball baseline picks up its cup but has no completed pour or destination crossing.
+The conditioned ball and both cloth endpoint cases continue running. Both fresh
+independent tool-push cases are submitted at high-9000, frozen at `01178f2`.
+
+New recognition prerequisite diagnostics cover tool push, part/landmark touch,
+joint travel and button cycles. Separate true/false/not-evaluated counts expose
+missing observed requirements without converting them into geometric scores or
+policy-failure labels. Duplicate steps and sampling gaps are tested. All **283
+host tests pass**; the core three docs and MD/HTML renderer are updated. Fresh
+matched live validation is the next execution step.
+
 Current October 7 snapshot, 17:19 UTC: the additional cloth and source-witness
 six-episode batch is collected. The integrated MD/HTML has **201 valid episodes,
 99 verified A/B pairs and 913 usable reproduced geometric event scores**, with

@@ -20,6 +20,8 @@ class EvalMatrixTests(unittest.TestCase):
         stage=handover();stage['stage_id']='handover';stage['conditions']=[{
             'id':'giver','event':{'kind':'recognition_event','name':'giver_hold'}}]
         stage['physical_events']['giver_hold']['contact']['contact_interval_start_step']=1
+        stage['physical_metrics']={'eligibility':{'sampled_steps':2,'gate_counts':{
+            'moving_link_contact':{'true':1,'false':1,'not_evaluated':0}}}}
         result={'cases':[{'case_id':'case','atomic_scores':[{'episode':'0','stage_id':'handover',
             'conditions':{'giver':{'status':'reproduced'}},'trajectories':{}}]}]}
         before=deepcopy(result)
@@ -31,6 +33,8 @@ class EvalMatrixTests(unittest.TestCase):
         self.assertEqual(result,before)
         self.assertEqual(refreshed['reproduced_event_scores'],0)
         self.assertEqual(refreshed['recognition_witness_failures'],1)
+        self.assertEqual(refreshed['cases'][0]['physical_requirement_diagnostics'][0]['eligibility'],
+                         stage['physical_metrics']['eligibility'])
         self.assertEqual(refreshed['cases'][0]['atomic_scores'][0]['conditions']['giver']['status'],
                          'invalid_recognition_window')
 

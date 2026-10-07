@@ -618,3 +618,18 @@ zero gap-error defaults from component means/deltas. It shows N/A and an explici
 no-overlap reason. Raw frozen scores are preserved. Curve/segment/shaft-fit
 rows now name their actual checker components even before an event is observed,
 without unrelated generic relation-error or footprint fields.
+
+## Diagnosing unrecognized rigid actions (October 7)
+
+Success thresholds and physical witnesses remain unchanged. Tool-push diagnostics
+identify sustained two-finger hold, tool/target force contact, support contact,
+contiguous interval length, planar tool/target displacement and target vertical
+bounds. Part touch separates new encounters, declared collider parts and impulse;
+landmark touch leaves landmark requirements not evaluated when an encounter or
+qualified hold is missing. Joint travel separates moving-link contact, sustained
+contact and travel threshold. Button cycles expose live press/release ratios
+and robot separation. None of these counters can substitute for completion.
+
+Raw summaries retain current measurements and across-attempt prerequisite counts.
+Reports show counts separately; a missing event retains N/A conditioning and
+requires inspecting both physical prerequisites and contact instrumentation.

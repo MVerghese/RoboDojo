@@ -199,6 +199,7 @@ class PhysicalRecognizer:
         self.events = {}
         self.attempt_index = 0
         self.metrics = {}
+        self.eligibility = {}
         self.material = {}
         self.fluid = {}
         self.flow_observer = None
@@ -321,6 +322,30 @@ class PhysicalRecognizer:
             self.attempt_index += 1
         self.state.clear()
 
+    def _diagnose(self, gates, **measurements):
+        """Retain observed physical requirements without changing recognition.
+
+        Counts span attempts, count distinct sampled physics steps, and do not
+        imply independent sensor coverage. None means a requirement was not
+        evaluated on this sample, rather than false or zero.
+        """
+        d = self.eligibility
+        d.setdefault('sampled_steps', 0)
+        d.setdefault('first_physics_step', self.contacts.steps)
+        d.setdefault('gate_counts', {})
+        d.setdefault('sampling_discontinuities', 0)
+        if 'last_physics_step' in d and self.contacts.steps != d['last_physics_step'] + 1:
+            d['sampling_discontinuities'] += 1
+        d['sampled_steps'] += 1
+        d['last_physics_step'] = self.contacts.steps
+        for name, value in gates.items():
+            counts = d['gate_counts'].setdefault(name, {'true': 0, 'false': 0, 'not_evaluated': 0})
+            counts['not_evaluated' if value is None else 'true' if value else 'false'] += 1
+        d['current'] = {'physics_step': self.contacts.steps,
+            'policy_action_index': self.session._action_index(), 'gates': deepcopy(gates),
+            'measurements': deepcopy(measurements)}
+        d['scope'] = 'observed physical requirements; absence alone does not establish policy failure'
+
     def observe(self):
         self.contacts = getattr(self.session.env, '_atomic_contacts', None)
         if self.contacts is None:
@@ -348,6 +373,8 @@ class PhysicalRecognizer:
                     self.fluid[int(ident)].update(exited_while_held_and_tilted=False,target_steps=0,previous_in_source=bool(inside))
         self.last_step, self.ready = step, False
         getattr(self, '_' + self.kind)()
+        if self.eligibility:
+            self.metrics['eligibility'] = deepcopy(self.eligibility)
         if self.flow_observer:
             if self.kind == 'fluid_material_transfer':
                 fluid, _, _ = self._fluid_state()
@@ -440,7 +467,12 @@ class PhysicalRecognizer:
         raw_hold = self._current_hold()
         pair = self._pair()
         support = self.contacts.support_evidence(self.c['target_label'], self.c['support_labels'], self.session.env_idx)
+        gates = {'two_finger_contact': bool(raw_hold), 'sustained_hold': bool(hold),
+            'tool_target_contact': bool(pair), 'target_support_contact': bool(support['contacts']),
+            'contact_interval_long_enough': None, 'target_planar_motion': None,
+            'tool_planar_motion': None, 'target_vertical_motion_within_bound': None}
         if not raw_hold or not pair or not support['contacts']:
+            self._diagnose(gates, consecutive_contact_steps=0)
             self._reset_attempt('physical_interval_invalidated')
             return
         tool, target = self._pose(), self._pose(self.c['target_label'])
@@ -448,6 +480,15 @@ class PhysicalRecognizer:
             self.state.update(arm=raw_hold['resolved_arm'], tool=tool.copy(), target=target.copy(), count=0)
         self.state['count'] += 1
         dt, do = tool[:3] - self.state['tool'][:3], target[:3] - self.state['target'][:3]
+        gates.update(contact_interval_long_enough=self.state['count'] >= self.c['min_contact_steps'],
+            target_planar_motion=bool(np.linalg.norm(do[:2]) >= self.c['motion_threshold_m']),
+            tool_planar_motion=bool(np.linalg.norm(dt[:2]) >= self.c['tool_motion_threshold_m']),
+            target_vertical_motion_within_bound=bool(abs(do[2]) <= self.c['max_vertical_motion_m']))
+        self._diagnose(gates, consecutive_contact_steps=self.state['count'],
+            target_displacement_m=do.tolist(), tool_displacement_m=dt.tolist(),
+            target_planar_displacement_m=float(np.linalg.norm(do[:2])),
+            tool_planar_displacement_m=float(np.linalg.norm(dt[:2])),
+            target_vertical_displacement_m=float(do[2]))
         if abs(do[2]) > self.c['max_vertical_motion_m']:
             self._reset_attempt('physical_interval_invalidated')
             return
@@ -462,12 +503,12 @@ class PhysicalRecognizer:
         hold = self._hold(self.c['label'], self.c['arm'])
         pair = self._pair()
         if not pair:
+            self._diagnose({'sustained_hold': bool(hold), 'tool_target_contact': False,
+                'new_encounter': False, 'declared_parts_contact': None, 'minimum_impulse': None})
             self.state['clear'] = True
             return
         # First force-bearing encounter after separation, not sustained resting contact.
         clear = self.state.pop('clear', False)
-        if not clear or not hold:
-            return
         roots = pair['object_roots']
         wanted = [roots[0] + '/' + self.c['tool_contact_suffix'],
                   roots[1] + '/' + self.c['target_contact_suffix']]
@@ -475,18 +516,32 @@ class PhysicalRecognizer:
             return any(p == path or p.startswith(path + '/') for p in (row[f'actor{i}'], row[f'collider{i}']))
         rows = [r for r in pair['contacts'] if any(match(r, i, wanted[0]) and match(r, 1-i, wanted[1]) for i in (0, 1))]
         impulse = sum(float(np.linalg.norm(r['impulse'])) for r in rows)
-        if rows and impulse >= self.c['min_impulse_ns']:
+        self._diagnose({'sustained_hold': bool(hold), 'tool_target_contact': True,
+            'new_encounter': clear, 'declared_parts_contact': bool(rows),
+            'minimum_impulse': impulse >= self.c['min_impulse_ns']},
+            declared_part_contact_count=len(rows), total_impulse_ns=impulse)
+        if clear and hold and rows and impulse >= self.c['min_impulse_ns']:
             self._emit(held_contact=hold, tool_target_contacts=rows, total_impulse_ns=impulse)
 
     def _held_tool_landmark_contact(self):
         hold, pair = self._hold(self.c['label'], self.c['arm']), self._pair()
         if not pair:
+            self._diagnose({'sustained_hold': bool(hold), 'tool_target_contact': False,
+                'new_encounter': False, 'declared_landmarks_contact': None, 'minimum_impulse': None})
             self.state['clear'] = True
             return
         clear = self.state.pop('clear', False)
         if not clear or not hold:
+            self._diagnose({'sustained_hold': bool(hold), 'tool_target_contact': True,
+                'new_encounter': clear, 'declared_landmarks_contact': None, 'minimum_impulse': None})
             return
         evidence = self._landmark_contact(pair)
+        self._diagnose({'sustained_hold': True, 'tool_target_contact': True, 'new_encounter': True,
+            'declared_landmarks_contact': bool(evidence['tool_target_contacts']),
+            'minimum_impulse': evidence['total_impulse_ns'] >= self.c['min_impulse_ns']},
+            contact_count=len(evidence['tool_target_contacts']), total_impulse_ns=evidence['total_impulse_ns'],
+            tool_landmark_distances_m=evidence['tool_landmark_distances_m'],
+            target_landmark_distances_m=evidence['target_landmark_distances_m'])
         if evidence['tool_target_contacts'] and evidence['total_impulse_ns'] >= self.c['min_impulse_ns']:
             self._emit(held_contact=hold, **evidence)
 
@@ -674,11 +729,18 @@ class PhysicalRecognizer:
         hold = self._hold(self.c['label'], self.c['arm'], fingers=1, body_path=body_path)
         raw_hold = self._current_hold(fingers=1)
         if not raw_hold:
+            self._diagnose({'moving_link_contact': False, 'sustained_contact': False, 'minimum_travel': None},
+                moving_body=body_path, joint_position=position, signed_travel=None,
+                unit='joint API units; see calibrated joint type')
             self._reset_attempt('physical_interval_invalidated')
             return
         if self.state.get('arm') != raw_hold['resolved_arm']:
             self.state.update(arm=raw_hold['resolved_arm'], initial=position)
         travel = self.c['direction'] * (position - self.state['initial'])
+        self._diagnose({'moving_link_contact': True, 'sustained_contact': bool(hold),
+            'minimum_travel': travel >= self.c['min_travel']}, moving_body=body_path,
+            joint_position=position, initial_joint_position=self.state['initial'], signed_travel=travel,
+            unit='joint API units; see calibrated joint type')
         if hold and travel >= self.c['min_travel']:
             self._emit(moving_link_contact=hold, moving_body=body_path, joint_name=self.c['joint_name'],
                 initial_joint_position=self.state['initial'], joint_position=position, signed_travel=travel)
@@ -698,9 +760,15 @@ class PhysicalRecognizer:
         ratio = (position - lower) / (upper - lower)
         hold = self._hold(self.c['label'], self.c['arm'], fingers=1, body_path=body)
         raw = self._current_hold(fingers=1)
+        touching = bool(self._touching())
+        self._diagnose({'moving_link_contact': bool(raw), 'sustained_contact': bool(hold),
+            'initial_unpressed': ratio > self.c['initial_ratio'],
+            'pressed': ratio < self.c['pressed_ratio'], 'released_position': ratio > self.c['released_ratio'],
+            'robot_separated': not touching}, moving_body=body, joint_position=position,
+            joint_lower=lower, joint_upper=upper, joint_ratio=ratio, phase=self.state.get('phase', 'unarmed'))
         if self.state.get('phase') == 'pressed':
             # Require complete robot release, not merely loss of the original finger.
-            if not self._touching() and ratio > self.c['released_ratio']:
+            if not touching and ratio > self.c['released_ratio']:
                 self._event('release', joint_ratio=ratio, moving_body=body)
                 self._emit(press_contact=self.state['press'], joint_name=self._button_joint,
                     moving_body=body, initial_ratio=self.state['initial'],

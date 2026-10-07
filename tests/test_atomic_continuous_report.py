@@ -111,6 +111,8 @@ class ContinuousReportTests(unittest.TestCase):
         self.assertEqual(data['tasks'][0]['conditioning_prompt'], 'original target')
         combined['tasks'][0]['cloth_contact_diagnostics']={'baseline':[{'counts':{'headers':0,'finger_force_points':0}}]}
         combined['tasks'][0]['cloth_bending_diagnostics']={'conditioned':[{'longest_component_m':.01,'max_new_bend_rad':math.pi/2}]}
+        combined['tasks'][0]['physical_requirement_diagnostics']={'baseline':[{'stage_id':'tool',
+            'eligibility':{'gate_counts':{'tool_target_contact':{'true':2,'false':8,'not_evaluated':1}}}}]}
         md, page = report_markdown(combined), report_html(combined)
         self.assertIn('original target', md)
         self.assertIn('new target <unsafe>', md)
@@ -124,6 +126,9 @@ class ContinuousReportTests(unittest.TestCase):
             self.assertIn('max_new_bend_deg',report)
             self.assertIn('90.0',report)
             self.assertIn('not certified settled creases',report)
+            self.assertIn('Observed recognition requirements',report)
+            self.assertIn('tool_target_contact',report)
+            self.assertIn('Not evaluated steps',report)
 
     def test_flow_path_and_selected_referent_keep_units_and_exclude_unscored_crossing(self):
         rows={'atomic_scores':[{'stage_id':'s','family':'pour','conditions':{},

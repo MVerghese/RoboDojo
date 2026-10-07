@@ -212,6 +212,7 @@ def build_report(manifest, result, matrix, root):
                 'conditioned': arm_summary(selected['conditioned'].values()),
                 'shared': shared_summary(selected['baseline'], selected['conditioned'], pair['matched'])})
         task = dict(pair) | {'conditions': conditions, 'conditioning_prompt': b.get('geometric_prompt_append'),
+            'physical_requirement_diagnostics':{mode:row.get('physical_requirement_diagnostics',[]) for mode,row in (('baseline',ra),('conditioned',rb))},
             'cloth_bending_diagnostics':{mode:row.get('cloth_bending_diagnostics',[]) for mode,row in (('baseline',ra),('conditioned',rb))},
             'cloth_contact_diagnostics':{mode:[{'counts':h['cloth_contact_probe'].get('counts',{}),
                 'material_vertex_correspondence':h['cloth_contact_probe'].get('material_vertex_correspondence'),
@@ -456,6 +457,13 @@ def condition_rows(task):
     return [measurement_row(c, name) for c in task['conditions'] for name in component_names(c)]
 
 
+def requirement_rows(diagnostics):
+    return [[d['stage_id'], gate, counts.get('true', 0), counts.get('false', 0),
+             counts.get('not_evaluated', 0)]
+            for d in diagnostics
+            for gate, counts in sorted(d['eligibility'].get('gate_counts', {}).items())]
+
+
 def bending_display(value):
     """Use report mm/degree units while preserving raw diagnostic evidence."""
     if not isinstance(value,dict):
@@ -510,6 +518,13 @@ def report_markdown(data):
             if diagnostics:
                 lines += ['**New cloth bending ('+mode+'):** `'+json.dumps(bending_display(diagnostics),sort_keys=True)
                           +'`. Lengths are mm and angles are degrees. Connected bending candidates are not certified settled creases.', '']
+        for mode, diagnostics in task.get('physical_requirement_diagnostics',{}).items():
+            if diagnostics:
+                lines += ['**Observed recognition requirements ('+mode+'):**', '',
+                    *table(['Stage', 'Requirement', 'True steps', 'False steps', 'Not evaluated steps'],
+                           requirement_rows(diagnostics)), '',
+                    'Counts include distinct observed physics steps across attempts. They do not measure '
+                    'geometric error or independently prove sensor coverage or policy failure.', '']
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             lines += ['No geometric event was observed; continuous error is N/A for both arms.', '']
         for c in task['conditions']:
@@ -568,6 +583,11 @@ def report_html(data):
         for mode, diagnostics in task.get('cloth_bending_diagnostics',{}).items():
             if diagnostics:
                 content += '<p><strong>New cloth bending ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(bending_display(diagnostics),sort_keys=True))+'</code>. Lengths are mm and angles are degrees. Connected bending candidates are not certified settled creases.</p>'
+        for mode, diagnostics in task.get('physical_requirement_diagnostics',{}).items():
+            if diagnostics:
+                content += '<h3>Observed recognition requirements ('+esc(mode)+')</h3>' + html_table(
+                    ['Stage', 'Requirement', 'True steps', 'False steps', 'Not evaluated steps'],
+                    requirement_rows(diagnostics)) + '<p>Counts include distinct observed physics steps across attempts. They do not measure geometric error or independently prove sensor coverage or policy failure.</p>'
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             content += '<p>No geometric event observed. Error is N/A for both arms.</p>'
         for c in task['conditions']:

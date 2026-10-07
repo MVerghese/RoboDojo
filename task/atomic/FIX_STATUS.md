@@ -281,3 +281,13 @@ checks reverse the normal/impulse when the supported object is slot 1 and
 require an upward normal component and upward force-bearing impulse. Taking
 an absolute normal dot product would accept a downward force. Raw actor,
 collider, normal and impulse evidence remains in the result.
+
+## Recognition prerequisite diagnostics (October 7)
+
+Tool push, part/landmark touch, joint travel and button cycles now retain
+synchronized observed prerequisite counts and current physical measurements.
+False and not evaluated are distinct; sampling gaps and duplicate calls are
+tracked. Success gates remain unchanged. Collector and MD/HTML render these
+counts separately from conditioning errors. Four new counterexample tests and
+the existing full gate pass: **283 tests**. Fresh matched live validation remains
+required for these diagnostic fields.

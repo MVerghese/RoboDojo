@@ -7,6 +7,21 @@ import statistics
 from scripts.atomic.storage import atomic_write_json
 
 
+def physical_requirement_diagnostics(report):
+    rows = []
+    for native in report.get('native_results', []):
+        details = native.get('details', {})
+        for episode, detail in (details.items() if isinstance(details, dict) else enumerate(details)):
+            stages = [*detail.get('atomic_sequence', {}).get('stages', []),
+                      *([detail['atomic']] if 'atomic' in detail else [])]
+            for stage in stages:
+                eligibility = stage.get('physical_metrics', {}).get('eligibility')
+                if eligibility:
+                    rows.append({'episode': str(episode), 'stage_id': stage['stage_id'],
+                        'action_success': stage.get('action_success'), 'eligibility': deepcopy(eligibility)})
+    return rows
+
+
 def refresh_recognition_validation(root, result):
     """Recheck raw witnesses when a collector used an older imported auditor.
 
@@ -19,7 +34,9 @@ def refresh_recognition_validation(root, result):
     for row in refreshed['cases']:
         report = root / 'runs' / row['case_id'] / 'eval_report.json'
         if report.exists() and row.get('atomic_scores'):
-            validate_cached_recognition(json.loads(report.read_text()), row['atomic_scores'])
+            raw = json.loads(report.read_text())
+            validate_cached_recognition(raw, row['atomic_scores'])
+            row['physical_requirement_diagnostics'] = physical_requirement_diagnostics(raw)
     if any('atomic_scores' in row for row in refreshed['cases']):
         stages = [s for row in refreshed['cases'] for s in row.get('atomic_scores', [])]
         refreshed['reproduced_event_scores'] = sum(c['status'] == 'reproduced'

@@ -548,3 +548,17 @@ zero gap-error defaults from component means/deltas. It shows N/A and an explici
 no-overlap reason. Raw frozen scores are preserved. Curve/segment/shaft-fit
 rows now name their actual checker components even before an event is observed,
 without unrelated generic relation-error or footprint fields.
+
+## Recognition eligibility trace (October 7)
+
+For tool push/touch and articulated travel/button cycles, each distinct observed
+physics step updates `physical_metrics.eligibility`. Counts distinguish true,
+false and not evaluated requirements, with current synchronized state and a
+sampling-discontinuity counter. Missing physical prerequisites reset the same
+attempt intervals as before; counters persist for diagnosis. Duplicate
+observations do not increase counts, and unsampled steps are not synthesized.
+
+These diagnostics explain which recorded requirement blocked a boundary. They
+do not create boundaries, classify all missing events as policy failures, or
+validate unobservable sensor channels. The MD/HTML report preserves them in a
+separate requirement table without mixing them into geometric error summaries.

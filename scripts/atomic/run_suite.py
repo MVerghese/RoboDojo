@@ -344,6 +344,8 @@ def summarize(manifest, root):
                                             for d in (n.get('details', {}).values() if isinstance(n.get('details', {}), dict) else n['details'])]
             row['contact_instrumentation'] = [d.get('contact_instrumentation') for n in report['native_results']
                                               for d in (n.get('details', {}).values() if isinstance(n.get('details', {}), dict) else n['details'])]
+            from scripts.atomic.report_eval_matrix import physical_requirement_diagnostics
+            row['physical_requirement_diagnostics'] = physical_requirement_diagnostics(report)
             from scripts.atomic.analyze_cloth_bending import analyze_report,compact_diagnostics
             bending=analyze_report(report)
             if bending:

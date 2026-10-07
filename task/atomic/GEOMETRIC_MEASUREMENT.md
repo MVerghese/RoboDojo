@@ -871,3 +871,19 @@ This is an API diagnostic. Collider face/instancer indices have **unverified
 material-vertex correspondence**. A callback, zero-force point or nearby finger
 does not certify a cloth grasp. Force-bearing finger evidence and a validated
 solver/material mapping are still required for cloth grasp geometry.
+
+## Recognition requirement diagnostics (October 7)
+
+`physical_metrics.eligibility` records synchronized prerequisites for tool push,
+part/landmark tool touch, articulated contact travel and button press cycles.
+Every requirement has true, false and not-evaluated sampled-step counts; current
+measurements retain displacement in metres, impulse in N·s and normalized button
+ratio. Joint travel remains explicitly native joint-API data until its unit is
+bound; it is not pooled with geometric errors. Report MD/HTML tables show counts
+separately from conditioning errors in physical units.
+
+Absent motion is not recorded as zero when no valid hold/contact/support interval
+exists. Counts deduplicate physics steps, preserve sampling-discontinuity counts
+and span retries without joining their displacement anchors. Contact callback
+health still needs separate inspection: absent qualifying contact alone does not
+prove policy failure or sensor completeness.
