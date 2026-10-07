@@ -955,3 +955,15 @@ the longest qualifying open chain. Multiple qualifying components remain
 `ambiguous_bending_components`; the largest component is not selected as a task
 crease. Both completed endpoint runs are ambiguous (219/207 qualifying components).
 Independent validation artifacts retain raw report hashes.
+
+### Timing-bearing selected-stage replay
+
+Fresh action traces record each command's contact-buffer physics span and the
+simulator dt in seconds/control cadence in substeps. A selected substep start
+uses these values to interrupt a joint command after the synchronized physics
+sample. Geometry scoring starts in a fresh selected-stage session after physical
+prefix verification; preceding geometry does not enter that score. Applied
+controls and drive targets remain while the unexecuted command tail is removed.
+`atomic_start` separately records replayed/discarded substeps and boundary
+verification. Missing timing, cadence changes and scripted support-arm controls
+are rejected. This path has host validation; simulator validation is pending.

@@ -685,3 +685,14 @@ the longest qualifying open chain. Multiple qualifying components remain
 `ambiguous_bending_components`; the largest component is not selected as a task
 crease. Both completed endpoint runs are ambiguous (219/207 qualifying components).
 Independent validation artifacts retain raw report hashes.
+
+### Verification at a partial control-command start
+
+Timing-bearing traces now permit a selected stage to start inside an interpolated
+joint command. Persistent preceding recognizers verify their physical/native/hold
+requirements at that exact synchronized physics boundary. A replayed substep
+count alone cannot certify success. The evaluator stops before the interrupted
+command's native endpoint bookkeeping, retains applied controls and drops its
+unexecuted tail. Host counterexamples cover timing gaps and forbidden scripted
+controls. Live capture/replay remains a separate gate; full-state and task-memory
+restoration are not supplied. See [restart constraints](RECOGNITION_SEGMENTATION.md#6-starting-at-an-atomic-action).

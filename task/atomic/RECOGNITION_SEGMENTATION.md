@@ -94,7 +94,7 @@ bounded, and how that differs from the source plans for all eval tasks. See
 | Executable programs | 11 schema-loadable JSON files for ten tasks in [programs/](programs/). A source plan is not automatically compiled into one. |
 | Physical recognition | Special pick/push contact-motion logic plus 14 generic configurations across eleven families. Fold's new observer recognizes material deformation and does not establish a cloth grasp. |
 | Observed live coverage | Original 49-task screen plus additional waves in [EXPANSION_STATUS.md](EXPANSION_STATUS.md). Corrected support contacts are live-verified in blocks/bowls. Tool acquisition and constrained-twist rollouts retain missing physical events; material and calibrated fit/flow cases remain pending. |
-| Restart | Whole-action prefix replay for suitable linear programs; no faithful full-state or partial-action restoration. |
+| Restart | Whole-action linear prefixes plus guarded joint-control substep prefixes with timing-bearing traces; full simulator snapshots remain unavailable. |
 
 The runtime observes **declared actions on bound objects**, rather than searching
 an arbitrary trajectory for every action the robot might perform. Extra motions,
@@ -293,10 +293,9 @@ with matching task/layout and strictly increasing recorded whole-action starts.
 stage endpoints at the recorded boundaries. It rejects nonlinear dependencies,
 unexpanded repeats, gates and choices.
 
-**Replay currently checks endpoint predicates only.** The atomic observer is
-disabled during replay, and `check_success_only()` does not reconstruct the
-original physical recognizer history. Programs whose endpoint checks depend on
-`is_atomic_interaction` cannot generally be verified by that endpoint-only replay.
+Persistent preceding-stage sessions receive synchronized physics samples during
+replay. They verify physical recognition, native predicates and maintained holds
+at each recorded boundary. Their geometry is omitted from selected-stage scoring.
 After replay, the evaluator resets reward-parser baselines and robot origin, then
 opens a new stage window and rejects an already-satisfied endpoint.
 
@@ -309,8 +308,28 @@ Substep activation saves `at_action_boundary=false` and
 `prefix_replay_supported=false`, and is omitted from `stage_starts`; it is not
 rounded to the end of a chunk. For a whole-action activation the flag indicates
 representable granularity only: program-level linearity/gate/choice checks can
-still reject replay. Graph starts and partial-action starts require restoration
-that is not yet implemented.
+still reject replay. Graph starts require restoration that is not yet implemented.
+
+Fresh traces also retain `action_physics_spans` (contact-buffer start/end physics
+indices for each native control action) and `control_timing` (`physics_dt` in
+seconds and `control_substeps`). A selected substep boundary can use
+`linear_substep_prefix` when the concrete program is linear and every preceding
+stage has a strictly increasing whole-action start. The trace's action spans
+must be contiguous and match its recorded control cadence. Old traces missing
+these fields are rejected for substep replay, rather than inferring timing.
+
+The evaluator currently restricts this path to one environment, joint actions,
+matching simulator dt/cadence, and no scripted support-arm controls. It replays
+complete preceding commands, then stops after the exact synchronized substep of
+the selected command. The control loop discards only that command's unexecuted
+tail; applied controls, drive targets and physical state remain in place. It
+skips native endpoint bookkeeping for the interrupted command and verifies the
+preceding action at that physical boundary before starting the selected stage.
+`atomic_start` retains the replayed/discarded substep counts and
+`physics_boundary_verified`. A sampling gap aborts. Host regression checks cover
+this path; live timing-bearing capture and replay are the next validation gate.
+This does not support earlier substep starts within the same prefix or restore
+task-specific memory/game state.
 
 ## 7. What is still needed for all 54 eval tasks
 
@@ -518,8 +537,8 @@ linear prefixes now retain preceding physical recognizers across every substep,
 activate sessions at the recorded boundaries and apply the same physical/native/
 maintained-hold success gates. Their evidence is saved before the documented
 baseline resets. Prefix geometry is omitted from scoring. This supplies selected
-stage execution, not new segmentation,
-physical cloth contact, partial-action replay or full simulator snapshots.
+stage execution. Guarded partial joint-command replay is described in section 6;
+physical cloth contact and full simulator snapshots remain separate gaps.
 
 ### Local shaft-cut observation
 

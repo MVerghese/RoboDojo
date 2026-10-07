@@ -3,7 +3,7 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "7dc2ba4b19bd2f697c315db850db5b3bb27b0f1027132a8e69b7acc9e4db04a4",
-    "task/atomic/spec.py": "5057b76841176ad74a43bc6dfcb3eb00f728c1457532328868035d6fad704cab",
+    "task/atomic/spec.py": "a6aebe2a48af629aee6526bc31915bb1624b5cf59bd6092aa580b9db0f9c930b",
     "task/atomic/geometry.py": "db5ac89eedd928e69ba03f47cc660f6c5688e48a3f467d49dfb6fb41d9b9afea",
     "task/atomic/session.py": "7cc4a650a6292d3a249aaf576c12742e0b60ffe5a17aa1b85a5e27dbd2e0cac1",
     "task/atomic/cloth_bending.py": "23c216f775603ae46fe459dfaaf58743f384eb632197ad2e658e0f547d7d1ceb",

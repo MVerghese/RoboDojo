@@ -1,6 +1,6 @@
 """Validated, JSON-serializable definitions of atomic RoboDojo trials."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from copy import deepcopy
 import json
 import math
@@ -675,6 +675,9 @@ class AtomicTrace:
     layout_id: int
     actions: tuple[dict, ...]
     stage_starts: dict[str, int]
+    stage_boundaries: dict = field(default_factory=dict)
+    action_physics_spans: tuple[dict, ...] = ()
+    control_timing: dict = field(default_factory=dict)
 
     @classmethod
     def load(cls, path):
@@ -687,9 +690,17 @@ class AtomicTrace:
             raise ValueError("trace needs an integer layout_id")
         if any(not isinstance(action, dict) for action in actions):
             raise ValueError("trace actions must be dictionaries")
-        if any(not isinstance(index, int) or index < 0 or index > len(actions) for index in starts.values()):
+        if any(type(index) is not int or index < 0 or index > len(actions) for index in starts.values()):
             raise ValueError("stage_starts indices must be valid action boundaries")
-        return cls(data["task_name"], data["layout_id"], tuple(actions), starts)
+        boundaries = data.get('stage_boundaries', {})
+        spans = data.get('action_physics_spans', [])
+        timing = data.get('control_timing', {})
+        if not isinstance(boundaries, dict) or not isinstance(timing, dict) or not isinstance(spans, list):
+            raise ValueError('trace boundary/timing metadata must be mappings and action_physics_spans a list')
+        if any(not isinstance(boundary, dict) for boundary in boundaries.values()):
+            raise ValueError('trace stage_boundaries values must be mappings')
+        return cls(data["task_name"], data["layout_id"], tuple(actions), starts,
+                   boundaries, tuple(spans), timing)
 
 
 def load_variant(path):

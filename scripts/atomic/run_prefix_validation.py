@@ -33,7 +33,8 @@ def collect_proof(root,case):
             for detail in details:
                 start=detail.get('atomic_start',{});prefix=start.get('prefix_stage_validation',[])
                 rows.append({'atomic_start':start,'selected_stage_success':detail.get('atomic',{}).get('action_success'),
-                    'prefix_verified':start.get('mode')=='linear_prefix' and bool(prefix)
+                    'prefix_verified':start.get('mode') in ('linear_prefix', 'linear_substep_prefix') and bool(prefix)
+                        and (start.get('mode')!='linear_substep_prefix' or start.get('physics_boundary_verified') is True)
                         and all(s.get('action_success') is True and s.get('prefix_boundary_verified') is True for s in prefix)})
     proof={'scope':'selected-stage replay and physical prefix witnesses; not full-state fidelity or a full-task A/B run',
         'status':'observed_verified_prefix' if any(r['prefix_verified'] for r in rows) else 'prefix_validation_unavailable',

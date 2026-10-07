@@ -293,6 +293,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 observer = getattr(self, '_atomic_replay_observer', None)
                 if observer is not None:
                     observer.observe_physics()
+                stop = getattr(self, '_atomic_replay_stop', None)
+                if stop is not None:
+                    stop.observe(self._atomic_contacts)
                 return
             for env_idx in getattr(self, '_atomic_stepping_envs', ()):
                 if self.end_flag[env_idx]:
@@ -362,6 +365,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             self._atomic_sessions = {}
             self._policy_prompt_history = []
             self._atomic_recorded_actions = [[] for _ in range(self.num_envs)]
+            self._atomic_action_physics_spans = [[] for _ in range(self.num_envs)]
             self._atomic_sequences = {}
             self._atomic_record_sessions = {}
             self._atomic_record_stage_indices = {}
@@ -508,6 +512,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 self.take_action_cnt[env_idx] += 1
                 if self._atomic_record_dir and not self._atomic_replaying:
                     self._atomic_recorded_actions[env_idx].append(_jsonable(action))
+                    self._atomic_action_physics_spans[env_idx].append({
+                        'start': getattr(self._atomic_contacts, 'steps', None), 'end': None})
                 print(
                     f"env{env_idx} step: \033[92m{self.take_action_cnt[env_idx]} / {self.step_lim}\033[0m",
                     end="\r",
@@ -592,6 +598,20 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     if self.physx_monitor_enabled:
                         self._check_physx_broken_envs()
                         self._check_endpose_finite(env_idx_list)
+                    stop = getattr(self, '_atomic_replay_stop', None)
+                    if stop is not None and stop.reached:
+                        dropped = self.robot_manager.control_manager.discard_pending(0)
+                        self._atomic_start_evidence['discarded_control_substeps'] = dropped
+                        self._atomic_start_evidence['replayed_physics_substeps'] = stop.last - stop.start
+                        if stop.error:
+                            raise ValueError(stop.error)
+                        return  # No native endpoint bookkeeping for this interrupted command.
+
+            if self._atomic_record_dir and not self._atomic_replaying:
+                for env_idx in env_idx_list:
+                    spans = self._atomic_action_physics_spans[env_idx]
+                    if spans and spans[-1]['end'] is None:
+                        spans[-1]['end'] = getattr(self._atomic_contacts, 'steps', None)
 
             if self.atomic_stage is None or self._atomic_replaying:
                 self.reward_manager.step(env_idx_list=env_idx_list)
@@ -916,24 +936,40 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
 
         def _start_atomic_stage(self):
             """Replay a recorded prefix, then start a fresh atomic score window."""
-            from task.atomic.replay import replay_prefix, validate_start_boundary, PrefixReplayObserver
+            from task.atomic.replay import (replay_prefix, validate_start_boundary, PrefixReplayObserver,
+                                            validate_substep_runtime, SubstepReplayStop)
             from task.atomic.session import AtomicSession
 
             start = 0
             self._atomic_start_evidence = validate_start_boundary(self.atomic_program, self.atomic_stage, self.atomic_trace)
+            partial = self._atomic_start_evidence['mode'] == 'linear_substep_prefix'
+            if partial:
+                validate_substep_runtime(self, self.atomic_trace)
             if self.atomic_trace is not None:
                 if self.atomic_trace.layout_id != int(self.env_seeds[0]):
                     raise ValueError("atomic trace layout_id does not match the loaded scene")
                 observer = (PrefixReplayObserver(self, self.atomic_program, self.atomic_stage)
-                            if self._atomic_start_evidence['mode'] == 'linear_prefix' else None)
+                            if self._atomic_start_evidence['mode'] in ('linear_prefix', 'linear_substep_prefix') else None)
                 self._atomic_replay_observer = observer
                 self._atomic_replaying = True
+                def take_partial_action(action, physics_substeps):
+                    stop = SubstepReplayStop(self._atomic_contacts, physics_substeps)
+                    self._atomic_replay_stop = stop
+                    try:
+                        self.take_action(action)
+                        if not stop.reached:
+                            raise ValueError('trace control command ended before its recorded physics boundary')
+                    finally:
+                        self._atomic_replay_stop = None
                 try:
                     start = replay_prefix(
                         self.atomic_program, self.atomic_stage, self.atomic_trace,
                         self.take_action,
                         observer.stage_succeeded if observer is not None else None,
+                        take_partial_action=take_partial_action,
                     )
+                    if partial:
+                        self._atomic_start_evidence['physics_boundary_verified'] = True
                 finally:
                     self._atomic_replaying = False
                     self._atomic_replay_observer = None
@@ -968,6 +1004,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     "stage_starts": stage_starts,
                     "stage_boundaries": (self._atomic_sequences[env_idx].stage_boundaries
                                          if env_idx in self._atomic_sequences else {}),
+                    "action_physics_spans": self._atomic_action_physics_spans[env_idx],
+                    "control_timing": {'physics_dt': float(self.dt),
+                                       'control_substeps': max(1, int(self.obs_manager.collect_interval))},
                     "episode_success": bool(self.success[env_idx]),
                 },
                 os.path.join(self._atomic_record_dir, file_name),

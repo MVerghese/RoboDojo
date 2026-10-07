@@ -133,3 +133,11 @@ class ControlManager:  # Control sequences for all environments
     def reset(self):  # clean all queue
         self.control_queue = [ControlSeq() for _ in range(self.num_envs)]  # create queue
         self.prev_control = [dict() for _ in range(self.num_envs)]
+
+    def discard_pending(self, env_idx):
+        """Drop an interrupted command's tail while retaining applied controls."""
+        dropped = 0
+        while not self.control_queue[env_idx].is_empty():
+            self.control_queue[env_idx].pop()
+            dropped += 1
+        return dropped

@@ -325,7 +325,7 @@ provide that restart state. See [recording and replay](README.md#record-annotate
 An independent graph stage recorded at a nonzero boundary still needs state
 restoration and is rejected. Repeats, gates, choices and label templates must be
 resolved into a concrete program first. Per-episode `atomic_start` evidence
-records `initial_scene` or `linear_prefix`, the selected stage/action index and
+records `initial_scene`, `linear_prefix` or `linear_substep_prefix`, the selected stage/action index and
 `state_restoration=false`; prefix replay is not a full simulator snapshot.
 
 During a nonzero prefix, persistent preceding-stage recognizers receive every
@@ -335,6 +335,17 @@ scoring. A failed prefix aborts before the selected stage runs and retains
 `atomic_start.prefix_stage_validation` diagnostics. Robot/parser resets occur
 only after verified nonzero replay; memory/game/count state still requires
 task-specific restoration.
+
+Fresh recorded traces include per-action physics spans and simulator dt/control
+cadence. A selected stage activated inside a command can use these fields to
+stop that command at the synchronized physics boundary, verify its preceding
+action and discard the remaining command tail. This path currently requires a
+linear program with whole-action preceding starts, a single environment, joint
+actions and no scripted support-arm controls. Old traces without timing metadata,
+IK actions, graph boundaries and earlier partial boundaries are rejected. Host
+tests cover interruption and physical verification; a fresh live capture/replay
+is required to establish simulator behavior. See section 6 of
+[recognition and segmentation](RECOGNITION_SEGMENTATION.md).
 
 For a separate live replay proof, `scripts/atomic/run_prefix_validation.py`
 provides `prepare`, `start`, `monitor` and `proof` actions. Prepare a fresh

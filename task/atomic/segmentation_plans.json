@@ -7387,7 +7387,7 @@
     },
     {
       "path": "task/atomic/spec.py",
-      "sha256": "5057b76841176ad74a43bc6dfcb3eb00f728c1457532328868035d6fad704cab"
+      "sha256": "a6aebe2a48af629aee6526bc31915bb1624b5cf59bd6092aa580b9db0f9c930b"
     },
     {
       "path": "task/atomic/recognizers.py",
@@ -7467,7 +7467,7 @@
     },
     {
       "path": "task/atomic/replay.py",
-      "sha256": "22e17993af753294d67e29946521c8cd6a07221cf9462e29d113a30f7eab2e1d"
+      "sha256": "7583f369818fe912e64a4507e89a5eb36ef6633cfec668353e3ca9e54669d502"
     },
     {
       "path": "task/atomic/recognition_validation.py",
@@ -7479,7 +7479,7 @@
     },
     {
       "path": "src/eval_client/eval_env.py",
-      "sha256": "f961ca9e862436d885ae2dc367d1810ccea05b24c8bfbcd17abf0bfc334ae943"
+      "sha256": "98b31c7576914eee1cb94fccd5558be9a1586084cfdc459e3416f1d3debdae85"
     }
   ]
 }
