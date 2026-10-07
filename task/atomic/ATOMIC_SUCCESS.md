@@ -694,7 +694,9 @@ requirements at that exact synchronized physics boundary. A replayed substep
 count alone cannot certify success. The evaluator stops before the interrupted
 command's native endpoint bookkeeping, retains applied controls and drops its
 unexecuted tail. Host counterexamples cover timing gaps and forbidden scripted
-controls. Live capture/replay remains a separate gate; full-state and task-memory
+controls. A fresh bowl replay has verified 87 whole commands and 7 substeps of
+command 88, followed by a successful selected placement. Its root-start residual
+was 0.008497716 mm. Full-state and task-memory
 restoration are not supplied. See [restart constraints](RECOGNITION_SEGMENTATION.md#6-starting-at-an-atomic-action).
 
 ### Oblique load-bearing support calibration

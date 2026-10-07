@@ -343,8 +343,11 @@ action and discard the remaining command tail. This path currently requires a
 linear program with whole-action preceding starts, a single environment, joint
 actions and no scripted support-arm controls. Old traces without timing metadata,
 IK actions, graph boundaries and earlier partial boundaries are rejected. Host
-tests cover interruption and physical verification; a fresh live capture/replay
-is required to establish simulator behavior. See section 6 of
+tests cover interruption and physical verification. A fresh bowl proof replayed
+87 whole commands plus 7 substeps of command 88, discarded its 3 remaining
+controls and verified the pickup/lift; the selected placement also succeeded.
+The root-start residual was 0.008497716 mm, with retained source/report hashes.
+Other task bindings still require their own live checks. See section 6 of
 [recognition and segmentation](RECOGNITION_SEGMENTATION.md).
 
 For a separate live replay proof, `scripts/atomic/run_prefix_validation.py`

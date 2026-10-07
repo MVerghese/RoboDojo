@@ -8,6 +8,7 @@ from datetime import datetime,timezone
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -23,6 +24,54 @@ from scripts.atomic.submit_trace import submit_prepared
 from task.atomic.spec import AtomicProgram,AtomicTrace
 
 
+def compare_start_positions(root, detail):
+    """Compare retained selected-stage root positions; never claim full state."""
+    scope = 'selected-stage object root positions only; no velocity, drive, material or full-state comparison'
+    unavailable = lambda reason: {'status':'unavailable', 'reason':reason, 'scope':scope}
+    source = root/'capture-source.json'
+    if not source.exists(): return unavailable('capture_source_manifest_absent')
+    try:
+        capture = json.loads(source.read_text());trace_path = Path(capture['trace'])
+        if (hashlib.sha256(trace_path.read_bytes()).hexdigest() != capture['trace_sha256']
+                or hashlib.sha256((root/'inputs/trace.json').read_bytes()).hexdigest() != capture['trace_sha256']):
+            return unavailable('capture_trace_hash_mismatch')
+        original_path = trace_path.parent.parent/'eval_report.json'
+        data = original_path.read_bytes();original = json.loads(data)
+        start = detail['atomic_start'];atomic = detail['atomic'];matches = []
+        if type(detail.get('layout_id')) is not int:
+            return unavailable('replay_layout_id_absent')
+        for native in original.get('native_results', []):
+            details = native.get('details', {});details = details.values() if isinstance(details,dict) else details
+            for candidate in details:
+                if candidate.get('layout_id') != detail.get('layout_id'): continue
+                for stage in candidate.get('atomic_sequence',{}).get('stages',[]):
+                    if stage['stage_id'] == start['stage_id']: matches.append(stage)
+        if len(matches) != 1: return unavailable('original_stage_boundary_not_unique')
+        before = matches[0];boundary = before['start_boundary']
+        if (boundary['action_index'] != start['action_index']
+                or boundary['physics_step'] != start.get('recorded_physics_step')
+                or atomic['stage_id'] != start['stage_id']):
+            return unavailable('original_boundary_identity_mismatch')
+        if any(s.get('coordinate_frame') != 'environment_local_world' or s.get('distance_unit') != 'metres'
+               for s in (before,atomic)):
+            return unavailable('position_frame_or_units_not_comparable')
+        old, new = before['initial_object_positions'], atomic['initial_object_positions']
+        positions = []
+        for label in sorted(old.keys() & new.keys()):
+            a, b = old[label], new[label]
+            if len(a) != 3 or len(b) != 3 or not all(type(v) in (int,float) and math.isfinite(v) for v in [*a,*b]):
+                return unavailable('invalid_root_position')
+            delta = [1000*(actual-recorded) for recorded,actual in zip(a,b)]
+            positions.append({'label':label, 'recorded_position_m':a, 'replayed_position_m':b,
+                              'axis_difference_mm':delta, 'position_error_mm':math.sqrt(sum(v*v for v in delta))})
+        if not positions: return unavailable('no_comparable_object_roots')
+        return {'status':'observed_position_comparison', 'positions':positions,
+                'unmatched_labels':sorted(old.keys() ^ new.keys()), 'scope':scope,
+                'source_report':str(original_path), 'source_report_sha256':hashlib.sha256(data).hexdigest()}
+    except (KeyError, ValueError, TypeError, OSError) as error:
+        return unavailable(type(error).__name__)
+
+
 def collect_proof(root,case):
     run=root/'runs'/case['id'];path=run/'eval_report.json'
     rows=[]
@@ -33,6 +82,7 @@ def collect_proof(root,case):
             for detail in details:
                 start=detail.get('atomic_start',{});prefix=start.get('prefix_stage_validation',[])
                 rows.append({'atomic_start':start,'selected_stage_success':detail.get('atomic',{}).get('action_success'),
+                    'boundary_position_comparison':compare_start_positions(root,detail),
                     'prefix_verified':start.get('mode') in ('linear_prefix', 'linear_substep_prefix') and bool(prefix)
                         and (start.get('mode')!='linear_substep_prefix' or start.get('physics_boundary_verified') is True)
                         and all(s.get('action_success') is True and s.get('prefix_boundary_verified') is True for s in prefix)})

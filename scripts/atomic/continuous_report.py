@@ -470,6 +470,26 @@ def requirement_rows(diagnostics):
             for gate, counts in sorted(d['eligibility'].get('gate_counts', {}).items())]
 
 
+REPLAY_HEADERS = ['Task', 'Stage', 'Mode', 'Boundary command', 'Substeps in command',
+                  'Discarded tail', 'Prefix verified', 'Stage success', 'Root start error (mm)']
+REPLAY_SCOPE = ('Selected-stage replay jobs are excluded from full-task A/B counts. '
+                'Root position residuals compare recorded and replayed starts in the same frame; '
+                'they do not establish velocity, drive, material or full simulator-state fidelity.')
+
+
+def replay_validation_rows(data):
+    rows = []
+    for proof in data.get('replay_validations', []):
+        for episode in proof['episodes']:
+            start = episode['atomic_start'];comparison = episode.get('boundary_position_comparison') or {}
+            errors = [p['position_error_mm'] for p in comparison.get('positions', [])]
+            rows.append([proof['task'], start.get('stage_id'), start.get('mode'), start.get('action_index'),
+                start.get('replayed_physics_substeps', 'N/A'), start.get('discarded_control_substeps', 'N/A'),
+                episode.get('prefix_verified'), episode.get('selected_stage_success'),
+                f'{max(errors):.4f}' if errors else 'N/A'])
+    return rows
+
+
 def bending_display(value):
     """Use report mm/degree units while preserving raw diagnostic evidence."""
     if not isinstance(value,dict):
@@ -499,6 +519,8 @@ def report_markdown(data):
         'Axes 0/1/2 denote local x/y/z. Raw signed separation/overlap are measurements, not unsigned errors. '
         'Unmatched episodes remain descriptive and contribute no shared delta or matched summary.', '',
         *(['## Original screen and expansion suites', '', *table(RUN_HEADERS, run_rows(data)), ''] if data.get('runs') else []),
+        *(['## Atomic start validation', '', REPLAY_SCOPE, '',
+           *table(REPLAY_HEADERS, replay_validation_rows(data)), ''] if data.get('replay_validations') else []),
         '## Matched-pair summary', '', *table((['Suite'] if data.get('runs') else []) + SUMMARY_HEADERS, summary_rows(data)), '',
         '## Task index', '', *table(([TASK_HEADERS[0], 'Suite', *TASK_HEADERS[1:]] if data.get('runs') else TASK_HEADERS), task_rows(data)), '', '## Conditioning and results by task', '']
     for task in data['tasks']:
@@ -575,6 +597,9 @@ def html_table(headers, rows):
 def report_html(data):
     esc = html.escape
     cards = []
+    if data.get('replay_validations'):
+        cards.append('<section class="method"><h2>Atomic start validation</h2><p>' + esc(REPLAY_SCOPE)
+                     + '</p>' + html_table(REPLAY_HEADERS, replay_validation_rows(data)) + '</section>')
     for task in data['tasks']:
         content = '<p class="status">' + esc('Verified A/B pair' if task['matched'] else 'Excluded: ' + '; '.join(task['exclusions'])) + '</p>'
         if 'suite' in task:

@@ -78,6 +78,17 @@ def generate(original, expansion_root, output):
         data = build_report(manifest, result, aggregate(manifest, result), directory)
         suites.append((directory.name, directory.resolve(), manifest, result, data))
     data = integrate(suites)
+    data['replay_validations'] = []
+    for path in sorted(expansion_root.glob('geometry-*-1006/prefix-validation.json')):
+        proof = json.loads(path.read_text());manifest = json.loads((path.parent/'suite.json').read_text())
+        data['replay_validations'].append({'suite':path.parent.name, 'task':manifest['task'],
+            'proof_path':str(path), 'status':proof['status'], 'report_sha256':proof.get('report_sha256'),
+            'episodes':[{'atomic_start':{k:v for k,v in row.get('atomic_start',{}).items()
+                         if k != 'prefix_stage_validation'},
+                        'prefix_verified':row.get('prefix_verified'),
+                        'selected_stage_success':row.get('selected_stage_success'),
+                        'boundary_position_comparison':row.get('boundary_position_comparison')}
+                        for row in proof.get('episodes',[])]})
     output.mkdir(parents=True, exist_ok=True)
     atomic_write_json(output / 'eval-matrix-continuous.json', data)
     atomic_write_text(output / 'EVAL_MATRIX_REPORT.md', report_markdown(data))

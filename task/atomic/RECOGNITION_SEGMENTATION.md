@@ -326,8 +326,13 @@ tail; applied controls, drive targets and physical state remain in place. It
 skips native endpoint bookkeeping for the interrupted command and verifies the
 preceding action at that physical boundary before starting the selected stage.
 `atomic_start` retains the replayed/discarded substep counts and
-`physics_boundary_verified`. A sampling gap aborts. Host regression checks cover
-this path; live timing-bearing capture and replay are the next validation gate.
+`physics_boundary_verified`. A sampling gap aborts. A fresh bowl capture/replay
+has now verified 87 complete commands plus 7 substeps of command 88, discarded
+the remaining 3 controls, and physically verified the preceding pickup/lift.
+The selected placement also succeeded. Its root-position difference from the
+original start was 0.008497716 mm; this compares one object root, not full state.
+The proof and source-report hashes are retained in the separate replay artifact
+and displayed in the unified MD/HTML report without entering full-task A/B counts.
 This does not support earlier substep starts within the same prefix or restore
 task-specific memory/game state.
 

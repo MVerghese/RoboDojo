@@ -978,7 +978,12 @@ prefix verification; preceding geometry does not enter that score. Applied
 controls and drive targets remain while the unexecuted command tail is removed.
 `atomic_start` separately records replayed/discarded substeps and boundary
 verification. Missing timing, cadence changes and scripted support-arm controls
-are rejected. This path has host validation; simulator validation is pending.
+are rejected. A fresh bowl simulator proof verified 87 whole commands plus 7
+substeps of command 88 and discarded 3 pending controls. The preceding grasp/lift
+and selected placement succeeded. The retained original/replayed root positions
+differed by 0.008497716 mm. This position comparison does not establish velocities,
+drive state, material state or full simulator fidelity; its source report/trace
+hashes are retained separately and the MD/HTML report keeps it outside A/B counts.
 
 The repaired button pair now retains 5 baseline and 8 conditioned cycles with
 consistent independent raw joint/interval checks; both native tasks failed.
