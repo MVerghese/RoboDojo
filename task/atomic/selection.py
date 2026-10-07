@@ -101,6 +101,20 @@ class SelectionObserver:
         self.session=session; self.c=session.stage.selection
         self.labels, self.binding = resolve_candidates(self.c['candidates'], session.env, session.env_idx)
         self.snapshot={}; self.holds={}; self.last_step=None; self.observed=None
+        self.candidate_roots={}
+        lm=session.env.scene_manager.layout_manager
+        for label in self.labels:
+            root=None
+            if hasattr(lm,'get_scene_object') and hasattr(lm,'get_instance_name'):
+                instance=lm.get_instance_name(env_idx=session.env_idx,label=label)
+                obj=lm.get_scene_object(session.env_idx,instance)
+                root=getattr(obj,'usd_prim_path',None) or getattr(obj,'prim_path',None)
+                if not isinstance(root,str) or not root.startswith('/'):
+                    raise RuntimeError('selection candidate needs an actual absolute scene root: '+label)
+            self.candidate_roots[label]=root
+        resolved=[root for root in self.candidate_roots.values() if root is not None]
+        if len(resolved)!=len(set(resolved)):
+            raise RuntimeError('selection labels alias the same actual scene root')
         for label in self.labels:
             rows={}
             for definition in self.c['conditions']:
@@ -145,6 +159,7 @@ class SelectionObserver:
 
     def summary(self):
         return {'definition':deepcopy(self.c),'candidate_binding':deepcopy(self.binding),'snapshot_physics_step':self.snapshot_step,
+            'candidate_roots':deepcopy(self.candidate_roots),'environment_index':self.session.env_idx,
             'snapshot':deepcopy(self.snapshot),'eligible_candidates':list(self.eligible),'target_status':self.target_status,
             'observed':deepcopy(self.observed),'status':self.observed['status'] if self.observed else 'contact_not_observed',
             'passed':self.observed['passed'] if self.observed else None}

@@ -110,7 +110,7 @@ preserves native/physical gates and saves source provenance. Each source task
 must occur in exactly one input suite. Pickup and direct push add point, pose,
 z-direction and contact-box probes; tool push/touch add pose and z-direction.
 Existing conditions remain scored and their instructions remain in the
-conditioned prompt. `suite.json.coverage` names every added stage, event,
+conditioned prompt. `suite.json.contact_frame_bindings` names every added stage, event,
 reference and frame. Pose errors remain separate mm and degree values.
 The box is centered at the reference origin; the point/pose target can differ.
 

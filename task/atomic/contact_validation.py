@@ -149,3 +149,44 @@ def validate_contact_witness(source, measurement=None, measured=None):
     except (ValueError, TypeError, IndexError, AttributeError):
         failed.append('malformed_contact_fields')
     return _result(failed,unavailable,scope)
+
+
+def validate_selection_contact_witness(selection):
+    """Audit the recorded first selected referent independently of geometry."""
+    scope='retained first-selection force snapshot and recorded contact count; not unsaved consecutive persistence'
+    observed=selection.get('observed')
+    if observed is None:return {'status':'unobserved_selection_contact','scope':scope}
+    failed,unavailable,snapshots=[],[],[]
+    try:
+        definition=selection['definition'];step=observed['physics_step'];contacts=observed['contacts']
+        if type(step) is not int or step<0 or not isinstance(contacts,list):raise ValueError('selection observation')
+        if not contacts:failed.append('selection_contacts_absent')
+        labels=[row['label'] for row in contacts]
+        if len(set(labels))!=len(labels):failed.append('duplicate_selected_label')
+        if set(labels)-set(selection['snapshot']):failed.append('selected_candidate_identity')
+        if 'snapshot_physics_step' not in selection:unavailable.append('initial_snapshot_physics_step')
+        elif type(selection['snapshot_physics_step']) is not int or step<selection['snapshot_physics_step']:
+            failed.append('selection_snapshot_order')
+        for row in contacts:
+            requested={'label':row['label'],'arm':definition['arm'],'min_finger_bodies':definition['min_finger_bodies']}
+            source=row.get('contact_source');witness=validate_contact_witness(source,requested)
+            snapshots.append({'label':row['label'],**witness})
+            failed.extend(witness.get('failed_checks',[]));unavailable.extend(witness.get('unavailable',[]))
+            if isinstance(source,dict):
+                if source.get('kind') is None:unavailable.append('selection_finger_contact_source')
+                elif source['kind']!='contact_points':failed.append('selection_finger_contact_source')
+                if source.get('physics_step')!=step:failed.append('selection_force_step')
+                roots=selection.get('candidate_roots')
+                if not isinstance(roots,dict) or not roots.get(row['label']):unavailable.append('initial_candidate_root_binding')
+                elif source.get('object_root') is None:unavailable.append('selected_contact_object_root')
+                elif roots[row['label']]!=source['object_root']:failed.append('selected_candidate_root')
+                if selection.get('environment_index') is None or source.get('environment_index') is None:
+                    unavailable.append('selection_environment_binding')
+                elif (type(selection['environment_index']) is not int or selection['environment_index']<0
+                      or selection['environment_index']!=source['environment_index']):failed.append('selection_environment_binding')
+            count=row['contact_steps'];minimum=definition['min_contact_steps']
+            if type(count) is not int or type(minimum) is not int or minimum<2 or count<minimum:
+                failed.append('recorded_selection_contact_count')
+    except KeyError:unavailable.append('incomplete_selection_contact_fields')
+    except (ValueError,TypeError,IndexError,AttributeError):failed.append('malformed_selection_contact_fields')
+    return {**_result(failed,unavailable,scope),'snapshots':snapshots}

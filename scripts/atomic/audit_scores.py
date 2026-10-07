@@ -186,6 +186,14 @@ def apply_contact_validation(atomic, output):
     for field in ('physical_events', 'interaction_evidence'):
         walk(atomic.get(field), field)
     if snapshots: output['contact_witnesses'] = snapshots
+    if atomic.get('selection') and output.get('selection'):
+        from task.atomic.contact_validation import validate_selection_contact_witness
+        selection=output['selection'];witness=validate_selection_contact_witness(atomic['selection'])
+        selection['contact_witness']=witness
+        if witness['status']=='inconsistent_contact_evidence':
+            selection['numerical_reproduction_status']=selection.get('numerical_reproduction_status',selection['status'])
+            selection['status']='invalid_selection_witness'
+            selection['reason']='retained selected candidate, force, arm or timing contradicts the selection observation'
 
 
 def apply_support_validation(atomic, output):

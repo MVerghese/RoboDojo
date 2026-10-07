@@ -16,11 +16,13 @@ def contact_witness_summary(scores):
     for stage in scores:
         conditions = [c['contact_witness'] for c in stage['conditions'].values() if c.get('contact_witness')]
         physical = list(stage.get('contact_witnesses', {}).values())
-        if conditions or physical:
+        selection=(stage.get('selection') or {}).get('contact_witness')
+        if conditions or physical or selection:
             rows.append({'stage_id':stage['stage_id'],
                 'condition_snapshots':dict(Counter(w['status'] for w in conditions)),
                 'physical_snapshots':dict(Counter(w['status'] for w in physical)),
-                'failed_checks':sorted({f for w in conditions + physical for f in w.get('failed_checks',[])})})
+                'selection_snapshot_status':selection.get('status') if selection else None,
+                'failed_checks':sorted({f for w in conditions + physical + ([selection] if selection else []) for f in w.get('failed_checks',[])})})
     return rows
 
 
@@ -139,7 +141,8 @@ def collect_events(row):
             label = contacts[0]['label'] if valid else None
             # Use initial geometry of the actually selected candidate, never its moved final pose.
             for ident, candidate in next(iter(selection.get('candidates',{}).values()),{}).items():
-                score = selection['candidates'][label][ident] if valid else {'status':'selection_not_resolved'}
+                score = selection['candidates'][label][ident] if valid else {'status':
+                    selection['status'] if selection.get('status')!='reproduced' else 'selection_not_resolved'}
                 events[(stage['stage_id'],'selection/'+ident)] = {'family':stage.get('family','unknown'),
                     'score':dict(score,slot='initial object selection',kind='selection',
                                  condition_id='selection/'+ident)}

@@ -3,11 +3,11 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 346 host tests; completed bowl, multiple-boundary button
+Current verification: 353 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
-validation; eight additional matched contact-frame runs are being prepared. Cloth force/material correspondence, unique task creases, full
+validation; eight additional matched contact-frame runs are submitting at high-9000. Cloth force/material correspondence, unique task creases, full
 layering/volume transfer and general graph/game/material state restoration remain
 limited. Dated evidence sections retain their earlier snapshots; latest proof
 details are at the end of this document.
@@ -29,6 +29,12 @@ Explicit contact-frame pose/orientation observes the existing synchronized
 contact event and does not introduce segmentation boundaries. Physical retries,
 attempt identities, archived interrupted events and required ancestor checks
 remain unchanged. The new pair generator retains these recognition definitions.
+
+Initial referent selection also retains actual candidate scene roots and the
+environment at activation. First sustained contact segmentation is unchanged.
+Independent validation checks its retained force snapshot/count and physical
+identity; it does not synthesize a boundary when contact is missing or infer
+unsaved contiguous contact from a recorded count.
 
 October 7: the checkpoint transport bridge preserves action-chunk inference
 cadence and intermediate simulator observations; it does not create action

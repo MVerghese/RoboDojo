@@ -14,6 +14,37 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
+October 7 snapshot, 23:42 UTC: the integrated MD/HTML contains **259 valid
+episodes, 128 verified A/B pairs and 1237 usable reproduced event scores**, with
+zero arithmetic mismatches and ten historical incompatible recognition windows
+excluded. Fourteen contact-binding cases are collected; two screw cases remain
+Running. Independent contact checks retain 437 consistent snapshots, 16 partial
+older tool-pair snapshots and no contradictions in those fourteen reports.
+These are snapshot counts, not distinct actions or force-closure certificates.
+Hashes and checks are in the suite's `independent-contact-validation.json`.
+
+All eight new `geometry-contact-frames-1006` cases are submitted at high-9000
+from frozen `ecd7003`: block pickup, T pushing, held tool pushing and mallet
+strikes. Four are Running and four Starting. Explicit named-frame pose and
+z-direction conditions retain actual contact positions. Pickup/push also test
+point and reference-origin box constraints. Prior scoring definitions and
+recognition are preserved, with prompt text added only to the conditioned arm.
+The generator's task coverage metadata was corrected after dry-run reporting
+found stage rows where task rows were required; packaged programs/runtime stayed
+unchanged. The fork now passes 353 host tests, including the metadata regression.
+
+The concrete graph's single-ancestry placement start proof completed separately:
+132 whole controls plus five substeps of control 133; required held pickup and
+activation verified, block-root position difference 0.000725 mm. Subsequent
+placement failed. Prefix proof does not establish selected-action success or
+full-state restoration. MD/HTML keeps it outside full-task A/B counts.
+
+Next, selected-referent validation records immutable actual candidate roots and
+environment identity and independently checks first-selection raw finger forces,
+counts, arm and timing. Root aliases fail on activation. Corrupt witnesses become
+`invalid_selection_witness`, not a reproduced adherence score. Historical missing
+roots remain partial. A fresh matching live selection pair is being prepared.
+
 October 7 snapshot, 18:09 UTC: combined MD/HTML has **213 valid episodes,
 105 verified A/B pairs and 966 usable reproduced event scores**, zero arithmetic
 mismatches and ten separately excluded historical recognition windows. Both

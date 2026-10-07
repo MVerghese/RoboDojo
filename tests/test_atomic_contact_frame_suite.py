@@ -1,7 +1,11 @@
 """Contact-frame A/B generation preserves physical gates and condition semantics."""
 from copy import deepcopy
+import hashlib
+import json
+from pathlib import Path
+import tempfile
 import unittest
-from scripts.atomic.generate_contact_frame_suite import expand
+from scripts.atomic.generate_contact_frame_suite import expand,generate
 from task.atomic.spec import _validate_condition
 from task.atomic.geometry import evaluate_geometry
 
@@ -51,6 +55,28 @@ class ContactFrameSuiteTests(unittest.TestCase):
             elif change=='missing':geometry.clear()
             else:geometry[0]['reference']['time']='stage_start'
             with self.subTest(change=change),self.assertRaises(ValueError):expand(source,'push_T')
+
+    def test_generated_manifest_separates_task_coverage_from_stage_bindings(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);cases=[]
+            for task,family,pair in [('push_T','push',False),('play_Xylophone','touch_with_tool',True)]:
+                source=program(family,pair);source['task_name']=task
+                source['stages'][0].pop('recognition')
+                if family=='push':
+                    source['stages'][0]['recognition']={'kind':'finger_contact_motion','label':'t','arm':'any',
+                        'motion_threshold_m':.01,'min_contact_steps':2,'support_labels':['@table']}
+                for mode in ('baseline','conditioned'):
+                    b=deepcopy(source)
+                    if mode=='conditioned':b['geometric_instruction']='Use the specified contact location.'
+                    path=root/(task+'_'+mode+'.json');path.write_text(json.dumps(b))
+                    cases.append({'id':task+'_'+mode,'task':task,'checkpoint_id':'cp','prompt_mode':mode,
+                        'program':str(path),'program_sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+                        'layout_id':0,'stage':'multiple','kind':'multiple'})
+            path=root/'suite.json';path.write_text(json.dumps({'checkpoints':{'cp':{'checkpoint':'test','base_run':'/test'}},'cases':cases}))
+            result=generate(root/'output',[path],['push_T','play_Xylophone'])
+            self.assertEqual(len(result['cases']),4)
+            self.assertEqual(sum(row['included'] for row in result['coverage']),2)
+            self.assertEqual({row['task'] for row in result['contact_frame_bindings']},{'push_T','play_Xylophone'})
 
 
 if __name__=='__main__':unittest.main()

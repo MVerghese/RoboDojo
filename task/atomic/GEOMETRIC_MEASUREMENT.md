@@ -3,11 +3,11 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 346 host tests; completed bowl, multiple-boundary button
+Current verification: 353 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
-validation; eight additional matched contact-frame runs are being prepared. Cloth force/material correspondence, unique task creases, full
+validation; eight additional matched contact-frame runs are submitting at high-9000. Cloth force/material correspondence, unique task creases, full
 layering/volume transfer and general graph/game/material state restoration remain
 limited. Dated evidence sections retain their earlier snapshots; latest proof
 details are at the end of this document.
@@ -38,6 +38,23 @@ separate axis/full-orientation scores and independent worst translation. These
 checks validate measurement semantics; the new matched GPU cases supply live
 validation separately. The eight former F cells now have explicit frame adapters
 and are G in the coverage audit. They are not promoted to live L cells yet.
+
+### Selected referent force witness (October 7)
+
+Selection scores use the immutable initial geometry of the first physically
+selected candidate. Candidate scene roots and environment identity are now
+captured at observer activation, including explicit-label candidates. Two labels
+aliasing one actual scene root are rejected. The independent audit checks that
+the recorded selected label belongs to the candidate snapshot and that the raw
+finger/object source names that label, root, environment, arm and physics step.
+It checks actual distinct force-bearing fingers and the recorded minimum sample
+count. It does not reconstruct unsaved contact persistence from that count.
+
+A contradiction receives `invalid_selection_witness`; its selected-candidate
+mm/degree/relation errors are excluded even when a cached initial-geometry audit
+reproduces. Native flags and recorded selection outcomes remain retained. Missing
+historical root/contact metadata remains partial; no selection contact is
+unobserved. MD/HTML show the selection witness status in the contact audit.
 
 October 7 transport repair: the actual demo runner now explicitly bridges local
 observation updates to checkpoint `infer`, preserving one request per chunk and

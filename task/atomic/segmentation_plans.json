@@ -7411,7 +7411,7 @@
     },
     {
       "path": "task/atomic/selection.py",
-      "sha256": "56d91e5d1798949e40501847494276854fb180b0bce8b22013e0a372518cb43b"
+      "sha256": "b3b113574d1000e65d02a29ab580122e8ab1899871aa0627ee1a1dba7fc8494c"
     },
     {
       "path": "task/atomic/trajectory.py",
@@ -7483,7 +7483,7 @@
     },
     {
       "path": "task/atomic/contact_validation.py",
-      "sha256": "7c5c7c9e5520a8b2089eff08c2ad5a3108fbcf5927932f2897cfca4ee4054529"
+      "sha256": "ce6a29ddb272a783872b632f96e2eebbb6fb84bfaf3931f7ec24b92049be7c5e"
     },
     {
       "path": "src/eval_client/eval_env.py",

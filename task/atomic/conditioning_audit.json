@@ -10,7 +10,7 @@
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "6a35bfae2d344ebbca1096a9004c48922367f3b0dd0afc9f4a886adcefeb9ed4",
     "task/atomic/support_validation.py": "5ce41213101b6ed6f373208f8d6aeaac5d17a334f266b45598178bc4e0c7ed9a",
-    "task/atomic/contact_validation.py": "7c5c7c9e5520a8b2089eff08c2ad5a3108fbcf5927932f2897cfca4ee4054529",
+    "task/atomic/contact_validation.py": "ce6a29ddb272a783872b632f96e2eebbb6fb84bfaf3931f7ec24b92049be7c5e",
     "task/atomic/recognizers.py": "bac20772c18ac4154b489b0021d06af37c1a769faa3ea00ef4f2874ae4b1122e",
     "task/atomic/diagnostics.py": "8a012fc51aad60c978bde7206497e880cb869893c3b1c9140225806f64b1c569",
     "task/atomic/recognition_validation.py": "3e6c49ee5584ef536678151972bfb18d93aca342c73de6bd3beaca105d431001",
@@ -18,7 +18,7 @@
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
     "task/atomic/materials.py": "0b42ca82fd5101a7b0dd409139181d629b443a8ed62d2253f545a60f5b9241b8",
-    "task/atomic/selection.py": "56d91e5d1798949e40501847494276854fb180b0bce8b22013e0a372518cb43b",
+    "task/atomic/selection.py": "b3b113574d1000e65d02a29ab580122e8ab1899871aa0627ee1a1dba7fc8494c",
     "task/atomic/trajectory.py": "8d783293da9fc57cf8d9d5cc52e72361806bb821aab6c3acb08706552a791d82",
     "task/atomic/regions.py": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753",
     "task/atomic/fit.py": "9b92e845e0309301ff083d61b5ccdf7d666855d2490a6ec43c6e8254c73ed509",
@@ -63,28 +63,28 @@
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select object offset from a named landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select object rotated relative to a landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object left of/inside another object.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -182,35 +182,35 @@
           "kind": "point",
           "concept": "Select by initial center P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from a landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to a landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select the object behind/on/inside another.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -350,35 +350,35 @@
           "kind": "point",
           "concept": "Select by initial center P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by relative orientation.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object beside/in front of landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -518,35 +518,35 @@
           "kind": "point",
           "concept": "Select tool by initial center P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select tool by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select tool by offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select tool by orientation relative to landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select tool on/next to rack.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -560,35 +560,35 @@
           "kind": "point",
           "concept": "Select objects at points/within point regions.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select rigid objects by initial poses.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select objects offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select oriented rigid objects.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select objects left of/inside region.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -812,35 +812,35 @@
           "kind": "point",
           "concept": "Select vessel at P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select vessel at initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select vessel offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select vessel oriented relative to landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select vessel left of/on landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -854,35 +854,35 @@
           "kind": "point",
           "concept": "Select vessel at P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select vessel at initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select vessel offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select vessel oriented relative to landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select vessel behind/on landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1064,35 +1064,35 @@
           "kind": "point",
           "concept": "Select mechanism by initial center P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select mechanism left of/inside assembly.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1106,35 +1106,35 @@
           "kind": "point",
           "concept": "Select button/lever at P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select control by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select control offset from mechanism center.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select control by relative orientation.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select top/left control of mechanism.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1274,35 +1274,35 @@
           "kind": "point",
           "concept": "Select part by center P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select part offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select part on/inside assembly.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1442,35 +1442,35 @@
           "kind": "point",
           "concept": "Select by initial center P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object beside/on landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1484,35 +1484,35 @@
           "kind": "point",
           "concept": "Select by center P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by orientation relative to landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select receptacle on/behind assembly.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1652,35 +1652,35 @@
           "kind": "point",
           "concept": "Select target at P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select target offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by relative orientation.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select third key/left of another target.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1736,35 +1736,35 @@
           "kind": "point",
           "concept": "Select tool at P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select tool offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by relative orientation.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select tool on rack.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }
@@ -1862,35 +1862,35 @@
           "kind": "point",
           "concept": "Select by initial center P.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select by offset from landmark.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select by relative orientation.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object left of/on table.",
           "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
+          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
           "live_evidence": null
         }
       }

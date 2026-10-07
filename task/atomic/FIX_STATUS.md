@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **346 offline atomic tests**. Dated sections below
+The current source passes **353 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -15,6 +15,15 @@ bounded cleanup after simulator exceptions. Cloth path calibration covers all
 three configured garment models. Repaired curve, selection-query, liquid and
 ball-pour pairs now have retained checkpoint rollouts; exact observations and
 missing physical witnesses are reported separately.
+
+Explicit contact-frame adapters now cover the eight formerly F pose/orientation
+cells: real contact coordinates plus same-step named robot-link/tool axes.
+These are generic G adapters pending their fresh live evidence, not surface-
+normal frames. All eight fresh A/B cases are submitted at high-9000 from frozen
+`ecd7003`. Current source adds independent selected-referent force/root/arm/time
+validation and root-alias rejection; historical missing metadata stays partial.
+The single-ancestry graph prefix also passed live boundary validation, with
+0.000725 mm block-root drift; its subsequent selected placement failed.
 
 The optional source-mouth gate now checks outward material-center crossings
 through the actual calibrated aperture, including holes and source-frame/model

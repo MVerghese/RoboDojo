@@ -3,11 +3,11 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 346 host tests; completed bowl, multiple-boundary button
+Current verification: 353 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
-validation; eight additional matched contact-frame runs are being prepared. Cloth force/material correspondence, unique task creases, full
+validation; eight additional matched contact-frame runs are submitting at high-9000. Cloth force/material correspondence, unique task creases, full
 layering/volume transfer and general graph/game/material state restoration remain
 limited. Dated evidence sections retain their earlier snapshots; latest proof
 details are at the end of this document.
@@ -26,6 +26,13 @@ It checks the actual impulse, normal, body roots, origin and sampled timing.
 Tool-pair contact alone does not prove a held tool or an active tip. Frame witness
 failures exclude affected geometric scores and remain distinct from the retained
 native/action flags. No cloth grasp, force closure or thread engagement is added.
+
+Referent selection now independently validates the first selected candidate's
+raw finger forces against immutable initial candidate scene roots, requested
+arm/count and recorded physics timing. Root aliases fail during activation.
+Contradictions exclude selection adherence as `invalid_selection_witness`,
+without rewriting recorded native/action/selection flags. The last retained
+contact snapshot does not independently establish unsaved sustained contact.
 
 October 7: checkpoint API failures before rollout have no atomic success result.
 The local observation/inference bridge fixes that transport contract without

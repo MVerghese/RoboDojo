@@ -87,7 +87,7 @@ def generate(output,sources,tasks):
     if output.exists() and any(output.iterdir()):raise ValueError('output directory must be empty')
     manifests=[(p,json.loads(p.read_text())) for p in sources]
     output.mkdir(parents=True,exist_ok=True)
-    checkpoints={};cases=[];provenance=[];coverage=[]
+    checkpoints={};cases=[];provenance=[];coverage=[];bindings=[]
     for task in tasks:
         if task not in TASK_FAMILY:raise ValueError('task contact binding has not been reviewed: '+task)
         matches=[(p,m) for p,m in manifests if any(c['task']==task for c in m['cases'])]
@@ -106,7 +106,12 @@ def generate(output,sources,tasks):
             b,c=deepcopy(programs['baseline']),deepcopy(programs['conditioned'])
             b.pop('geometric_instruction',None);prior=c.pop('geometric_instruction',None)
             if b!=c or not prior:raise ValueError('source pair differs beyond its geometric prompt')
-            expanded,text,rows=expand(b,task);coverage.extend({'task':task,**r} for r in rows)
+            expanded,text,rows=expand(b,task)
+            bindings.extend({'task':task,'checkpoint_id':checkpoint_id,**r} for r in rows)
+            if not any(c['task']==task for c in coverage):
+                coverage.append({'task':task,'included':True,
+                    'families':sorted({s['family'] for s in expanded['stages']}),
+                    'unbound_families':[],'blocker':None})
             for mode,original in originals.items():
                 program=deepcopy(expanded)
                 if mode=='conditioned':program['geometric_instruction']=prior+' '+text
@@ -117,7 +122,8 @@ def generate(output,sources,tasks):
                 provenance.append({'task':task,'mode':mode,'source_suite':str(source.resolve()),
                     'source_program':original['program'],'source_program_sha256':hashlib.sha256(Path(original['program']).read_bytes()).hexdigest()})
     manifest={'schema_version':3,'task':'robodojo_geometry_expansion','mode':'paired_native_and_geometrically_conditioned',
-              'checkpoints':checkpoints,'layout_id':0,'phase':'contact_frames','cases':cases,'coverage':coverage}
+              'checkpoints':checkpoints,'layout_id':0,'phase':'contact_frames','cases':cases,
+              'coverage':coverage,'contact_frame_bindings':bindings}
     validate_suite(manifest)
     (output/'suite.json').write_text(json.dumps(manifest,indent=2)+'\n')
     (output/'clone-provenance.json').write_text(json.dumps(provenance,indent=2)+'\n')
