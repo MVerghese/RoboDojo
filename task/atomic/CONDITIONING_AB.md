@@ -736,3 +736,9 @@ boundary cannot satisfy this stronger validation request. The fresh
 cycle, and the next red-button cycle in a concrete linear program. These are
 physical observers within the native task; they do not reconstruct its full
 number/memory semantics after a parser reset.
+
+An already submitted selected-stage proof can resume its local collector with
+`run_prefix_validation.py monitor --root ... --credentials-file ...
+--gpu-memory-ledger ... --detach`. It verifies the submitted job identity, retains
+previous/resumed monitor provenance, avoids replacing a running monitor and locks
+collection per proof. It does not submit another GPU job.

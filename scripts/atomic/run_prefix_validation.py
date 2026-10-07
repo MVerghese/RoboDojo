@@ -99,6 +99,7 @@ def main():
     p.add_argument('--root',type=Path,required=True);p.add_argument('--base-run',type=Path)
     p.add_argument('--program',type=Path);p.add_argument('--trace',type=Path);p.add_argument('--stage')
     p.add_argument('--name',default='rb-prefix-validation');p.add_argument('--credentials-file',type=Path)
+    p.add_argument('--detach',action='store_true',help='Detach a resumed monitor for an already submitted proof')
     p.add_argument('--gpu-memory-ledger',type=Path,required=True)
     a=p.parse_args();root=a.root
     if not re.fullmatch('[a-z0-9-]+',a.name):p.error('name must be a job slug')
@@ -131,6 +132,31 @@ def main():
     if a.action=='proof':collect_proof(root,case);return
     if a.credentials_file is None:p.error('start/monitor needs credentials-file')
     if a.action=='monitor':
+        if a.detach:
+            plan=json.loads((run/'run_plan.json').read_text())
+            if len(plan.get('submitted',[]))!=1:raise ValueError('monitor resume needs exactly one submitted proof')
+            control=json.loads((root/'control.json').read_text())
+            if control['job']!=plan['submitted'][0]['id']:raise ValueError('monitor resume job identity mismatch')
+            if (run/'collection_finished.json').exists():
+                print('Prefix proof collection already finished',flush=True);return
+            try:
+                argv=Path('/proc',str(control['monitor_pid']),'cmdline').read_bytes().split(b'\0')
+                if (str(root).encode() in argv and b'monitor' in argv
+                        and any(arg.endswith(b'/scripts/atomic/run_prefix_validation.py') for arg in argv)):
+                    print('Prefix proof monitor already running',control['monitor_pid'],flush=True);return
+            except (FileNotFoundError,ProcessLookupError):pass
+            with (run/'controller-monitor.log').open('a') as log:
+                argv=[arg for arg in sys.argv[1:] if arg!='--detach']
+                child=subprocess.Popen([sys.executable,'-u',str(Path(__file__).resolve()),*argv],cwd=REPO,
+                    stdout=log,stderr=subprocess.STDOUT,stdin=subprocess.DEVNULL,start_new_session=True)
+            control['previous_monitor_pid']=control['monitor_pid'];control['monitor_pid']=child.pid
+            control['monitor_resumed_at']=datetime.now(timezone.utc).isoformat()
+            atomic_write_json(root/'control.json',control)
+            print('Resumed prefix proof monitor',child.pid,flush=True);return
+        collection_lock=(root/'prefix-collection.lock').open('a+')
+        try:fcntl.flock(collection_lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+        except BlockingIOError:
+            print('Prefix proof collector already active',flush=True);return
         subprocess.run([sys.executable,'scripts/atomic/monitor_trace.py','--run-dir',str(run),
             '--credentials-file',str(a.credentials_file),'--gpu-memory-ledger',str(a.gpu_memory_ledger)],cwd=REPO,check=True)
         collect_proof(root,case)
