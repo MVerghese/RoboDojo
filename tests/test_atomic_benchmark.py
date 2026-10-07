@@ -158,6 +158,7 @@ class SubmissionTests(unittest.TestCase):
                 # image did not contain it and the partial overlay omitted it.
                 self.assertIn('XPolicyLab/client_server/ws/model_client.py',names)
                 self.assertIn('XPolicyLab/client_server/ws/protocol/client.py',names)
+                self.assertIn('src/eval_client/checkpoint_client.py', names)
                 proof=json.loads(archive.extractfile('task/atomic/pinned-protocol.json').read())
                 self.assertEqual(len(proof['xpolicylab_commit']),40)
                 data=archive.extractfile('XPolicyLab/client_server/ws/model_client.py').read()
@@ -221,6 +222,7 @@ class SubmissionTests(unittest.TestCase):
         self.assertEqual(patched["spec"]["queue_config"], base["spec"]["queue_config"])
         self.assertEqual(patched["spec"]["reservation_config"]["reservation_id"], "reservation")
         self.assertTrue(patched["spec"]["container"]["command"][2].endswith("exec runner"))
+        self.assertIn('export ROBODOJO_POLICY_API=checkpoint_infer', patched['spec']['container']['command'][2])
 
 
 class GpuAdmissionTests(unittest.TestCase):

@@ -15,6 +15,7 @@ from env.global_configs import BENCHMARK
 from env.observation_manager.obs_manager import ObsManager
 from env.seed_manager.seed_manager import SeedManager
 from src.eval_client.ws_compat import compatible_client_kwargs
+from src.eval_client.checkpoint_client import configure_policy_client
 from utils.cluttered_generator import UnStableError
 from utils.pipeline_utils import get_robot_action_dim_info
 from utils.save_file import VideoStreamWriter, format_video_saved_message, save_json
@@ -255,7 +256,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 ws_ping_interval_s=self.deploy_cfg.get("ws_ping_interval_s", 20.0),
                 ws_ping_timeout_s=self.deploy_cfg.get("ws_ping_timeout_s", 20.0),
             )
-            self.model_client = WsModelClient(**client_kwargs)
+            self.model_client = configure_policy_client(WsModelClient(**client_kwargs),
+                os.environ.get('ROBODOJO_POLICY_API'), self.policy_name)
             self.robot_action_dim_info = get_robot_action_dim_info(env_cfg=self.eval_cfg)
 
         def close(self):
@@ -1022,6 +1024,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     "success": bool(self.success[env_idx]),
                     "score": episode_score,
                 }
+                if os.environ.get('ROBODOJO_POLICY_API') == 'checkpoint_infer':
+                    self.eval_result['details'][index]['policy_transport'] = self.model_client.summary()
                 if self.atomic_stage is not None:
                     self._atomic_sessions[env_idx].finalize()
                     self.eval_result["details"][index]["atomic"] = self._atomic_sessions[env_idx].summary()

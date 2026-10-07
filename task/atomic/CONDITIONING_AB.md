@@ -38,6 +38,30 @@ complete JSON files in `programs/` or the generators below.
 The authoritative delivered text is `details[*].policy_prompt_history` in
 `eval_report.json`. A scoring target alone does not condition the policy.
 
+### Checkpoint transport (October 7)
+
+Fresh atomic overlays explicitly set `ROBODOJO_POLICY_API=checkpoint_infer`.
+The demo runner caches `update_obs` locally and requests the checkpoint's
+`infer` endpoint once per action chunk. Intermediate control-step observations
+do not cause extra inference calls. Native action dictionaries and arrays pass
+through unchanged; `details[*].policy_transport` records the selected API and
+observation/inference counts. Both A/B arms use this same bridge.
+
+This fixes `no model method named 'update_obs'` with the pinned websocket client
+and Cosmos infer-only server. A generic websocket check was insufficient: the
+new proof exercises the actual demo runner, JPEG decoding, array codec and
+keepalive during blocking steps. To reproduce it with protocol dependencies
+installed:
+
+```bash
+python scripts/atomic/validate_checkpoint_transport.py --output /tmp/checkpoint-rpc-proof.json
+```
+
+This proof uses an infer-only toy model, not the GPU checkpoint or simulator.
+Failed frozen packages require fresh matched packages; retrying an identical
+package preserves the API mismatch. Native client mode remains available for
+servers that implement the demo runner's method API.
+
 ## 2. Define exactly what the geometry means
 
 Use the [per-slot modifier matrices](TAXONOMY.md) and

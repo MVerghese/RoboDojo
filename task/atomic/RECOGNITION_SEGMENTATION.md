@@ -3,6 +3,11 @@
 Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
+October 7: the checkpoint transport bridge preserves action-chunk inference
+cadence and intermediate simulator observations; it does not create action
+boundaries. Failed pre-rollout RPC calls supply no segmentation evidence. Source
+fingerprints were refreshed after reviewing this evaluator integration change.
+
 Current live segmentation evidence includes the contact-held mallet pickup and
 eight held impact/retraction intervals in the `geometry-tool-contacts-1006`
 xylophone baseline. A separate raw-witness validator checks retained contact

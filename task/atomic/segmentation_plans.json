@@ -7462,7 +7462,7 @@
     },
     {
       "path": "src/eval_client/eval_env.py",
-      "sha256": "0b1c233243e97bc47841baab77bf4ee65cbb85ba48a6f2884ea48d6df53ebd25"
+      "sha256": "4417e93f47853e2bf4c1d8a3855af82ac852f6a296f4f5049a57b63b20bae942"
     }
   ]
 }

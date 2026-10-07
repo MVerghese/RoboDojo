@@ -3,6 +3,11 @@
 Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
+October 7: checkpoint API failures before rollout have no atomic success result.
+The local observation/inference bridge fixes that transport contract without
+altering physical recognizers or native predicates. Fresh rollout validation is
+separate from its actual-demo-runner and real websocket proof.
+
 October 6 correction: supported placement preserves an already verified
 two-finger held transport while the same arm releases its jaws one at a time.
 One remaining finger is not full release; motion with one finger cannot

@@ -1,6 +1,6 @@
 # Additional conditioning implementation and live validation
 
-Updated October 6, 2026. Kernel tests, live measurements and matched policy
+Updated October 7, 2026. Kernel tests, live measurements and matched policy
 comparisons are separate evidence levels. Reports retain missing-event statuses
 and separate physical units; one episode per arm makes no statistical claim.
 
@@ -13,6 +13,21 @@ See [EVAL_MATRIX.md](EVAL_MATRIX.md#integrated-original-and-expansion-report-oct
 for regeneration commands and preserved original backups.
 
 ## Execution ledger
+
+October 7 snapshot, 06:56 UTC: all previously submitted jobs are terminal. The
+integrated report contains **175 valid episodes, 86 verified matched pairs and
+679 reproduced geometric event scores, with zero reproduction mismatches**.
+The dated ledger below is retained as historical status, not the current queue.
+
+Seven fresh pinned-protocol suites failed before evaluation because the demo
+runner called `update_obs` on the infer-only checkpoint. This is an infrastructure
+failure, not zero adherence. The explicit bridge is validated with the actual
+demo runner and real websocket/JPEG/array transport, but GPU rollouts still need
+fresh frozen pairs. Replacement scopes cover bottle handovers, combined cloth
+geometry, charger sections, populated liquid cores, material curves, ball-pour
+initialization and bounded initial block selection. Checkpoint, layout and
+geometric scoring targets stay fixed. Selection text removes the accidental
+`np.float64(...)` rendering without changing its numerical target.
 
 All pairs use the 25k checkpoint, layout/seed 0, one episode per arm, reservation
 `cosmos-rollout-luemzvvo`, priority `high-9000`, no burst, and the 512 MiB/two-sample

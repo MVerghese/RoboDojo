@@ -3,6 +3,12 @@
 Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
+October 7 transport repair: the actual demo runner now explicitly bridges local
+observation updates to checkpoint `infer`, preserving one request per chunk and
+the latest prompt. The real websocket/JPEG proof validates delivery, not simulator
+geometry. Runs that failed on `update_obs` have no completed episode or adherence
+measurement. See [A/B transport instructions](CONDITIONING_AB.md#checkpoint-transport-october-7).
+
 October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
 landmark or material state immediately before scene reset. It measures goal
 error even if the action fails, and samples episode end for stages completed

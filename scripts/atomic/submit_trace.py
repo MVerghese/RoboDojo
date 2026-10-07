@@ -109,6 +109,9 @@ def patch_overlay_spec(spec: dict, remote: str, digest: str, reservation: str | 
     if bootstrap.count(marker) != 1:
         raise ValueError("unexpected i4 bootstrap; cannot place RoboDojo overlay safely")
     overlay_commands = "\n".join((
+        # The baked demo runner speaks update_obs/get_action. New pinned clients
+        # forward those names, but the checkpoint server exposes infer instead.
+        "export ROBODOJO_POLICY_API=checkpoint_infer",
         f"s5cmd --endpoint-url https://storage.googleapis.com cp {shlex.quote(remote)} /tmp/robodojo-overlay.tar.gz",
         f"printf '%s  %s\\n' {shlex.quote(digest)} /tmp/robodojo-overlay.tar.gz | sha256sum -c -",
         "tar -xzf /tmp/robodojo-overlay.tar.gz -C /workspace/RoboDojo",
@@ -121,6 +124,11 @@ def patch_overlay_spec(spec: dict, remote: str, digest: str, reservation: str | 
             "sys.path.insert(1, '/workspace/RoboDojo/XPolicyLab'); "
             "from client_server.ws.model_client import WsModelClient; "
             "from src.eval_client.ws_compat import compatible_client_kwargs; "
+            "from src.eval_client.checkpoint_client import configure_policy_client; "
+            "from client_server.ws.protocol.client import PolicyEvalClient; "
+            "import inspect; "
+            "inspect.signature(PolicyEvalClient.infer).bind(None, {}, "
+            "trial_id='preflight', action_case_id='preflight', repeat_index=None, step=0); "
             "compatible_client_kwargs(WsModelClient, url='ws://127.0.0.1:9990', "
             "evaluation_id='preflight', trial_id='preflight', action_case_id='preflight', "
             "repeat_index=None, ws_ping_interval_s=20.0, ws_ping_timeout_s=20.0); "

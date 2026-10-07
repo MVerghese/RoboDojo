@@ -1,12 +1,12 @@
 # Audit fixes and remaining implementation
 
-Updated 2026-10-06. This page distinguishes implemented fixes from source plans
+Updated 2026-10-07. This page distinguishes implemented fixes from source plans
 and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 [slot/factor coverage](CONDITIONING_AUDIT.md), and [all-task plans](SEGMENTATION.md).
 
 ## Current verification snapshot (October 6)
 
-The current source passes **232 offline atomic tests**. Dated sections below
+The current source passes **236 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -14,6 +14,14 @@ early contact API installation and
 bounded cleanup after simulator exceptions. Cloth path calibration covers all
 three configured garment models. Fresh curve, selection-query and corrected pour
 pairs require simulator validation; host tests and baked assets do not supply it.
+
+October 7 transport repair: fresh pinned-client runs reached the policy but
+failed because the demo runner sent `update_obs` to an infer-only checkpoint.
+An explicit local observation cache/inference bridge now preserves action-chunk
+cadence and prompts. Actual demo-runner unit tests and a real websocket/JPEG/
+array/keepalive proof pass. Fresh GPU pairs are required; this is not yet a
+checkpoint rollout validation. Overlay preflight checks the inference signature
+before model initialization. Generated selection prompts now use plain numbers.
 
 Corrected support recognition has live stack-block/stack-bowl evidence. See
 [EXPANSION_STATUS.md](EXPANSION_STATUS.md) for frozen suite provenance and the

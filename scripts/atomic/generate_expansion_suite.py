@@ -585,7 +585,7 @@ def breadth_expand(base, scene=None):
             'measurement':{'kind':'object_center_position','label':'@candidate'},'expected':target.tolist(),'tolerance':.01}]}
         base['stages'].append(stage);base['stage_dependencies'][stage['id']]=[]
         texts.append('First pick the block whose initial mesh-bounds center is within 10 mm of '
-                     + str([round(v*1000,3) for v in target])+' mm in environment-local world XYZ. '
+                     + str([round(float(v)*1000,3) for v in target])+' mm in environment-local world XYZ. '
                      'This selection is judged using initial positions and the first sustained two-finger contact, '
                      'before any block is moved.')
     return base,' '.join(dict.fromkeys(texts))
