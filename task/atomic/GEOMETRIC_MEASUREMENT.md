@@ -1045,3 +1045,28 @@ records confirm activation at command 45 / physics step 988 and next-red
 activation at command 108 / physics step 1616, both inside commands. The automatic
 monitor submitted `rb-timed-button-proof-1007-000-6b88` to validate that actual
 multiple-boundary prefix. Its live proof was still pending at this snapshot.
+
+### Independent force-bearing finger snapshot audit
+
+Fresh finger contact sources retain the selected object root/subtree, environment
+index and world origin, actual finger-to-environment/arm bindings, the impulse
+threshold (1e-9 N·s), and raw synchronized actor/collider/position/normal/impulse
+records. `contact_validation.py` independently checks distinct finger count,
+requested arm/object, native finger actor identity, the object subtree on the
+other side, same-environment bindings, finite positive impulses, unit normals
+and raw force timestamps. It reconstructs every local contact point and centroid
+from world points and the recorded environment origin; geometric scoring still
+uses the maximum per-contact error.
+
+Arithmetic reproduction cannot override contradictory contact evidence:
+`invalid_contact_witness` excludes that conditioning event from error summaries,
+while preserving its numerical reproduction status. The audit also records
+physical recognizer contact snapshots even when no contact geometry is specified.
+These diagnostics do not change the retained native or atomic success flag.
+Missing historical root/environment fields remain `partial_contact_evidence`;
+no binding is inferred from a finger name or assumed zero environment origin.
+The report displays contact witness snapshot counts separately from action counts.
+This verifies retained samples, not force closure or unsaved continuous contact.
+Cloth contact/material correspondence remains unverified. Counterexamples cover
+zero impulse, foreign object/finger/arm/environment, stale timestamps, wrong
+coordinates, nonunit normals and many contact points from a single finger.

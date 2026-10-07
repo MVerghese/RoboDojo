@@ -11,6 +11,19 @@ import tarfile
 from scripts.atomic.storage import atomic_write_json, atomic_write_text
 
 
+def contact_witness_summary(scores):
+    rows = []
+    for stage in scores:
+        conditions = [c['contact_witness'] for c in stage['conditions'].values() if c.get('contact_witness')]
+        physical = list(stage.get('contact_witnesses', {}).values())
+        if conditions or physical:
+            rows.append({'stage_id':stage['stage_id'],
+                'condition_snapshots':dict(Counter(w['status'] for w in conditions)),
+                'physical_snapshots':dict(Counter(w['status'] for w in physical)),
+                'failed_checks':sorted({f for w in conditions + physical for f in w.get('failed_checks',[])})})
+    return rows
+
+
 METHOD = (
     'Each geometric conditioning has separate continuous measurements in actual physical units. '
     'Position, contact and gap errors are reported in millimetres; orientation errors in degrees; '
@@ -232,6 +245,8 @@ def build_report(manifest, result, matrix, root):
                 for mode, row in (('baseline', ra), ('conditioned', rb))},
             'support_validation': {mode: [{'stage_id': s['stage_id'], 'condition_id': ident, **c['support_witness']}
                 for s in row.get('atomic_scores', []) for ident, c in s['conditions'].items() if c.get('support_witness')]
+                for mode, row in (('baseline', ra), ('conditioned', rb))},
+            'contact_validation': {mode: contact_witness_summary(row.get('atomic_scores',[]))
                 for mode, row in (('baseline', ra), ('conditioned', rb))},
             'program_sha256': {mode: cases[c]['program_sha256'] for mode, c in (
                 ('baseline', a['id']), ('conditioned', b['id']))},
@@ -543,6 +558,10 @@ def report_markdown(data):
             if witnesses:
                 lines += ['**Named-support witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
                     + '`. Force signs/body identity are separate from geometric arithmetic. Missing raw force or sleep-history proof remains partial; inconsistent witnesses are excluded.', '']
+        for mode, witnesses in task.get('contact_validation', {}).items():
+            if witnesses:
+                lines += ['**Finger/object contact witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
+                    + '`. These count retained snapshots, not distinct actions. Missing historical root/environment bindings remain partial. Contradictory contact measurements are excluded; force closure and unsaved persistence are not certified.', '']
         for mode, diagnostics in task.get('cloth_contact_diagnostics',{}).items():
             if diagnostics:
                 lines += ['**Native cloth contact probe ('+mode+'):** `'+json.dumps(diagnostics,sort_keys=True)
@@ -616,6 +635,9 @@ def report_html(data):
         for mode, witnesses in task.get('support_validation', {}).items():
             if witnesses:
                 content += '<p><strong>Named-support witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. Force signs/body identity are separate from geometric arithmetic. Missing raw force or sleep-history proof remains partial; inconsistent witnesses are excluded.</p>'
+        for mode, witnesses in task.get('contact_validation', {}).items():
+            if witnesses:
+                content += '<p><strong>Finger/object contact witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. These count retained snapshots, not distinct actions. Missing historical root/environment bindings remain partial. Contradictory contact measurements are excluded; force closure and unsaved persistence are not certified.</p>'
         for mode, diagnostics in task.get('cloth_contact_diagnostics',{}).items():
             if diagnostics:
                 content += '<p><strong>Native cloth contact probe ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(diagnostics,sort_keys=True))+'</code>. Diagnostic counts do not establish calibrated cloth grasp force.</p>'

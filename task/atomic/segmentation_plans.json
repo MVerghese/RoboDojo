@@ -7463,7 +7463,7 @@
     },
     {
       "path": "task/atomic/contacts.py",
-      "sha256": "61def57efb7578083951344a27c31000b6f8b1698a3ecc3d96e04bed8682e77d"
+      "sha256": "c542152f9884b57e30876942f1ce6f5874e96a133c9302b265ba2e2d0e2da668"
     },
     {
       "path": "task/atomic/replay.py",
@@ -7480,6 +7480,10 @@
     {
       "path": "task/atomic/support_validation.py",
       "sha256": "5ce41213101b6ed6f373208f8d6aeaac5d17a334f266b45598178bc4e0c7ed9a"
+    },
+    {
+      "path": "task/atomic/contact_validation.py",
+      "sha256": "071a718904420f58fa41e8fefc5986eb49deb112a4ac06a168af18e742a06f8b"
     },
     {
       "path": "src/eval_client/eval_env.py",

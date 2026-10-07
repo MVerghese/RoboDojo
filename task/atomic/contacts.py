@@ -293,6 +293,10 @@ class PhysXContacts:
         points = np.asarray([row['position_world'] for row in selected], dtype=float) - np.asarray(origin)
         return {'position': points.mean(axis=0).tolist(), 'points': points.tolist()}, {
             **selector, 'frame': 'environment_local_world', 'resolved_arm': arm,
+            'object_root': root, 'object_contact_scope': body_path or root,
+            'environment_index': int(env_idx), 'environment_origin_world_m': np.asarray(origin).tolist(),
+            'finger_body_bindings': {finger: list(self.fingers[finger]) for finger in sorted(fingers)},
+            'force_eligibility': {'min_impulse_norm_ns': 1e-9},
             'finger_bodies': sorted(fingers), 'contacts': selected,
             'aggregation': 'maximum per-contact error; centroid is diagnostic only',
             'physics_step': self.steps, 'contact_reports': self.reports,

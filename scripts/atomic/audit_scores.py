@@ -157,6 +157,35 @@ def validate_cached_recognition(report, scores):
             apply_recognition_validation(stage, score)
             apply_flow_validation(stage, score)
             apply_support_validation(stage, score)
+            apply_contact_validation(stage, score)
+
+
+def apply_contact_validation(atomic, output):
+    """A reproduced point error cannot override a contradictory force witness."""
+    from task.atomic.contact_validation import validate_contact_witness
+    for ident, raw in atomic.get('geometry', {}).items():
+        measurement = raw.get('condition', {}).get('measurement', {})
+        if measurement.get('kind') != 'contact_points' or 'measured_state' not in raw:
+            continue
+        row = output['conditions'].get(ident)
+        if row is None: continue
+        witness = validate_contact_witness(raw.get('measurement_source'), measurement, raw['measured_state'])
+        row['contact_witness'] = witness
+        if witness['status'] == 'inconsistent_contact_evidence':
+            row['numerical_reproduction_status'] = row.get('numerical_reproduction_status', row['status'])
+            row['status'] = 'invalid_contact_witness'
+            row['reason'] = 'retained finger/object forces, identity or coordinates contradict the contact measurement'
+    snapshots = {}
+    def walk(value, path):
+        if not isinstance(value, dict): return
+        if value.get('kind') == 'contact_points' and 'contacts' in value:
+            snapshots[path] = validate_contact_witness(value)
+            return
+        for key, child in value.items():
+            walk(child, path + '/' + key)
+    for field in ('physical_events', 'interaction_evidence'):
+        walk(atomic.get(field), field)
+    if snapshots: output['contact_witnesses'] = snapshots
 
 
 def apply_support_validation(atomic, output):
@@ -236,6 +265,7 @@ def audit_atomic(atomic, variant=None):
     apply_recognition_validation(atomic, output)
     apply_flow_validation(atomic, output)
     apply_support_validation(atomic, output)
+    apply_contact_validation(atomic, output)
     if atomic.get("closest_approach"):
         alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}
         output["closest_approach"] = audit_atomic(alternate, variant)["conditions"]
