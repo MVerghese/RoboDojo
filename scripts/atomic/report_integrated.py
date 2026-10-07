@@ -16,7 +16,7 @@ def integrate(suites):
     combined = deepcopy(suites[0][4])
     combined.update(tasks=[], summary=[], runs=[], limitations=[], checkpoints={})
     counts = ('valid_episodes', 'matched_pairs', 'total_pairs',
-              'reproduced_event_scores', 'score_mismatches')
+              'reproduced_event_scores', 'score_mismatches', 'recognition_witness_failures')
     for key in counts:
         combined[key] = 0
     included = set()

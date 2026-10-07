@@ -31,7 +31,7 @@ METHOD = (
     'action, condition, modifier and slot, weighting each observed condition equally rather '
     'than each task equally. '
     'One episode per arm gives descriptive results, not a statistical steering estimate.'
-    ' Raw strike witnesses are checked separately from numerical reproduction. '
+    ' Raw strike, handover, insertion and release witnesses are checked separately from numerical reproduction. '
     'Incompatible impact/retraction attempts are marked invalid_recognition_window '
     'and excluded from scalar summaries; their recorded values and native outcomes remain retained.'
 )
@@ -245,6 +245,7 @@ def build_report(manifest, result, matrix, root):
             'matched_pairs': matrix['matched_pairs'], 'total_pairs': matrix['total_pairs'],
             'reproduced_event_scores': result.get('reproduced_event_scores'),
             'score_mismatches': result.get('score_mismatches'), 'checkpoints': manifest['checkpoints'],
+            'recognition_witness_failures': result.get('recognition_witness_failures', 0),
             'summary': summary, 'tasks': tasks, 'coverage': manifest.get('coverage', []),
             'limitations': manifest.get('limitations', []), 'scope': manifest.get('scope', 'partial action observers')}
 
@@ -449,6 +450,8 @@ def report_markdown(data):
         f"{data['matched_pairs']}/{data['total_pairs']} verified A/B pairs.**", '',
         f"Collected: {data['updated_at']}. Offline reproduction: {data['reproduced_event_scores']} "
         f"event scores, {data['score_mismatches']} mismatches.", '', '## Measurements and units', '', data['method'], '',
+        'Independent boundary witness validation: ' + str(data.get('recognition_witness_failures', 0))
+        + ' inconsistent windows. These are separate from numerical reproduction mismatches.', '',
         'Distances below are in millimetres and angles in degrees. Raw components show mean / median. '
         'Targets and tolerances use the displayed mm/degree units; orientations use wxyz quaternions. '
         'Selector metadata with explicit `_m`/`_rad` suffixes retains those named units. '
@@ -468,7 +471,7 @@ def report_markdown(data):
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 lines += ['**Recognition witness failures (' + mode + '):** `' + json.dumps(failures, sort_keys=True)
-                          + '`. Incompatible strike windows are excluded from geometric summaries.', '']
+                          + '`. Geometry and paths using invalid boundary events are excluded from geometric summaries.', '']
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             lines += ['No geometric event was observed; continuous error is N/A for both arms.', '']
         for c in task['conditions']:
@@ -517,7 +520,7 @@ def report_html(data):
         content += html_table(CONDITION_HEADERS, condition_rows(task))
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
-                content += '<p><strong>Recognition witness failures (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(failures, sort_keys=True)) + '</code>. Incompatible strike windows are excluded from geometric summaries.</p>'
+                content += '<p><strong>Recognition witness failures (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(failures, sort_keys=True)) + '</code>. Geometry and paths using invalid boundary events are excluded from geometric summaries.</p>'
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             content += '<p>No geometric event observed. Error is N/A for both arms.</p>'
         for c in task['conditions']:
@@ -568,7 +571,7 @@ def report_html(data):
     window.addEventListener('afterprint',()=>printOpen.forEach(([d,open])=>d.open=open));
     '''
     excluded = [[c['task'], c.get('blocker') or 'Not selected', 'None; no episodes'] for c in data['coverage'] if not c['included']]
-    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoboDojo · Continuous conditioning errors</title><style>' + css + '</style></head><body><main><header><div class="eyebrow">RoboDojo · Geometric conditioning benchmark</div><h1>Continuous conditioning errors</h1><p>' + esc(f"{data['valid_episodes']} valid episodes · {data['included_tasks']}/{data['catalog_tasks']} tasks · {data['matched_pairs']}/{data['total_pairs']} verified A/B pairs") + '</p><p>Collected ' + esc(data['updated_at']) + ' · ' + esc(str(data['reproduced_event_scores'])) + ' event scores reproduced · ' + esc(str(data['score_mismatches'])) + ' mismatches</p></header><section class="method"><h2 style="margin-top:0">Measurements and units</h2><p>' + esc(data['method']) + '</p><p class="muted">Distances: mm. Angles: degrees. Components: mean / median. Targets and tolerances use mm/degrees; orientations use wxyz quaternions. Selector metadata keeps named _m/_rad units. Axes 0/1/2 mean local x/y/z. Signed separation and footprint overlap are measurements, not unsigned errors.</p></section>' + ('<h2>Original screen and expansion suites</h2>' + html_table(RUN_HEADERS, run_rows(data)) if data.get('runs') else '') + '<h2>Matched-pair summary</h2>' + html_table((['Suite'] if data.get('runs') else []) + SUMMARY_HEADERS, summary_rows(data)) + '<h2>Task index</h2>' + html_table(([TASK_HEADERS[0], 'Suite', *TASK_HEADERS[1:]] if data.get('runs') else TASK_HEADERS), task_rows(data)) + '<h2>Conditioning and results by task</h2><div class="controls"><label for="search">Find task / action</label><input id="search" type="search" placeholder="Search tasks, actions or conditioning"><label><input id="matched" type="checkbox"> Verified pairs only</label><button id="expand">Expand tasks</button><button id="collapse">Collapse tasks</button><span id="count" aria-live="polite"></span></div>' + ''.join(cards) + '<h2>Eval tasks not run</h2>' + html_table(['Task', 'Reason', 'Conditioning tested'], excluded) + '<h2>Scope and limitations</h2><p>' + esc(data['scope']) + '</p><ul>' + ''.join('<li>' + esc(x) + '</li>' for x in data['limitations']) + '<li>Missing events are not scores. A release error does not establish successful placement.</li><li>Recognizers without observed events do not establish live recognition accuracy.</li></ul><footer>Generated from suite.json, frozen conditioning programs and benchmark_results.json. Exact continuous values: eval-matrix-continuous.json. For integrated reports, raw action outcomes remain in each listed evidence directory’s benchmark_results.json. This HTML is self-contained and needs no network connection.</footer></main><script>' + javascript + '</script></body></html>\n'
+    return '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>RoboDojo · Continuous conditioning errors</title><style>' + css + '</style></head><body><main><header><div class="eyebrow">RoboDojo · Geometric conditioning benchmark</div><h1>Continuous conditioning errors</h1><p>' + esc(f"{data['valid_episodes']} valid episodes · {data['included_tasks']}/{data['catalog_tasks']} tasks · {data['matched_pairs']}/{data['total_pairs']} verified A/B pairs") + '</p><p>Collected ' + esc(data['updated_at']) + ' · ' + esc(str(data['reproduced_event_scores'])) + ' event scores reproduced · ' + esc(str(data['score_mismatches'])) + ' mismatches</p><p>Independent boundary witness validation: ' + esc(str(data.get('recognition_witness_failures', 0))) + ' inconsistent windows</p></header><section class="method"><h2 style="margin-top:0">Measurements and units</h2><p>' + esc(data['method']) + '</p><p class="muted">Distances: mm. Angles: degrees. Components: mean / median. Targets and tolerances use mm/degrees; orientations use wxyz quaternions. Selector metadata keeps named _m/_rad units. Axes 0/1/2 mean local x/y/z. Signed separation and footprint overlap are measurements, not unsigned errors.</p></section>' + ('<h2>Original screen and expansion suites</h2>' + html_table(RUN_HEADERS, run_rows(data)) if data.get('runs') else '') + '<h2>Matched-pair summary</h2>' + html_table((['Suite'] if data.get('runs') else []) + SUMMARY_HEADERS, summary_rows(data)) + '<h2>Task index</h2>' + html_table(([TASK_HEADERS[0], 'Suite', *TASK_HEADERS[1:]] if data.get('runs') else TASK_HEADERS), task_rows(data)) + '<h2>Conditioning and results by task</h2><div class="controls"><label for="search">Find task / action</label><input id="search" type="search" placeholder="Search tasks, actions or conditioning"><label><input id="matched" type="checkbox"> Verified pairs only</label><button id="expand">Expand tasks</button><button id="collapse">Collapse tasks</button><span id="count" aria-live="polite"></span></div>' + ''.join(cards) + '<h2>Eval tasks not run</h2>' + html_table(['Task', 'Reason', 'Conditioning tested'], excluded) + '<h2>Scope and limitations</h2><p>' + esc(data['scope']) + '</p><ul>' + ''.join('<li>' + esc(x) + '</li>' for x in data['limitations']) + '<li>Missing events are not scores. A release error does not establish successful placement.</li><li>Recognizers without observed events do not establish live recognition accuracy.</li></ul><footer>Generated from suite.json, frozen conditioning programs and benchmark_results.json. Exact continuous values: eval-matrix-continuous.json. For integrated reports, raw action outcomes remain in each listed evidence directory’s benchmark_results.json. This HTML is self-contained and needs no network connection.</footer></main><script>' + javascript + '</script></body></html>\n'
 
 
 def write_continuous_report(manifest, result, matrix, root):

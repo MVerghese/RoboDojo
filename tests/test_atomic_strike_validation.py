@@ -50,7 +50,8 @@ class StrikeValidationTests(unittest.TestCase):
         stage['physical_events']['strike']['elapsed_physics_steps']=2
         score={'conditions':{'contact':{'status':'reproduced','recorded_result':{'error':.003}},
                              'final':{'status':'reproduced'}},
-               'trajectories':{'path':{'status':'reproduced'}}}
+               'trajectories':{'path':{'status':'reproduced','condition':{'start_event':{
+                   'kind':'recognition_event','name':'impact'}}}}}
         apply_recognition_validation(stage,score)
         self.assertEqual(score['conditions']['contact']['status'],'invalid_recognition_window')
         self.assertEqual(score['conditions']['contact']['numerical_reproduction_status'],'reproduced')

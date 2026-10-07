@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 6)
 
-The current source passes **240 offline atomic tests**. Dated sections below
+The current source passes **245 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -31,6 +31,16 @@ cross-attempt stitching. Cached strike audits now receive independent raw-witnes
 validation; incompatible windows are excluded from scalar MD/HTML summaries.
 The original trace and arithmetic audit remain retained. Corrected paired runtime
 validation is the next live check.
+
+The broader boundary audit found three additional inconsistent archives in
+retained traces: two conditioned bowl releases and the baseline bottle handover's
+initial giver event. Geometry using those specific invalid events is excluded;
+the valid receiver-only event remains scored. Seven other completed release/
+handover archives passed boundary identity checks; 64 incomplete windows remain
+unobserved. These checks do not reconstruct unsaved intermediate force histories.
+Physical completion before a failed native endpoint is also archived on retry;
+it cannot freeze a stale release/entry event. Completed successful stages retain
+their evidence. Fresh bowl/handover runtime validation is being prepared.
 
 Corrected support recognition has live stack-block/stack-bowl evidence. See
 [EXPANSION_STATUS.md](EXPANSION_STATUS.md) for frozen suite provenance and the

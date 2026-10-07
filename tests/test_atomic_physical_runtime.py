@@ -122,6 +122,20 @@ def stage(kind, ident='action', label=None):
 
 
 class PhysicalTests(unittest.TestCase):
+    def test_physical_completion_without_native_goal_does_not_freeze_a_later_attempt(self):
+        w=World(); w.goal=False; s=AtomicSession(w.env,stage('supported_release'),0)
+        w.hold(); w.tick(s,2); w.poses['object'][0]=.03; w.tick(s)
+        w.release(); self.assertFalse(w.tick(s,3))
+        self.assertIn('settled',s.summary()['physical_events'])
+        w.hold(); w.tick(s,2)
+        summary=s.summary()
+        self.assertFalse(summary['physical_events'])
+        self.assertIsNone(summary['interaction_evidence'])
+        self.assertIsNotNone(summary['aborted_recognition_attempts'][0]['physical_completion_without_stage_success'])
+        w.goal=True; w.poses['object'][0]=.06; w.tick(s); w.release()
+        self.assertTrue(w.tick(s,3))
+        self.assertEqual(s.summary()['physical_events']['settled']['attempt_index'],1)
+
     def test_aborted_handover_insertion_and_release_do_not_reuse_intermediate_events(self):
         for kind in ('grip_transfer', 'held_insertion', 'supported_release'):
             with self.subTest(kind=kind):

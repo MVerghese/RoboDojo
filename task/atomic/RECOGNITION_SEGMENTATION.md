@@ -16,7 +16,9 @@ Contact loss, arm changes, invalid entry/transfer intervals, strike timeouts and
 sampling gaps clear the applicable current window. Regrasp after release starts
 another transport interval. Current events carry an `attempt_index`; their
 event-conditioned geometry and paths cannot borrow an aborted start. Completed
-evidence stays immutable. Archived events, scores, failures and partial paths
+successful-stage evidence stays immutable. Physical completion without native
+stage success is archived if that interval is interrupted before a later retry.
+Archived events, scores, failures and partial paths
 remain available for diagnosis rather than becoming a completed action.
 
 The conditioned xylophone trace exposed the original bug: `strike_7` retained an
@@ -25,6 +27,15 @@ at 3635. The first impact's hold had ended. Its original path spanned incompatib
 attempts. New regression tests reproduce retries after contact loss, timeout and
 sampling gaps, and interrupted handover/insertion/release windows. Fresh paired
 rollouts are required to validate the corrected runtime.
+
+The broader raw-boundary validator found two stale conditioned bowl releases and
+one stale baseline bottle giver event. It compares held-interval identities,
+boundary order and declared thresholds without trusting success flags. It does
+not reconstruct unsaved intermediate force history. Reproduce a report audit:
+
+```bash
+python scripts/atomic/validate_recognition_windows.py --report /path/eval_report.json --output /tmp/window-proof.json
+```
 
 Current live segmentation evidence includes the contact-held mallet pickup and
 eight held impact/retraction intervals in the `geometry-tool-contacts-1006`

@@ -42,6 +42,17 @@ across the current integrated evidence, with zero arithmetic reproduction
 mismatches and one separately reported recognition witness failure. The runtime
 attempt-archive repair is covered by 240 offline tests and needs fresh live runs.
 
+Broader retained-boundary audit: seven completed handover/release windows passed,
+three archives were inconsistent (two conditioned bowl releases and one baseline
+bottle giver event), and 64 windows had no complete events. These are boundary
+checks, not reconstruction of all intermediate contacts. Four affected bowl
+release scores are excluded, while the valid handover receiver-only score stays.
+The integrated count is now **674 reproduced event scores**, with zero arithmetic
+mismatches and **four inconsistent witness windows** including the strike.
+Raw reports and previous derived results remain retained. Current source passes
+245 offline tests. Sixteen fresh cases are active, including the strike pair;
+the repaired selection baseline has reached real checkpoint inference.
+
 All pairs use the 25k checkpoint, layout/seed 0, one episode per arm, reservation
 `cosmos-rollout-luemzvvo`, priority `high-9000`, no burst, and the 512 MiB/two-sample
 GPU admission guard. The global controller window allows at most 32 queued plus

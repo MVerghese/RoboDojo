@@ -87,25 +87,36 @@ def audit_selection(selection):
 
 
 def apply_recognition_validation(atomic, output):
-    if (atomic.get('recognition') or {}).get('kind') != 'held_tool_strike':
-        return
-    from scripts.atomic.validate_strike_evidence import validate_strike
-    witness = validate_strike(atomic)
+    if (atomic.get('recognition') or {}).get('kind') == 'held_tool_strike':
+        from scripts.atomic.validate_strike_evidence import validate_strike
+        witness = validate_strike(atomic)
+        window_errors = {'event_order', 'elapsed_steps', 'same_arm_hold_interval',
+                         'retraction_rise_from_raw_poses', 'contiguous_retraction_samples'}
+        invalid = {'impact', 'retracted', 'strike'} if window_errors.intersection(witness.get('failed_checks', [])) else set()
+    else:
+        from task.atomic.recognition_validation import validate_recognition_window
+        witness = validate_recognition_window(atomic)
+        if witness['status'] == 'not_applicable':
+            return
+        invalid = set(witness.get('invalid_event_names', []))
     output['recognition_witness'] = witness
-    window_errors = {'event_order', 'elapsed_steps', 'same_arm_hold_interval',
-                     'retraction_rise_from_raw_poses', 'contiguous_retraction_samples'}
-    if not window_errors.intersection(witness.get('failed_checks', [])):
+    if not invalid:
         return
     conditions = {c['id']: c for c in atomic.get('conditions', [])}
     for ident, row in output['conditions'].items():
-        if conditions.get(ident, {}).get('event', {}).get('kind') == 'recognition_event':
+        event = conditions.get(ident, {}).get('event', {})
+        if event.get('kind') == 'recognition_event' and event['name'] in invalid:
             row['numerical_reproduction_status'] = row.get('numerical_reproduction_status', row['status'])
             row['status'] = 'invalid_recognition_window'
-            row['reason'] = 'strike event witnesses span incompatible physical attempts'
+            row['reason'] = 'event witnesses span incompatible physical attempts or fail boundary checks'
     for row in output.get('trajectories', {}).values():
+        c = row.get('condition', {})
+        if not any(c.get(key, {}).get('kind') == 'recognition_event'
+                   and c[key]['name'] in invalid for key in ('start_event', 'end_event')):
+            continue
         row['numerical_reproduction_status'] = row.get('numerical_reproduction_status', row['status'])
         row['status'] = 'invalid_recognition_window'
-        row['reason'] = 'strike event witnesses span incompatible physical attempts'
+        row['reason'] = 'path boundary witnesses span incompatible physical attempts'
 
 
 def validate_cached_recognition(report, scores):

@@ -96,7 +96,7 @@ class AtomicSession:
     def _action_index(self):
         return int(self.env.take_action_cnt[self.env_idx]) if hasattr(self.env, 'take_action_cnt') else None
 
-    def abort_recognition_attempt(self, events, reason, attempt_index):
+    def abort_recognition_attempt(self, events, reason, attempt_index, completion=None):
         """Archive interrupted event scores; never stitch their path to a retry."""
         names = set(events)
         affected = {c['id'] for c in self.stage.geometry
@@ -104,6 +104,7 @@ class AtomicSession:
                     and c['event']['name'] in names}
         row = {'attempt_index': attempt_index, 'reason': reason,
                'aborted_physics_step': self.env._atomic_contacts.steps,
+               'physical_completion_without_stage_success': deepcopy(completion),
                'physical_events': deepcopy(events), 'geometry': {}, 'measurement_failures': {}}
         for key, source in (('geometry', self.results), ('measurement_failures', self.measurement_failures)):
             row[key] = {ident: source.pop(ident) for ident in affected if ident in source}
@@ -112,6 +113,7 @@ class AtomicSession:
         if self._trajectory_observer:
             row['trajectories'] = self._trajectory_observer.abort_events(names)
         self.aborted_recognition_attempts.append(row)
+        self.interaction_evidence = None
 
     @staticmethod
     def _selector_key(selector):

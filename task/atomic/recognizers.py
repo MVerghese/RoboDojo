@@ -301,11 +301,12 @@ class PhysicalRecognizer:
         Completed evidence is immutable. Source-qualified material transfers
         have per-particle histories rather than this single interaction window.
         """
-        if (self.events and self.evidence is None and self.kind in {
+        if (self.events and not self.session.success and self.kind in {
                 'held_tool_strike', 'grip_transfer', 'held_insertion',
                 'held_multi_tip_insertion', 'supported_release'}):
-            self.session.abort_recognition_attempt(self.events, reason, self.attempt_index)
+            self.session.abort_recognition_attempt(self.events, reason, self.attempt_index, self.evidence)
             self.events.clear()
+            self.evidence = None
             self.attempt_index += 1
         self.state.clear()
 
@@ -375,7 +376,7 @@ class PhysicalRecognizer:
                             contacting_fingers=len(touch.get('finger_bodies', [])) if touch else 0,
                             transported_while_held=bool(self.state.get('transported')))
         if touch:
-            if 'release' in self.events and self.evidence is None:
+            if 'release' in self.events and not self.session.success:
                 self._reset_attempt('regrasp_after_release')
             self.state.pop('settling', None)
             if raw_hold:

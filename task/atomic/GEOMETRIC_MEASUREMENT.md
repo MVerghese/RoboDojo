@@ -18,6 +18,15 @@ their arithmetic reproduces. Recorded numbers and native outcomes remain
 retained; this instrumentation failure is not zero error or a policy failure.
 MD and HTML identify the affected stage and failed witness checks.
 
+Boundary validators now also compare handover giver/overlap/receiver hold
+identities, insertion entry against the completing hold, and release against the
+completing transported hold. Event ordering, attempt IDs when available and
+declared boundary thresholds are checked. Only geometry and paths using invalid
+events are excluded; a stale giver event does not invalidate a consistent
+receiver-only measurement. Missing fields are partial evidence; absent complete
+windows are unobserved. Raw boundary checks cannot reconstruct contact persistence
+at unsaved intermediate physics steps.
+
 October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
 landmark or material state immediately before scene reset. It measures goal
 error even if the action fails, and samples episode end for stages completed

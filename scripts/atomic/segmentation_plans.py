@@ -41,7 +41,7 @@ DEPENDENCIES = (
     'env/scene_manager/objects/fluid.py',
     'env/scene_manager/objects/garment.py',
     'task/atomic/contacts.py',
-    'task/atomic/replay.py',
+    'task/atomic/replay.py', 'task/atomic/recognition_validation.py',
     'src/eval_client/eval_env.py',
 )
 

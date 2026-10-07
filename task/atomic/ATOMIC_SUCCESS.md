@@ -15,6 +15,14 @@ has seven consistent strike witnesses and one incompatible event window. The
 recorded native/atomic outcomes remain intact, with a separate recognition
 validation failure; its affected geometry is excluded from adherence summaries.
 
+Physical completion and native stage success can occur at different times. If
+physical completion occurs while native endpoint checks still fail, a subsequent
+invalid interval/regrasp archives that completion and starts a fresh physical
+window. It cannot latch the prior release/entry as the next attempt's boundary.
+Successful completed stages keep their evidence. Boundary validators also check
+handover/insertion/release identity consistency separately from their recorded
+success flags and from numerical geometric reproduction.
+
 October 6 correction: supported placement preserves an already verified
 two-finger held transport while the same arm releases its jaws one at a time.
 One remaining finger is not full release; motion with one finger cannot
