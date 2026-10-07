@@ -598,6 +598,10 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                     if self.physx_monitor_enabled:
                         self._check_physx_broken_envs()
                         self._check_endpose_finite(env_idx_list)
+                    observer = getattr(self, '_atomic_replay_observer', None)
+                    if observer is not None and observer.error:
+                        self.robot_manager.control_manager.discard_pending(0)
+                        raise ValueError(observer.error)
                     stop = getattr(self, '_atomic_replay_stop', None)
                     if stop is not None and stop.reached:
                         dropped = self.robot_manager.control_manager.discard_pending(0)
@@ -943,13 +947,15 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             start = 0
             self._atomic_start_evidence = validate_start_boundary(self.atomic_program, self.atomic_stage, self.atomic_trace)
             partial = self._atomic_start_evidence['mode'] == 'linear_substep_prefix'
-            if partial:
+            timed = bool(self._atomic_start_evidence.get('prefix_physics_boundaries'))
+            if timed:
                 validate_substep_runtime(self, self.atomic_trace)
             if self.atomic_trace is not None:
                 if self.atomic_trace.layout_id != int(self.env_seeds[0]):
                     raise ValueError("atomic trace layout_id does not match the loaded scene")
-                observer = (PrefixReplayObserver(self, self.atomic_program, self.atomic_stage)
-                            if self._atomic_start_evidence['mode'] in ('linear_prefix', 'linear_substep_prefix') else None)
+                observer = (PrefixReplayObserver(self, self.atomic_program, self.atomic_stage,
+                            boundary_plan=self._atomic_start_evidence)
+                            if self._atomic_start_evidence['mode'] in ('linear_prefix', 'linear_substep_prefix', 'linear_timed_prefix') else None)
                 self._atomic_replay_observer = observer
                 self._atomic_replaying = True
                 def take_partial_action(action, physics_substeps):
@@ -968,7 +974,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                         observer.stage_succeeded if observer is not None else None,
                         take_partial_action=take_partial_action,
                     )
-                    if partial:
+                    if timed:
                         self._atomic_start_evidence['physics_boundary_verified'] = True
                 finally:
                     self._atomic_replaying = False

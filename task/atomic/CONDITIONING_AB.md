@@ -318,14 +318,14 @@ scene without a trace, including roots listed after another independent root.
 A trace recording that root at action zero also uses the initial scene; no
 actions, parser reset or robot-origin reset are applied. Dependent stages require
 a **layout-linked simulator action trace** from a linear program with all
-preceding, strictly increasing whole-action stage boundaries
+preceding, strictly increasing recorded stage boundaries
 and successful prefix predicates. LeRobot demonstration videos alone do not
 provide that restart state. See [recording and replay](README.md#record-annotate-run).
 
 An independent graph stage recorded at a nonzero boundary still needs state
 restoration and is rejected. Repeats, gates, choices and label templates must be
 resolved into a concrete program first. Per-episode `atomic_start` evidence
-records `initial_scene`, `linear_prefix` or `linear_substep_prefix`, the selected stage/action index and
+records `initial_scene`, `linear_prefix`, `linear_substep_prefix` or `linear_timed_prefix`, the selected stage/action index and
 `state_restoration=false`; prefix replay is not a full simulator snapshot.
 
 During a nonzero prefix, persistent preceding-stage recognizers receive every
@@ -340,9 +340,13 @@ Fresh recorded traces include per-action physics spans and simulator dt/control
 cadence. A selected stage activated inside a command can use these fields to
 stop that command at the synchronized physics boundary, verify its preceding
 action and discard the remaining command tail. This path currently requires a
-linear program with whole-action preceding starts, a single environment, joint
-actions and no scripted support-arm controls. Old traces without timing metadata,
-IK actions, graph boundaries and earlier partial boundaries are rejected. Host
+linear program, a single environment, joint actions and no scripted support-arm
+controls. Earlier partial boundaries are scheduled from their actual physics
+indices, including distinct boundaries within one command. A whole selected
+boundary with partial predecessors uses `linear_timed_prefix`. Old traces without
+timing metadata, IK actions, graph boundaries and ambiguous/nonincreasing physics
+boundaries are rejected. Multiple partial predecessors have host validation;
+their live simulator proof remains pending. Host
 tests cover interruption and physical verification. A fresh bowl proof replayed
 87 whole commands plus 7 substeps of command 88, discarded its 3 remaining
 controls and verified the pickup/lift; the selected placement also succeeded.

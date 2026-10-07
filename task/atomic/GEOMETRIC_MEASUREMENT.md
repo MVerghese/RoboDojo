@@ -977,7 +977,10 @@ sample. Geometry scoring starts in a fresh selected-stage session after physical
 prefix verification; preceding geometry does not enter that score. Applied
 controls and drive targets remain while the unexecuted command tail is removed.
 `atomic_start` separately records replayed/discarded substeps and boundary
-verification. Missing timing, cadence changes and scripted support-arm controls
+verification. Timed linear prefixes also retain the action/physics schedule for
+every preceding stage. The observer can activate multiple predecessors inside
+one command; their geometry remains outside the selected score. Host validation
+passes, while live proof of multiple partial predecessors remains pending. Missing timing, cadence changes and scripted support-arm controls
 are rejected. A fresh bowl simulator proof verified 87 whole commands plus 7
 substeps of command 88 and discarded 3 pending controls. The preceding grasp/lift
 and selected placement succeeded. The retained original/replayed root positions

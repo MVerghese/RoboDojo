@@ -690,7 +690,11 @@ Independent validation artifacts retain raw report hashes.
 
 Timing-bearing traces now permit a selected stage to start inside an interpolated
 joint command. Persistent preceding recognizers verify their physical/native/hold
-requirements at that exact synchronized physics boundary. A replayed substep
+requirements at that exact synchronized physics boundary. Earlier partial
+predecessors are activated at their own recorded physics boundaries, with no
+rounding to command endpoints. Whole-command verification waits for native
+endpoint updates. Host tests cover multiple partial boundaries and contact loss;
+live proof of the multiple-predecessor path remains pending. A replayed substep
 count alone cannot certify success. The evaluator stops before the interrupted
 command's native endpoint bookkeeping, retains applied controls and drops its
 unexecuted tail. Host counterexamples cover timing gaps and forbidden scripted

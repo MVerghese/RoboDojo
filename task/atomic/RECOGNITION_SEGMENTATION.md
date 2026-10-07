@@ -313,8 +313,11 @@ still reject replay. Graph starts require restoration that is not yet implemente
 Fresh traces also retain `action_physics_spans` (contact-buffer start/end physics
 indices for each native control action) and `control_timing` (`physics_dt` in
 seconds and `control_substeps`). A selected substep boundary can use
-`linear_substep_prefix` when the concrete program is linear and every preceding
-stage has a strictly increasing whole-action start. The trace's action spans
+`linear_substep_prefix` when the concrete program is linear. Preceding stages
+may also activate inside commands, including multiple distinct boundaries in one
+command. Each boundary must have a strictly increasing recorded physics index;
+the first stage must start at the initial whole-action boundary. A selected whole
+command boundary with partial predecessors uses `linear_timed_prefix`. The trace's action spans
 must be contiguous and match its recorded control cadence. Old traces missing
 these fields are rejected for substep replay, rather than inferring timing.
 
@@ -333,8 +336,14 @@ The selected placement also succeeded. Its root-position difference from the
 original start was 0.008497716 mm; this compares one object root, not full state.
 The proof and source-report hashes are retained in the separate replay artifact
 and displayed in the unified MD/HTML report without entering full-task A/B counts.
-This does not support earlier substep starts within the same prefix or restore
-task-specific memory/game state.
+The observer activates each preceding recognizer at its recorded physical
+boundary and retains its history until the next boundary. Whole-command native
+checks run after native endpoint updates. Timing/order divergence is raised by
+the control loop outside the physics callback and discards pending controls.
+Host tests cover two boundaries in one command, a whole-command endpoint after a
+partial predecessor, lost contact and malformed timing. Live proof of multiple
+partial predecessors is still pending. Task-specific memory/game state is not
+restored.
 
 ## 7. What is still needed for all 54 eval tasks
 
