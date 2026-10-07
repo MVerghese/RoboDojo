@@ -17,11 +17,12 @@ GEOMETRY_KINDS = frozenset(
     {"point", "pose", "relative_displacement", "relative_orientation", "spatial_relation"}
 )
 EVENT_KINDS = frozenset({"stage_success", "first_lift", "first_motion", "first_predicate", "first_contact", "before_contact", "recognition_event", "attempt_end"})
-CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'})
+CONTACT_POSE_KINDS = frozenset({'contact_pose', 'object_contact_pose'})
+CONTACT_KINDS = frozenset({'contact_points', 'object_contact_points'}) | CONTACT_POSE_KINDS
 MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_pose", "object_center_position", "robot_ee_pose", "functional_point", "support_point", "articulated_link_pose", "joint_link_pose"}) | CONTACT_KINDS
 CURVE_KINDS = frozenset({'cloth_curve', 'cloth_model_curve'})
 MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame','model_calibrated_frame'} | CURVE_KINDS
-FRAME_KINDS = MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS - CURVE_KINDS
+FRAME_KINDS = (MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS - CURVE_KINDS) | CONTACT_POSE_KINDS
 OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame','model_calibrated_frame','cloth_patch_surface','cloth_model_patch'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
                                'near', 'inside_box', 'inside_region', 'inside_aperture', 'inside_trace_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment','intersects_curve','coincides_with_curve'})
@@ -55,6 +56,23 @@ def _read_json(path):
 def _validate_selector(selector, name):
     if not isinstance(selector, dict) or selector.get("kind") not in MEASUREMENT_KINDS:
         raise ValueError(f"{name} must have kind in {sorted(MEASUREMENT_KINDS)}")
+    if selector['kind'] in CONTACT_POSE_KINDS:
+        base = {k:v for k,v in selector.items() if k != 'orientation_frame'}
+        base['kind'] = 'contact_points' if selector['kind']=='contact_pose' else 'object_contact_points'
+        _validate_selector(base, name+'.contacts')
+        frame = selector.get('orientation_frame')
+        _validate_selector(frame, name+'.orientation_frame')
+        if frame.get('time','live') != 'live':
+            raise ValueError('contact orientation frame must be live at the contact sample')
+        if selector['kind']=='contact_pose':
+            if (frame['kind']!='robot_ee_pose' or frame.get('arm')!='contacting'
+                    or frame.get('label')!=selector['label']
+                    or frame.get('min_finger_bodies',2)<selector.get('min_finger_bodies',1)):
+                raise ValueError('finger contact pose needs the same physically contacting arm frame')
+        elif (frame['kind'] not in ('object_pose','functional_point','calibrated_frame','model_calibrated_frame')
+                or frame.get('label')!=selector['label']):
+            raise ValueError('object contact pose needs a named physical frame on the first contacting object')
+        return
     common = {'kind', 'time'}
     fields = {'robot_ee_pose': {'arm', 'label', 'min_finger_bodies'},
               'model_calibrated_frame': {'label', 'models'},
@@ -260,6 +278,8 @@ def _validate_condition(condition):
             raise ValueError('object position relations require explicit points scope; they do not measure whole objects')
     if condition.get("reference") is not None:
         _validate_selector(condition["reference"], f"condition {condition['id']}.reference")
+        if condition['reference']['kind'] in CONTACT_POSE_KINDS:
+            raise ValueError('contact poses are measurements; use a physical landmark as reference')
         if condition['reference']['kind'] not in FRAME_KINDS and not (
                 kind == 'spatial_relation' and condition.get('relation_scope') == 'curves'
                 and condition['reference']['kind'] in CURVE_KINDS):

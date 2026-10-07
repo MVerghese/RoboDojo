@@ -3,14 +3,32 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 336 host tests; completed bowl and multiple-boundary button
-selected-stage replay proofs; independent placement-support and finger-force
-snapshot audits. A fresh 16-run contact-binding A/B batch is running. Single
-ancestry inside a concrete graph has host validation, with dedicated live proof
-being prepared. Cloth force/material correspondence, unique task creases, full
+Current verification: 346 host tests; completed bowl, multiple-boundary button
+and single-ancestry graph selected-stage replay proofs; independent support,
+finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
+binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
+validation; eight additional matched contact-frame runs are being prepared. Cloth force/material correspondence, unique task creases, full
 layering/volume transfer and general graph/game/material state restoration remain
 limited. Dated evidence sections retain their earlier snapshots; latest proof
 details are at the end of this document.
+
+### Live single-ancestry graph start proof (October 7)
+
+`stack_blocks_by_language` selected `place_block_1` from the original concrete
+graph. Replay observed only its required ancestor `pick_block_1`, while replaying
+every recorded joint control, including controls performed for independent peers.
+It replayed 132 whole commands plus five physics substeps of command 133 and
+dropped the remaining five. The required pick and selected activation boundary
+verified; the block root position differed by 0.000725 mm. The subsequent selected
+placement failed. This proves this start route, not placement success or general
+merged graph/game/material state restoration. Evidence is retained under
+`geometry-ancestor-replay-validation-1006/prefix-validation.json` and displayed
+separately in the integrated report. It is not a full-task A/B episode.
+
+Explicit contact-frame pose/orientation observes the existing synchronized
+contact event and does not introduce segmentation boundaries. Physical retries,
+attempt identities, archived interrupted events and required ancestor checks
+remain unchanged. The new pair generator retains these recognition definitions.
 
 October 7: the checkpoint transport bridge preserves action-chunk inference
 cadence and intermediate simulator observations; it does not create action

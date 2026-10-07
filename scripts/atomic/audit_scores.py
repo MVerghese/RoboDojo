@@ -165,7 +165,7 @@ def apply_contact_validation(atomic, output):
     from task.atomic.contact_validation import validate_contact_witness
     for ident, raw in atomic.get('geometry', {}).items():
         measurement = raw.get('condition', {}).get('measurement', {})
-        if measurement.get('kind') != 'contact_points' or 'measured_state' not in raw:
+        if measurement.get('kind') not in ('contact_points','object_contact_points','contact_pose','object_contact_pose') or 'measured_state' not in raw:
             continue
         row = output['conditions'].get(ident)
         if row is None: continue
@@ -174,11 +174,11 @@ def apply_contact_validation(atomic, output):
         if witness['status'] == 'inconsistent_contact_evidence':
             row['numerical_reproduction_status'] = row.get('numerical_reproduction_status', row['status'])
             row['status'] = 'invalid_contact_witness'
-            row['reason'] = 'retained finger/object forces, identity or coordinates contradict the contact measurement'
+            row['reason'] = 'retained force contacts, identity, coordinates or physical frame contradict the contact measurement'
     snapshots = {}
     def walk(value, path):
         if not isinstance(value, dict): return
-        if value.get('kind') == 'contact_points' and 'contacts' in value:
+        if value.get('kind') in ('contact_points','object_contact_points','contact_pose','object_contact_pose') and ('contacts' in value or 'contact_source' in value):
             snapshots[path] = validate_contact_witness(value)
             return
         for key, child in value.items():

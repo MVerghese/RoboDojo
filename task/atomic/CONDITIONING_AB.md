@@ -85,6 +85,39 @@ servers that implement the demo runner's method API.
 
 ## 2. Define exactly what the geometry means
 
+### Explicit contact-frame probes
+
+For contact-slot pose/orientation, use `contact_pose` with an explicit
+`orientation_frame` of `robot_ee_pose`, `arm: contacting`, the same object label
+and sufficient `min_finger_bodies`. Tool contacts use `object_contact_pose` with
+`label`, `other_label` and a physical orientation frame on `label`, such as the
+mallet's annotated `beat` functional frame. Both frames must be live. These
+selectors preserve actual manifold positions; they never use EEF translation.
+
+Generate fresh matched programs from previously reviewed pairs with:
+
+```bash
+python scripts/atomic/generate_contact_frame_suite.py \
+  --output-dir /path/to/new-contact-frame-suite \
+  --source-suite /path/to/source-contact-binding/suite.json \
+  --source-suite /path/to/source-tool-push/suite.json \
+  --source-suite /path/to/source-direct-push/suite.json \
+  --tasks stack_blocks_by_language play_Xylophone align_blocks push_T
+```
+
+The generator rejects changed source hashes and differences beyond the prompt,
+preserves native/physical gates and saves source provenance. Each source task
+must occur in exactly one input suite. Pickup and direct push add point, pose,
+z-direction and contact-box probes; tool push/touch add pose and z-direction.
+Existing conditions remain scored and their instructions remain in the
+conditioned prompt. `suite.json.coverage` names every added stage, event,
+reference and frame. Pose errors remain separate mm and degree values.
+The box is centered at the reference origin; the point/pose target can differ.
+
+Both arms must be prepared and frozen together before submission using the
+run commands below. An absent qualifying contact/action remains unobserved.
+Frame adapter source validation is separate from live policy adherence.
+
 Use the [per-slot modifier matrices](TAXONOMY.md) and
 [implemented checker audit](INSTRUMENTATION_AUDIT.md). A geometric condition names:
 

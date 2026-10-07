@@ -3,14 +3,41 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 336 host tests; completed bowl and multiple-boundary button
-selected-stage replay proofs; independent placement-support and finger-force
-snapshot audits. A fresh 16-run contact-binding A/B batch is running. Single
-ancestry inside a concrete graph has host validation, with dedicated live proof
-being prepared. Cloth force/material correspondence, unique task creases, full
+Current verification: 346 host tests; completed bowl, multiple-boundary button
+and single-ancestry graph selected-stage replay proofs; independent support,
+finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
+binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
+validation; eight additional matched contact-frame runs are being prepared. Cloth force/material correspondence, unique task creases, full
 layering/volume transfer and general graph/game/material state restoration remain
 limited. Dated evidence sections retain their earlier snapshots; latest proof
 details are at the end of this document.
+
+### Explicit contact pose and orientation (October 7)
+
+`contact_pose` combines every actual force-bearing finger/object contact point
+with the same-step contacting arm's named physical end-effector link axes.
+`object_contact_pose` combines actual tool/target contact points with a named
+object, functional or calibrated frame on the contacting tool. Both require an
+explicit live `orientation_frame`; contact points alone still have no orientation.
+The end-effector frame supplies axes only. Its translation is never used as the
+grasp/contact position. Surface-normal axes and a tangent gauge are not inferred.
+
+SE(3) adherence reports the maximum contact translation error in mm and full
+physical-frame orientation error in degrees separately. A shared angular error
+cannot hide a worse contact translation. Relative orientation may measure the
+full rotation or explicitly selected frame directions with `orientation_axes`.
+Independent validation reconstructs contact coordinates from raw force rows and
+the saved environment origin, verifies named actor/finger/arm/object bindings,
+and checks the frame pose, quaternion and physics-step agreement. Contradictions
+receive `invalid_contact_witness`, even when cached numerical errors reproduce.
+Missing historical origin/frame metadata remains partial evidence.
+
+Host counterexamples cover distant EEF origins, two simultaneous contacting arms,
+wrong arm/link/step/quaternion, corrupt contact positions, zero pair impulses,
+separate axis/full-orientation scores and independent worst translation. These
+checks validate measurement semantics; the new matched GPU cases supply live
+validation separately. The eight former F cells now have explicit frame adapters
+and are G in the coverage audit. They are not promoted to live L cells yet.
 
 October 7 transport repair: the actual demo runner now explicitly bridges local
 observation updates to checkpoint `infer`, preserving one request per chunk and

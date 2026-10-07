@@ -360,6 +360,8 @@ class PhysXContacts:
         points = np.asarray([row['position_world'] for row in selected], dtype=float) - np.asarray(origin)
         return {'position': points.mean(axis=0).tolist(), 'points': points.tolist()}, {
             **selector, 'frame': 'environment_local_world', 'object_roots': roots,
+            'environment_origin_world_m': np.asarray(origin).tolist(),
+            'force_eligibility': {'min_impulse_norm_ns': 1e-9},
             'contacts': selected, 'physics_step': self.steps, 'contact_reports': self.reports,
             'aggregation': 'maximum per-contact error; centroid is diagnostic only',
         }

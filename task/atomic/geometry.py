@@ -120,13 +120,21 @@ def evaluate_geometry(condition: dict, measured, reference=None) -> GeometryResu
         points = np.asarray(measured['points'], dtype=float)
         if points.ndim != 2 or points.shape[1] != 3 or not len(points) or not np.isfinite(points).all():
             raise ValueError('contact measurement requires nonempty finite Nx3 points')
-        if kind in ('pose', 'relative_orientation'):
+        oriented = kind in ('pose','relative_orientation')
+        if oriented and (orientation is None or measured.get('oriented_contact_frame') is not True):
             raise ValueError('contact points do not define an SE(3) orientation; use an explicit contact frame')
-        results = [evaluate_geometry(condition, p, reference) for p in points]
+        results = [evaluate_geometry(condition, {'position':p,'orientation':orientation} if oriented else p,
+                                     reference) for p in points]
         worst = max(results, key=lambda r: r.error)
+        components = {**worst.components}
+        if kind=='pose':
+            # A common angular error can dominate every normalized pose error.
+            # Translation still reports its own maximum, including tied cases.
+            components['position_m']=max(r.components['position_m'] for r in results)
+            components['orientation_rad']=max(r.components['orientation_rad'] for r in results)
         count_key='material_points' if measured.get('point_kind') in ('cloth','fluid') else 'contact_points'
         return GeometryResult(all(r.passed for r in results), worst.error, worst.tolerance,
-                              {**worst.components, count_key: float(len(points))},
+                              {**components, count_key: float(len(points))},
                               {'centroid_in_reference': local_point.tolist(),
                                'per_contact': [r.observed for r in results]})
 

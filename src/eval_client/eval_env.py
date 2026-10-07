@@ -278,7 +278,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 from task.atomic.surfaces import ObjectSurfaces
                 self._atomic_surfaces = ObjectSurfaces(self)
                 if (any(s.recognition is not None or s.maintained_holds or s.trajectories or s.selection for program in programs for s in program.stages)
-                        or any(c['measurement']['kind'] in ('contact_points', 'object_contact_points')
+                        or any(c['measurement']['kind'] in ('contact_points', 'object_contact_points', 'contact_pose', 'object_contact_pose')
                                or c.get('expected') == 'on_top'
                                or c.get('event', {}).get('kind') in ('first_contact','before_contact')
                                for program in programs for s in program.stages for c in s.geometry)):

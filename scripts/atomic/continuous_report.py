@@ -560,7 +560,7 @@ def report_markdown(data):
                     + '`. Force signs/body identity are separate from geometric arithmetic. Missing raw force or sleep-history proof remains partial; inconsistent witnesses are excluded.', '']
         for mode, witnesses in task.get('contact_validation', {}).items():
             if witnesses:
-                lines += ['**Finger/object contact witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
+                lines += ['**Force-contact witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
                     + '`. These count retained snapshots, not distinct actions. Missing historical root/environment bindings remain partial. Contradictory contact measurements are excluded; force closure and unsaved persistence are not certified.', '']
         for mode, diagnostics in task.get('cloth_contact_diagnostics',{}).items():
             if diagnostics:
@@ -637,7 +637,7 @@ def report_html(data):
                 content += '<p><strong>Named-support witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. Force signs/body identity are separate from geometric arithmetic. Missing raw force or sleep-history proof remains partial; inconsistent witnesses are excluded.</p>'
         for mode, witnesses in task.get('contact_validation', {}).items():
             if witnesses:
-                content += '<p><strong>Finger/object contact witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. These count retained snapshots, not distinct actions. Missing historical root/environment bindings remain partial. Contradictory contact measurements are excluded; force closure and unsaved persistence are not certified.</p>'
+                content += '<p><strong>Force-contact witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. These count retained snapshots, not distinct actions. Missing historical root/environment bindings remain partial. Contradictory contact measurements are excluded; force closure and unsaved persistence are not certified.</p>'
         for mode, diagnostics in task.get('cloth_contact_diagnostics',{}).items():
             if diagnostics:
                 content += '<p><strong>Native cloth contact probe ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(diagnostics,sort_keys=True))+'</code>. Diagnostic counts do not establish calibrated cloth grasp force.</p>'

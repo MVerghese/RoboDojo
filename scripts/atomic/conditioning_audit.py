@@ -26,7 +26,7 @@ MD_PATH = REPO / 'task/atomic/CONDITIONING_AUDIT.md'
 # independently of whether that family's action recognizer exists.
 PROFILES = {
     'selection': ('S', 'Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.'),
-    'contact': ('C', 'Actual same-step finger/object manifold points. P/D/R can score contact location. T/O require a separate physical frame plus contact evidence, not an orientation on a point.'),
+    'contact': ('C', 'Actual same-step finger/object manifold points. P/D/R score every contact location. Explicit contact_pose combines those positions with named contacting-arm link axes for T/O; these are not surface-normal axes.'),
     'goal': ('G', 'Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.'),
     'approach': ('G', 'before_contact retains the synchronized point/frame and reference from the step immediately preceding actual contact. held_tool_strike measures target-relative pre-impact velocity, actual landmark-scoped impact and held separation/retraction. Offline counterexamples; physical frame/normal calibration and live evidence remain.'),
     'release': ('G', 'supported_release emits object-specific release and settled events after held transport, all-finger release, support and bounded pose changes. Live rigid geometry can be sampled at either event. Offline counterexamples; task binding/calibration and live verification remain.'),
@@ -105,7 +105,7 @@ def build():
             status = 'NA' if concept == '—' else code
             detail = note if concept != '—' or profile == 'categorical' else 'No meaningful condition of this geometric type on this slot; intrinsic/context parameters are scored separately.'
             if status == 'C' and factor in 'TO':
-                status = 'F'
+                status, detail = 'G', 'contact_pose measures every actual finger/object contact position with the same-step named contacting-arm link axes. The frame must resolve the measured contacting arm; EEF translation is not substituted for contact position. Independent force, identity, coordinate and orientation-frame counterexamples pass. These are explicit link-axis conditions, not surface-normal orientation; per-task binding and live validation remain.'
             if family == 'pick' and slot == 'lift goal' and factor == 'D':
                 status, detail = 'G', 'Reference time=stage_start freezes the actual landmark frame for lift displacement; root/centre pose and historical rigid footprints remain fixed. Local regression tested; no new live snapshot evidence. This is not a referent-selection adapter.'
             if family == 'push' and slot == 'goal' and factor == 'D':
@@ -113,7 +113,7 @@ def build():
             if profile == 'tool' and slot in ('start contact', 'contact') and factor in 'PDR' and concept != '—':
                 status, detail = 'G', 'Force-bearing object_contact_points resolves explicit tool/target pairs; first_contact records synchronized points/impulses. held_tool_push and held_tool_contact provide held stroke/contact evidence offline. held_tool_strike adds pre-impact approach speed and held retraction after impact; active-part calibration, musical timing and live verification remain. Contacts have no orientation.'
             if profile == 'tool' and slot in ('start contact','contact') and factor in 'TO' and concept != '—':
-                status, detail = 'F', 'Actual contact points have no orientation. Use a separately calibrated physical tool/target frame and independently verify the contact event.'
+                status, detail = 'G', 'object_contact_pose combines actual tool/target force-contact positions with same-step named physical axes on the contacting tool. Explicit object, functional or calibrated frames are supported. Independent pair-force, coordinate and frame checks are implemented; active-part calibration and live validation remain. This is not a surface-normal orientation or proof of tool hold.'
             if family == 'insert' and slot in ('opening', 'alignment', 'goal') and factor == 'R' and concept != '—':
                 status, detail = 'G', 'inside_aperture measures an actual closed-solid cross-section; inside_trace_aperture separately measures closed consistently directed actual material traces at one live calibrated plane, even when remote mesh ends are open. Explicit material paths, directed degree/winding and noncrossing traces are required. Both preserve aperture holes and planar clearance; local traces do not certify whole-solid volume. held_insertion separately requires outside-to-inside depth, hold and target contact. Annotated seat/rim poses measure gap/alignment but do not prove thread engagement or seating force. through/flush are not unrestricted generic relation names; live calibration remains.'
             if family == 'fold' and slot == 'grasp point' and concept != '—':

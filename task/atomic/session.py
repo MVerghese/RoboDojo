@@ -207,6 +207,29 @@ class AtomicSession:
                                                        self._object_pose(selector['label']))
             source['landmark'] = 'centre of live surface bounds in object-root axes; articulated child meshes follow PhysX link poses'
             return (pose if kind == 'object_center_pose' else pose[:3]), source
+        if kind in ('contact_pose','object_contact_pose'):
+            contact_selector={k:v for k,v in selector.items() if k!='orientation_frame'}
+            contact_selector['kind']='contact_points' if kind=='contact_pose' else 'object_contact_points'
+            measured, contact_source=self._resolve_with_source(contact_selector)
+            frame_selector=deepcopy(selector['orientation_frame'])
+            if kind=='contact_pose':
+                frame_selector['arm']=contact_source['resolved_arm']
+            frame_pose, frame_source=self._resolve_with_source(frame_selector)
+            frame_pose=_array(frame_pose)
+            if frame_pose.shape!=(7,) or not np.isfinite(frame_pose).all() or not np.linalg.norm(frame_pose[3:]):
+                raise RuntimeError('contact pose requires an actual finite oriented frame')
+            if kind=='contact_pose':
+                if frame_source.get('resolved_arm')!=contact_source['resolved_arm']:
+                    raise RuntimeError('contact pose orientation belongs to a different arm')
+                if not frame_source.get('ee_link_name'):
+                    raise RuntimeError('contact pose needs a named physical end-effector link')
+            frame_source={**frame_source,'physics_step':self.env._atomic_contacts.steps}
+            return {**measured,'orientation':frame_pose[3:].tolist(),'oriented_contact_frame':True}, {
+                **selector,'frame':'environment_local_world','physics_step':self.env._atomic_contacts.steps,
+                'contact_source':contact_source,'orientation_frame_source':frame_source,
+                'orientation_frame_pose':frame_pose.tolist(),
+                'pose_semantics':'actual contact positions with named same-step physical-frame axes; not surface-normal orientation',
+            }
         if kind == 'contact_points':
             contacts = getattr(self.env, '_atomic_contacts', None)
             if contacts is None:

@@ -3,14 +3,29 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 336 host tests; completed bowl and multiple-boundary button
-selected-stage replay proofs; independent placement-support and finger-force
-snapshot audits. A fresh 16-run contact-binding A/B batch is running. Single
-ancestry inside a concrete graph has host validation, with dedicated live proof
-being prepared. Cloth force/material correspondence, unique task creases, full
+Current verification: 346 host tests; completed bowl, multiple-boundary button
+and single-ancestry graph selected-stage replay proofs; independent support,
+finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
+binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
+validation; eight additional matched contact-frame runs are being prepared. Cloth force/material correspondence, unique task creases, full
 layering/volume transfer and general graph/game/material state restoration remain
 limited. Dated evidence sections retain their earlier snapshots; latest proof
 details are at the end of this document.
+
+### Contact-frame conditioning and success (October 7)
+
+Explicit `contact_pose` and `object_contact_pose` add geometric measurements to
+existing physical events. Pick still requires force-bearing fingers and held
+lift; pushing requires contact-coupled motion; a tool action still requires its
+declared hold/target contact/stroke or impact/retraction sequence. Correct frame
+axes alone cannot satisfy these action predicates. The A/B generator preserves
+all original recognition and native success definitions in both arms.
+
+The force snapshot validator now covers named object pairs as well as fingers.
+It checks the actual impulse, normal, body roots, origin and sampled timing.
+Tool-pair contact alone does not prove a held tool or an active tip. Frame witness
+failures exclude affected geometric scores and remain distinct from the retained
+native/action flags. No cloth grasp, force closure or thread engagement is added.
 
 October 7: checkpoint API failures before rollout have no atomic success result.
 The local observation/inference bridge fixes that transport contract without
