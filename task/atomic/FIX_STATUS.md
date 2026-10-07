@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **264 offline atomic tests**. Dated sections below
+The current source passes **272 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -15,6 +15,21 @@ bounded cleanup after simulator exceptions. Cloth path calibration covers all
 three configured garment models. Repaired curve, selection-query, liquid and
 ball-pour pairs now have retained checkpoint rollouts; exact observations and
 missing physical witnesses are reported separately.
+
+The optional source-mouth gate now checks outward material-center crossings
+through the actual calibrated aperture, including holes and source-frame/model
+binding, while held and tilted. It rejects core-only escapes, unheld crossings,
+sampling gaps and stale qualification after source reentry. Whole-ball source
+aperture fit and whole-fluid volume remain outside this center witness. Fresh
+matched `liquid_mouth`/`pour_mouth` validation is being prepared.
+
+The fresh core-only liquid pair supplies **144 consistent source witnesses**,
+with no inconsistent source evidence (native false/true). The cloth callback
+probe has zero garment headers/points in both completed episodes; applying its
+native report API did not expose cloth/finger forces. Those five grasp-factor
+cells remain missing. The integrated MD/HTML now includes **201 valid episodes,
+99 verified pairs and 913 reproduced event scores**, with zero arithmetic
+mismatches. Historical invalid recognition windows remain excluded.
 
 October 7 transport repair: fresh pinned-client runs reached the policy but
 failed because the demo runner sent `update_obs` to an infer-only checkpoint.

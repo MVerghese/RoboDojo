@@ -56,6 +56,34 @@ crossings. Source cores are explicitly calibrated subsets; leaving a core is
 not a certified passage through the source mouth. These checks do not measure
 whole fluid volume/density or reconstruct unsaved intermediate contact histories.
 
+### Actual source-mouth crossings (October 7)
+
+The optional pour recognizer field `source_exit` binds a live calibrated source
+mouth frame and a physical aperture polygon, including holes. Persistent material
+centers must cross from negative to nonnegative mouth-local z on adjacent physics
+steps, through that polygon, while the source satisfies its two-finger hold and
+tilt threshold. Core departure alone no longer qualifies these new profiles.
+An actual inward mouth crossing or return to the source core clears qualification.
+Source mouth motion is included in the local crossing and relative velocity.
+Substeps with mouth rotation above 0.05 radians and observation/dt gaps are
+unscored. Translation, rotation, velocity and interpolation witnesses remain raw.
+
+The independent audit reconstructs the mouth and core from their declared local
+frames and the retained source root, verifies model/file/scale proof where used,
+and recomputes the mouth crossing. It separately checks source hold/tilt and
+destination flow. `liquid_mouth` and `pour_mouth` are fresh suite phases; existing
+core-only frozen runs keep their original scope. For balls this checks the center
+passing through the mouth and whole-mesh target containment, not the entire ball
+cross-section's fit through the source mouth. This remains sampled linear motion,
+not an exact continuous trajectory or whole-liquid volume measurement.
+
+Fresh core-only liquid validation has **144 consistent source witnesses** (64
+baseline, 80 conditioned), with no inconsistent witnesses. Both partial-cohort
+pour observers completed; native task success was false/true. The cloth contact
+probe returned zero cloth callbacks in both episodes despite active rigid contact
+reports. Per-vertex finger-force grasp calibration therefore remains unavailable.
+Reproduce these checks with `scripts/atomic/validate_material_witnesses.py`.
+
 October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
 landmark or material state immediately before scene reset. It measures goal
 error even if the action fails, and samples episode end for stages completed

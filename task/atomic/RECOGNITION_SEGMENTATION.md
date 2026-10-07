@@ -1,12 +1,20 @@
 # Recognizing and segmenting atomic actions during eval
 
-Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
+Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
 October 7: the checkpoint transport bridge preserves action-chunk inference
 cadence and intermediate simulator observations; it does not create action
 boundaries. Failed pre-rollout RPC calls supply no segmentation evidence. Source
 fingerprints were refreshed after reviewing this evaluator integration change.
+
+Optional source-mouth pour segmentation now waits for an outward persistent
+material-center crossing through the calibrated source aperture while held and
+tilted. Leaving a core does not emit the source-exit boundary in these profiles.
+Return through the mouth or into the core clears qualification. First transfer
+and completion still require target-core entry and the declared settling count.
+Adjacent samples, source-frame/model binding, holds and tilt are saved and audited
+independently. Mouth-center passage does not certify whole-material aperture fit.
 
 ### Interrupted physical attempts (October 7)
 

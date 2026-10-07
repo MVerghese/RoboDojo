@@ -82,7 +82,7 @@ def validate_recognition(config, family, validate_selector):
     if kind not in SCHEMAS or SCHEMAS[kind][0] != family:
         raise ValueError(f'unsupported physical recognizer {kind!r} for {family}')
     fields = SCHEMAS[kind][1] | {'kind'}
-    optional = {'flow'} if kind in ('rigid_material_transfer', 'fluid_material_transfer') else set()
+    optional = {'flow', 'source_exit'} if kind in ('rigid_material_transfer', 'fluid_material_transfer') else set()
     if set(config) - optional != fields:
         raise ValueError(f'{kind} requires exactly {sorted(fields)}')
     if 'flow' in config:
@@ -90,6 +90,9 @@ def validate_recognition(config, family, validate_selector):
         validate_flow(config['flow'], validate_selector)
         if config['flow']['opening']['label'] != config['target_label']:
             raise ValueError('flow opening must belong to the material target')
+    if 'source_exit' in config:
+        from task.atomic.flow import validate_source_exit
+        validate_source_exit(config['source_exit'], validate_selector, config['label'])
     for key in fields & {'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label', 'joint_name', 'joint_tag','fluid_label'}:
         if not isinstance(config[key], str) or not config[key]:
             raise ValueError(f'{kind}.{key} must be a nonempty name')
@@ -199,9 +202,13 @@ class PhysicalRecognizer:
         self.material = {}
         self.fluid = {}
         self.flow_observer = None
+        self.source_exit_observer = None
         if 'flow' in self.c:
             from task.atomic.flow import FlowObserver
             self.flow_observer = FlowObserver(self.c['flow'])
+        if 'source_exit' in self.c:
+            from task.atomic.flow import SourceExitObserver
+            self.source_exit_observer = SourceExitObserver(self.c['source_exit'])
         lm = session.env.scene_manager.layout_manager
         if hasattr(lm, 'instance_type_by_env'):
             expected = ('Garment' if self.kind == 'cloth_landmark_fold' else
@@ -768,19 +775,26 @@ class PhysicalRecognizer:
         frame=self.session._resolve(self.c['source_frame'])
         tilt=float(np.arccos(np.clip(_rotation(frame[3:])[:,2]@self.source_initial_rotation[:,2],-1,1)))
         fluid,source,target=self._fluid_state()
+        mouth_exits = (self._source_mouth_exits(
+            {str(i): p for i,p in zip(fluid['ids'], fluid['positions'])}, self.fluid)
+            if self.source_exit_observer else {})
         counts={'source_only':int(np.sum(source & ~target)), 'target_only':int(np.sum(target & ~source)),
                 'both_interiors':int(np.sum(source & target)), 'outside_both':int(np.sum(~source & ~target)),
                 'initially_eligible':sum(m['eligible'] for m in self.fluid.values()),'transferred':0}
         transferred=[]
         for ident,s,t,position in zip(fluid['ids'],source,target,fluid['positions']):
             ident=int(ident);m=self.fluid[ident]
-            if s:
+            if s or (self.source_exit_observer and str(ident) in self.source_exit_observer.reentries):
                 m.update(exited_while_held_and_tilted=False,target_steps=0)
-            elif m['eligible'] and not m['exited_while_held_and_tilted'] and m['previous_in_source'] and hold and tilt>=self.c['min_tilt_rad']:
+            elif (m['eligible'] and not m['exited_while_held_and_tilted']
+                  and (mouth_exits.get(str(ident), {}).get('result', {}).get('passed') is True
+                       if self.source_exit_observer else m['previous_in_source'])
+                  and hold and tilt>=self.c['min_tilt_rad']):
                 m.update(exited_while_held_and_tilted=True,exit_physics_step=self.contacts.steps,
                          exit_position=position.tolist(),exit_tilt_rad=tilt,
                          exit_contact=deepcopy(hold),exit_source_frame=frame.tolist(),
                          initial_source_frame=self.fluid_initial['region_frames']['source'])
+                if self.source_exit_observer:m['source_mouth_crossing']=deepcopy(mouth_exits[str(ident)])
                 self._event('source_exit',particle_id=ident,held_contact=hold,tilt_rad=tilt,particle_position=position.tolist())
             if m['eligible'] and m['exited_while_held_and_tilted'] and t and not s:
                 m['target_steps']+=1
@@ -795,6 +809,7 @@ class PhysicalRecognizer:
             'partition_count_error':total-len(self.fluid), 'transferred_particle_ids':transferred,
             'containment':'particle centers in explicitly calibrated interior boxes; not whole fluid volumes',
             'outside_semantics':'includes in-flight particles; no connected-component artifact filtering or automatic spill label'}
+        if self.source_exit_observer:self.metrics['source_mouth_sampling']=self.source_exit_observer.summary()
         if len(transferred)>=self.c['required_count']:
             self._emit(metrics=self.metrics,particles=deepcopy(self.fluid),initial_state=self.fluid_initial,
                        current_state={'ids':fluid['ids'].tolist(),'positions':fluid['positions'].tolist(),'source':fluid['source']})
@@ -815,6 +830,9 @@ class PhysicalRecognizer:
         hold = self._hold(self.c['label'], self.c['arm'])
         frame = self.session._resolve(self.c['source_frame'])
         tilt = float(np.arccos(np.clip(_rotation(frame[3:])[:, 2] @ self.source_initial_rotation[:, 2], -1, 1)))
+        mouth_exits = (self._source_mouth_exits({label:self.session._resolve(
+            {'kind':'object_center_position','label':label}) for label in self.material}, self.material)
+            if self.source_exit_observer else {})
         counts = {'in_source': 0, 'in_target': 0, 'outside_both': 0, 'transferred': 0,
                   'initially_eligible': sum(m['eligible'] for m in self.material.values())}
         for label, m in self.material.items():
@@ -822,14 +840,17 @@ class PhysicalRecognizer:
             counts['in_source'] += int(inside_source)
             counts['in_target'] += int(inside_target)
             counts['outside_both'] += int(not inside_source and not inside_target)
-            if inside_source:
+            if inside_source or (self.source_exit_observer and label in self.source_exit_observer.reentries):
                 m['exited_while_held_and_tilted'] = False
                 m['target_steps'] = 0
             elif m['eligible'] and not m['exited_while_held_and_tilted']:
-                if m['previous_in_source'] and hold and tilt >= self.c['min_tilt_rad']:
+                if ((mouth_exits.get(label, {}).get('result', {}).get('passed') is True
+                     if self.source_exit_observer else m['previous_in_source'])
+                        and hold and tilt >= self.c['min_tilt_rad']):
                     m.update(exited_while_held_and_tilted=True, exit_physics_step=self.contacts.steps,
                              exit_contact=deepcopy(hold), exit_tilt_rad=tilt,
                              exit_source_frame=frame.tolist(),initial_source_frame=self.source_initial_frame)
+                    if self.source_exit_observer:m['source_mouth_crossing']=deepcopy(mouth_exits[label])
                     self._event('source_exit', material_label=label, held_contact=hold, tilt_rad=tilt)
             if m['eligible'] and m['exited_while_held_and_tilted'] and inside_target and not inside_source:
                 m['target_steps'] += 1
@@ -839,9 +860,17 @@ class PhysicalRecognizer:
             counts['transferred'] += int(m['target_steps'] >= self.c['settle_steps'])
             m['previous_in_source'] = inside_source
         self.metrics = counts
+        if self.source_exit_observer:self.metrics['source_mouth_sampling']=self.source_exit_observer.summary()
         if counts['transferred'] >= self.c['required_count']:
             self._emit(counts=counts, materials=self.material,
                        containment='whole rigid mesh in explicitly calibrated convex interior boxes')
+
+    def _source_mouth_exits(self, positions, provenance):
+        if self.source_exit_observer is None:return {}
+        opening, source = self.session._resolve_with_source(self.c['source_exit']['opening'])
+        return self.source_exit_observer.observe(positions, opening,
+            {str(i) for i,m in provenance.items() if m['eligible']}, self.contacts.steps,
+            self.session.env.dt, self.session._action_index(), source)
 
 
 def live_joint_state(env, label, joint_name, env_idx, resolved_body_path=None):

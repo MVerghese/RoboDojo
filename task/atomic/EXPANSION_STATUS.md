@@ -14,7 +14,26 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
-Current October 7 snapshot, 16:07 UTC: all twenty repaired-runtime episodes have
+Current October 7 snapshot, 17:14 UTC: the additional cloth and source-witness
+six-episode batch is collected. The integrated MD/HTML has **201 valid episodes,
+99 verified A/B pairs and 913 usable reproduced geometric event scores**, with
+zero arithmetic mismatches. Fresh liquid source evidence is consistent for all
+64 baseline and 80 conditioned crossings. Both partial-cohort observers completed;
+native success is false/true. Both ball runs picked up the cup but supplied no
+completed core-pour observer or destination crossing. Both cloth native tasks and
+fold observers failed; the opt-in native cloth callback probe returned zero
+garment headers, points and finger forces despite active rigid callbacks.
+
+The persistent physical-prefix replay fix is pushed as `bc41fa2`. Its selected-
+stage validation `rb-prefix-pour-1007-000-cd4w` is Running at high-9000 with a
+detached collector. It must verify the 45-action pickup prefix before allowing
+the pour stage to start. This stage-only proof is excluded from full-task A/B
+aggregates. New source-mouth `liquid_mouth`/`pour_mouth` pairs are being prepared
+after 272 passing host tests. The new gate requires actual outward aperture
+passage while held/tilted; source-core departure alone does not qualify. Balls
+use a center crossing plus whole-mesh target containment, not whole-ball mouth fit.
+
+October 7 snapshot, 16:07 UTC: all twenty repaired-runtime episodes have
 been collected after recovering local NFS quota failures. The integrated MD/HTML
 contains **195 valid episodes, 96 verified A/B pairs and 861 usable reproduced
 event scores, with zero arithmetic mismatches**. Fresh strike evidence has sixteen

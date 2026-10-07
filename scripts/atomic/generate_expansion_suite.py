@@ -137,7 +137,7 @@ def calibrated_charger_sections_profile(base, assets, evidence=None):
     return base,text
 
 
-def calibrated_liquid_profile(base, assets, scene, evidence=None):
+def calibrated_liquid_profile(base, assets, scene, evidence=None, mouth_crossing=False):
     """Partial persistent-particle transfer through reviewed vessel cores/mouths."""
     import numpy as np
     from shapely.geometry import Polygon
@@ -197,12 +197,20 @@ def calibrated_liquid_profile(base, assets, scene, evidence=None):
             'tolerance': .025, 'angle_tolerance_rad': math.pi/6,
             'event': {'kind': 'recognition_event', 'name': 'first_transfer'}, 'track_closest': False}]})
     base['stage_dependencies']['calibrated_fluid_core_pour'] = []
+    if mouth_crossing:
+        mouth=calibration['wuliangye/00000']['mouth']['aperture_profile']
+        xy=np.asarray(mouths['wuliangye/00000']['local_pose'][:2])
+        centered={'outer':(np.asarray(mouth['outer'])-xy).tolist(),
+                  'holes':[(np.asarray(ring)-xy).tolist() for ring in mouth.get('holes',[])]}
+        base['stages'][-1]['recognition']['source_exit']={'opening':source_mouth,'aperture_profile':centered}
+        base['stages'][-1]['instruction']='Observe held and tilted source-mouth center crossings followed by target-core transfer.'
     cohort = initial_fluid_core_cohort(scene, base['stages'][-1]['recognition'])
     if cohort['initial_source_only_count'] < base['stages'][-1]['recognition']['required_count']:
         raise ValueError('reviewed fluid source core is empty in retained initial simulator positions')
     if evidence is not None:
         evidence.update(calibration)
         evidence['initial_cohort_preflight'] = cohort
+        if mouth_crossing:evidence['source_exit']=deepcopy(base['stages'][-1]['recognition']['source_exit'])
     text = ('At the first qualified particle transfer from the initially populated reviewed bottle '
             'core, place the actual bottle mouth center 80 mm above the actual cup mouth center '
             'within 25 mm position error, and rotate its mouth frame minus 90 degrees about cup '
@@ -301,7 +309,7 @@ def calibrated_curve_profile(assets, evidence=None):
     return base, text
 
 
-def calibrated_pour_profile(base,scene,assets):
+def calibrated_pour_profile(base,scene,assets,mouth_crossing=False):
     """Whole-ball source-core cohort and measured target mouth crossings."""
     import numpy as np
     from task.atomic.calibration import interior_core_box,opening_section
@@ -360,6 +368,10 @@ def calibrated_pour_profile(base,scene,assets):
              'relation_scope':'objects','expected':'inside_box','half_extents':definitions['vase']['half_extents'],
              'tolerance':.001,'event':{'kind':'attempt_end'},'track_closest':False} for label in eligible]})
     base['stage_dependencies']['calibrated_core_pour']=[]
+    if mouth_crossing:
+        base['stages'][-1]['recognition']['source_exit']={
+            'opening':cup_mouth,'aperture_profile':deepcopy(mouths['cup']['aperture_profile'])}
+        base['stages'][-1]['instruction']='Observe held and tilted source-mouth center crossings followed by whole-ball target-core containment.'
     text=('At the first qualified whole-ball transfer, put the actual cup mouth center 80 mm above '
           'the actual vase mouth center within 25 mm position error, and rotate the cup mouth frame '
           'minus 90 degrees about the vase local y axis within 30 degrees full orientation error. '
@@ -797,13 +809,13 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
             names=['asset-summary.json','charger-parts.json','charger-part-0.npz','charger-part-4.npz','Rigid_socket_00000.npz']
             manifest.setdefault('calibration_inputs',{})['charger_assets']=[{'path':str(Path(asset_calibration_root)/name),
                 'sha256':hashlib.sha256((Path(asset_calibration_root)/name).read_bytes()).hexdigest()} for name in names]
-        if phase=='liquid_core':
+        if phase in ('liquid_core','liquid_mouth'):
             if task!='pour_liquid_into_cup' or not asset_calibration_root:
                 raise ValueError('liquid core profile needs baked vessel calibration evidence')
             names=['asset-summary.json']+[f'Rigid_{name}_{i:05d}.npz' for name,i in [('wuliangye',0),('mug',15),('mug',16),('goblet',6)]]
             manifest.setdefault('calibration_inputs',{})['liquid_assets']=[{'path':str(Path(asset_calibration_root)/name),
                 'sha256':hashlib.sha256((Path(asset_calibration_root)/name).read_bytes()).hexdigest()} for name in names]
-        if phase in ('calibrated','pour_core'):
+        if phase in ('calibrated','pour_core','pour_mouth'):
             if task!=('insert_key' if phase=='calibrated' else 'pour_balls_into_vase'):raise ValueError('calibrated task profile is not bound yet: '+task)
             if not asset_calibration_root:raise ValueError('calibrated bindings require actual asset evidence')
             asset_files=(['asset-summary.json','key-geometry.json','Geometry_key_slot_00000.npz'] if phase=='calibrated' else ['asset-summary.json','Rigid_cup_00006.npz','Geometry_vase_00002.npz'])
@@ -813,11 +825,11 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                 for name in asset_files]
         if phase == 'selection_query' and task != 'stack_blocks':
             raise ValueError('selection query pilot is calibrated only for stack_blocks')
-        if (phase in ('breadth','selection_query') and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws') or phase in ('calibrated','pour_core','liquid_core'):
+        if (phase in ('breadth','selection_query') and task=='stack_blocks') or (phase=='constrained' and task=='fasten_screws') or phase in ('calibrated','pour_core','liquid_core','liquid_mouth','pour_mouth'):
             if not calibration_root:
                 raise ValueError('calibrated task binding requires retained initial simulator evidence')
             source=Path(calibration_root)/'runs'/f'robodojo_25k_{task}_baseline'/'eval_report.json'
-            if phase=='pour_core' and not source.exists():
+            if phase in ('pour_core','pour_mouth') and not source.exists():
                 source=source.parent.parent/f'robodojo_25k_{task}_conditioned'/'eval_report.json'
             report=json.loads(source.read_text())
             detail=next(iter(report['native_results'][0]['details'].values()))
@@ -826,10 +838,10 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
         binding_evidence={}
         base, append = (calibrated_charger_sections_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='charger_sections' else
                         calibrated_charger_profile(pair[0],Path(asset_calibration_root),binding_evidence) if phase=='charger_tips' else
-                        calibrated_liquid_profile(pair[0],Path(asset_calibration_root),scene,binding_evidence) if phase=='liquid_core' else
+                        calibrated_liquid_profile(pair[0],Path(asset_calibration_root),scene,binding_evidence,phase=='liquid_mouth') if phase in ('liquid_core','liquid_mouth') else
                         calibrated_curve_profile(Path(asset_calibration_root),binding_evidence) if phase=='material_curves' else
                         calibrated_fold_profile(Path(asset_calibration_root)) if phase in ('cloth_patches','crease_segments','surface_gaps','cloth_geometry','material_curves') else
-                        calibrated_pour_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='pour_core' else
+                        calibrated_pour_profile(pair[0],scene,Path(asset_calibration_root),phase=='pour_mouth') if phase in ('pour_core','pour_mouth') else
                         calibrated_key_profile(pair[0],scene,Path(asset_calibration_root)) if phase=='calibrated' and task=='insert_key' else
                         constrained_expand(task,pair[0],scene,
                         manifest.get('calibration_inputs',{}).get(task,{}).get('sha256','actual-material-topology')) if phase=='constrained' else
@@ -861,7 +873,7 @@ def generate(output, checkpoints, tasks=FEASIBLE_TASKS, phase='feasible', calibr
                     'relation_scope':'segments','measurement':line,'reference':{**line,'time':'stage_start'},
                     'expected':'coincides_with_segment','tolerance':.02,'event':{'kind':'attempt_end'},'track_closest':False})
             append+=' At episode end preserve each finite chord joining the two crease material landmarks within 20 mm symmetric segment Hausdorff distance from its initial chord. This targets both full finite extents, not only the midpoint; it does not measure a curved crease.'
-        if phase in ('validation','breadth','selection_query','calibrated','pour_core','liquid_core','charger_tips','charger_sections') or (phase=='constrained' and task!='fold_clothes'):
+        if phase in ('validation','breadth','selection_query','calibrated','pour_core','liquid_core','liquid_mouth','pour_mouth','charger_tips','charger_sections') or (phase=='constrained' and task!='fold_clothes'):
             append = pair[1] + ' ' + append
         manifest['coverage'].append({'task':task,'included':True,
             'families':sorted({s['family'] for s in base['stages']}), 'unbound_families':[],
@@ -893,7 +905,7 @@ if __name__ == '__main__':
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--checkpoints', type=Path, required=True)
     parser.add_argument('--tasks', nargs='+', default=FEASIBLE_TASKS)
-    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core','charger_tips','selection_query','material_curves','charger_sections'), default='feasible')
+    parser.add_argument('--phase', choices=('feasible','validation','materials','breadth','constrained','calibrated','cloth_patches','pour_core','crease_segments','surface_gaps','cloth_geometry','liquid_core','liquid_mouth','pour_mouth','charger_tips','selection_query','material_curves','charger_sections'), default='feasible')
     parser.add_argument('--calibration-root',type=Path)
     parser.add_argument('--asset-calibration-root',type=Path)
     args = parser.parse_args()

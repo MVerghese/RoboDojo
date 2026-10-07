@@ -7390,7 +7390,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "88960e88503279ed075061fec844dec8f8f7cc008b96ea60b1e4c1654b18a26a"
+      "sha256": "fb94c25746c8506019f0c1c2d4d3c8d9a8319eadb91fa4c2b528c8ba91f1834f"
     },
     {
       "path": "task/atomic/bindings.py",
@@ -7422,7 +7422,7 @@
     },
     {
       "path": "task/atomic/flow.py",
-      "sha256": "04109ee3310907bf6471a3653b7e7d216d18c50650033ef8b36234c6725552ed"
+      "sha256": "48cfe1077cb0e70909be98ae8f99f6eaa5a9d175d5db3258c13f1fc538800a15"
     },
     {
       "path": "task/atomic/fold.py",
@@ -7466,7 +7466,7 @@
     },
     {
       "path": "task/atomic/material_validation.py",
-      "sha256": "82d3d1d2c7f95a1ed3e5ce48182a8e7f394c06703d9da01b5cc4424d22f4ceb8"
+      "sha256": "7143b6590e5d68b3d4c1b09fec3a4fe2dee9181ae97deaf258baaf012d04524b"
     },
     {
       "path": "src/eval_client/eval_env.py",

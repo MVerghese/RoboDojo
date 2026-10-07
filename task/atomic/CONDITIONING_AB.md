@@ -10,6 +10,19 @@ source-backed [catalogue entry](TASK_MAP.md).
 
 ## 1. What the policy receives
 
+Fresh calibrated pour suites can use generator phases `liquid_mouth` (liquid)
+and `pour_mouth` (balls), with the same retained scene/asset calibration inputs
+as `liquid_core`/`pour_core`. These strengthen source qualification to an actual
+outward mouth-center crossing while held and tilted; they retain separate
+destination position/velocity conditioning and source-mouth SE(3) errors.
+Keep them in new suite directories and package both arms together. Historical
+core-only comparisons retain their previous scope. Independent source/flow and
+cloth probe audits can be reproduced with:
+
+```bash
+python scripts/atomic/validate_material_witnesses.py --report /path/eval_report.json --output /tmp/material-witnesses.json
+```
+
 In a **full-task run**, an annotation program observes atomic stages while the
 policy receives a single task-wide instruction throughout the episode:
 

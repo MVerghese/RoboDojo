@@ -39,6 +39,22 @@ runs. A calibrated source-core exit does not certify passage through the source
 mouth or full-volume pouring. One transferred cohort member is not native task
 success unless the native task itself accepts that outcome.
 
+Optional `source_exit` now strengthens the pour gate with an actual outward
+source-mouth center crossing inside a calibrated aperture. The source must be
+held by the required force-bearing fingers and tilted at that adjacent sampled
+crossing. Leaving the interior core, passing through an aperture hole, exiting
+unheld, or borrowing an observation across a sampling gap cannot satisfy this
+gate. Source reentry resets qualification. Required settled target counts remain
+unchanged. For rigid material, target containment still uses the whole mesh;
+source-mouth passage is explicitly a center witness, not whole-ball fit.
+Fresh `liquid_mouth`/`pour_mouth` GPU validation is separate from host counterexamples.
+
+The fresh source-witness liquid pair completed both partial-cohort observers,
+with 64/80 consistent saved source/hold/tilt/destination witnesses. Native success
+was false/true. Fresh ball runs picked up the cup but completed no core-pour
+observer or destination crossing. The cloth API probe observed no garment
+callbacks in either arm; its result does not establish contact-based cloth grasp.
+
 October 6 correction: supported placement preserves an already verified
 two-finger held transport while the same arm releases its jaws one at a time.
 One remaining finger is not full release; motion with one finger cannot

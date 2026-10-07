@@ -84,6 +84,38 @@ def validate_flow_witness(identifier, row, config, cohort=None):
             if position.shape!=(3,) or not np.isfinite(position).all():raise ValueError('invalid source-exit particle position')
             local=(position-current[:3])@_rotation(current[3:])
             check('outside_declared_source_core',not np.all(np.abs(local)<=np.asarray(config['source_half_extents_m'])))
+        if 'source_exit' in config:
+            from task.atomic.flow import score_source_exit
+            mouth = p['source_mouth_crossing'];ma,mb=mouth['before'],mouth['after']
+            check('source_mouth_adjacent_samples',type(ma['physics_step']) is int
+                  and mb['physics_step']==ma['physics_step']+1 and mb['physics_step']==exit_step)
+            check('source_mouth_fixed_dt',ma['dt_s']==mb['dt_s'] and mb['dt_s']==dt1)
+            measured=score_source_exit(config['source_exit'],ma,mb)
+            check('source_mouth_outward_aperture_crossing',measured['passed'] is True)
+            saved=mouth['result']
+            check('source_mouth_numerical_witness',saved.keys()==measured.keys() and all(
+                np.allclose(saved[k],value,rtol=1e-7,atol=1e-9)
+                if isinstance(value,(list,float)) else saved[k]==value
+                for k,value in measured.items()))
+            if config.get('kind')=='fluid_material_transfer':
+                check('source_mouth_exit_position_binding',np.allclose(mb['position'],p['exit_position'],rtol=1e-7,atol=1e-9))
+            source=mb['opening_source'];root=np.asarray(source['root_pose'],dtype=float)
+            if root.shape!=(7,) or not np.isfinite(root).all():raise ValueError('invalid source mouth root witness')
+            model_proof=source.get('model_frame_proof')
+            for name,selector,pose in [('mouth',config['source_exit']['opening'],mb['opening']),
+                                       ('core',config['source_frame'],current)]:
+                if selector['kind']=='model_calibrated_frame':
+                    model=model_proof['model'];definition=selector['models'][model]
+                    check('source_'+name+'_asset_binding',definition['asset_sha256']==model_proof['asset_sha256']
+                          and np.allclose(definition['scaled_bounds_m'],model_proof['scaled_bounds_m'],rtol=0,atol=1e-7))
+                    local_pose=np.asarray(definition['local_pose'])
+                elif selector['kind']=='object_pose':local_pose=np.asarray([0,0,0,1,0,0,0])
+                else:local_pose=np.asarray(selector['local_pose'])
+                pose=np.asarray(pose)
+                check('source_'+name+'_frame_position_binding',np.allclose(
+                    root[:3]+_rotation(root[3:])@local_pose[:3],pose[:3],rtol=1e-7,atol=1e-9))
+                check('source_'+name+'_frame_rotation_binding',np.allclose(
+                    _rotation(root[3:])@_rotation(local_pose[3:]),_rotation(pose[3:]),rtol=1e-7,atol=1e-9))
     except KeyError as error:
         unavailable.append(str(error))
     except (TypeError,ValueError,IndexError) as error:
