@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **272 offline atomic tests**. Dated sections below
+The current source passes **277 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -22,6 +22,19 @@ binding, while held and tilted. It rejects core-only escapes, unheld crossings,
 sampling gaps and stale qualification after source reentry. Whole-ball source
 aperture fit and whole-fluid volume remain outside this center witness. Fresh
 matched `liquid_mouth`/`pour_mouth` validation is being prepared.
+
+Those four source-mouth cases are now submitted at high-9000 from frozen
+`67318bf`. Live later-stage replay proof `bc41fa2` also completed: a 45-action
+prefix verified the contact-held pickup before 400 policy actions in the selected
+pour stage. Replay validity passed; the selected pour endpoint failed.
+
+Opt-in full garment endpoint capture and adjacent-face bending analysis are
+implemented. They preserve persistent IDs/topology, compare angle increase from
+initial shape, and expose bad winding, nonmanifold, degenerate and stretch
+exclusions. Components remain diagnostic bending candidates; unique physical
+crease recognition, temporal settling and task-specific binding are unresolved.
+Five new host tests verify real hinge geometry, rigid-motion/preexisting-bend
+counterexamples, reordered IDs, mesh capture before reset and failure visibility.
 
 The fresh core-only liquid pair supplies **144 consistent source witnesses**,
 with no inconsistent source evidence (native false/true). The cloth callback

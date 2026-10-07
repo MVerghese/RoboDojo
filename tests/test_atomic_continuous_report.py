@@ -109,6 +109,8 @@ class ContinuousReportTests(unittest.TestCase):
         self.assertEqual([r['suite'] for r in combined['summary']], ['original', 'expansion'])
         self.assertEqual(combined['tasks'][1]['provenance']['baseline']['runtime_sha256'], 'new-runtime')
         self.assertEqual(data['tasks'][0]['conditioning_prompt'], 'original target')
+        combined['tasks'][0]['cloth_contact_diagnostics']={'baseline':[{'counts':{'headers':0,'finger_force_points':0}}]}
+        combined['tasks'][0]['cloth_bending_diagnostics']={'conditioned':[{'longest_component_m':.01,'max_new_bend_rad':math.pi/2}]}
         md, page = report_markdown(combined), report_html(combined)
         self.assertIn('original target', md)
         self.assertIn('new target <unsafe>', md)
@@ -116,6 +118,12 @@ class ContinuousReportTests(unittest.TestCase):
         self.assertIn('new-runtime', page)
         self.assertIn('Original screen and expansion suites', page)
         self.assertIn('not_run', md)
+        for report in (md,page):
+            self.assertIn('Native cloth contact probe',report)
+            self.assertIn('longest_component_mm',report)
+            self.assertIn('max_new_bend_deg',report)
+            self.assertIn('90.0',report)
+            self.assertIn('not certified settled creases',report)
 
     def test_flow_path_and_selected_referent_keep_units_and_exclude_unscored_crossing(self):
         rows={'atomic_scores':[{'stage_id':'s','family':'pour','conditions':{},

@@ -55,6 +55,11 @@ was false/true. Fresh ball runs picked up the cup but completed no core-pour
 observer or destination crossing. The cloth API probe observed no garment
 callbacks in either arm; its result does not establish contact-based cloth grasp.
 
+The opt-in full-endpoint cloth bending probe is diagnostic only. Its new
+adjacent-face bending candidates do not alter `cloth_landmark_fold` completion,
+certify a unique settled crease, or establish finger force. Threshold-qualified
+components remain separate from native success and the declared fold observer.
+
 October 6 correction: supported placement preserves an already verified
 two-finger held transport while the same arm releases its jaws one at a time.
 One remaining finger is not full release; motion with one finger cannot

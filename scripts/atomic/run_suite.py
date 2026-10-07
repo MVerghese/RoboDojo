@@ -35,6 +35,8 @@ def execution_controls(plan):
         'timeouts_seconds', 'image', 'reservation', 'reservation_burst', 'resource_shape')}
     if plan.get('atomic_cloth_contact_probe'):
         controls['cloth_contact_probe'] = True
+    if plan.get('atomic_cloth_bending_probe'):
+        controls['cloth_bending_probe'] = True
     return controls
 
 
@@ -196,6 +198,8 @@ def validate_suite(manifest):
     for case in cases:
         if type(case.get('cloth_contact_probe', False)) is not bool:
             raise ValueError('cloth_contact_probe must be boolean')
+        if type(case.get('cloth_bending_probe', False)) is not bool:
+            raise ValueError('cloth_bending_probe must be boolean')
         if manifest.get('checkpoints') and case.get('checkpoint_id') not in manifest['checkpoints']:
             raise ValueError('case checkpoint_id must exist in checkpoint manifest')
         path = Path(case['program'])
@@ -218,7 +222,8 @@ def validate_suite(manifest):
                 raise ValueError('A/B pair must have the same task and baseline/conditioned order')
             if (a.get('checkpoint_id') != b.get('checkpoint_id')
                     or a.get('task_timeout_s') != b.get('task_timeout_s')
-                    or a.get('cloth_contact_probe', False) != b.get('cloth_contact_probe', False)):
+                    or a.get('cloth_contact_probe', False) != b.get('cloth_contact_probe', False)
+                    or a.get('cloth_bending_probe', False) != b.get('cloth_bending_probe', False)):
                 raise ValueError('A/B pair must have identical checkpoint and timeout controls')
             if not append or append != b.get('geometric_prompt_append') or a.get('geometric_prompt_append'):
                 raise ValueError('manifest geometric append does not match the program')
@@ -339,6 +344,11 @@ def summarize(manifest, root):
                                             for d in (n.get('details', {}).values() if isinstance(n.get('details', {}), dict) else n['details'])]
             row['contact_instrumentation'] = [d.get('contact_instrumentation') for n in report['native_results']
                                               for d in (n.get('details', {}).values() if isinstance(n.get('details', {}), dict) else n['details'])]
+            from scripts.atomic.analyze_cloth_bending import analyze_report,compact_diagnostics
+            bending=analyze_report(report)
+            if bending:
+                atomic_write_json(run/'cloth-bending-validation.json',{'garments':bending})
+                row['cloth_bending_diagnostics']=compact_diagnostics(bending)
             scored += sum(c["status"] == "reproduced" for a in row["atomic_scores"] for c in a["conditions"].values())
             mismatches += sum(c["status"] == "score_mismatch" for a in row["atomic_scores"]
                               for c in list(a["conditions"].values()) + list(a.get("closest_approach", {}).values()))
@@ -451,7 +461,8 @@ def main():
         subprocess.run([sys.executable, "scripts/atomic/submit_trace.py", "--run-dir", str(run),
                         '--task', case_task,
                         "--program", case["program"], "--max-initial-gpu-memory-mib", "512", "--dry-run"] +
-                       (['--cloth-contact-probe'] if case.get('cloth_contact_probe') else []),
+                       (['--cloth-contact-probe'] if case.get('cloth_contact_probe') else [])+
+                       (['--cloth-bending-probe'] if case.get('cloth_bending_probe') else []),
                        cwd=REPO, check=True, stdout=subprocess.DEVNULL)
         runtimes.add(freeze_case(run, case['program'], case_task)['runtime_sha256'])
     if len(runtimes) != 1:

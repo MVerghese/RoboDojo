@@ -229,6 +229,8 @@ def main() -> None:
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument('--cloth-contact-probe', action='store_true',
                         help='Diagnostic native cloth callback probe; not a cloth grasp checker')
+    parser.add_argument('--cloth-bending-probe', action='store_true',
+                        help='Retain full endpoint garment mesh for independent bending diagnostics')
     args = parser.parse_args()
 
     plan_path = args.run_dir / "run_plan.json"
@@ -254,6 +256,10 @@ def main() -> None:
     if args.cloth_contact_probe:
         patched['spec']['envs'].append({'name':'ATOMIC_CLOTH_CONTACT_PROBE','value':'1'})
         plan['atomic_cloth_contact_probe'] = True
+        plan_path.write_text(json.dumps(plan, indent=2) + '\n')
+    if args.cloth_bending_probe:
+        patched['spec']['envs'].append({'name':'ATOMIC_CLOTH_BENDING_PROBE','value':'1'})
+        plan['atomic_cloth_bending_probe'] = True
         plan_path.write_text(json.dumps(plan, indent=2) + '\n')
     if args.program:
         for env in patched["spec"]["envs"]:

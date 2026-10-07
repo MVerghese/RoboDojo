@@ -23,6 +23,14 @@ cloth probe audits can be reproduced with:
 python scripts/atomic/validate_material_witnesses.py --report /path/eval_report.json --output /tmp/material-witnesses.json
 ```
 
+For full endpoint cloth bending diagnostics, set `cloth_bending_probe: true` in
+both case entries before freezing. The controller validates matching boolean
+controls and records the flag in runtime execution provenance. This captures
+live cloth positions before reset; it changes neither the prompt nor success
+gates. `analyze_cloth_bending.py` computes connected new-bending candidates from
+actual adjacent faces using explicit mm/degree thresholds. It cannot certify
+force-based grasp or a settled crease from a single endpoint.
+
 In a **full-task run**, an annotation program observes atomic stages while the
 policy receives a single task-wide instruction throughout the episode:
 

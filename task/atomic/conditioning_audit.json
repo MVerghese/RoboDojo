@@ -6,6 +6,7 @@
     "task/atomic/spec.py": "5057b76841176ad74a43bc6dfcb3eb00f728c1457532328868035d6fad704cab",
     "task/atomic/geometry.py": "db5ac89eedd928e69ba03f47cc660f6c5688e48a3f467d49dfb6fb41d9b9afea",
     "task/atomic/session.py": "9f179ce2ec36f72103331fa3c13ab7be706a2718ab341bd802e759bf2617a128",
+    "task/atomic/cloth_bending.py": "bc863ee88907c1e0d664d244b252d01931510d1af8fff44e8207d7ac5a0a524b",
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "5cf7aba9d425a976880e49d5f8dd6c3939f4d66eaf1c9dc09014d56de69bbb1c",
     "task/atomic/recognizers.py": "fb94c25746c8506019f0c1c2d4d3c8d9a8319eadb91fa4c2b528c8ba91f1834f",

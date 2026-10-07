@@ -84,6 +84,36 @@ probe returned zero cloth callbacks in both episodes despite active rigid contac
 reports. Per-vertex finger-force grasp calibration therefore remains unavailable.
 Reproduce these checks with `scripts/atomic/validate_material_witnesses.py`.
 
+### Full endpoint cloth bending diagnostics (October 7)
+
+`cloth_bending_probe: true` on both suite cases retains the complete live garment
+mesh just before reset, with persistent IDs, source backend, physics/action step,
+coordinate frame and a topology fingerprint matched to initial readback. A failed
+or changed mesh is reported explicitly. This opt-in readback does not change
+action success or the geometric scoring program. Historical runs without it
+cannot supply full endpoint bending evidence.
+
+`cloth_bending.py` measures initial and final dihedral angles on pairs of actual
+adjacent faces sharing a consistently wound material edge. It rejects boundary,
+nonmanifold, inconsistent-winding, degenerate and overly stretched hinges; their
+counts stay visible. Newly bent edges must satisfy both an absolute angle and
+an increase from initial bending. Connected components retain every edge's IDs,
+angles, lengths and stretch, with open-chain/closed-loop/branched classification.
+Rigid motion, preexisting bending, row reordering and nearby disconnected layers
+cannot fabricate new material adjacency or angle increase.
+
+The diagnostic defaults are 45 degrees absolute bend, 30 degrees increase,
+10 mm connected length and 25 percent maximum absolute edge stretch. These are
+explicit prototype thresholds, not calibrated cloth crease recognition. A curved
+fold may have no edge exceeding the threshold. A branched bending network is not
+a unique crease, and one endpoint does not establish settling or correct layers.
+MD/HTML retain these diagnostics separately, in mm/degrees. Reproduce or change
+thresholds with:
+
+```bash
+python scripts/atomic/analyze_cloth_bending.py --report /path/eval_report.json --output /tmp/bending.json --min-bend-deg 45 --min-increase-deg 30 --min-component-mm 10
+```
+
 October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
 landmark or material state immediately before scene reset. It measures goal
 error even if the action fails, and samples episode end for stages completed

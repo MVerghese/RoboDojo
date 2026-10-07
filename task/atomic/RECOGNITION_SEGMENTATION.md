@@ -16,6 +16,12 @@ and completion still require target-core entry and the declared settling count.
 Adjacent samples, source-frame/model binding, holds and tilt are saved and audited
 independently. Mouth-center passage does not certify whole-material aperture fit.
 
+Full cloth endpoint capture and adjacent-face bending analysis are optional
+diagnostics, not action boundaries. They compare initial/final persistent mesh
+topology and bending, preserving ambiguous branching and excluded hinge counts.
+They do not turn an anchored material path or one bent edge into a recognized
+physical crease. Temporal ridge persistence and crease-to-task binding remain.
+
 ### Interrupted physical attempts (October 7)
 
 Strikes, handovers, single/multiple-tip insertions and supported releases now

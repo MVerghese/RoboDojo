@@ -1,5 +1,6 @@
 """Concurrent dependency-driven stages observed at physics-substep resolution."""
 from copy import deepcopy
+import os
 
 from task.atomic.session import AtomicSession
 
@@ -20,6 +21,8 @@ class AtomicSequence:
         self._activate(0, at_action_boundary=True)
         from task.atomic.calibration import snapshot_scene
         self.calibration = snapshot_scene(self.session) if self.session else {'status': 'no_active_action', 'objects': {}}
+        self._cloth_bending_enabled = os.environ.get('ATOMIC_CLOTH_BENDING_PROBE') == '1'
+        self.cloth_bending_capture = None
 
     @property
     def index(self):
@@ -128,6 +131,11 @@ class AtomicSequence:
             # Preserve the original completion boundary; final-state scores
             # describe episode end rather than that earlier action boundary.
             self.completed[ident].update(session.summary())
+        if self._cloth_bending_enabled and self.cloth_bending_capture is None:
+            from task.atomic.cloth_bending import capture_cloth_endpoint
+            session=next(iter([*self.sessions.values(),*self._finished_sessions.values()]),None)
+            self.cloth_bending_capture=(capture_cloth_endpoint(session,self.calibration) if session else
+                {'status':'no_started_session','garments':{}})
 
     def summary(self):
         rows = []
@@ -157,7 +165,7 @@ class AtomicSequence:
                 row={**row,'required':False,'choice_status':'not_selected','choice_id':skipped['choice_id'],
                      'choice_branch':skipped['branch_index']}
             rows.append(deepcopy(row))
-        return {'task_name': self.program.task_name, 'instruction': self.program.instruction,
+        result = {'task_name': self.program.task_name, 'instruction': self.program.instruction,
                 'scene_calibration': deepcopy(self.calibration),
                 'geometric_instruction': self.program.geometric_instruction,
                 'stage_dependencies': deepcopy(self._dependencies),
@@ -169,3 +177,5 @@ class AtomicSequence:
                 'choices': [deepcopy(self._choice_states.get(c.id,{'choice_id':c.id,'status':'pending','required_branches':c.required})) for c in self.program.choices],
                 'stage_starts': deepcopy(self.stage_starts),
                 'stage_boundaries': deepcopy(self.stage_boundaries), 'stages': rows}
+        if self._cloth_bending_enabled:result['cloth_bending_capture']=deepcopy(self.cloth_bending_capture)
+        return result

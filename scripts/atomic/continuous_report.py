@@ -212,6 +212,11 @@ def build_report(manifest, result, matrix, root):
                 'conditioned': arm_summary(selected['conditioned'].values()),
                 'shared': shared_summary(selected['baseline'], selected['conditioned'], pair['matched'])})
         task = dict(pair) | {'conditions': conditions, 'conditioning_prompt': b.get('geometric_prompt_append'),
+            'cloth_bending_diagnostics':{mode:row.get('cloth_bending_diagnostics',[]) for mode,row in (('baseline',ra),('conditioned',rb))},
+            'cloth_contact_diagnostics':{mode:[{'counts':h['cloth_contact_probe'].get('counts',{}),
+                'material_vertex_correspondence':h['cloth_contact_probe'].get('material_vertex_correspondence'),
+                'scope':h['cloth_contact_probe'].get('scope')} for h in row.get('contact_instrumentation',[])
+                if h and 'cloth_contact_probe' in h] for mode,row in (('baseline',ra),('conditioned',rb))},
             'material_source_validation': {mode: [{'stage_id':s['stage_id'],
                 'statuses':s['material_flow']['witness_summary']}
                 for s in row.get('atomic_scores',[]) if (s.get('material_flow') or {}).get('witness_summary')]
@@ -451,6 +456,20 @@ def condition_rows(task):
     return [measurement_row(c, name) for c in task['conditions'] for name in component_names(c)]
 
 
+def bending_display(value):
+    """Use report mm/degree units while preserving raw diagnostic evidence."""
+    if not isinstance(value,dict):
+        return [bending_display(v) for v in value] if isinstance(value,list) else value
+    result={}
+    for key,v in value.items():
+        if key.endswith('_rad'):
+            result[key[:-4]+'_deg']=None if v is None else math.degrees(v)
+        elif key.endswith('_m'):
+            result[key[:-2]+'_mm']=None if v is None else v*1000
+        else:result[key]=bending_display(v)
+    return result
+
+
 def report_markdown(data):
     lines = ['# RoboDojo conditioning: continuous geometric errors', '',
         f"**{data['valid_episodes']} valid episodes · {data['included_tasks']}/{data['catalog_tasks']} tasks · "
@@ -483,6 +502,14 @@ def report_markdown(data):
             if witnesses:
                 lines += ['**Material source witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
                           + '`. Partial evidence preserves sampled geometry without certifying missing source contact/cohort witnesses; inconsistent witnesses are excluded.', '']
+        for mode, diagnostics in task.get('cloth_contact_diagnostics',{}).items():
+            if diagnostics:
+                lines += ['**Native cloth contact probe ('+mode+'):** `'+json.dumps(diagnostics,sort_keys=True)
+                          +'`. Diagnostic counts do not establish calibrated cloth grasp force.', '']
+        for mode, diagnostics in task.get('cloth_bending_diagnostics',{}).items():
+            if diagnostics:
+                lines += ['**New cloth bending ('+mode+'):** `'+json.dumps(bending_display(diagnostics),sort_keys=True)
+                          +'`. Lengths are mm and angles are degrees. Connected bending candidates are not certified settled creases.', '']
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             lines += ['No geometric event was observed; continuous error is N/A for both arms.', '']
         for c in task['conditions']:
@@ -535,6 +562,12 @@ def report_html(data):
         for mode, witnesses in task.get('material_source_validation', {}).items():
             if witnesses:
                 content += '<p><strong>Material source witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. Partial evidence preserves sampled geometry without certifying missing source contact/cohort witnesses; inconsistent witnesses are excluded.</p>'
+        for mode, diagnostics in task.get('cloth_contact_diagnostics',{}).items():
+            if diagnostics:
+                content += '<p><strong>Native cloth contact probe ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(diagnostics,sort_keys=True))+'</code>. Diagnostic counts do not establish calibrated cloth grasp force.</p>'
+        for mode, diagnostics in task.get('cloth_bending_diagnostics',{}).items():
+            if diagnostics:
+                content += '<p><strong>New cloth bending ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(bending_display(diagnostics),sort_keys=True))+'</code>. Lengths are mm and angles are degrees. Connected bending candidates are not certified settled creases.</p>'
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             content += '<p>No geometric event observed. Error is N/A for both arms.</p>'
         for c in task['conditions']:

@@ -19,19 +19,17 @@ REPO = Path(__file__).resolve().parents[1]
 class WorkflowControlsTests(unittest.TestCase):
     def test_cloth_probe_is_a_shared_experimental_control(self):
         from scripts.atomic.run_suite import execution_controls
-        with tempfile.TemporaryDirectory() as temp:
-            root=Path(temp);prompt=root/'prompt.txt';prompt.write_text('Use the target contact band.')
-            path=generate(REPO/'task/atomic/programs/pour_balls_into_vase.json',prompt,root/'suite')
-            suite=json.loads(path.read_text());suite['cases'][0]['cloth_contact_probe']=True
-            with self.assertRaisesRegex(ValueError,'controls'):
-                validate_suite(suite)
-            suite['cases'][1]['cloth_contact_probe']=True
-            validate_suite(suite)
-            suite['cases'][1]['cloth_contact_probe']='true'
-            with self.assertRaisesRegex(ValueError,'boolean'):
-                validate_suite(suite)
-        self.assertNotIn('cloth_contact_probe',execution_controls({}))
-        self.assertTrue(execution_controls({'atomic_cloth_contact_probe':True})['cloth_contact_probe'])
+        for control in ('cloth_contact_probe','cloth_bending_probe'):
+            with self.subTest(control=control),tempfile.TemporaryDirectory() as temp:
+                root=Path(temp);prompt=root/'prompt.txt';prompt.write_text('Use the target contact band.')
+                path=generate(REPO/'task/atomic/programs/pour_balls_into_vase.json',prompt,root/'suite')
+                suite=json.loads(path.read_text());suite['cases'][0][control]=True
+                with self.assertRaisesRegex(ValueError,'controls'):validate_suite(suite)
+                suite['cases'][1][control]=True;validate_suite(suite)
+                suite['cases'][1][control]='true'
+                with self.assertRaisesRegex(ValueError,'boolean'):validate_suite(suite)
+            self.assertNotIn(control,execution_controls({}))
+            self.assertTrue(execution_controls({'atomic_'+control:True})[control])
 
     def test_pair_keeps_scoring_and_rejects_target_or_prompt_drift(self):
         with tempfile.TemporaryDirectory() as temp:

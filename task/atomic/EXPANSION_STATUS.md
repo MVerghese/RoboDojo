@@ -14,7 +14,7 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
-Current October 7 snapshot, 17:14 UTC: the additional cloth and source-witness
+Current October 7 snapshot, 17:19 UTC: the additional cloth and source-witness
 six-episode batch is collected. The integrated MD/HTML has **201 valid episodes,
 99 verified A/B pairs and 913 usable reproduced geometric event scores**, with
 zero arithmetic mismatches. Fresh liquid source evidence is consistent for all
@@ -25,13 +25,21 @@ fold observers failed; the opt-in native cloth callback probe returned zero
 garment headers, points and finger forces despite active rigid callbacks.
 
 The persistent physical-prefix replay fix is pushed as `bc41fa2`. Its selected-
-stage validation `rb-prefix-pour-1007-000-cd4w` is Running at high-9000 with a
-detached collector. It must verify the 45-action pickup prefix before allowing
-the pour stage to start. This stage-only proof is excluded from full-task A/B
-aggregates. New source-mouth `liquid_mouth`/`pour_mouth` pairs are being prepared
-after 272 passing host tests. The new gate requires actual outward aperture
+stage validation `rb-prefix-pour-1007-000-cd4w` has completed and collected:
+`prefix-validation.json` is `observed_verified_prefix`, with both pickup success
+and `prefix_boundary_verified` true. The 45-action prefix retained a two-finger
+right-arm held lift (56.31 mm observed displacement, 87 consecutive contact
+samples). The selected pour then ran 400 policy actions/13 checkpoint inferences
+and failed its endpoint. This stage-only proof is excluded from full-task A/B
+aggregates. All four source-mouth `liquid_mouth`/`pour_mouth` cases were submitted
+at high-9000 from frozen `67318bf` after 272 passing host tests. The new gate requires actual outward aperture
 passage while held/tilted; source-core departure alone does not qualify. Balls
 use a center crossing plus whole-mesh target containment, not whole-ball mouth fit.
+
+Next implementation adds opt-in full endpoint garment readback and initial/final
+adjacent-face bending candidates, with invalid topology/stretch exclusions and
+explicit angles/lengths. These remain diagnostics rather than unique physical
+crease or action-success claims. A fresh matched cloth validation is being prepared.
 
 October 7 snapshot, 16:07 UTC: all twenty repaired-runtime episodes have
 been collected after recovering local NFS quota failures. The integrated MD/HTML
