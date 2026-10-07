@@ -30,6 +30,7 @@ class AtomicSession:
         self.measurement_failures = {}
         self.interaction_observed = False
         self.interaction_evidence = None
+        self.aborted_recognition_attempts = []
         self.goal_success = False
         self.current_hold_observed = False
         self.maintained_hold_failures = []
@@ -94,6 +95,23 @@ class AtomicSession:
 
     def _action_index(self):
         return int(self.env.take_action_cnt[self.env_idx]) if hasattr(self.env, 'take_action_cnt') else None
+
+    def abort_recognition_attempt(self, events, reason, attempt_index):
+        """Archive interrupted event scores; never stitch their path to a retry."""
+        names = set(events)
+        affected = {c['id'] for c in self.stage.geometry
+                    if c.get('event', {}).get('kind') == 'recognition_event'
+                    and c['event']['name'] in names}
+        row = {'attempt_index': attempt_index, 'reason': reason,
+               'aborted_physics_step': self.env._atomic_contacts.steps,
+               'physical_events': deepcopy(events), 'geometry': {}, 'measurement_failures': {}}
+        for key, source in (('geometry', self.results), ('measurement_failures', self.measurement_failures)):
+            row[key] = {ident: source.pop(ident) for ident in affected if ident in source}
+        for event in events:
+            self._event_evidence.pop(self._selector_key({'kind': 'recognition_event', 'name': event}), None)
+        if self._trajectory_observer:
+            row['trajectories'] = self._trajectory_observer.abort_events(names)
+        self.aborted_recognition_attempts.append(row)
 
     @staticmethod
     def _selector_key(selector):
@@ -647,6 +665,7 @@ class AtomicSession:
                                    else 'physical_contact_motion' if self.stage.recognition is not None
                                    else 'endpoint_checks_only'),
             'interaction_evidence': deepcopy(self.interaction_evidence),
+            'aborted_recognition_attempts': deepcopy(self.aborted_recognition_attempts),
             'physical_events': deepcopy(self._physical_recognizer.events) if self._physical_recognizer else {},
             'physical_metrics': deepcopy(getattr(self._physical_recognizer, 'metrics', {})),
             'material_flow': self._physical_recognizer.flow_observer.summary() if (

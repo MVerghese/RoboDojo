@@ -8,6 +8,24 @@ cadence and intermediate simulator observations; it does not create action
 boundaries. Failed pre-rollout RPC calls supply no segmentation evidence. Source
 fingerprints were refreshed after reviewing this evaluator integration change.
 
+### Interrupted physical attempts (October 7)
+
+Strikes, handovers, single/multiple-tip insertions and supported releases now
+archive interrupted intermediate events in `aborted_recognition_attempts`.
+Contact loss, arm changes, invalid entry/transfer intervals, strike timeouts and
+sampling gaps clear the applicable current window. Regrasp after release starts
+another transport interval. Current events carry an `attempt_index`; their
+event-conditioned geometry and paths cannot borrow an aborted start. Completed
+evidence stays immutable. Archived events, scores, failures and partial paths
+remain available for diagnosis rather than becoming a completed action.
+
+The conditioned xylophone trace exposed the original bug: `strike_7` retained an
+impact at physics step 3453, but its completed strike at 3698 belonged to an impact
+at 3635. The first impact's hold had ended. Its original path spanned incompatible
+attempts. New regression tests reproduce retries after contact loss, timeout and
+sampling gaps, and interrupted handover/insertion/release windows. Fresh paired
+rollouts are required to validate the corrected runtime.
+
 Current live segmentation evidence includes the contact-held mallet pickup and
 eight held impact/retraction intervals in the `geometry-tool-contacts-1006`
 xylophone baseline. A separate raw-witness validator checks retained contact

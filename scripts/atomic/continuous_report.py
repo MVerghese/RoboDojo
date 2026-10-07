@@ -31,6 +31,9 @@ METHOD = (
     'action, condition, modifier and slot, weighting each observed condition equally rather '
     'than each task equally. '
     'One episode per arm gives descriptive results, not a statistical steering estimate.'
+    ' Raw strike witnesses are checked separately from numerical reproduction. '
+    'Incompatible impact/retraction attempts are marked invalid_recognition_window '
+    'and excluded from scalar summaries; their recorded values and native outcomes remain retained.'
 )
 
 
@@ -95,7 +98,8 @@ def collect_events(row):
             scored = path.get('status') == 'reproduced' and result.get('status') == 'scored'
             components = {k:v for k,v in result.items() if k.endswith(('_m','_s')) and v is not None}
             events[(stage['stage_id'],'path/'+ident)] = {'family':stage.get('family','unknown'),
-                'score':{'status':'reproduced' if scored else result.get('status',path.get('status','missing_raw_evidence')),
+                'score':{'status':'reproduced' if scored else (result.get('status','missing_raw_evidence')
+                         if path.get('status') == 'reproduced' else path.get('status','missing_raw_evidence')),
                          'kind':'trajectory','slot':path.get('condition',{}).get('slot','path'),
                          'recorded_result':{'components':components}}}
         flow = stage.get('material_flow')
@@ -105,7 +109,8 @@ def collect_events(row):
                 result = crossing.get('recorded_result', {})
                 scored = crossing.get('status') == 'reproduced' and result.get('status') == 'scored'
                 events[(stage['stage_id'],'flow/'+ident)] = {'family':stage.get('family','unknown'),
-                    'score':{'status':'reproduced' if scored else result.get('status',crossing['status']),
+                    'score':{'status':'reproduced' if scored else (result.get('status','missing_raw_evidence')
+                             if crossing['status'] == 'reproduced' else crossing['status']),
                              'condition_id':'opening_crossing','kind':'stream_crossing','slot':'opening',
                              'recorded_result':{'components':result.get('components',{})}}}
         selection = stage.get('selection')
@@ -204,6 +209,11 @@ def build_report(manifest, result, matrix, root):
                 'conditioned': arm_summary(selected['conditioned'].values()),
                 'shared': shared_summary(selected['baseline'], selected['conditioned'], pair['matched'])})
         task = dict(pair) | {'conditions': conditions, 'conditioning_prompt': b.get('geometric_prompt_append'),
+            'recognition_validation': {mode: [{'stage_id': s['stage_id'],
+                'status': s['recognition_witness']['status'],
+                'failed_checks': s['recognition_witness'].get('failed_checks', [])}
+                for s in row.get('atomic_scores', []) if s.get('recognition_witness', {}).get('status') == 'inconsistent_evidence']
+                for mode, row in (('baseline', ra), ('conditioned', rb))},
             'program_sha256': {mode: cases[c]['program_sha256'] for mode, c in (
                 ('baseline', a['id']), ('conditioned', b['id']))},
             'delivered_prompts': {mode: sorted({p['instruction'] for episode in row.get('policy_prompt_history', [])
@@ -455,6 +465,10 @@ def report_markdown(data):
                   '; conditioned ' + str(task['actual_layouts']['conditioned']) + '.', '',
                   '**Conditioning supplied to the policy:**', '', '> ' + (task['conditioning_prompt'] or 'No append recorded.'), '',
                   *table(CONDITION_HEADERS, condition_rows(task)), '']
+        for mode, failures in task.get('recognition_validation', {}).items():
+            if failures:
+                lines += ['**Recognition witness failures (' + mode + '):** `' + json.dumps(failures, sort_keys=True)
+                          + '`. Incompatible strike windows are excluded from geometric summaries.', '']
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             lines += ['No geometric event was observed; continuous error is N/A for both arms.', '']
         for c in task['conditions']:
@@ -501,6 +515,9 @@ def report_html(data):
         content += '<p>Actual layouts: baseline ' + esc(str(task['actual_layouts']['baseline'])) + '; conditioned ' + esc(str(task['actual_layouts']['conditioned'])) + '.</p>'
         content += '<h3>Conditioning supplied to the policy</h3><blockquote>' + esc(task['conditioning_prompt'] or 'No append recorded.') + '</blockquote>'
         content += html_table(CONDITION_HEADERS, condition_rows(task))
+        for mode, failures in task.get('recognition_validation', {}).items():
+            if failures:
+                content += '<p><strong>Recognition witness failures (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(failures, sort_keys=True)) + '</code>. Incompatible strike windows are excluded from geometric summaries.</p>'
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             content += '<p>No geometric event observed. Error is N/A for both arms.</p>'
         for c in task['conditions']:

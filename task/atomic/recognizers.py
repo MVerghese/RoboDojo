@@ -194,6 +194,7 @@ class PhysicalRecognizer:
         self.holds = {}
         self.current_contacts = {}
         self.events = {}
+        self.attempt_index = 0
         self.metrics = {}
         self.material = {}
         self.fluid = {}
@@ -285,14 +286,28 @@ class PhysicalRecognizer:
 
     def _emit(self, **values):
         self.ready = True
-        self.evidence = {'kind': self.kind, 'physics_step': self.contacts.steps,
+        self.evidence = {'kind': self.kind, 'attempt_index': self.attempt_index, 'physics_step': self.contacts.steps,
             'policy_action_index': self.session._action_index(), **deepcopy(values)}
         self._event(COMPLETION[self.kind], **values)
 
     def _event(self, name, **values):
         if name not in self.events:
-            self.events[name] = {'name': name, 'physics_step': self.contacts.steps,
+            self.events[name] = {'name': name, 'attempt_index': self.attempt_index, 'physics_step': self.contacts.steps,
                 'policy_action_index': self.session._action_index(), **deepcopy(values)}
+
+    def _reset_attempt(self, reason):
+        """Keep interrupted physical windows separate from a later completion.
+
+        Completed evidence is immutable. Source-qualified material transfers
+        have per-particle histories rather than this single interaction window.
+        """
+        if (self.events and self.evidence is None and self.kind in {
+                'held_tool_strike', 'grip_transfer', 'held_insertion',
+                'held_multi_tip_insertion', 'supported_release'}):
+            self.session.abort_recognition_attempt(self.events, reason, self.attempt_index)
+            self.events.clear()
+            self.attempt_index += 1
+        self.state.clear()
 
     def observe(self):
         self.contacts = getattr(self.session.env, '_atomic_contacts', None)
@@ -304,7 +319,7 @@ class PhysicalRecognizer:
         if step == self.last_step:
             return
         if self.last_step is not None and step != self.last_step + 1:
-            self.state.clear()
+            self._reset_attempt('sampling_gap')
             self.holds.clear()
             self.current_contacts.clear()
             if self.fold_observer:
@@ -360,10 +375,13 @@ class PhysicalRecognizer:
                             contacting_fingers=len(touch.get('finger_bodies', [])) if touch else 0,
                             transported_while_held=bool(self.state.get('transported')))
         if touch:
+            if 'release' in self.events and self.evidence is None:
+                self._reset_attempt('regrasp_after_release')
             self.state.pop('settling', None)
             if raw_hold:
                 arm = raw_hold['resolved_arm']
                 if self.state.get('arm') != arm:
+                    self._reset_attempt('contacting_arm_changed')
                     self.state.update(arm=arm, anchor=pose.copy(), transported=False)
                 moved = np.linalg.norm(pose[:3] - self.state['anchor'][:3])
                 if hold and moved >= self.c['transport_threshold_m']:
@@ -376,11 +394,11 @@ class PhysicalRecognizer:
                 self.metrics['phase'] = 'partial_release'
             else:
                 # A one-finger push is not a prior grasp; require sustained hold again.
-                self.state.clear()
+                self._reset_attempt('physical_interval_invalidated')
                 self.metrics['phase'] = 'touch_without_verified_transport'
             return
         if not self.state.get('transported'):
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         self._event('release', held_contact=self.state['hold'], pose=pose.tolist())
         self.metrics.update(phase='released', support_contacts=len(support['contacts']),
@@ -411,7 +429,7 @@ class PhysicalRecognizer:
         pair = self._pair()
         support = self.contacts.support_evidence(self.c['target_label'], self.c['support_labels'], self.session.env_idx)
         if not raw_hold or not pair or not support['contacts']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         tool, target = self._pose(), self._pose(self.c['target_label'])
         if self.state.get('arm') != raw_hold['resolved_arm']:
@@ -419,7 +437,7 @@ class PhysicalRecognizer:
         self.state['count'] += 1
         dt, do = tool[:3] - self.state['tool'][:3], target[:3] - self.state['target'][:3]
         if abs(do[2]) > self.c['max_vertical_motion_m']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         if (hold and self.state['count'] >= self.c['min_contact_steps'] and
                 np.linalg.norm(do[:2]) >= self.c['motion_threshold_m'] and
@@ -485,7 +503,7 @@ class PhysicalRecognizer:
         hold=self._hold(self.c['label'],self.c['arm'])
         raw=self._current_hold()
         if not raw or self.state.get('arm',raw['resolved_arm'])!=raw['resolved_arm']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         self.state['arm']=raw['resolved_arm']
         tool=self.session._resolve(self.c['tool_point'])
@@ -494,7 +512,7 @@ class PhysicalRecognizer:
         pair=self._pair()
         if self.state.get('phase')=='impact':
             if self.contacts.steps-self.state['impact_step']>self.c['max_retraction_steps']:
-                self.state.clear()
+                self._reset_attempt('physical_interval_invalidated')
                 return
             self.state['clear_steps']=0 if pair else self.state['clear_steps']+1
             rise=float((rotation.T@relative)[2]-self.state['impact_height'])
@@ -531,7 +549,7 @@ class PhysicalRecognizer:
         pose = self._pose()
         old = self.state.get('pose')
         if old is not None and np.linalg.norm(pose[:3] - old[:3]) > self.c['max_position_step_m']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
         self.state['pose'] = pose.copy()
         giver = self._hold(self.c['label'], self.c['giver_arm'])
         receiver = self._hold(self.c['label'], self.c['receiver_arm'])
@@ -542,7 +560,7 @@ class PhysicalRecognizer:
                 self._event('giver_hold', contact=giver)
         elif phase == 'overlap':
             if not giver:
-                self.state.clear()
+                self._reset_attempt('physical_interval_invalidated')
             elif receiver:
                 self.state['overlap'] += 1
                 if self.state['overlap'] >= self.c['overlap_steps']:
@@ -552,7 +570,7 @@ class PhysicalRecognizer:
                 self.state['overlap'] = 0
         elif phase == 'release':
             if not receiver:
-                self.state.clear()
+                self._reset_attempt('physical_interval_invalidated')
             elif self._touching(self.c['giver_arm']):
                 self.state['released_steps'] = 0
             else:
@@ -574,12 +592,12 @@ class PhysicalRecognizer:
                         'currently_held': bool(hold), 'opening_pose': opening.tolist(), 'tip_pose': tip.tolist(),
                         'entered_from_outside': bool(self.state.get('entered_from_outside'))}
         if not raw_hold or lateral > self.c['lateral_tolerance_m'] or angle > self.c['axis_tolerance_rad']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         if self.state.get('arm') != raw_hold['resolved_arm']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
         if depth > self.c['max_depth_m']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
         if depth <= -self.c['entry_clearance_m']:
             self.state.update(entered_from_outside=True, arm=raw_hold['resolved_arm'], initial_depth=depth)
         self.state['last_depth'] = depth
@@ -615,10 +633,10 @@ class PhysicalRecognizer:
         if (not raw or any(not r['projected_tip_inside_aperture']
                 or r['axis_error_rad'] > self.c['axis_tolerance_rad']
                 or r['depth_m'] > self.c['max_depth_m'] for r in rows)):
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         if self.state.get('arm') != raw['resolved_arm']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             self.state.update(arm=raw['resolved_arm'], outside=[None]*len(rows))
         for i, row in enumerate(rows):
             if row['depth_m'] <= -self.c['entry_clearance_m']:
@@ -644,7 +662,7 @@ class PhysicalRecognizer:
         hold = self._hold(self.c['label'], self.c['arm'], fingers=1, body_path=body_path)
         raw_hold = self._current_hold(fingers=1)
         if not raw_hold:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         if self.state.get('arm') != raw_hold['resolved_arm']:
             self.state.update(arm=raw_hold['resolved_arm'], initial=position)
@@ -677,10 +695,10 @@ class PhysicalRecognizer:
                     pressed_ratio=self.state['pressed'], released_ratio=ratio)
             return
         if not raw:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         if self.state.get('arm') != raw['resolved_arm']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
         if ratio > self.c['initial_ratio']:
             self.state.update(phase='armed', arm=raw['resolved_arm'], initial=ratio)
         if hold and self.state.get('phase') == 'armed' and ratio < self.c['pressed_ratio']:
@@ -701,7 +719,7 @@ class PhysicalRecognizer:
                         'currently_held': bool(hold), 'constraint_contact': bool(pair),
                         'signed_angle_rad': None, 'off_axis_rotation_rad': None}
         if not raw_hold or not pair or radius > self.c['max_radius_m'] or not self.c['min_depth_m'] <= depth <= self.c['max_depth_m']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         rotation = _rotation(pivot[3:]).T @ _rotation(pose[3:])
         if self.state.get('arm') != raw_hold['resolved_arm']:
@@ -710,14 +728,14 @@ class PhysicalRecognizer:
         # Rotation log for substeps below pi. Do not alias ambiguous large jumps.
         theta = float(np.arccos(np.clip((np.trace(delta) - 1) / 2, -1, 1)))
         if theta >= np.pi - 1e-4:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         vector = np.array([delta[2, 1]-delta[1, 2], delta[0, 2]-delta[2, 0], delta[1, 0]-delta[0, 1]])
         vector *= .5 if theta < 1e-7 else theta / (2 * np.sin(theta))
         signed = float(vector @ axis)
         self.state['off_axis'] += float(np.linalg.norm(vector - signed * axis))
         if self.state['off_axis'] > self.c['max_off_axis_rad']:
-            self.state.clear()
+            self._reset_attempt('physical_interval_invalidated')
             return
         self.state['angle'] += signed
         self.state['rotation'] = rotation.copy()

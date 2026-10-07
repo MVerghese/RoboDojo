@@ -7382,7 +7382,7 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "22eaa5b926c3711d20383588843dce678ec72aa038385aa8f2cf2d986c08c669"
+      "sha256": "36b101f584d1bdc8543674017b42e9ef5ab23e26b3935aef35b6be9786690327"
     },
     {
       "path": "task/atomic/spec.py",
@@ -7390,7 +7390,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "c2d10272722d22a9a6e5df5d9aa9681ca739196f0e8eff2c420d1956bba7c4e8"
+      "sha256": "493324766d5f36e927f47d7735a32842c8d90b59ee320d73c421ec32d8a2026a"
     },
     {
       "path": "task/atomic/bindings.py",
@@ -7410,7 +7410,7 @@
     },
     {
       "path": "task/atomic/trajectory.py",
-      "sha256": "93cd1d5388f4ed9bcb76f53cb61e9a29e6e61502c6f45dd0d580394f2ce20056"
+      "sha256": "8d783293da9fc57cf8d9d5cc52e72361806bb821aab6c3acb08706552a791d82"
     },
     {
       "path": "task/atomic/regions.py",

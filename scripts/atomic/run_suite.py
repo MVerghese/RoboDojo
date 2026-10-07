@@ -17,7 +17,7 @@ import time
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
-from scripts.atomic.audit_scores import audit_report
+from scripts.atomic.audit_scores import audit_report, validate_cached_recognition
 from scripts.atomic.storage import atomic_write_json, atomic_write_text
 from task.atomic.spec import AtomicProgram
 
@@ -301,6 +301,7 @@ def summarize(manifest, root):
     scored = 0
     path_scored = selection_scored = flow_scored = 0
     mismatches = 0
+    witness_failures = 0
     for case in manifest["cases"]:
         run = root / "runs" / case["id"]
         row = {"case_id": case["id"], "conditioned_stage": case["stage"], "kind": case["kind"],
@@ -325,6 +326,9 @@ def summarize(manifest, root):
                                                   else n["details"])]
             audit_path = run / 'atomic-score-audit.json'
             row["atomic_scores"] = (json.loads(audit_path.read_text()) if audit_path.exists() else audit_report(report))["atomic_episodes"]
+            validate_cached_recognition(report, row['atomic_scores'])
+            witness_failures += sum(a.get('recognition_witness', {}).get('status') == 'inconsistent_evidence'
+                                    for a in row['atomic_scores'])
             row['policy_prompt_history'] = [d.get('policy_prompt_history', []) for n in report['native_results']
                                             for d in (n.get('details', {}).values() if isinstance(n.get('details', {}), dict) else n['details'])]
             row['contact_instrumentation'] = [d.get('contact_instrumentation') for n in report['native_results']
@@ -356,11 +360,13 @@ def summarize(manifest, root):
               "mode": manifest["mode"], "cases": rows, "reproduced_event_scores": scored,
               "completed_cases": sum(r["status"] != "pending" for r in rows),
               "score_mismatches": mismatches,
+              'recognition_witness_failures': witness_failures,
               'reproduced_trajectory_scores':path_scored,'reproduced_selection_scores':selection_scored,
               'reproduced_flow_scores':flow_scored,
               "benchmark_proof": "pending" if any(r["status"] == "pending" for r in rows) else
                   ("score_audit_failed" if mismatches else "completed_with_infrastructure_failures"
                    if any(r["status"] != "passed" for r in rows) else
+                   'completed_with_recognition_validation_failures' if witness_failures else
                    "end_to_end_verified" if scored or path_scored or selection_scored or flow_scored else "no_event_scores_observed")}
     atomic_write_json(root / 'benchmark_results.json', result)
     lines = ["# Full-task atomic geometric benchmark", "", f"Task: `{manifest['task']}`. "

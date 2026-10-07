@@ -19,6 +19,16 @@ def event(components=None, status='reproduced'):
 
 
 class ContinuousReportTests(unittest.TestCase):
+    def test_invalid_strike_window_is_not_hidden_by_numerically_scored_path(self):
+        rows={'atomic_scores':[{'stage_id':'strike','family':'touch_with_tool','conditions':{},
+            'trajectories':{'path':{'status':'invalid_recognition_window',
+                'condition':{'slot':'tool path'}, 'recorded_result':{'status':'scored',
+                'max_deviation_m':.001,'duration_s':.5}}}}]}
+        events=collect_events(rows); summary=arm_summary(events.values())
+        self.assertEqual(summary['observed'],0)
+        self.assertEqual(summary['statuses'],{'invalid_recognition_window':1})
+        self.assertEqual(summary['components'],{})
+
     def test_layer_gap_defaults_are_not_measurements_without_projected_overlap(self):
         a = event({'footprint_overlap_fraction':0.,'footprint_gap_m':.018,
                    'layer_gap_shortfall_m':0.,'layer_gap_excess_m':0.})

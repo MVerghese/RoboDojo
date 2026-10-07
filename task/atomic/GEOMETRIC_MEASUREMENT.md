@@ -9,6 +9,15 @@ the latest prompt. The real websocket/JPEG proof validates delivery, not simulat
 geometry. Runs that failed on `update_obs` have no completed episode or adherence
 measurement. See [A/B transport instructions](CONDITIONING_AB.md#checkpoint-transport-october-7).
 
+Current recognition-event geometry belongs to one physical attempt. An aborted
+strike/handover/insertion/release archives its event scores and paths, allowing
+the next attempt to be measured independently. Offline strike witness validation
+also runs on cached arithmetic audits. Incompatible event windows receive
+`invalid_recognition_window` and are excluded from scalar summaries even when
+their arithmetic reproduces. Recorded numbers and native outcomes remain
+retained; this instrumentation failure is not zero error or a policy failure.
+MD and HTML identify the affected stage and failed witness checks.
+
 October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
 landmark or material state immediately before scene reset. It measures goal
 error even if the action fails, and samples episode end for stages completed

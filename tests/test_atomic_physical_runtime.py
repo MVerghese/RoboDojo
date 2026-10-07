@@ -122,6 +122,25 @@ def stage(kind, ident='action', label=None):
 
 
 class PhysicalTests(unittest.TestCase):
+    def test_aborted_handover_insertion_and_release_do_not_reuse_intermediate_events(self):
+        for kind in ('grip_transfer', 'held_insertion', 'supported_release'):
+            with self.subTest(kind=kind):
+                w=World(); s=AtomicSession(w.env, stage(kind), 0); w.hold(); w.tick(s,2)
+                if kind == 'grip_transfer':
+                    name='giver_hold'; w.release(); w.tick(s)
+                elif kind == 'held_insertion':
+                    w.poses['object'][2]=.004; w.tick(s)
+                    w.poses['object'][2]=-.001; w.tick(s)
+                    name='entry'; w.release(); w.tick(s)
+                else:
+                    w.poses['object'][0]=.03; w.tick(s)
+                    w.release(); w.tick(s)
+                    name='release'; w.hold(); w.tick(s)
+                summary=s.summary()
+                self.assertNotIn(name,summary['physical_events'])
+                self.assertIn(name,summary['aborted_recognition_attempts'][0]['physical_events'])
+                self.assertFalse(summary['action_success'])
+
     def test_place_needs_transport_then_release_then_supported_stability(self):
         w = World(); s = AtomicSession(w.env, stage('supported_release'), 0)
         self.assertFalse(w.tick(s, 5))  # Object already resting on target isn't placement.

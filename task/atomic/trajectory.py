@@ -153,6 +153,20 @@ class TrajectoryObserver:
         return {ident:{**deepcopy(row),'result':aggregate_path(row['condition'],row['samples'],row['failures'],row['complete'])}
                 for ident,row in self.rows.items()}
 
+    def abort_events(self, names):
+        """Archive and reset paths that belong to the interrupted interaction."""
+        archived = {}
+        for ident, row in self.rows.items():
+            c = row['condition']
+            if not row['started'] or not any(c[key].get('kind') == 'recognition_event'
+                    and c[key]['name'] in names for key in ('start_event', 'end_event')):
+                continue
+            archived[ident] = {**deepcopy(row),
+                'result': aggregate_path(c, row['samples'], row['failures'], row['complete'])}
+            self.rows[ident] = {'condition': deepcopy(c), 'started': False, 'complete': False,
+                               'samples': [], 'failures': []}
+        return archived
+
     def finalize(self):
         """Close an attempt-end window without duplicating a physics sample."""
         contacts = self.session.env._atomic_contacts

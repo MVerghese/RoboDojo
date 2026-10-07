@@ -29,6 +29,19 @@ initialization and bounded initial block selection. Checkpoint, layout and
 geometric scoring targets stay fixed. Selection text removes the accidental
 `np.float64(...)` rendering without changing its numerical target.
 
+At 07:16 UTC all 14 replacement cases were submitted: eight Running and six
+Starting. Controllers, report refresh and the retained-exception watcher are
+active. No completed replacement episode was available at that snapshot.
+
+Additional witness audit: all eight baseline xylophone strike windows were
+consistent. The conditioned arm has seven consistent windows; `strike_7` joined
+an aborted impact to a later successful strike. The raw trace/outcomes and prior
+derived results are retained. Updated MD/HTML excludes that incompatible contact
+score and retraction path, leaving **678 reproduced geometric event scores**
+across the current integrated evidence, with zero arithmetic reproduction
+mismatches and one separately reported recognition witness failure. The runtime
+attempt-archive repair is covered by 240 offline tests and needs fresh live runs.
+
 All pairs use the 25k checkpoint, layout/seed 0, one episode per arm, reservation
 `cosmos-rollout-luemzvvo`, priority `high-9000`, no burst, and the 512 MiB/two-sample
 GPU admission guard. The global controller window allows at most 32 queued plus

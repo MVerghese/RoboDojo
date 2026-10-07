@@ -231,6 +231,44 @@ class TemporalGeometryTests(unittest.TestCase):
 
 
 class StrikeTests(unittest.TestCase):
+    def test_retry_after_release_timeout_or_gap_has_its_own_events_scores_and_path(self):
+        for mode in ('release', 'timeout', 'gap'):
+            with self.subTest(mode=mode):
+                w = strike_world()
+                condition = {'id': 'impact_point', 'slot': 'tool tip', 'kind': 'point',
+                    'measurement': {'kind': 'object_position', 'label': 'object'},
+                    'expected': [0,0,0], 'tolerance': .005,
+                    'event': {'kind': 'recognition_event', 'name': 'impact'}}
+                path = path_definition(expected=[[0,0,0],[0,0,.04]], axes=[2],
+                    start_event={'kind':'recognition_event','name':'impact'},
+                    end_event={'kind':'recognition_event','name':'strike'})
+                s = AtomicSession(w.env, replace(strike_stage(), geometry=(condition,), trajectories=(path,)), 0)
+                impact(w,s); first = s.summary()['physical_events']['impact']['physics_step']
+                if mode == 'release':
+                    w.release(); w.tick(s)
+                elif mode == 'timeout':
+                    for _ in range(9): w.tick(s)
+                else:
+                    w.contacts.steps += 3; w.tick(s)
+                self.assertFalse(s.summary()['physical_events'])
+                self.assertNotIn('impact_point', s.results)
+                self.assertFalse(s.summary()['trajectories']['path']['started'])
+                w.contacts.pairs = False
+                impact(w,s); second = s.summary()['physical_events']['impact']['physics_step']
+                self.assertGreater(second,first)
+                w.contacts.pairs=False; w.poses['object'][2]=.04
+                w.tick(s); self.assertTrue(w.tick(s))
+                summary=s.summary(); events=summary['physical_events']
+                self.assertEqual(events['strike']['elapsed_physics_steps'], events['strike']['physics_step']-second)
+                self.assertEqual({e['attempt_index'] for e in events.values()}, {1})
+                self.assertEqual(summary['geometry']['impact_point']['measurement_physics_step'], second)
+                self.assertEqual(summary['trajectories']['path']['start_physics_step'], second)
+                self.assertTrue(summary['trajectories']['path']['result']['passed'])
+                archived=summary['aborted_recognition_attempts'][0]
+                self.assertEqual(archived['physical_events']['impact']['physics_step'], first)
+                self.assertEqual(archived['geometry']['impact_point']['measurement_physics_step'], first)
+                self.assertFalse(archived['trajectories']['path']['complete'])
+
     def test_impact_needs_approach_contact_and_held_retraction(self):
         w=strike_world();s=AtomicSession(w.env,strike_stage(),0)
         self.assertFalse(impact(w,s))

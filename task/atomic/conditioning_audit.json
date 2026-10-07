@@ -5,15 +5,15 @@
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
     "task/atomic/spec.py": "5057b76841176ad74a43bc6dfcb3eb00f728c1457532328868035d6fad704cab",
     "task/atomic/geometry.py": "db5ac89eedd928e69ba03f47cc660f6c5688e48a3f467d49dfb6fb41d9b9afea",
-    "task/atomic/session.py": "22eaa5b926c3711d20383588843dce678ec72aa038385aa8f2cf2d986c08c669",
+    "task/atomic/session.py": "36b101f584d1bdc8543674017b42e9ef5ab23e26b3935aef35b6be9786690327",
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "339e541fec06115da306593def4f592f4220385df03763fb497c87bbffa110ca",
-    "task/atomic/recognizers.py": "c2d10272722d22a9a6e5df5d9aa9681ca739196f0e8eff2c420d1956bba7c4e8",
+    "task/atomic/recognizers.py": "493324766d5f36e927f47d7735a32842c8d90b59ee320d73c421ec32d8a2026a",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
     "task/atomic/materials.py": "0b42ca82fd5101a7b0dd409139181d629b443a8ed62d2253f545a60f5b9241b8",
     "task/atomic/selection.py": "56d91e5d1798949e40501847494276854fb180b0bce8b22013e0a372518cb43b",
-    "task/atomic/trajectory.py": "93cd1d5388f4ed9bcb76f53cb61e9a29e6e61502c6f45dd0d580394f2ce20056",
+    "task/atomic/trajectory.py": "8d783293da9fc57cf8d9d5cc52e72361806bb821aab6c3acb08706552a791d82",
     "task/atomic/regions.py": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753",
     "task/atomic/fit.py": "9b92e845e0309301ff083d61b5ccdf7d666855d2490a6ec43c6e8254c73ed509",
     "task/atomic/flow.py": "04109ee3310907bf6471a3653b7e7d216d18c50650033ef8b36234c6725552ed",
@@ -1702,7 +1702,7 @@
           "kind": "relative_displacement",
           "concept": "Strike offset from target center.",
           "status": "L",
-          "audit": "The geometry-tool-contacts-1006 xylophone baseline retained eight held impacts/retractions and actual mallet/xylophone contact-location errors of 1.23\u20136.33 mm. Raw contact, approach-speed and retraction-pose witnesses passed a separate consistency validator. Native task failed; the conditioned partner is pending. This covers these impacts, not every tool/asset or musical timing.",
+          "audit": "The geometry-tool-contacts-1006 xylophone baseline retained eight held impacts/retractions and actual mallet/xylophone contact-location errors of 1.23\u20136.33 mm. Raw contact, approach-speed and retraction-pose witnesses passed a separate consistency validator. Native task failed. The conditioned partner has seven consistent strike windows and one incompatible aborted-impact/completion window, excluded from scalar summaries. Current runtime archives interrupted event scores/paths and binds retries by attempt ID. This covers these impacts, not every tool/asset or musical timing.",
           "live_evidence": "task/atomic/EXPANSION_STATUS.md#live-held-strike-witness-validation"
         },
         "O": {
@@ -2178,7 +2178,7 @@
           "kind": "spatial_relation",
           "concept": "Left sleeve/region above crease.",
           "status": "L",
-          "audit": "Actual model/topology-bound patches measured coverage and horizontal gap in geometry-cloth-patches-1006 conditioned and geometry-crease-segments-1006 baseline episodes. Zero overlap leaves vertical gaps unobserved; body-patch coverage 0.0553 in the chord baseline had 13.8\u201338.7 mm overlapping-region gaps. These belong to different frozen comparisons; matched partners remain pending. No whole-garment layering or grasp-force claim.",
+          "audit": "Actual model/topology-bound patches measured coverage and horizontal gap in geometry-cloth-patches-1006 conditioned and geometry-crease-segments-1006 baseline episodes. Zero overlap leaves vertical gaps unobserved; body-patch coverage 0.0553 in the chord baseline had 13.8\u201338.7 mm overlapping-region gaps. These belong to distinct completed frozen comparisons. No whole-garment layering or grasp-force claim.",
           "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation"
         }
       }

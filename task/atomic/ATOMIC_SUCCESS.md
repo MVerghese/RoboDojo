@@ -8,6 +8,13 @@ The local observation/inference bridge fixes that transport contract without
 altering physical recognizers or native predicates. Fresh rollout validation is
 separate from its actual-demo-runner and real websocket proof.
 
+Intermediate events from an interrupted strike, handover, insertion or supported
+release now remain in a separate aborted-attempt archive. They cannot establish
+a later attempt's completion or trajectory. The original conditioned xylophone
+has seven consistent strike witnesses and one incompatible event window. The
+recorded native/atomic outcomes remain intact, with a separate recognition
+validation failure; its affected geometry is excluded from adherence summaries.
+
 October 6 correction: supported placement preserves an already verified
 two-finger held transport while the same arm releases its jaws one at a time.
 One remaining finger is not full release; motion with one finger cannot

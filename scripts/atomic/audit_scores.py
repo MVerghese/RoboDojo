@@ -86,6 +86,43 @@ def audit_selection(selection):
             'eligible_candidates':eligible,'target_status':target_status,'passed':passed,'observed':observed}
 
 
+def apply_recognition_validation(atomic, output):
+    if (atomic.get('recognition') or {}).get('kind') != 'held_tool_strike':
+        return
+    from scripts.atomic.validate_strike_evidence import validate_strike
+    witness = validate_strike(atomic)
+    output['recognition_witness'] = witness
+    window_errors = {'event_order', 'elapsed_steps', 'same_arm_hold_interval',
+                     'retraction_rise_from_raw_poses', 'contiguous_retraction_samples'}
+    if not window_errors.intersection(witness.get('failed_checks', [])):
+        return
+    conditions = {c['id']: c for c in atomic.get('conditions', [])}
+    for ident, row in output['conditions'].items():
+        if conditions.get(ident, {}).get('event', {}).get('kind') == 'recognition_event':
+            row['numerical_reproduction_status'] = row.get('numerical_reproduction_status', row['status'])
+            row['status'] = 'invalid_recognition_window'
+            row['reason'] = 'strike event witnesses span incompatible physical attempts'
+    for row in output.get('trajectories', {}).values():
+        row['numerical_reproduction_status'] = row.get('numerical_reproduction_status', row['status'])
+        row['status'] = 'invalid_recognition_window'
+        row['reason'] = 'strike event witnesses span incompatible physical attempts'
+
+
+def validate_cached_recognition(report, scores):
+    """Check raw physical witnesses even when arithmetic audits are cached."""
+    raw = {}
+    for native in report.get('native_results', []):
+        details = native.get('details', {})
+        for episode, detail in (details.items() if isinstance(details, dict) else enumerate(details)):
+            for stage in [*detail.get('atomic_sequence', {}).get('stages', []),
+                          *([detail['atomic']] if 'atomic' in detail else [])]:
+                raw[(str(episode), stage['stage_id'])] = stage
+    for score in scores:
+        stage = raw.get((str(score['episode']), score['stage_id']))
+        if stage is not None:
+            apply_recognition_validation(stage, score)
+
+
 def audit_atomic(atomic, variant=None):
     if variant and variant.get("stage_id") != atomic["stage_id"]:
         raise ValueError("counterfactual variant must use the recorded stage")
@@ -145,6 +182,7 @@ def audit_atomic(atomic, variant=None):
         'selection': audit_selection(atomic.get('selection')),
         'material_flow': audit_flow(atomic.get('material_flow')),
     }
+    apply_recognition_validation(atomic, output)
     if atomic.get("closest_approach"):
         alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}
         output["closest_approach"] = audit_atomic(alternate, variant)["conditions"]

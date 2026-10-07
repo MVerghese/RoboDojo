@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 6)
 
-The current source passes **236 offline atomic tests**. Dated sections below
+The current source passes **240 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -22,6 +22,15 @@ cadence and prompts. Actual demo-runner unit tests and a real websocket/JPEG/
 array/keepalive proof pass. Fresh GPU pairs are required; this is not yet a
 checkpoint rollout validation. Overlay preflight checks the inference signature
 before model initialization. Generated selection prompts now use plain numbers.
+
+October 7 interval repair: a conditioned xylophone retry exposed stale first-
+impact events paired with later completion. Interrupted strike, handover,
+insertion and supported-release windows now archive their events/geometry/paths
+and reset current measurements. Attempt IDs and adversarial retry tests prevent
+cross-attempt stitching. Cached strike audits now receive independent raw-witness
+validation; incompatible windows are excluded from scalar MD/HTML summaries.
+The original trace and arithmetic audit remain retained. Corrected paired runtime
+validation is the next live check.
 
 Corrected support recognition has live stack-block/stack-bowl evidence. See
 [EXPANSION_STATUS.md](EXPANSION_STATUS.md) for frozen suite provenance and the

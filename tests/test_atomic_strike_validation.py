@@ -2,6 +2,7 @@
 import unittest
 
 from scripts.atomic.validate_strike_evidence import validate_strike
+from scripts.atomic.audit_scores import apply_recognition_validation
 
 
 def retained_strike():
@@ -42,6 +43,22 @@ def retained_strike():
 
 
 class StrikeValidationTests(unittest.TestCase):
+    def test_incompatible_cached_window_is_excluded_but_numerical_result_is_retained(self):
+        stage=retained_strike()
+        stage['conditions']=[{'id':'contact','event':{'kind':'recognition_event','name':'impact'}},
+                             {'id':'final','event':{'kind':'attempt_end'}}]
+        stage['physical_events']['strike']['elapsed_physics_steps']=2
+        score={'conditions':{'contact':{'status':'reproduced','recorded_result':{'error':.003}},
+                             'final':{'status':'reproduced'}},
+               'trajectories':{'path':{'status':'reproduced'}}}
+        apply_recognition_validation(stage,score)
+        self.assertEqual(score['conditions']['contact']['status'],'invalid_recognition_window')
+        self.assertEqual(score['conditions']['contact']['numerical_reproduction_status'],'reproduced')
+        self.assertEqual(score['conditions']['contact']['recorded_result']['error'],.003)
+        self.assertEqual(score['conditions']['final']['status'],'reproduced')
+        self.assertEqual(score['trajectories']['path']['status'],'invalid_recognition_window')
+        self.assertIn('elapsed_steps',score['recognition_witness']['failed_checks'])
+
     def test_valid_witness_reconstructs_speed_and_retraction(self):
         result = validate_strike(retained_strike())
         self.assertEqual(result['status'], 'consistent_evidence')
