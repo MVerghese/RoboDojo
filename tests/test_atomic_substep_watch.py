@@ -34,9 +34,27 @@ class SubstepWatchTests(unittest.TestCase):
             selected = eligible_capture(root, 'b')
             self.assertEqual(selected['boundary']['physics_substeps'], 2)
             self.assertEqual(selected['trace_sha256'], hashlib.sha256(path.read_bytes()).hexdigest())
+            self.assertIsNone(eligible_capture(root, 'b', require_partial_predecessor=True))
             p.write_text('{}')
             with self.assertRaisesRegex(ValueError, 'program changed'):
                 eligible_capture(root, 'b')
+
+    def test_partial_predecessor_proof_accepts_recorded_partial_or_whole_selected_boundary(self):
+        from test_atomic_timed_replay import fixture as timed_fixture
+        for whole in (False, True):
+            with self.subTest(whole=whole), tempfile.TemporaryDirectory() as tmp:
+                root=Path(tmp);program,trace=timed_fixture(whole)
+                p=root/'program.json';p.write_text(json.dumps({'task_name':program.task_name,'stages':[
+                    {'id':s.id,'family':s.family,'instruction':s.instruction,
+                     'success_checks':list(s.success_checks),'recognition':s.recognition}
+                    for s in program.stages]}))
+                (root/'suite.json').write_text(json.dumps({'cases':[{'id':'baseline','prompt_mode':'baseline',
+                    'program':str(p),'program_sha256':hashlib.sha256(p.read_bytes()).hexdigest()}]}))
+                d=root/'runs/baseline/traces';d.mkdir(parents=True)
+                (d/'trace.json').write_text(json.dumps(trace.__dict__))
+                selected=eligible_capture(root,'c',require_partial_predecessor=True)
+                self.assertIsNotNone(selected)
+                self.assertEqual(selected['boundary']['mode'],'linear_timed_prefix' if whole else 'linear_substep_prefix')
 
 
 if __name__ == '__main__': unittest.main()

@@ -726,3 +726,13 @@ stop. Policy/native failure, reconnects and quiet contact scenes cannot trigger
 it. Stop evidence is retained in `failed-worker-watch-events.jsonl`. Terminal
 collections with unavailable reports are reconciled after every worker in that
 suite finishes. New packages also have the faster in-container cleanup guard.
+
+For a proof specifically exercising multiple timed boundaries, add
+`--require-partial-predecessor` to `watch_substep_replay.py`. It requires an actual
+recorded partial boundary before the selected stage and accepts a selected
+partial or whole-command boundary. A trace with only the selected partial
+boundary cannot satisfy this stronger validation request. The fresh
+`geometry-timed-button-capture-1006` pair observes one red-button cycle, a confirm
+cycle, and the next red-button cycle in a concrete linear program. These are
+physical observers within the native task; they do not reconstruct its full
+number/memory semantics after a parser reset.

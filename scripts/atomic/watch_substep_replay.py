@@ -17,7 +17,7 @@ from task.atomic.replay import validate_start_boundary
 from task.atomic.spec import AtomicProgram, AtomicTrace
 
 
-def eligible_capture(source, stage_id):
+def eligible_capture(source, stage_id, require_partial_predecessor=False):
     """Prefer baseline; never manufacture a boundary or infer absent timing."""
     manifest = json.loads((source/'suite.json').read_text())
     cases = sorted(manifest['cases'], key=lambda c: c.get('prompt_mode') != 'baseline')
@@ -33,8 +33,13 @@ def eligible_capture(source, stage_id):
                 boundary = validate_start_boundary(program, program.stage(stage_id), trace)
             except ValueError:
                 continue
-            if (boundary['mode'] == 'linear_substep_prefix'
-                    and boundary['physics_substeps'] < trace.control_timing['control_substeps']):
+            partial_tail = (boundary['mode'] == 'linear_substep_prefix'
+                    and boundary['physics_substeps'] < trace.control_timing['control_substeps'])
+            earlier_partial = any(not r['at_action_boundary'] for r in
+                                  boundary.get('prefix_physics_boundaries', [])[1:-1])
+            eligible = (earlier_partial and boundary['mode'] in ('linear_substep_prefix', 'linear_timed_prefix')
+                        if require_partial_predecessor else partial_tail)
+            if eligible:
                 return {'case_id': case['id'], 'program': str(program_path), 'trace': str(path),
                         'program_sha256': digest, 'trace_sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
                         'boundary': boundary}
@@ -50,6 +55,8 @@ def main():
     p.add_argument('--gpu-memory-ledger', type=Path, required=True)
     p.add_argument('--name', default='rb-substep-proof')
     p.add_argument('--max-wait-s', type=int, default=14400)
+    p.add_argument('--require-partial-predecessor', action='store_true',
+                   help='Require a real partial boundary before the selected stage')
     p.add_argument('--detach', action='store_true', help='Start a persistent monitor and return its PID')
     a = p.parse_args()
     if a.detach:
@@ -78,7 +85,7 @@ def main():
         if (a.output/'suite.json').exists() and not provenance.exists():
             raise ValueError('prepared replay needs retained capture provenance before resuming')
         selected = (json.loads(provenance.read_text()) if provenance.exists()
-                    else eligible_capture(a.source_suite, a.stage))
+                    else eligible_capture(a.source_suite, a.stage, a.require_partial_predecessor))
         if selected is None:
             manifest = json.loads((a.source_suite/'suite.json').read_text())
             if all((a.source_suite/'runs'/c['id']/'collection_finished.json').exists() for c in manifest['cases']):
