@@ -7,6 +7,7 @@ import numpy as np
 
 from task.atomic.geometry import evaluate_geometry, GeometryUnavailable
 from task.atomic.contacts import ContactUnavailable
+from task.atomic.diagnostics import record_requirements
 
 
 def _state(value):
@@ -40,6 +41,7 @@ class AtomicSession:
         self._recognition_anchor = None
         self._recognition_contact_steps = 0
         self._recognition_current_displacement = np.zeros(3)
+        self._contact_motion_metrics = {}
         self._held_lift_required = max([float(check['args']['z_threshold']) for check in stage.success_checks
                                        if stage.family == 'pick' and check['name'] == 'is_lift']
                                       + ([stage.recognition['motion_threshold_m']]
@@ -312,13 +314,22 @@ class AtomicSession:
         self._recognition_last_step = physics_step
         selector = {'kind': 'contact_points', 'label': recognition['label'], 'arm': recognition['arm'],
                     'min_finger_bodies': 2 if self.stage.family == 'pick' else 1}
+        contact_seen = False
+        support = None
+        diagnostic = self._contact_motion_metrics.setdefault('eligibility', {})
         try:
             measured, source = contacts.resolve(selector, self.env_idx)
+            contact_seen = True
             support = (contacts.support_evidence(recognition['label'], recognition['support_labels'], self.env_idx)
                        if self.stage.family == 'push' else None)
             if self.stage.family == 'push' and not support['contacts']:
                 raise ContactUnavailable('push has no upward force-bearing named support at this physics step')
         except ContactUnavailable:
+            record_requirements(diagnostic, physics_step, self._action_index(),
+                {'finger_contact': contact_seen, 'sustained_contact': False,
+                 'support_contact': bool(support['contacts']) if support is not None else None,
+                 'contact_coupled_motion': None, 'required_held_lift': None},
+                {'displacement_m': None, 'motion_m': None, 'consecutive_contact_steps': 0})
             self.current_hold_observed = False
             self._recognition_arm = self._recognition_anchor = None
             self._recognition_contact_steps = 0
@@ -337,6 +348,13 @@ class AtomicSession:
         displacement = current - self._recognition_anchor
         self._recognition_current_displacement = displacement.copy()
         motion = float(displacement[2] if self.stage.family == 'pick' else np.linalg.norm(displacement[:2]))
+        record_requirements(diagnostic, physics_step, self._action_index(),
+            {'finger_contact': True, 'sustained_contact': self.current_hold_observed,
+             'support_contact': bool(support['contacts']) if support is not None else None,
+             'contact_coupled_motion': motion >= recognition['motion_threshold_m'],
+             'required_held_lift': bool(displacement[2] >= self._held_lift_required) if self.stage.family == 'pick' else None},
+            {'displacement_m': displacement.tolist(), 'motion_m': motion,
+             'consecutive_contact_steps': self._recognition_contact_steps})
         if self.current_hold_observed and motion >= recognition['motion_threshold_m']:
             self.interaction_observed = True
             self.interaction_evidence = {
@@ -675,7 +693,7 @@ class AtomicSession:
             'interaction_evidence': deepcopy(self.interaction_evidence),
             'aborted_recognition_attempts': deepcopy(self.aborted_recognition_attempts),
             'physical_events': deepcopy(self._physical_recognizer.events) if self._physical_recognizer else {},
-            'physical_metrics': deepcopy(getattr(self._physical_recognizer, 'metrics', {})),
+            'physical_metrics': deepcopy(self._physical_recognizer.metrics if self._physical_recognizer else self._contact_motion_metrics),
             'material_transfer_initial_state': deepcopy(getattr(self._physical_recognizer, 'fluid_initial', None)),
             'material_flow': self._physical_recognizer.flow_observer.summary() if (
                 self._physical_recognizer and self._physical_recognizer.flow_observer) else None,

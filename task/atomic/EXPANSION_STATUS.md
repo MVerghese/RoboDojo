@@ -14,6 +14,20 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
+October 7 snapshot, 17:58 UTC: the endpoint-only cloth baseline is collected
+with native success true and all three landmark fold observers false. Actual
+9665-vertex/19000-face garment readback produces 2501 selected bend hinges, 149
+length-qualified open chains and 70 branched networks; 142 overstretched hinges
+are excluded. The longest open chain is 54.41 mm. Network edge-length sums do not
+represent unique physical crease lengths. No temporal witness exists in this
+frozen endpoint-only run; the fresh `978b3ec` persistence pair is running/starting.
+
+The fresh table-level tool-push baseline is collected: native failure and no
+qualified held-tool strokes. Active rigid callbacks report direct fingers/block
+contact and support, with no tool/block force pair. The diagnostic tool/button
+pair continues running. Requirement diagnostics now cover all implemented
+families, with 291 passing host tests.
+
 October 7 snapshot, 17:48 UTC: both actual-mouth ball cases are collected. Both
 pick up their cup, native tasks fail, and neither produces a completed pour or
 destination crossing. The liquid actual-mouth pair retains 13 fully consistent

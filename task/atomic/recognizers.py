@@ -12,6 +12,7 @@ import numpy as np
 
 from task.atomic.contacts import ContactUnavailable
 from task.atomic.geometry import _rotation, _angular_error
+from task.atomic.diagnostics import record_requirements
 
 
 SCHEMAS = {
@@ -196,6 +197,7 @@ class PhysicalRecognizer:
         self.state = {}
         self.holds = {}
         self.current_contacts = {}
+        self.hold_observation_steps = {}
         self.events = {}
         self.attempt_index = 0
         self.metrics = {}
@@ -256,6 +258,7 @@ class PhysicalRecognizer:
                     f'particle_world_bounds_m={[fluid["positions"].min(0).tolist(), fluid["positions"].max(0).tolist()]}')
 
     def _hold(self, label, arm, fingers=2, body_path=None):
+        self.hold_observation_steps[(label, arm, fingers)] = self.contacts.steps
         selector = {'kind': 'contact_points', 'label': label, 'arm': arm, 'min_finger_bodies': fingers}
         if body_path:
             selector['body_path'] = body_path
@@ -329,22 +332,82 @@ class PhysicalRecognizer:
         imply independent sensor coverage. None means a requirement was not
         evaluated on this sample, rather than false or zero.
         """
-        d = self.eligibility
-        d.setdefault('sampled_steps', 0)
-        d.setdefault('first_physics_step', self.contacts.steps)
-        d.setdefault('gate_counts', {})
-        d.setdefault('sampling_discontinuities', 0)
-        if 'last_physics_step' in d and self.contacts.steps != d['last_physics_step'] + 1:
-            d['sampling_discontinuities'] += 1
-        d['sampled_steps'] += 1
-        d['last_physics_step'] = self.contacts.steps
-        for name, value in gates.items():
-            counts = d['gate_counts'].setdefault(name, {'true': 0, 'false': 0, 'not_evaluated': 0})
-            counts['not_evaluated' if value is None else 'true' if value else 'false'] += 1
-        d['current'] = {'physics_step': self.contacts.steps,
-            'policy_action_index': self.session._action_index(), 'gates': deepcopy(gates),
-            'measurements': deepcopy(measurements)}
-        d['scope'] = 'observed physical requirements; absence alone does not establish policy failure'
+        record_requirements(self.eligibility, self.contacts.steps, self.session._action_index(), gates, measurements)
+
+    def _observed_hold_gate(self, arm=None, fingers=2):
+        key=(self.c['label'],arm or self.c['arm'],fingers)
+        if self.hold_observation_steps.get(key) != self.contacts.steps:
+            return None
+        source=self.current_contacts.get(key)
+        return bool(source and source['consecutive_contact_steps'] >= self.c['min_contact_steps'])
+
+    def _diagnose_remaining(self):
+        """Read requirements already measured by the other physical adapters."""
+        c,m=self.c,self.metrics
+        hold=self._observed_hold_gate() if 'arm' in c else None
+        if self.kind == 'supported_release':
+            self._diagnose({'sustained_hold':hold,'transported_while_held':bool(self.state.get('transported')),
+                'robot_separated':not bool(m['contacting_fingers']),'support_contact':bool(m['support_contacts']),
+                'settling_interval_long_enough':self.state.get('settling',(None,0))[1] >= c['settle_steps']},
+                transport_m=self.state.get('transport_m'),stable_steps=m.get('stable_steps'))
+        elif self.kind == 'grip_transfer':
+            self._diagnose({'giver_sustained_hold':self._observed_hold_gate(c['giver_arm']),
+                'receiver_sustained_hold':self._observed_hold_gate(c['receiver_arm']),
+                'giver_separated':not bool(self._touching(c['giver_arm'])),
+                'overlap_long_enough':self.state.get('overlap',0) >= c['overlap_steps'],
+                'receiver_only_long_enough':self.state.get('released_steps',0) >= c['receiver_steps']},
+                phase=self.state.get('phase','giver'),overlap_steps=self.state.get('overlap',0),
+                receiver_only_steps=self.state.get('released_steps',0))
+        elif self.kind == 'held_insertion':
+            depth=m['insertion_depth_m']
+            self._diagnose({'sustained_hold':hold,'target_contact':bool(self._pair()),
+                'entered_from_outside':bool(self.state.get('entered_from_outside')),
+                'lateral_alignment':m['lateral_error_m'] <= c['lateral_tolerance_m'],
+                'axis_alignment':m['axis_error_rad'] <= c['axis_tolerance_rad'],
+                'insertion_depth':c['min_depth_m'] <= depth <= c['max_depth_m']},
+                insertion_depth_m=depth,lateral_error_m=m['lateral_error_m'],axis_error_rad=m['axis_error_rad'])
+        elif self.kind == 'held_multi_tip_insertion':
+            pairs=m['tip_pairs']
+            self._diagnose({'sustained_hold':hold,'target_contact':bool(self._pair()),
+                'all_tips_observed_outside':bool(self.state.get('outside')) and all(bool(v) for v in self.state['outside']),
+                'all_tip_centers_inside_apertures':all(p['projected_tip_inside_aperture'] for p in pairs),
+                'all_axes_aligned':all(p['axis_error_rad'] <= c['axis_tolerance_rad'] for p in pairs),
+                'all_depths_in_range':all(c['min_depth_m'] <= p['depth_m'] <= c['max_depth_m'] for p in pairs)},
+                tip_depths_m=[p['depth_m'] for p in pairs],axis_errors_rad=[p['axis_error_rad'] for p in pairs])
+        elif self.kind == 'contact_constrained_twist':
+            angle=m['signed_angle_rad'];off=m['off_axis_rotation_rad']
+            self._diagnose({'sustained_hold':hold,'constraint_contact':m['constraint_contact'],
+                'pivot_radius':m['pivot_radius_m'] <= c['max_radius_m'],
+                'pivot_depth':c['min_depth_m'] <= m['pivot_depth_m'] <= c['max_depth_m'],
+                'rotation_travel':None if angle is None else c['direction']*angle >= c['min_angle_rad'],
+                'off_axis_rotation':None if off is None else off <= c['max_off_axis_rad']},
+                **{k:m[k] for k in ('pivot_radius_m','pivot_depth_m','signed_angle_rad','off_axis_rotation_rad')})
+        elif self.kind in ('fluid_material_transfer','rigid_material_transfer'):
+            counts=m['counts'] if self.kind == 'fluid_material_transfer' else m
+            population=self.fluid if self.kind == 'fluid_material_transfer' else self.material
+            self._diagnose({'sustained_hold':hold,
+                'source_cohort_large_enough':counts['initially_eligible'] >= c['required_count'],
+                'any_qualified_source_exit':any(v['exited_while_held_and_tilted'] for v in population.values()),
+                'enough_settled_transfers':counts['transferred'] >= c['required_count']},
+                initially_eligible_count=counts['initially_eligible'],transferred_count=counts['transferred'],
+                source_exit_semantics='outward_aperture_passage' if self.source_exit_observer else 'core_departure')
+        elif self.kind == 'cloth_landmark_fold':
+            self._diagnose({'lift':m['relative_lift_peak_m'] >= c['min_relative_lift_m'],
+                'closure':m['closure_m'] >= c['min_closure_m'],
+                'region_distance':m['region_distance_m'] <= c['max_region_distance_m'],
+                'new_bend':m['bend_change_rad'] >= c['min_bend_rad'],
+                'landmark_layer_gap':c['min_layer_gap_m'] <= m['layer_gap_m'] <= c['max_layer_gap_m'],
+                'crease_chord_length':m['crease_length_fraction'] >= c['min_crease_length_fraction'],
+                'settling_interval_long_enough':m['stable_steps'] >= c['settle_steps']},
+                **{k:m[k] for k in ('relative_lift_peak_m','closure_m','region_distance_m','bend_change_rad','layer_gap_m','crease_length_fraction','stable_steps')})
+        elif self.kind == 'held_tool_strike':
+            speed=m.get('toward_surface_speed_m_s');impulse=m.get('total_impulse_ns')
+            self._diagnose({'sustained_hold':hold,'tool_target_contact':m.get('tool_target_contact'),
+                'preimpact_velocity':None if speed is None else speed >= c['min_approach_speed_m_s'],
+                'landmark_force_contact':None if impulse is None else impulse >= c['min_impulse_ns'],
+                'retracted': 'retracted' in self.events},
+                phase=self.state.get('phase','approach'),toward_surface_speed_m_s=speed,total_impulse_ns=impulse,
+                rise_m=m.get('rise_m'),separated_steps=m.get('separated_steps'))
 
     def observe(self):
         self.contacts = getattr(self.session.env, '_atomic_contacts', None)
@@ -373,6 +436,8 @@ class PhysicalRecognizer:
                     self.fluid[int(ident)].update(exited_while_held_and_tilted=False,target_steps=0,previous_in_source=bool(inside))
         self.last_step, self.ready = step, False
         getattr(self, '_' + self.kind)()
+        if self.eligibility.get('last_physics_step') != step:
+            self._diagnose_remaining()
         if self.eligibility:
             self.metrics['eligibility'] = deepcopy(self.eligibility)
         if self.flow_observer:
@@ -411,6 +476,7 @@ class PhysicalRecognizer:
         self.metrics['support_seen_steps'] = self.metrics.get('support_seen_steps', 0) + int(bool(support['contacts']))
         self.metrics.update(physics_step=self.contacts.steps,
                             current_pose=pose.tolist(),
+                            support_contacts=len(support['contacts']),
                             contacting_fingers=len(touch.get('finger_bodies', [])) if touch else 0,
                             transported_while_held=bool(self.state.get('transported')))
         if touch:
@@ -562,6 +628,8 @@ class PhysicalRecognizer:
                 'target_landmark_distances_m':target_distance[eligible].tolist()}
 
     def _held_tool_strike(self):
+        self.metrics={'physics_step':self.contacts.steps,'phase':self.state.get('phase','approach'),
+            'tool_target_contact':None,'toward_surface_speed_m_s':None,'total_impulse_ns':None}
         if self.state.get('phase') == 'completed':
             return
         dt=float(getattr(self.session.env,'dt',float('nan')))
@@ -577,12 +645,14 @@ class PhysicalRecognizer:
         target=self.session._resolve(self.c['target_point'])
         relative=tool[:3]-target[:3]; rotation=_rotation(target[3:])
         pair=self._pair()
+        self.metrics['tool_target_contact']=bool(pair)
         if self.state.get('phase')=='impact':
             if self.contacts.steps-self.state['impact_step']>self.c['max_retraction_steps']:
                 self._reset_attempt('physical_interval_invalidated')
                 return
             self.state['clear_steps']=0 if pair else self.state['clear_steps']+1
             rise=float((rotation.T@relative)[2]-self.state['impact_height'])
+            self.metrics.update(rise_m=rise,separated_steps=self.state['clear_steps'])
             if hold and self.state['clear_steps']>=self.c['min_retraction_steps'] and rise>=self.c['min_retraction_m']:
                 self._event('retracted',rise_m=rise,separated_steps=self.state['clear_steps'])
                 self._emit(held_contact=hold,impact=deepcopy(self.state['impact']),rise_m=rise,
@@ -604,6 +674,7 @@ class PhysicalRecognizer:
         normal=_rotation(previous[1]['target_pose'][3:])[:,2]
         speed=-float(velocity@normal)
         evidence=self._landmark_contact(pair)
+        self.metrics.update(toward_surface_speed_m_s=speed,total_impulse_ns=evidence['total_impulse_ns'])
         if speed<self.c['min_approach_speed_m_s'] or not evidence['tool_target_contacts'] or evidence['total_impulse_ns']<self.c['min_impulse_ns']:
             return
         impact={'held_contact':hold,'approach_samples':previous,'relative_velocity_m_s':velocity.tolist(),
@@ -814,6 +885,8 @@ class PhysicalRecognizer:
         vector *= .5 if theta < 1e-7 else theta / (2 * np.sin(theta))
         signed = float(vector @ axis)
         self.state['off_axis'] += float(np.linalg.norm(vector - signed * axis))
+        self.metrics.update(signed_angle_rad=float(self.state['angle']+signed),
+                            off_axis_rotation_rad=float(self.state['off_axis']))
         if self.state['off_axis'] > self.c['max_off_axis_rad']:
             self._reset_attempt('physical_interval_invalidated')
             return

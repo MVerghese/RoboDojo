@@ -68,6 +68,59 @@ class EligibilityTests(unittest.TestCase):
         w.joint -= .006; self.assertTrue(w.tick(s))
         self.assertAlmostEqual(s.summary()['physical_metrics']['eligibility']['current']['measurements']['signed_travel'], .006)
 
+    def test_insertion_reports_alignment_and_contact_without_certifying_insertion(self):
+        w=World();s=AtomicSession(w.env,stage('held_insertion'),0)
+        w.poses['object'][0]=.02;w.poses['object'][2]=-.01;w.tick(s)
+        row=s.summary()['physical_metrics']['eligibility']['current']
+        self.assertFalse(row['gates']['lateral_alignment'])
+        self.assertFalse(row['gates']['target_contact'])
+        self.assertTrue(row['gates']['insertion_depth'])
+        self.assertAlmostEqual(row['measurements']['lateral_error_m'],.02)
+        self.assertFalse(s.success)
+
+    def test_release_diagnostics_preserve_gradual_jaw_release_and_settling_gates(self):
+        w=World();s=AtomicSession(w.env,stage('supported_release'),0)
+        w.hold();w.tick(s,2);w.poses['object'][0]=.03;w.tick(s)
+        w.hold(fingers=1);w.tick(s)
+        row=s.summary()['physical_metrics']['eligibility']['current']
+        self.assertTrue(row['gates']['transported_while_held'])
+        self.assertFalse(row['gates']['robot_separated'])
+        w.release();w.tick(s)
+        self.assertFalse(s.summary()['physical_metrics']['eligibility']['current']['gates']['settling_interval_long_enough'])
+        self.assertTrue(w.tick(s,2))
+        self.assertTrue(s.summary()['physical_metrics']['eligibility']['current']['gates']['settling_interval_long_enough'])
+
+    def test_strike_completion_does_not_reuse_stale_hold_as_a_current_observation(self):
+        from test_atomic_paths_selection import strike_world,strike_stage,impact
+        w=strike_world();w.goal=False;s=AtomicSession(w.env,strike_stage(),0)
+        impact(w,s);w.contacts.pairs=False;w.poses['object'][2]=.04;w.tick(s,2)
+        w.release();w.tick(s)
+        row=s.summary()['physical_metrics']['eligibility']['current']
+        self.assertIsNone(row['gates']['sustained_hold'])
+        self.assertIsNone(row['gates']['tool_target_contact'])
+        self.assertTrue(row['gates']['retracted'])
+
+    def test_pick_and_push_diagnostics_distinguish_absent_contact_from_absent_support(self):
+        from test_atomic_recognition import environment,config
+        from task.atomic.spec import AtomicStage
+        for family in ('pick','push'):
+            env,pose,contacts=environment();s=AtomicSession(env,AtomicStage.from_dict(config(family=family)),0)
+            contacts.steps=1;s.observe_events()
+            row=s.summary()['physical_metrics']['eligibility']['current']
+            self.assertFalse(row['gates']['finger_contact'])
+            self.assertIsNone(row['gates']['contact_coupled_motion'])
+            contacts.present=True;contacts.steps=2;s.observe_events()
+            contacts.steps=3;pose[0 if family=='push' else 2]=.03;s.observe_events()
+            row=s.summary()['physical_metrics']['eligibility']['current']
+            self.assertTrue(row['gates']['contact_coupled_motion'])
+            if family=='pick':self.assertFalse(row['gates']['required_held_lift'])
+            else:
+                contacts.support=False;contacts.steps=4;s.observe_events()
+                row=s.summary()['physical_metrics']['eligibility']['current']
+                self.assertTrue(row['gates']['finger_contact'])
+                self.assertFalse(row['gates']['support_contact'])
+                self.assertIsNone(row['measurements']['displacement_m'])
+
 
 if __name__ == '__main__':
     unittest.main()

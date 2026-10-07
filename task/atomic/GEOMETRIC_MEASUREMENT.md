@@ -907,3 +907,20 @@ or invalid statuses. Report diagnostics use mm, degrees and seconds separately.
 This is sampled stability of bending candidates. It does not identify a unique
 crease for a task role, prove motion between samples, check layering/self-
 intersection or measure cloth finger force. A fresh frozen live pair is required.
+
+## Requirement diagnostics across all implemented families (October 7)
+
+The same separate observed-requirement counters now cover every implemented
+recognizer, including base pick/push, supported release, handover, single/multi-tip
+insertion, constrained twist, tool strikes, rigid/fluid transfer and material
+landmark folding. Pick diagnostics distinguish initial contact, sustained hold,
+contact-coupled motion and the full required held lift. Push distinguishes absent
+fingers from absent upward support. Insertion exposes each tip's calibrated
+aperture/depth/axis requirements; twist retains measured off-axis violations.
+
+Strike frames that no longer sample a hold leave it not evaluated; they cannot
+reuse an old contact as current evidence. Source transfer counts distinguish
+initial source eligibility, qualified exit and settled target occupancy. Fold
+counters concern material deformation and landmark/chord geometry; they make no
+cloth-finger force or whole-layer certification. None of these counters changes
+action success or geometric scoring thresholds.

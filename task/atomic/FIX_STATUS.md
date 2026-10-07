@@ -301,3 +301,13 @@ coordinates, sustained new bending, pairwise vertex drift and angle range.
 Diagnostic bounds are 0.1 s, 2 mm and 2 degrees. Four counterexample tests and the
 full **287-test** gate pass. This is sampled candidate stability, not a unique task
 crease, layering or grasp-force certificate. A fresh live matched pair is required.
+
+## Requirement diagnostics for every implemented recognizer (October 7)
+
+Observed counters now cover base pick/push and all physical adapters. They expose
+held lift, support, release settling, named-arm handover, insertion aperture/depth/
+axis, twist constraints/rotation, strike approach/retraction, source/target transfer
+and cloth landmark deformation. A completed strike does not reuse stale hold
+evidence; off-axis twist violations retain their measured values. Four additional
+regressions and the full **291-test** gate pass. Source audit fingerprints include
+the shared diagnostic recorder. Fresh matched live coverage is next.

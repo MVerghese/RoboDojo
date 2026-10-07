@@ -644,3 +644,20 @@ Even a sampled stable bending component remains a candidate until crease role,
 layering and physical manipulation correspondence are validated. Cloth grasp
 force remains uninstrumented. Endpoint-only archives are not promoted to settled
 fold evidence.
+
+## Requirement diagnostics across all implemented families (October 7)
+
+The same separate observed-requirement counters now cover every implemented
+recognizer, including base pick/push, supported release, handover, single/multi-tip
+insertion, constrained twist, tool strikes, rigid/fluid transfer and material
+landmark folding. Pick diagnostics distinguish initial contact, sustained hold,
+contact-coupled motion and the full required held lift. Push distinguishes absent
+fingers from absent upward support. Insertion exposes each tip's calibrated
+aperture/depth/axis requirements; twist retains measured off-axis violations.
+
+Strike frames that no longer sample a hold leave it not evaluated; they cannot
+reuse an old contact as current evidence. Source transfer counts distinguish
+initial source eligibility, qualified exit and settled target occupancy. Fold
+counters concern material deformation and landmark/chord geometry; they make no
+cloth-finger force or whole-layer certification. None of these counters changes
+action success or geometric scoring thresholds.

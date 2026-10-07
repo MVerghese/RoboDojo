@@ -7383,7 +7383,7 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "9f179ce2ec36f72103331fa3c13ab7be706a2718ab341bd802e759bf2617a128"
+      "sha256": "7cc4a650a6292d3a249aaf576c12742e0b60ffe5a17aa1b85a5e27dbd2e0cac1"
     },
     {
       "path": "task/atomic/spec.py",
@@ -7391,7 +7391,11 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "280d453018144da4f89f8d4c433e9a2ed8ce9efa60f6ef013ae6dc7831a5021b"
+      "sha256": "ff3e357d7173e251fe225131742d1af4df6dd8a6c32eda968009674b9e8378b8"
+    },
+    {
+      "path": "task/atomic/diagnostics.py",
+      "sha256": "8a012fc51aad60c978bde7206497e880cb869893c3b1c9140225806f64b1c569"
     },
     {
       "path": "task/atomic/bindings.py",
