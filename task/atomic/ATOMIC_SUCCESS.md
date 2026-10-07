@@ -678,3 +678,10 @@ advance recognition or count a force hold. Its timestamp must still be adjacent
 to the first cap-contact sample; the retained witness labels its activation
 context explicitly. This avoids requiring an extra idle physics step between
 otherwise complete press/release cycles.
+
+Cloth candidate diagnostics now distinguish branched networks from open chains.
+A network's sum of edge lengths is reported as total edge length, separately from
+the longest qualifying open chain. Multiple qualifying components remain
+`ambiguous_bending_components`; the largest component is not selected as a task
+crease. Both completed endpoint runs are ambiguous (219/207 qualifying components).
+Independent validation artifacts retain raw report hashes.

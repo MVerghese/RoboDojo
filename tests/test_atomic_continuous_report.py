@@ -110,7 +110,7 @@ class ContinuousReportTests(unittest.TestCase):
         self.assertEqual(combined['tasks'][1]['provenance']['baseline']['runtime_sha256'], 'new-runtime')
         self.assertEqual(data['tasks'][0]['conditioning_prompt'], 'original target')
         combined['tasks'][0]['cloth_contact_diagnostics']={'baseline':[{'counts':{'headers':0,'finger_force_points':0}}]}
-        combined['tasks'][0]['cloth_bending_diagnostics']={'conditioned':[{'longest_component_m':.01,'max_new_bend_rad':math.pi/2}]}
+        combined['tasks'][0]['cloth_bending_diagnostics']={'conditioned':[{'largest_component_total_edge_length_m':.01,'max_new_bend_rad':math.pi/2}]}
         combined['tasks'][0]['physical_requirement_diagnostics']={'baseline':[{'stage_id':'tool',
             'eligibility':{'gate_counts':{'tool_target_contact':{'true':2,'false':8,'not_evaluated':1}}}}]}
         md, page = report_markdown(combined), report_html(combined)
@@ -122,7 +122,7 @@ class ContinuousReportTests(unittest.TestCase):
         self.assertIn('not_run', md)
         for report in (md,page):
             self.assertIn('Native cloth contact probe',report)
-            self.assertIn('longest_component_mm',report)
+            self.assertIn('largest_component_total_edge_length_mm',report)
             self.assertIn('max_new_bend_deg',report)
             self.assertIn('90.0',report)
             self.assertIn('not certified settled creases',report)

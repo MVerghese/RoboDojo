@@ -37,6 +37,10 @@ def refresh_recognition_validation(root, result):
             raw = json.loads(report.read_text())
             validate_cached_recognition(raw, row['atomic_scores'])
             row['physical_requirement_diagnostics'] = physical_requirement_diagnostics(raw)
+            existing=row.get('cloth_bending_diagnostics',[])
+            if existing and any('candidate_selection_status' not in d for d in existing):
+                from scripts.atomic.analyze_cloth_bending import analyze_report,compact_diagnostics
+                row['cloth_bending_diagnostics']=compact_diagnostics(analyze_report(raw))
     if any('atomic_scores' in row for row in refreshed['cases']):
         stages = [s for row in refreshed['cases'] for s in row.get('atomic_scores', [])]
         refreshed['reproduced_event_scores'] = sum(c['status'] == 'reproduced'

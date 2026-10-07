@@ -470,6 +470,7 @@ def bending_display(value):
         return [bending_display(v) for v in value] if isinstance(value,list) else value
     result={}
     for key,v in value.items():
+        if key=='longest_component_m':key='largest_component_total_edge_length_m'
         if key.endswith('_rad'):
             result[key[:-4]+'_deg']=None if v is None else math.degrees(v)
         elif key.endswith('_m'):

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Audit captured full garment endpoints for new mesh bending in physical units."""
 import argparse
+from collections import Counter
 import hashlib
 import json
 import math
@@ -46,15 +47,24 @@ def analyze_report(report, thresholds=None):
 
 
 def compact_diagnostics(rows):
-    return [{k:v for k,v in row.items() if k not in ('components','temporal_persistence')} | {
+    output=[]
+    for row in rows:
+        qualified=[c for c in row.get('components',[]) if c['meets_length_threshold']]
+        connectivity=dict(Counter(c['connectivity'] for c in qualified))
+        chains=[c for c in qualified if c['connectivity']=='open_chain']
+        output.append({k:v for k,v in row.items() if k not in ('components','temporal_persistence')} | {
         'temporal_persistence':{k:v for k,v in row.get('temporal_persistence',{}).items() if k!='components'},
         'max_candidate_vertex_drift_m':max((c['max_vertex_drift_m'] for c in row.get('temporal_persistence',{}).get('components',[])),default=None),
         'max_candidate_bend_change_rad':max((c['max_bend_change_rad'] for c in row.get('temporal_persistence',{}).get('components',[])),default=None),
         'component_count':len(row.get('components',[])),
         'length_qualified_components':sum(c['meets_length_threshold'] for c in row.get('components',[])),
-        'longest_component_m':max((c['total_edge_length_m'] for c in row.get('components',[])),default=None),
-        'max_new_bend_rad':max((v for c in row.get('components',[]) for v in c['bend_increase_rad']),default=None)}
-        for row in rows]
+        'qualified_connectivity_counts':connectivity,
+        'candidate_selection_status':'no_qualified_candidates' if not qualified else
+            'single_open_chain_candidate' if len(qualified)==1 and len(chains)==1 else 'ambiguous_bending_components',
+        'largest_component_total_edge_length_m':max((c['total_edge_length_m'] for c in row.get('components',[])),default=None),
+        'longest_qualified_open_chain_m':max((c['total_edge_length_m'] for c in chains),default=None),
+        'max_new_bend_rad':max((v for c in row.get('components',[]) for v in c['bend_increase_rad']),default=None)})
+    return output
 
 
 if __name__=='__main__':

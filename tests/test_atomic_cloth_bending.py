@@ -89,7 +89,8 @@ class ClothBendingTests(unittest.TestCase):
         self.assertAlmostEqual(compact_diagnostics(results)[0]['max_new_bend_rad'],math.pi/2)
         shown=bending_display(compact_diagnostics(results))[0]
         self.assertAlmostEqual(shown['max_new_bend_deg'],90)
-        self.assertAlmostEqual(shown['longest_component_mm'],1000*math.sqrt(2))
+        self.assertAlmostEqual(shown['largest_component_total_edge_length_mm'],1000*math.sqrt(2))
+        self.assertEqual(compact_diagnostics(results)[0]['candidate_selection_status'],'single_open_chain_candidate')
         self.assertIn('max_new_bend_rad',compact_diagnostics(results)[0])
         data['positions_world']=P.copy();seq.finalize()
         np.testing.assert_allclose(seq.summary()['cloth_bending_capture']['garments']['cloth']['positions_world'],folded())

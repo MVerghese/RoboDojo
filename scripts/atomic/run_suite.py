@@ -349,7 +349,10 @@ def summarize(manifest, root):
             from scripts.atomic.analyze_cloth_bending import analyze_report,compact_diagnostics
             bending=analyze_report(report)
             if bending:
-                atomic_write_json(run/'cloth-bending-validation.json',{'garments':bending})
+                atomic_write_json(run/'cloth-bending-validation.json',{
+                    'report':str((run/'eval_report.json').resolve()),
+                    'report_sha256':hashlib.sha256((run/'eval_report.json').read_bytes()).hexdigest(),
+                    'garments':bending})
                 row['cloth_bending_diagnostics']=compact_diagnostics(bending)
             scored += sum(c["status"] == "reproduced" for a in row["atomic_scores"] for c in a["conditions"].values())
             mismatches += sum(c["status"] == "score_mismatch" for a in row["atomic_scores"]
