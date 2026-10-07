@@ -14,6 +14,26 @@ from task.atomic.spec import AtomicProgram, AtomicStage
 
 
 class EvalMatrixTests(unittest.TestCase):
+    def test_render_refresh_checks_raw_boundaries_from_an_older_collector_without_changing_inputs(self):
+        from scripts.atomic.report_eval_matrix import refresh_recognition_validation
+        from test_atomic_recognition_validation import handover
+        stage=handover();stage['stage_id']='handover';stage['conditions']=[{
+            'id':'giver','event':{'kind':'recognition_event','name':'giver_hold'}}]
+        stage['physical_events']['giver_hold']['contact']['contact_interval_start_step']=1
+        result={'cases':[{'case_id':'case','atomic_scores':[{'episode':'0','stage_id':'handover',
+            'conditions':{'giver':{'status':'reproduced'}},'trajectories':{}}]}]}
+        before=deepcopy(result)
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);run=root/'runs/case';run.mkdir(parents=True)
+            (run/'eval_report.json').write_text(json.dumps({'native_results':[{'details':{
+                '0':{'atomic_sequence':{'stages':[stage]}}}}]}))
+            refreshed=refresh_recognition_validation(root,result)
+        self.assertEqual(result,before)
+        self.assertEqual(refreshed['reproduced_event_scores'],0)
+        self.assertEqual(refreshed['recognition_witness_failures'],1)
+        self.assertEqual(refreshed['cases'][0]['atomic_scores'][0]['conditions']['giver']['status'],
+                         'invalid_recognition_window')
+
     def test_finished_collection_without_report_is_failed_evidence_not_pending_policy_failure(self):
         from scripts.atomic.run_suite import summarize
         manifest = {'task':'task','mode':'test','cases':[{'id':'case','stage':'stage','kind':'point'}]}

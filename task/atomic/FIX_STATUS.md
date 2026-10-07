@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 6)
 
-The current source passes **245 offline atomic tests**. Dated sections below
+The current source passes **246 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -41,6 +41,20 @@ unobserved. These checks do not reconstruct unsaved intermediate force histories
 Physical completion before a failed native endpoint is also archived on retry;
 it cannot freeze a stale release/entry event. Completed successful stages retain
 their evidence. Fresh bowl/handover runtime validation is being prepared.
+
+Live progress: the repaired block-selection pair completed, with 18 checkpoint
+inferences over 550 control actions per arm and 23 arithmetic-reproduced event
+scores. Both native tasks failed; both selected the wrong first block, producing
+a physical point error rather than a missing referent. Current report rendering
+revalidates raw boundaries even when an older running collector used a cached
+auditor. Native reports and input result files are preserved.
+
+A CPU-only search scanned all 267 installed binding stubs, including generic
+`_physx.pyi`. It retained five matching interfaces without skipped files. Contact
+headers expose collider face and instancer indices, now retained in raw force
+rows; these are not cloth material vertex IDs. Generic rigid contact-report APIs
+were found, but no particle/finger impulse readout was established. A live cloth
+contact probe and solver identity correspondence remain necessary.
 
 Corrected support recognition has live stack-block/stack-bowl evidence. See
 [EXPANSION_STATUS.md](EXPANSION_STATUS.md) for frozen suite provenance and the

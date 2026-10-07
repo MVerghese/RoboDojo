@@ -53,6 +53,21 @@ Raw reports and previous derived results remain retained. Current source passes
 245 offline tests. Sixteen fresh cases are active, including the strike pair;
 the repaired selection baseline has reached real checkpoint inference.
 
+07:30 UTC progress: five replacement episodes are valid, including both block-
+selection arms; both selected the wrong initial block. The integrated report had
+180 valid episodes, 87 verified pairs, 712 usable reproduced event scores and
+nine independently flagged boundary archives (including original-screen
+handovers and fresh runs with the older frozen runtime). These failure counts
+are separate from zero arithmetic mismatches. Raw-boundary revalidation occurs
+during rendering so long-lived older controllers cannot bypass new checks.
+Four additional bowl-placement/bottle-handover cases use the corrected runtime.
+
+The CPU contact-binding inventory completed: all 267 installed `.pyi` stubs were
+scanned, five matched, none exceeded the size limit. It exposes generic contact
+callbacks, collider face IDs and point-instancer IDs, but establishes no actual
+cloth-particle impulse readout. Native face/instancer metadata is now retained
+in raw contact rows, explicitly distinguished from cloth solver identities.
+
 All pairs use the 25k checkpoint, layout/seed 0, one episode per arm, reservation
 `cosmos-rollout-luemzvvo`, priority `high-9000`, no burst, and the 512 MiB/two-sample
 GPU admission guard. The global controller window allows at most 32 queued plus

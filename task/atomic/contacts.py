@@ -180,6 +180,12 @@ class PhysXContacts:
                     self.rows.append({'actor0': a, 'actor1': b, 'collider0': c0, 'collider1': c1,
                                       'position_world': position.tolist(), 'normal_world': normal.tolist(),
                                       'impulse': impulse.tolist(), 'lifecycle_supported': lifecycle,
+                                      'mesh_contact_metadata': {
+                                          'face_index0': getattr(contact, 'face_index0', None),
+                                          'face_index1': getattr(contact, 'face_index1', None),
+                                          'proto_index0': getattr(header, 'proto_index0', None),
+                                          'proto_index1': getattr(header, 'proto_index1', None),
+                                          'semantics': 'native collider face/instancer indices; not cloth solver vertex IDs'},
                                       'force_report_physics_step': self.steps})
         except Exception as error:
             self.errors.append(f'{type(error).__name__}: {error}')

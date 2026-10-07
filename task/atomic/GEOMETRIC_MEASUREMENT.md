@@ -27,6 +27,11 @@ receiver-only measurement. Missing fields are partial evidence; absent complete
 windows are unobserved. Raw boundary checks cannot reconstruct contact persistence
 at unsaved intermediate physics steps.
 
+Raw contact rows now also retain native `face_index0/1` and `proto_index0/1`
+when the installed callback provides them. Their actor/collider side ordering
+is preserved. These are collider face/instancer indices, not material vertex IDs;
+missing values or native sentinel values are not mapped to a cloth grasp.
+
 October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
 landmark or material state immediately before scene reset. It measures goal
 error even if the action fails, and samples episode end for stages completed

@@ -118,6 +118,24 @@ def main():
             binaries.append(row)
         result['native_api_inventory']={'package_root':str(package),'declarations':declarations,
             'binaries':binaries,'scope':'installed declaration/exported-symbol inventory only; absence does not prove lack of an internal API or certify particle contact readback'}
+        # Binding stubs commonly have names such as _physx.pyi rather than
+        # "particle". Inspect their declarations directly; the earlier filename
+        # inventory did not cover these interfaces.
+        binding_files = sorted(set(package.rglob('*.pyi')))
+        bindings=[]; skipped=[]
+        for path in binding_files:
+            if path.stat().st_size > 2*1024**2:
+                skipped.append({'path':str(path),'reason':'over_2_MiB'});continue
+            source=path.read_text(errors='replace')
+            if not re.search(r'particle|cloth|contact.?report|contact.?force|contact.?impulse',source,re.I):
+                continue
+            signatures=[{'line':i,'declaration':line.strip()} for i,line in enumerate(source.splitlines(),1)
+                if re.search(r'particle|cloth|contact|impulse|force',line,re.I)]
+            bindings.append({'path':str(path),'sha256':hashlib.sha256(path.read_bytes()).hexdigest(),
+                             'source':source,'matching_declarations':signatures})
+        result['contact_binding_inventory']={'package_root':str(package),'stub_files_scanned':len(binding_files),
+            'files':bindings,'skipped':skipped,
+            'scope':'all installed Python binding stubs including generic _physx interfaces; declarations are not runtime particle/finger force readback validation'}
     args.output.write_text(json.dumps(result)+'\n')
     print('Exported',sum(r['status']=='exported' for r in rows.values()),'/',len(rows),flush=True)
 

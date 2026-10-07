@@ -7,7 +7,7 @@ import os
 from pathlib import Path
 
 from scripts.atomic.continuous_report import build_report, report_html, report_markdown
-from scripts.atomic.report_eval_matrix import aggregate
+from scripts.atomic.report_eval_matrix import aggregate, refresh_recognition_validation
 from scripts.atomic.storage import atomic_write_json, atomic_write_text
 
 
@@ -74,7 +74,7 @@ def generate(original, expansion_root, output):
                 raise FileNotFoundError(source)
             continue
         manifest = json.loads((directory / 'suite.json').read_text())
-        result = json.loads(source.read_text())
+        result = refresh_recognition_validation(directory, json.loads(source.read_text()))
         data = build_report(manifest, result, aggregate(manifest, result), directory)
         suites.append((directory.name, directory.resolve(), manifest, result, data))
     data = integrate(suites)

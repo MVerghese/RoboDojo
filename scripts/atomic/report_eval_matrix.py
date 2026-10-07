@@ -1,8 +1,32 @@
 """Aggregate observed scores without converting absent events into outcomes."""
 from collections import defaultdict
+from copy import deepcopy
+import json
 import statistics
 
 from scripts.atomic.storage import atomic_write_json
+
+
+def refresh_recognition_validation(root, result):
+    """Recheck raw witnesses when a collector used an older imported auditor.
+
+    Stored native reports, cached arithmetic audits and input results are intact.
+    Current derived reports exclude inconsistent boundaries even for live
+    controllers started before the validation implementation changed.
+    """
+    from scripts.atomic.audit_scores import validate_cached_recognition
+    refreshed = deepcopy(result)
+    for row in refreshed['cases']:
+        report = root / 'runs' / row['case_id'] / 'eval_report.json'
+        if report.exists() and row.get('atomic_scores'):
+            validate_cached_recognition(json.loads(report.read_text()), row['atomic_scores'])
+    if any('atomic_scores' in row for row in refreshed['cases']):
+        stages = [s for row in refreshed['cases'] for s in row.get('atomic_scores', [])]
+        refreshed['reproduced_event_scores'] = sum(c['status'] == 'reproduced'
+            for stage in stages for c in stage['conditions'].values())
+        refreshed['recognition_witness_failures'] = sum(s.get('recognition_witness', {}).get('status')
+            == 'inconsistent_evidence' for s in stages)
+    return refreshed
 
 
 def delivered_prompt(row):
@@ -96,6 +120,7 @@ def aggregate(manifest, result):
 
 def write_matrix_report(manifest, result, root):
     from scripts.atomic.continuous_report import write_continuous_report
+    result = refresh_recognition_validation(root, result)
     data = aggregate(manifest, result)
     atomic_write_json(root / 'eval-matrix-results.json', data)
     return write_continuous_report(manifest, result, data, root)
