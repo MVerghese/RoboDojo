@@ -290,6 +290,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
         def _observe_atomic_physics(self):
             # Contact manifold and live poses now belong to the same substep.
             if self._atomic_replaying:
+                observer = getattr(self, '_atomic_replay_observer', None)
+                if observer is not None:
+                    observer.observe_physics()
                 return
             for env_idx in getattr(self, '_atomic_stepping_envs', ()):
                 if self.end_flag[env_idx]:
@@ -913,7 +916,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
 
         def _start_atomic_stage(self):
             """Replay a recorded prefix, then start a fresh atomic score window."""
-            from task.atomic.replay import replay_prefix, validate_start_boundary
+            from task.atomic.replay import replay_prefix, validate_start_boundary, PrefixReplayObserver
             from task.atomic.session import AtomicSession
 
             start = 0
@@ -921,15 +924,20 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
             if self.atomic_trace is not None:
                 if self.atomic_trace.layout_id != int(self.env_seeds[0]):
                     raise ValueError("atomic trace layout_id does not match the loaded scene")
+                observer = (PrefixReplayObserver(self, self.atomic_program, self.atomic_stage)
+                            if self._atomic_start_evidence['mode'] == 'linear_prefix' else None)
+                self._atomic_replay_observer = observer
                 self._atomic_replaying = True
                 try:
                     start = replay_prefix(
                         self.atomic_program, self.atomic_stage, self.atomic_trace,
                         self.take_action,
-                        lambda stage: AtomicSession(self, stage, 0).check_success_only(),
+                        observer.stage_succeeded if observer is not None else None,
                     )
                 finally:
                     self._atomic_replaying = False
+                    self._atomic_replay_observer = None
+                    self._atomic_start_evidence['prefix_stage_validation'] = observer.evidence if observer is not None else []
                 if self.take_action_cnt[0] != start:
                     raise ValueError("trace replay stopped before the atomic stage boundary")
                 self.take_action_cnt[0] = 0

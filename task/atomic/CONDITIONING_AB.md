@@ -307,6 +307,25 @@ resolved into a concrete program first. Per-episode `atomic_start` evidence
 records `initial_scene` or `linear_prefix`, the selected stage/action index and
 `state_restoration=false`; prefix replay is not a full simulator snapshot.
 
+During a nonzero prefix, persistent preceding-stage recognizers receive every
+physics step. The evaluator checks physical completion, native predicates and
+maintained holds at each recorded boundary. Prefix geometry is omitted from
+scoring. A failed prefix aborts before the selected stage runs and retains
+`atomic_start.prefix_stage_validation` diagnostics. Robot/parser resets occur
+only after verified nonzero replay; memory/game/count state still requires
+task-specific restoration.
+
+For a separate live replay proof, `scripts/atomic/run_prefix_validation.py`
+provides `prepare`, `start`, `monitor` and `proof` actions. Prepare a fresh
+`geometry-*-1006` evidence directory with `--base-run`, `--program`, `--trace`,
+`--stage`, `--name` and `--gpu-memory-ledger`. Then use `start` with the same
+`--root`, ledger and `--credentials-file`. It freezes the stage package, uses
+high-9000/clean-GPU admission, respects the shared 32-job window and starts a
+collector. `prefix-validation.json` requires each preceding action's current
+physical/native/hold checks to pass at its recorded boundary. Selected-stage
+success is separate. This stage-only proof is not included in full-task A/B
+summaries and does not establish full simulator-state fidelity.
+
 ```bash
 "$PYTHON" scripts/atomic/submit_stage.py \
   --run-dir /path/to/fresh-stage-plan --fork "$FORK" \

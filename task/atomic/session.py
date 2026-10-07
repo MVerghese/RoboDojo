@@ -623,20 +623,26 @@ class AtomicSession:
                     "measurement_context": "closest approach at policy action boundaries; not required-event adherence",
                     "ee_contact_proxy": condition["measurement"]["kind"] == "robot_ee_pose",
                 }
+        success_now = self._qualified_success(success_now)
+        if self._trajectory_observer:
+            self._trajectory_observer.observe(success_now and not self.maintained_hold_failures)
+        self.success = self.success or (success_now and not self.maintained_hold_failures)
+        return self.success
+
+    def _qualified_success(self, success_now):
         if self.stage.recognition is not None:
             success_now = success_now and (self._physical_recognizer.ready if self._physical_recognizer
                                           else self.interaction_observed)
             if self.stage.family == 'pick':
                 success_now = (success_now and self.current_hold_observed
                                and self._recognition_current_displacement[2] >= self._held_lift_required)
-        if self._trajectory_observer:
-            self._trajectory_observer.observe(success_now and not self.maintained_hold_failures)
-        self.success = self.success or (success_now and not self.maintained_hold_failures)
-        return self.success
+        return bool(success_now and not self.maintained_hold_failures)
 
     def check_success_only(self):
-        """Advance stage annotation without measuring geometric conditions."""
-        self.success = self.success or self._check_success()
+        """Observe and check the same physical success gates without geometry."""
+        self._observe_interaction()
+        self.goal_success = self._check_success()
+        self.success = self.success or self._qualified_success(self.goal_success)
         return self.success
 
     def summary(self):

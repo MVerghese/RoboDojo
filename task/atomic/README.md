@@ -146,7 +146,7 @@ After submission, `scripts/atomic/monitor_trace.py --run-dir <run-dir> --credent
 "stage_starts": {"pick_coin": 0, "insert_coin": 37}
 ```
 
-The index `37` means replay actions `0..36`, then ask the policy to perform `insert_coin`. The trace's `layout_id` must match the saved RoboDojo layout. The first stage can run without a trace. For a later stage, supply all three arguments to the normal eval launcher:
+The index `37` means replay actions `0..36`, then ask the policy to perform `insert_coin`. The trace's `layout_id` must match the saved RoboDojo layout. Any concrete root without dependencies can run without a trace. For a later linear stage, supply all three arguments to the normal eval launcher:
 
 ```text
 --atomic_spec task/atomic/programs/deposit_coin.json

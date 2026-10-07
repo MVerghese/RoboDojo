@@ -494,8 +494,11 @@ their list order does not impose a fictional sequential fold route.
 The submission helper and evaluator share boundary validation. Per-episode
 `atomic_start` records the mode, stage and action index. A graph boundary after
 action zero still requires faithful state restoration and is rejected. Nonzero
-linear prefixes retain their existing replay/predicate checks and documented
-baseline resets. This supplies initial-stage execution, not new segmentation,
+linear prefixes now retain preceding physical recognizers across every substep,
+activate sessions at the recorded boundaries and apply the same physical/native/
+maintained-hold success gates. Their evidence is saved before the documented
+baseline resets. Prefix geometry is omitted from scoring. This supplies selected
+stage execution, not new segmentation,
 physical cloth contact, partial-action replay or full simulator snapshots.
 
 ### Local shaft-cut observation

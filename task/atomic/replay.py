@@ -56,3 +56,38 @@ def replay_prefix(program, selected_stage, trace, take_action, stage_succeeded):
                         f"replay diverged: stage {stage.id!r} failed at action {action_index}"
                     )
     return selected_start
+
+
+class PrefixReplayObserver:
+    """Retain prefix recognition history, activating only at recorded boundaries.
+
+    Geometry targets are not success gates. Their observers are omitted here;
+    native checks, physical recognizers and maintained holds stay unchanged.
+    """
+    def __init__(self, env, program, selected_stage, env_idx=0):
+        self.env, self.program, self.env_idx = env, program, env_idx
+        self.limit = [s.id for s in program.stages].index(selected_stage.id)
+        self.index = 0;self.evidence = [];self.current = None
+        if self.limit:self._activate()
+
+    def _activate(self):
+        from dataclasses import replace
+        from task.atomic.session import AtomicSession
+        stage=replace(self.program.stages[self.index],geometry=(),trajectories=(),selection=None)
+        self.current=AtomicSession(self.env,stage,self.env_idx)
+
+    def observe_physics(self):
+        if self.current is not None:
+            self.current.check_success_only()
+
+    def stage_succeeded(self, stage):
+        if self.current is None or self.current.stage.id!=stage.id:
+            raise ValueError('prefix observer stage order differs from recorded boundaries')
+        self.current.check_success_only()
+        success=self.current._qualified_success(self.current.goal_success)
+        row=self.current.summary();row['prefix_boundary_verified']=bool(success)
+        self.evidence.append(row)
+        if success:
+            self.index+=1;self.current=None
+            if self.index<self.limit:self._activate()
+        return success

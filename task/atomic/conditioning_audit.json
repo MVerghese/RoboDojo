@@ -5,7 +5,7 @@
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
     "task/atomic/spec.py": "5057b76841176ad74a43bc6dfcb3eb00f728c1457532328868035d6fad704cab",
     "task/atomic/geometry.py": "db5ac89eedd928e69ba03f47cc660f6c5688e48a3f467d49dfb6fb41d9b9afea",
-    "task/atomic/session.py": "24dd44a4ac5d32135c613d53fdb4aedd0b12e9e64cc9cb1f4a0ab01a36872419",
+    "task/atomic/session.py": "9f179ce2ec36f72103331fa3c13ab7be706a2718ab341bd802e759bf2617a128",
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "5cf7aba9d425a976880e49d5f8dd6c3939f4d66eaf1c9dc09014d56de69bbb1c",
     "task/atomic/recognizers.py": "88960e88503279ed075061fec844dec8f8f7cc008b96ea60b1e4c1654b18a26a",

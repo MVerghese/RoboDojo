@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **257 offline atomic tests**. Dated sections below
+The current source passes **264 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -58,6 +58,15 @@ evaluation. Any concrete independent root can start in the initial scene,
 including a nonfirst root or its retained action-zero trace. Zero replay preserves
 native parser and robot-origin baselines, and `atomic_start` retains provenance.
 Nonzero graph boundaries still require state restoration and are rejected.
+
+Later linear prefixes now keep their recognizers alive through every physics
+substep and apply the same physical/native/maintained-hold success gates at
+recorded boundaries. The old fresh-session endpoint check lost physical history
+and could bypass physical contact gates. Prefix geometry is not scored; failure
+clears replay state and aborts before baseline resets or selected-stage inference.
+`atomic_start.prefix_stage_validation` saves the preceding physical evidence.
+Host tests exercise the actual evaluator callback path; simulator replay fidelity
+and faithful memory/game state restoration remain separate validation needs.
 
 A CPU-only search scanned all 267 installed binding stubs, including generic
 `_physx.pyi`. It retained five matching interfaces without skipped files. Contact

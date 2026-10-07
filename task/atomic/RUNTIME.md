@@ -179,7 +179,16 @@ Per-episode `atomic_start` retains mode, selected stage, action index and the
 explicit absence of state restoration.
 
 Nonzero prefix replay currently accepts only linear programs with available
-whole-action boundaries. Later graph starts and mid-chunk starts require faithful state restoration
+whole-action boundaries. `PrefixReplayObserver` keeps preceding sessions alive
+through every physics substep, including their physical recognizers and maintained
+holds. It initializes successors at recorded action boundaries and checks the
+same physical success gates there; a fresh endpoint session cannot substitute
+for that history. Prefix geometry targets are not success gates and are not
+scored. `atomic_start.prefix_stage_validation` retains each preceding action's
+physical/native evidence. Divergence clears the replay observer and aborts before
+baseline resets or selected-stage policy inference.
+
+Later graph starts and mid-chunk starts require faithful state restoration
 or verified partial-action replay. Templates with repeats or gates must first be concretely resolved for selected-stage execution. Neither restoration nor partial replay is implemented; no boundary is
 silently rounded to the end of an action chunk.
 
