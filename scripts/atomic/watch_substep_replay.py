@@ -50,7 +50,17 @@ def main():
     p.add_argument('--gpu-memory-ledger', type=Path, required=True)
     p.add_argument('--name', default='rb-substep-proof')
     p.add_argument('--max-wait-s', type=int, default=14400)
+    p.add_argument('--detach', action='store_true', help='Start a persistent monitor and return its PID')
     a = p.parse_args()
+    if a.detach:
+        with (a.source_suite/'substep-replay-watch.log').open('a') as log:
+            argv = [arg for arg in sys.argv[1:] if arg != '--detach']
+            child = subprocess.Popen([sys.executable, '-u', str(Path(__file__).resolve()), *argv],
+                cwd=REPO, stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
+                start_new_session=True)
+        (a.source_suite/'substep-replay-watch.pid').write_text(str(child.pid)+'\n')
+        print('Started substep replay monitor', child.pid, flush=True)
+        return
     lock = (a.source_suite/'substep-replay-watch.lock').open('a+')
     fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     state = a.source_suite/'substep-replay-watch.json'
