@@ -358,6 +358,16 @@ physical/native/hold checks to pass at its recorded boundary. Selected-stage
 success is separate. This stage-only proof is not included in full-task A/B
 summaries and does not establish full simulator-state fidelity.
 
+For asynchronous timed-trace capture, `scripts/atomic/watch_substep_replay.py`
+waits for a retained linear activation strictly inside a command, freezes a
+stage-only proof and starts its collector automatically. It requires
+`--source-suite`, `--output`, `--stage`, `--base-run`, `--credentials-file` and
+`--gpu-memory-ledger`. It prefers eligible baseline traces, records immutable
+capture hashes, respects the global 32-job window, and writes progress to the
+source suite's `substep-replay-watch.json`. It never synthesizes a midpoint or
+infers missing timing. If the capture finishes without a qualifying boundary,
+it records that limitation without submitting a misleading partial-command proof.
+
 ```bash
 "$PYTHON" scripts/atomic/submit_stage.py \
   --run-dir /path/to/fresh-stage-plan --fork "$FORK" \
