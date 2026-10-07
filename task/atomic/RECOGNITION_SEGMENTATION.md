@@ -472,6 +472,21 @@ bounded by the cleanup timeout. Real subprocess tests cover each behavior.
 These are infrastructure outcomes and do not supply atomic action boundaries or
 policy adherence scores. Previously frozen suites keep their original guard.
 
+### Independent initial-stage execution
+
+Selected-stage execution now accepts every concrete independent root, including
+one listed after another independent root. No trace is needed; a retained trace
+with that root at action zero also uses the initial scene without parser or
+robot-origin resets. The three retained cloth observers all start at zero, so
+their list order does not impose a fictional sequential fold route.
+
+The submission helper and evaluator share boundary validation. Per-episode
+`atomic_start` records the mode, stage and action index. A graph boundary after
+action zero still requires faithful state restoration and is rejected. Nonzero
+linear prefixes retain their existing replay/predicate checks and documented
+baseline resets. This supplies initial-stage execution, not new segmentation,
+physical cloth contact, partial-action replay or full simulator snapshots.
+
 ### Local shaft-cut observation
 
 The `charger_sections` pair keeps the existing two-tip held-entry observer and

@@ -285,10 +285,20 @@ Use the actual case directory (the four-task suite uses task-prefixed names).
 ## 6. Selected-stage A/B trials and later starts
 
 For stage-only runs use `submit_stage.py` with an existing dry-run base plan for
-that task. The first stage needs no trace. Later stages require a **layout-linked
-simulator action trace** with all preceding, strictly increasing stage boundaries
+that task. Any concrete root stage with no dependencies can start in the initial
+scene without a trace, including roots listed after another independent root.
+A trace recording that root at action zero also uses the initial scene; no
+actions, parser reset or robot-origin reset are applied. Dependent stages require
+a **layout-linked simulator action trace** from a linear program with all
+preceding, strictly increasing whole-action stage boundaries
 and successful prefix predicates. LeRobot demonstration videos alone do not
 provide that restart state. See [recording and replay](README.md#record-annotate-run).
+
+An independent graph stage recorded at a nonzero boundary still needs state
+restoration and is rejected. Repeats, gates, choices and label templates must be
+resolved into a concrete program first. Per-episode `atomic_start` evidence
+records `initial_scene` or `linear_prefix`, the selected stage/action index and
+`state_restoration=false`; prefix replay is not a full simulator snapshot.
 
 ```bash
 "$PYTHON" scripts/atomic/submit_stage.py \

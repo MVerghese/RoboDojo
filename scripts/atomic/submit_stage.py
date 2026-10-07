@@ -16,24 +16,14 @@ sys.path.insert(0, str(REPO))
 
 from scripts.atomic.submit_trace import add_gpu_admission, build_overlay, patch_overlay_spec, submit_prepared
 from task.atomic.spec import AtomicProgram, AtomicTrace, load_variant
+from task.atomic.replay import validate_start_boundary
 
 
 def validate_stage_inputs(program, stage_id, trace, variant):
     stage = program.stage(stage_id)
     if variant:
         stage.with_variant(variant)
-    selected_index = [item.id for item in program.stages].index(stage_id)
-    if trace is None:
-        if selected_index != 0:
-            raise ValueError("a recorded trace is required after the first atomic stage")
-        return
-    if trace.task_name != program.task_name:
-        raise ValueError("trace task_name does not match atomic program")
-    starts = [trace.stage_starts.get(item.id) for item in program.stages[:selected_index + 1]]
-    if starts[0] != 0 or any(index is None for index in starts):
-        raise ValueError("trace must contain the first stage at zero and every preceding stage boundary")
-    if any(a >= b for a, b in zip(starts, starts[1:])):
-        raise ValueError("trace stage boundaries must be strictly increasing")
+    validate_start_boundary(program, stage, trace)
 
 
 def main() -> None:

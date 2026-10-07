@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 6)
 
-The current source passes **246 offline atomic tests**. Dated sections below
+The current source passes **249 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -48,6 +48,12 @@ scores. Both native tasks failed; both selected the wrong first block, producing
 a physical point error rather than a missing referent. Current report rendering
 revalidates raw boundaries even when an older running collector used a cached
 auditor. Native reports and input result files are preserved.
+
+Selected-stage starts now share a boundary validator between submission and
+evaluation. Any concrete independent root can start in the initial scene,
+including a nonfirst root or its retained action-zero trace. Zero replay preserves
+native parser and robot-origin baselines, and `atomic_start` retains provenance.
+Nonzero graph boundaries still require state restoration and are rejected.
 
 A CPU-only search scanned all 267 installed binding stubs, including generic
 `_physx.pyi`. It retained five matching interfaces without skipped files. Contact

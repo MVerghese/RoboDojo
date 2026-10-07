@@ -252,7 +252,8 @@ def render(data):
              'See [RUNTIME.md](RUNTIME.md); the prose plans are still not executable programs.',
              '4. Capture verified start states at observed action boundaries. Save the common and task-specific state below. '
              '`replay_prefix` currently replays actions and checks preceding predicates; it is not a full simulator snapshot. '
-             '`_start_atomic_stage` resets parser baselines and robot origin after replay, so memory/game/count/trigger tasks need '
+             'Any concrete independent root may start in the initial scene, including a trace boundary at action zero, without resetting native baselines. '
+             '`_start_atomic_stage` resets parser baselines and robot origin after nonzero prefix replay, so memory/game/count/trigger tasks need '
              'explicit state restoration rather than treating that reset as equivalent to the original boundary.',
              '5. Validate replay/snapshot fidelity against original poses, joints, velocities, material/particle state and native '
              'phase; reject already-completed or unsupported starts. Then generate with/without-condition pairs using identical '

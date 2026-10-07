@@ -509,7 +509,9 @@ class GraphTests(unittest.TestCase):
             with self.subTest(deps=deps), self.assertRaises(ValueError):
                 AtomicProgram('test', (a, b), stage_dependencies=deps)
         p = AtomicProgram('test', (a, b), stage_dependencies={'a': [], 'b': []})
-        trace = AtomicTrace('test', 0, (), {'a': 0, 'b': 0})
+        # Independent roots at zero are initial-scene starts, not prefix replay.
+        # A later independent graph boundary still needs state restoration.
+        trace = AtomicTrace('test', 0, ({},), {'a': 0, 'b': 1})
         with self.assertRaisesRegex(ValueError, 'requires a linear program'):
             replay_prefix(p, b, trace, lambda _: None, lambda _: True)
 

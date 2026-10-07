@@ -116,6 +116,8 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                         raise ValueError("atomic trace task_name does not match eval task")
                 elif self.atomic_program.dependencies()[self.atomic_stage.id]:
                     raise ValueError("a recorded trace is required to start after the first atomic stage")
+                from task.atomic.replay import validate_start_boundary
+                validate_start_boundary(self.atomic_program, self.atomic_stage, self.atomic_trace)
             self.eval_batch = self.eval_cfg.get("eval_batch", False)
             self.eval_num = int(self.eval_cfg.get("eval_num", 50))
             self.policy_name = self.eval_cfg.get("policy_name", None)
@@ -911,10 +913,11 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
 
         def _start_atomic_stage(self):
             """Replay a recorded prefix, then start a fresh atomic score window."""
-            from task.atomic.replay import replay_prefix
+            from task.atomic.replay import replay_prefix, validate_start_boundary
             from task.atomic.session import AtomicSession
 
             start = 0
+            self._atomic_start_evidence = validate_start_boundary(self.atomic_program, self.atomic_stage, self.atomic_trace)
             if self.atomic_trace is not None:
                 if self.atomic_trace.layout_id != int(self.env_seeds[0]):
                     raise ValueError("atomic trace layout_id does not match the loaded scene")
@@ -930,8 +933,9 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 if self.take_action_cnt[0] != start:
                     raise ValueError("trace replay stopped before the atomic stage boundary")
                 self.take_action_cnt[0] = 0
-                self.reward_manager.func_parser.init_state()
-                self.robot_manager.set_origin_endpose()
+                if start > 0:
+                    self.reward_manager.func_parser.init_state()
+                    self.robot_manager.set_origin_endpose()
             if self.atomic_stage.step_limit is not None:
                 self.step_lim = self.atomic_stage.step_limit
             self._atomic_sessions = {0: AtomicSession(self, self.atomic_stage, 0)}
@@ -1029,6 +1033,7 @@ def create_eval_env(config, app, resume_state=None, **kwargs):
                 if self.atomic_stage is not None:
                     self._atomic_sessions[env_idx].finalize()
                     self.eval_result["details"][index]["atomic"] = self._atomic_sessions[env_idx].summary()
+                    self.eval_result['details'][index]['atomic_start'] = deepcopy(self._atomic_start_evidence)
                 if env_idx in self._atomic_sequences:
                     self._atomic_sequences[env_idx].finalize()
                     self.eval_result["details"][index]["atomic_sequence"] = self._atomic_sequences[env_idx].summary()

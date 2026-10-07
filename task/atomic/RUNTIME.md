@@ -171,9 +171,15 @@ occurred at a whole-action boundary. `stage_starts` contains **only** starts tha
 can be represented by whole-action prefix replay. Mid-chunk starts are marked
 `prefix_replay_supported=false` and are omitted from `stage_starts`.
 
-A program root (no prerequisites) may be selected from a fresh episode. Prefix
-replay currently accepts only linear programs with available whole-action
-boundaries. Graph starts and mid-chunk starts require faithful state restoration
+A concrete program root (no prerequisites) may be selected from a fresh episode,
+regardless of its list position. A supplied trace with that root at action zero
+also starts in the initial scene and preserves native parser/robot-origin
+baselines. The submission helper and evaluator share the same boundary validator.
+Per-episode `atomic_start` retains mode, selected stage, action index and the
+explicit absence of state restoration.
+
+Nonzero prefix replay currently accepts only linear programs with available
+whole-action boundaries. Later graph starts and mid-chunk starts require faithful state restoration
 or verified partial-action replay. Templates with repeats or gates must first be concretely resolved for selected-stage execution. Neither restoration nor partial replay is implemented; no boundary is
 silently rounded to the end of an action chunk.
 
