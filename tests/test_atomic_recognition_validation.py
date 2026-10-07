@@ -51,16 +51,45 @@ class RecognitionValidationTests(unittest.TestCase):
             self.assertEqual(validate_recognition_window(raw)['status'],'unobserved')
 
     def test_release_from_another_transport_interval_fails_and_missing_metrics_stay_partial(self):
+        from test_atomic_persistent_support import world
+        backend, _ = world()
         raw={'recognition':{'kind':'supported_release','min_contact_steps':2,'settle_steps':2,
+                           'label':'object','support_labels':['support'],
                            'transport_threshold_m':.02,'max_settle_displacement_m':.002,
                            'max_settle_angle_rad':.02},'physical_events':{
             'release':{'physics_step':9,'held_contact':hold('left')},
             'settled':{'physics_step':12,'held_contact':hold('left'),'stable_steps':3,
                        'transport_m':.03,'settle_displacement_m':.001,'settle_angle_rad':.01,
-                       'separated_since_step':10,'separated_steps':3,'robot_touching':False}}}
+                       'separated_since_step':10,'separated_steps':3,'robot_touching':False,
+                       'support':backend.support_evidence('object',['support'],0)}}}
         self.assertEqual(validate_recognition_window(raw)['status'],'consistent_boundary_evidence')
         raw['physical_events']['release']['held_contact']=hold('right')
         self.assertEqual(validate_recognition_window(raw)['invalid_event_names'],['release'])
         raw['physical_events']['release']['held_contact']=hold('left')
         raw['physical_events']['settled'].pop('transport_m')
         self.assertEqual(validate_recognition_window(raw)['status'],'partial_evidence')
+
+    def test_settled_support_force_and_declared_object_are_checked_without_on_top_geometry(self):
+        from test_atomic_persistent_support import world
+        backend, _ = world()
+        original={'recognition':{'kind':'supported_release','label':'object','support_labels':['support'],
+            'min_contact_steps':2,'settle_steps':2,'transport_threshold_m':.02,
+            'max_settle_displacement_m':.002,'max_settle_angle_rad':.02},'physical_events':{
+            'release':{'physics_step':9,'held_contact':hold('left')},
+            'settled':{'physics_step':12,'held_contact':hold('left'),'stable_steps':3,
+                'transport_m':.03,'settle_displacement_m':.001,'settle_angle_rad':.01,
+                'separated_since_step':10,'separated_steps':3,'robot_touching':False,
+                'support':backend.support_evidence('object',['support'],0)}}}
+        valid=validate_recognition_window(original)
+        self.assertEqual(valid['status'],'consistent_boundary_evidence')
+        self.assertEqual(valid['settled_support_witness']['status'],'consistent_support_evidence')
+        for corrupt in ('force','object','support','absent'):
+            raw=deepcopy(original);support=raw['physical_events']['settled']['support']
+            if corrupt=='force':support['contacts'][0]['impulse']=[0,0,-.01]
+            elif corrupt=='object':support['object']='other'
+            elif corrupt=='support':raw['recognition']['support_labels']=['other']
+            else:raw['physical_events']['settled'].pop('support')
+            with self.subTest(corrupt=corrupt):
+                result=validate_recognition_window(raw)
+                self.assertEqual(result['status'],'partial_evidence' if corrupt=='absent' else 'inconsistent_evidence')
+                self.assertEqual(result['invalid_event_names'],[] if corrupt=='absent' else ['settled'])

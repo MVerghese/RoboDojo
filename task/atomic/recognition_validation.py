@@ -25,7 +25,7 @@ def validate_recognition_window(stage):
     if not all(name in events for name in names):
         return {'status': 'unobserved', 'reason': 'complete_boundary_events_absent',
                 'scope': 'retained boundary identities; intermediate persistence not reconstructed'}
-    checks, invalid, unavailable = {}, set(), []
+    checks, invalid, unavailable, support_witness = {}, set(), [], None
 
     def check(name, passed, affected):
         checks[name] = bool(passed)
@@ -71,6 +71,23 @@ def validate_recognition_window(stage):
             check('transport_threshold', final['transport_m'] >= config['transport_threshold_m'], names)
             check('settling_displacement_bound', final['settle_displacement_m'] <= config['max_settle_displacement_m'], ['settled'])
             check('settling_angle_bound', final['settle_angle_rad'] <= config['max_settle_angle_rad'], ['settled'])
+            support = final.get('support')
+            if (not isinstance(support, dict) or not all(k in support for k in
+                    ('object', 'object_root', 'support_roots', 'normal_axis_world', 'contacts'))):
+                unavailable.append('settled: raw named-support evidence absent')
+            else:
+                from task.atomic.support_validation import validate_support_witness
+                support_witness = validate_support_witness({'support_contact': True,
+                                                            'support_contact_evidence': support})
+                check('settled_support_force_signs', support_witness['status'] != 'inconsistent_support_evidence', ['settled'])
+                if support_witness['status'] == 'partial_support_evidence':
+                    unavailable.extend('settled support: ' + reason for reason in support_witness['unavailable'])
+                if 'label' not in config or 'support_labels' not in config:
+                    unavailable.append('settled: declared object/support binding absent')
+                else:
+                    check('settled_support_binding', support['object'] == config['label']
+                          and bool(support['contacts']) and all(row['support_label'] in config['support_labels']
+                                                               for row in support['contacts']), ['settled'])
             if 'separated_steps' not in final:
                 unavailable.append('settled: separation interval absent')
             else:
@@ -151,4 +168,5 @@ def validate_recognition_window(stage):
     return {'status': 'inconsistent_evidence' if failed else 'partial_evidence' if unavailable else 'consistent_boundary_evidence',
             'checks': checks, 'failed_checks': failed, 'invalid_event_names': sorted(invalid),
             'unavailable': unavailable,
+            'settled_support_witness': support_witness,
             'scope': 'retained boundary identities and declared thresholds; intermediate contact/force persistence not reconstructed'}

@@ -692,3 +692,31 @@ was omitted from the program, but the parser required the native constructor's
 outcome; a fresh matched pair is required. The suite controller also drains its
 already submitted collection workers after the infrastructure failure limit stops
 new submissions, so successful sibling evidence receives a terminal marker.
+
+### Fresh release/defaults validation (October 7, 21:18 UTC)
+
+The single-finger recontact repair now has a completed matched bowl pair.
+`place_bowl1` succeeded in both arms, with 24 settling samples and 50/35
+consecutive separated samples (baseline/conditioned). Independent raw checks
+reproduce the transport interval, release order, single-finger brush identity,
+settling bounds and upward named-support force signs. At the original first
+release, local-z direction errors were 7.17855 / 16.14496 degrees and full
+orientation errors were 13.62692 / 18.92420 degrees. These are individual
+rollouts, with no causal or statistical prompt-effect claim. Both native bowl
+tasks succeeded.
+
+Settled support is now independently checked for every archived supported-release
+recognizer, even when its geometry only measures orientation. The validator
+checks raw body/force signs and binding to the declared object/support labels.
+Contradictory settled support invalidates that completion event; missing historical
+raw support remains partial evidence. Unit tests corrupt force direction, object
+identity and support labels, and separately exercise missing legacy evidence.
+
+The repaired block-language A/B pair completed without the native-default crash.
+Both arms recognized both pickups and the first placement; the second placement
+and native full task failed in both. The concrete linear button capture recognized
+all three cycles in both arms; both native full tasks failed. Its baseline trace
+records confirm activation at command 45 / physics step 988 and next-red
+activation at command 108 / physics step 1616, both inside commands. The automatic
+monitor submitted `rb-timed-button-proof-1007-000-6b88` to validate that actual
+multiple-boundary prefix. Its live proof was still pending at this snapshot.

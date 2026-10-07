@@ -205,7 +205,10 @@ class PhysicalTests(unittest.TestCase):
         self.assertEqual(event['post_release_recontacts']['sampled_steps'],4)
         self.assertEqual(event['post_release_recontacts']['last_physics_step']+1,event['separated_since_step'])
         from task.atomic.recognition_validation import validate_recognition_window
-        self.assertEqual(validate_recognition_window(s.summary())['status'],'consistent_boundary_evidence')
+        witness = validate_recognition_window(s.summary())
+        self.assertEqual(witness['status'],'partial_evidence')
+        self.assertIn('settled: raw named-support evidence absent',witness['unavailable'])
+        self.assertTrue(witness['checks']['settled_separation_interval'])
         event['separated_since_step'] = release_step
         summary = s.summary(); summary['physical_events']['settled'] = event
         self.assertEqual(validate_recognition_window(summary)['status'],'inconsistent_evidence')

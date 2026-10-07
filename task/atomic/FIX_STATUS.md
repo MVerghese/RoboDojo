@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **279 offline atomic tests**. Dated sections below
+The current source passes **325 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -320,3 +320,23 @@ retains raw start/press/release joint limits and positions plus contact interval
 identity. Independent boundary validation checks ratios, time, body/arm and release;
 historical missing witnesses remain partial. Six new regressions and the full
 **297-test** gate pass. A fresh matched button pair is required for live proof.
+
+## October 7, 21:18 UTC follow-up
+
+Native predicate defaults are preserved through the actual RewardManager
+constructors, with resolved arguments retained. The fresh block-language pair
+completes after the `z_threshold=None` repair; both arms recognize two pickups
+and one placement but fail the native full task. Fresh bowl placement succeeds
+in both arms after single-finger brush handling, with consistent independent
+release/separation/settling and named-support force evidence. Support evidence is
+now audited even for placement programs without an on-top geometry condition.
+
+Linear replay schedules multiple partial predecessors at their recorded physics
+boundaries, including distinct boundaries in one command; it does not restore
+DAG/choice/material or native game state. All 325 host tests pass. A three-cycle
+button pair recognized every cycle in both arms. Its automatic monitor submitted
+a separate multiple-boundary selected-stage proof, pending at this snapshot.
+The existing bowl selected-stage proof succeeded with a 0.008497716 mm root
+position residual. Missing cloth force/material correspondence, unique task
+creases, full layering, full-volume transfer and full simulator state restoration
+remain explicit limitations.

@@ -634,3 +634,21 @@ At 23:39 UTC, the unified MD/HTML report contained 160 valid episodes, 72 verifi
 matched pairs and 566 reproduced required-event scores, with zero mismatches.
 Both corrected `geometry-liquid-populated-1006` cases were submitted at high-9000
 after the two-case batch fitted the existing global window.
+
+## October 7, 21:18 UTC follow-up
+
+Both native-defaults block-language runs and both concrete timed-button captures
+are collected. Both block arms recognize two pickups and the first placement;
+both button arms recognize all three physical cycles. Native full-task success
+is false in all four. The earlier two block-language crashed runs remain retained
+infrastructure failures with no completed episode. The automatic replay monitor
+has submitted `rb-timed-button-proof-1007-000-6b88`, using the baseline's actual
+partial predecessor at command 45 / physics 988 and selected boundary at command
+108 / physics 1616. Its stage-only result is excluded from full-task A/B counts.
+
+The completed bowl recontact pair recognizes `place_bowl1` in both arms, each
+with 24 settling samples and 50/35 separated samples. Both native tasks succeed.
+Raw release/settling and named-support force checks pass independently, with
+report hashes in `geometry-release-brush-1006/release-brush-independent-validation.json`.
+The unified MD/HTML reports include these new pairs. See the three measurement,
+success and segmentation docs for remaining proof boundaries.
