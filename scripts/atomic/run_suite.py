@@ -28,11 +28,14 @@ H200_TASKS = {'fold_clothes_random', 'hang_mugs_random',
 
 
 def execution_controls(plan):
-    return {key: plan.get(key) for key in (
+    controls = {key: plan.get(key) for key in (
         'checkpoint', 'config_name', 'policy', 'seeds', 'eval_num', 'action_type',
         'joint_deadband_rad', 'num_steps', 'guidance', 'disable_compile',
         'pointcond_mode', 'pointcond_condition', 'pointcond_assignment_seed',
         'timeouts_seconds', 'image', 'reservation', 'reservation_burst', 'resource_shape')}
+    if plan.get('atomic_cloth_contact_probe'):
+        controls['cloth_contact_probe'] = True
+    return controls
 
 
 def overlay_runtime_hash(path):
@@ -191,6 +194,8 @@ def validate_suite(manifest):
         raise ValueError('case IDs must be nonempty, unique directory-safe names')
     programs = []
     for case in cases:
+        if type(case.get('cloth_contact_probe', False)) is not bool:
+            raise ValueError('cloth_contact_probe must be boolean')
         if manifest.get('checkpoints') and case.get('checkpoint_id') not in manifest['checkpoints']:
             raise ValueError('case checkpoint_id must exist in checkpoint manifest')
         path = Path(case['program'])
@@ -212,7 +217,8 @@ def validate_suite(manifest):
             if (a.get('prompt_mode'), b.get('prompt_mode')) != ('baseline', 'conditioned') or a.get('task') != b.get('task'):
                 raise ValueError('A/B pair must have the same task and baseline/conditioned order')
             if (a.get('checkpoint_id') != b.get('checkpoint_id')
-                    or a.get('task_timeout_s') != b.get('task_timeout_s')):
+                    or a.get('task_timeout_s') != b.get('task_timeout_s')
+                    or a.get('cloth_contact_probe', False) != b.get('cloth_contact_probe', False)):
                 raise ValueError('A/B pair must have identical checkpoint and timeout controls')
             if not append or append != b.get('geometric_prompt_append') or a.get('geometric_prompt_append'):
                 raise ValueError('manifest geometric append does not match the program')
@@ -444,7 +450,8 @@ def main():
                      args.gpu_memory_ledger, task=case_task, task_timeout_s=case.get('task_timeout_s'))
         subprocess.run([sys.executable, "scripts/atomic/submit_trace.py", "--run-dir", str(run),
                         '--task', case_task,
-                        "--program", case["program"], "--max-initial-gpu-memory-mib", "512", "--dry-run"],
+                        "--program", case["program"], "--max-initial-gpu-memory-mib", "512", "--dry-run"] +
+                       (['--cloth-contact-probe'] if case.get('cloth_contact_probe') else []),
                        cwd=REPO, check=True, stdout=subprocess.DEVNULL)
         runtimes.add(freeze_case(run, case['program'], case_task)['runtime_sha256'])
     if len(runtimes) != 1:

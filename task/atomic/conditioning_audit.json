@@ -7,7 +7,7 @@
     "task/atomic/geometry.py": "db5ac89eedd928e69ba03f47cc660f6c5688e48a3f467d49dfb6fb41d9b9afea",
     "task/atomic/session.py": "30d99312f7e12511ca939d00616953d182dd9bcba09d60796aa48144693a88c6",
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
-    "task/atomic/contacts.py": "06579e4069423863b460acf57d19c92415690038317c34189f3126ca3759a166",
+    "task/atomic/contacts.py": "5cf7aba9d425a976880e49d5f8dd6c3939f4d66eaf1c9dc09014d56de69bbb1c",
     "task/atomic/recognizers.py": "bc4deeed0cb39fd84e6c15afeac79da2b839be48732d7b67d5dd3d8773c5bc15",
     "task/atomic/recognition_validation.py": "848313e9cc7208ab04cc5c00d66a4ebb018964dfc8532524373a7cfc3c2c10a8",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",

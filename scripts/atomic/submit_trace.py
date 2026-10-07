@@ -227,6 +227,8 @@ def main() -> None:
     parser.add_argument("--max-initial-gpu-memory-mib", type=int,
                         help="Require an idle GPU before policy loading; allow this much driver memory")
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument('--cloth-contact-probe', action='store_true',
+                        help='Diagnostic native cloth callback probe; not a cloth grasp checker')
     args = parser.parse_args()
 
     plan_path = args.run_dir / "run_plan.json"
@@ -249,6 +251,10 @@ def main() -> None:
     remote = f"{plan['results_s3']}/robodojo-overlay.tar.gz"
     patched = patch_spec(spec, remote, digest, args.task, args.reservation,
                          args.max_initial_gpu_memory_mib)
+    if args.cloth_contact_probe:
+        patched['spec']['envs'].append({'name':'ATOMIC_CLOTH_CONTACT_PROBE','value':'1'})
+        plan['atomic_cloth_contact_probe'] = True
+        plan_path.write_text(json.dumps(plan, indent=2) + '\n')
     if args.program:
         for env in patched["spec"]["envs"]:
             if env["name"] == "ATOMIC_RECORD_SPEC":

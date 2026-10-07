@@ -757,3 +757,23 @@ unobserved for zero projected overlap. Native and atomic fold success were false
 while these final-state geometry scores were retained and reproduced. Its
 matched baseline is pending. A passing boundary-distance score alone cannot
 establish a correct fold or patch alignment.
+
+### Diagnostic particle-cloth contact probe
+
+`submit_trace.py --cloth-contact-probe` (suite case `cloth_contact_probe: true`)
+adds `PhysxContactReportAPI` to actual particle-cloth meshes before their tensor
+initialization. It adds no rigid body or collision geometry. Normal runs leave
+this experimental probe disabled. Matched pairs require the same probe setting,
+retained in frozen execution controls.
+
+`contact_instrumentation.cloth_contact_probe` retains enabled mesh paths, native
+actor/collider identities, world positions, normals, impulses, separation,
+face/instancer indices and resolved finger participation. Counters cover all
+reported points; bounded samples reserve 128 finger-force, 96 other-force and
+32 zero-impulse entries so initial table contacts cannot hide later fingers.
+Reload clears paths, counts and samples.
+
+This is an API diagnostic. Collider face/instancer indices have **unverified
+material-vertex correspondence**. A callback, zero-force point or nearby finger
+does not certify a cloth grasp. Force-bearing finger evidence and a validated
+solver/material mapping are still required for cloth grasp geometry.

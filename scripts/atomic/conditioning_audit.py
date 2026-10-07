@@ -10,6 +10,7 @@ import sys
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from task.atomic.spec import FAMILIES, GEOMETRY_KINDS
+from scripts.atomic.storage import atomic_write_json, atomic_write_text
 
 FAMILY_NAMES = dict(zip(
     ['Pick', 'Place', 'Push', 'Push with tool / sweep', 'Pour', 'Actuate', 'Twist',
@@ -190,8 +191,8 @@ def main():
     details = marker + existing.split(marker, 1)[1] if marker in existing else ''
     expected = generated + details
     if args.refresh:
-        JSON_PATH.write_text(json.dumps(data, indent=2) + '\n')
-        MD_PATH.write_text(expected)
+        atomic_write_json(JSON_PATH, data)
+        atomic_write_text(MD_PATH, expected)
     elif json.loads(JSON_PATH.read_text()) != data or existing != expected:
         raise ValueError('stale conditioning audit: review changed sources/slots, then --refresh')
     print(f"Verified {data['families']} families, {data['slots']} slots and {data['factor_cells']} factor cells; {data['status_counts']}")

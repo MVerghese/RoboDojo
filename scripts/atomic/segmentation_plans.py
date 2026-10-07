@@ -16,6 +16,7 @@ import yaml
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO))
 from task.atomic.spec import FAMILIES
+from scripts.atomic.storage import atomic_write_json, atomic_write_text
 
 PLANS = REPO / 'task/atomic/segmentation_plans.json'
 REPORT = REPO / 'task/atomic/SEGMENTATION.md'
@@ -314,8 +315,8 @@ def main():
         for entry in data['tasks']:
             entry['evidence'] = evidence(entry['task'])
         data['dependencies'] = [fingerprint(REPO / path) for path in DEPENDENCIES]
-        PLANS.write_text(json.dumps(data, indent=2) + '\n')
-        REPORT.write_text(render(data))
+        atomic_write_json(PLANS, data)
+        atomic_write_text(REPORT, render(data))
     elif args.task:
         entry = next((e for e in data['tasks'] if e['task'] == args.task), None)
         if entry is None:

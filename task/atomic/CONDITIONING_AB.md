@@ -284,6 +284,13 @@ Use the actual case directory (the four-task suite uses task-prefixed names).
 
 ## 6. Selected-stage A/B trials and later starts
 
+For a diagnostic particle-cloth callback comparison, set `cloth_contact_probe:
+true` on both suite cases. The runner passes `--cloth-contact-probe` to
+`submit_trace.py` and freezes it as an execution control. Native mesh callback
+samples are saved under `contact_instrumentation.cloth_contact_probe`; they do
+not establish material-vertex correspondence or supply a cloth grasp score.
+See [measurement details](GEOMETRIC_MEASUREMENT.md#diagnostic-particle-cloth-contact-probe).
+
 For stage-only runs use `submit_stage.py` with an existing dry-run base plan for
 that task. Any concrete root stage with no dependencies can start in the initial
 scene without a trace, including roots listed after another independent root.

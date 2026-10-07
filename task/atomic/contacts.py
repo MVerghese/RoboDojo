@@ -2,6 +2,7 @@
 
 No nearest-link fallback is used. A missing contact is missing evidence.
 """
+import os
 import numpy as np
 
 
@@ -33,6 +34,10 @@ class PhysXContacts:
         self.enable_errors = []
         self.skipped_nested_body_paths = []
         self.material_states = {}
+        self.cloth_probe_enabled = os.environ.get('ATOMIC_CLOTH_CONTACT_PROBE') == '1'
+        self.cloth_probe_paths = []
+        self.cloth_probe_samples = []
+        self.cloth_probe_counts = {'headers': 0, 'points': 0, 'force_points': 0, 'finger_force_points': 0}
         from omni.physx.bindings._physx import ContactEventType
         self._contact_event_lost = ContactEventType.CONTACT_LOST
         self.fingers = {}
@@ -84,6 +89,15 @@ class PhysXContacts:
         from pxr import PhysxSchema, Usd, UsdGeom, UsdPhysics
         paths = []
         for prim in Usd.PrimRange(root, Usd.TraverseInstanceProxies()):
+            if (getattr(self, 'cloth_probe_enabled', False)
+                    and prim.HasAPI(PhysxSchema.PhysxParticleClothAPI)):
+                # Diagnostic only. Never turn the particle mesh into a rigid
+                # body or equate native face indices with material vertex IDs.
+                if not prim.HasAPI(PhysxSchema.PhysxContactReportAPI):
+                    PhysxSchema.PhysxContactReportAPI.Apply(prim).CreateThresholdAttr(0.0)
+                path = str(prim.GetPath())
+                if path not in self.cloth_probe_paths:
+                    self.cloth_probe_paths.append(path)
             if not prim.HasAPI(UsdPhysics.RigidBodyAPI):continue
             # A visual/collision child without a transform reset belongs to
             # its enabled ancestor body. Do not add an independent reporting
@@ -135,6 +149,38 @@ class PhysXContacts:
         self.enable_errors.clear()
         self.steps = 0
         self.reports = 0
+        if getattr(self, 'cloth_probe_enabled', False):
+            self.cloth_probe_paths.clear()
+            self.cloth_probe_samples.clear()
+            self.cloth_probe_counts = {'headers': 0, 'points': 0, 'force_points': 0, 'finger_force_points': 0}
+
+    def _probe_cloth_pair(self, actors, colliders):
+        paths = getattr(self, 'cloth_probe_paths', ())
+        return any(value == root or value.startswith(root + '/')
+                   for value in (*actors, *colliders) for root in paths)
+
+    def _probe_cloth_point(self, actors, colliders, header, contact, position, normal, impulse):
+        """Retain bounded native samples without claiming solver correspondence."""
+        counts = self.cloth_probe_counts
+        counts['points'] += 1
+        force = float(np.linalg.norm(impulse)) > 1e-9
+        finger = any(value in self.fingers for value in (*actors, *colliders))
+        counts['force_points'] += int(force)
+        counts['finger_force_points'] += int(force and finger)
+        bucket = 'finger_force' if force and finger else 'other_force' if force else 'zero_impulse'
+        limit = {'finger_force': 128, 'other_force': 96, 'zero_impulse': 32}[bucket]
+        if sum(row['sample_bucket'] == bucket for row in self.cloth_probe_samples) < limit:
+            self.cloth_probe_samples.append({
+                'sample_bucket': bucket,
+                'physics_step': self.steps, 'actors': list(actors), 'colliders': list(colliders),
+                'position_world_m': position.tolist(), 'normal_world': normal.tolist(),
+                'impulse_native': impulse.tolist(), 'force_bearing': force,
+                'resolved_finger_pair': finger,
+                'face_indices': [getattr(contact, 'face_index0', None), getattr(contact, 'face_index1', None)],
+                'proto_indices': [getattr(header, 'proto_index0', None), getattr(header, 'proto_index1', None)],
+                'separation_native': getattr(contact, 'separation', None),
+                'material_vertex_correspondence': 'unverified',
+            })
 
     def _report(self, headers, data):
         self.reports += 1
@@ -155,6 +201,9 @@ class PhysXContacts:
                     self._lost_pairs.add(pair)
                     continue
                 if lifecycle: self._lost_pairs.discard(pair)
+                cloth_pair = getattr(self, 'cloth_probe_enabled', False) and self._probe_cloth_pair((a,b),(c0,c1))
+                if cloth_pair:
+                    self.cloth_probe_counts['headers'] += 1
                 if not hasattr(self, 'report_pair_diagnostics'): self.report_pair_diagnostics = {}
                 key = '|'.join((a,b,c0,c1))
                 if key not in self.report_pair_diagnostics and len(self.report_pair_diagnostics) < 96:
@@ -171,6 +220,8 @@ class PhysXContacts:
                     normal = np.asarray(contact.normal, dtype=float)
                     if any(value.shape != (3,) or not np.isfinite(value).all() for value in (impulse, position, normal)):
                         raise ValueError('contact position, normal and impulse must be finite 3-vectors')
+                    if cloth_pair:
+                        self._probe_cloth_point((a,b),(c0,c1),header,contact,position,normal,impulse)
                     if np.linalg.norm(impulse) <= 1e-9:
                         if diagnostic: diagnostic['zero_impulse_points'] += 1
                         continue
@@ -248,7 +299,7 @@ class PhysXContacts:
         }
 
     def summary(self):
-        return {'backend': 'PhysX contact reports', 'steps': self.steps, 'reports': self.reports,
+        result = {'backend': 'PhysX contact reports', 'steps': self.steps, 'reports': self.reports,
                 'event_types': dict(getattr(self, 'event_types', {})),
                 'support_pair_diagnostics': dict(getattr(self, 'pair_diagnostics', {})),
                 'report_pair_diagnostics': dict(getattr(self, 'report_pair_diagnostics', {})),
@@ -258,6 +309,16 @@ class PhysXContacts:
                 'health_status': ('callback_error' if self.errors else
                                   'observed_reports' if self.reports else 'awaiting_contact_evidence'),
                 'resolved_finger_bodies': self.fingers, 'errors': self.errors}
+        if getattr(self, 'cloth_probe_enabled', False):
+            result['cloth_contact_probe'] = {
+                'enabled_mesh_paths': list(self.cloth_probe_paths),
+                'schema_change': 'PhysxContactReportAPI only; no added rigid body or collision geometry',
+                'counts': dict(self.cloth_probe_counts), 'native_samples': list(self.cloth_probe_samples),
+                'sample_limit': 256, 'sample_bucket_limits': {'finger_force':128,'other_force':96,'zero_impulse':32},
+                'material_vertex_correspondence': 'unverified',
+                'scope': 'diagnostic contact API probe, not calibrated cloth grasp measurement',
+            }
+        return result
 
     def resolve_object_pair(self, selector, env_idx):
         """Force-bearing points between two named physical object subtrees.

@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 6)
 
-The current source passes **249 offline atomic tests**. Dated sections below
+The current source passes **253 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -61,6 +61,20 @@ headers expose collider face and instancer indices, now retained in raw force
 rows; these are not cloth material vertex IDs. Generic rigid contact-report APIs
 were found, but no particle/finger impulse readout was established. A live cloth
 contact probe and solver identity correspondence remain necessary.
+
+The opt-in native cloth callback probe is now implemented: contact-report API
+installation precedes cloth tensor initialization; no rigid body is added.
+Raw force/zero-force samples have separate budgets, real finger identities,
+native face/instancer indices and explicit unverified material correspondence.
+Matched pairs enforce the same probe setting. Live callback validation remains
+necessary; the five cloth grasp cells remain missing.
+
+NFS quota failures interrupted local collection and audit generation. The
+checkout and operational state now use node storage with original home paths
+preserved as symlinks; NFS backups and original cloud artifacts remain retained.
+Truncated authored/generated files were restored before the full test run.
+Audit generators now use atomic writes, preserving prior artifacts if a write
+fails. Completed remote jobs are collected from unchanged frozen inputs.
 
 Corrected support recognition has live stack-block/stack-bowl evidence. See
 [EXPANSION_STATUS.md](EXPANSION_STATUS.md) for frozen suite provenance and the
