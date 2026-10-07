@@ -5,11 +5,12 @@
     "task/atomic/TAXONOMY.md": "24eca0dd1915859e96c8b797c42d4f85fde79861993e02b41005bf0b46cd40ac",
     "task/atomic/spec.py": "5057b76841176ad74a43bc6dfcb3eb00f728c1457532328868035d6fad704cab",
     "task/atomic/geometry.py": "db5ac89eedd928e69ba03f47cc660f6c5688e48a3f467d49dfb6fb41d9b9afea",
-    "task/atomic/session.py": "30d99312f7e12511ca939d00616953d182dd9bcba09d60796aa48144693a88c6",
+    "task/atomic/session.py": "24dd44a4ac5d32135c613d53fdb4aedd0b12e9e64cc9cb1f4a0ab01a36872419",
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "5cf7aba9d425a976880e49d5f8dd6c3939f4d66eaf1c9dc09014d56de69bbb1c",
-    "task/atomic/recognizers.py": "bc4deeed0cb39fd84e6c15afeac79da2b839be48732d7b67d5dd3d8773c5bc15",
+    "task/atomic/recognizers.py": "88960e88503279ed075061fec844dec8f8f7cc008b96ea60b1e4c1654b18a26a",
     "task/atomic/recognition_validation.py": "848313e9cc7208ab04cc5c00d66a4ebb018964dfc8532524373a7cfc3c2c10a8",
+    "task/atomic/material_validation.py": "82d3d1d2c7f95a1ed3e5ce48182a8e7f394c06703d9da01b5cc4424d22f4ceb8",
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
     "task/atomic/materials.py": "0b42ca82fd5101a7b0dd409139181d629b443a8ed62d2253f545a60f5b9241b8",
@@ -33,11 +34,11 @@
   "slots": 54,
   "factor_cells": 270,
   "status_counts": {
-    "L": 10,
+    "L": 12,
     "C": 4,
-    "G": 140,
+    "G": 139,
     "F": 8,
-    "S": 75,
+    "S": 74,
     "M": 5,
     "NA": 28
   },
@@ -50,9 +51,9 @@
         "P": {
           "kind": "point",
           "concept": "Select object whose initial center is at P.",
-          "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, binding inventories, unique geometric target resolution and first sustained contact identity. Offline binding/geometry reproduction is implemented. Per-control/tip/cloth candidates, categorical language roles and query live validation remain. Moved final poses do not replace initial candidates.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-selection-query-rpc-1006 block pair resolved the same unique initial XYZ candidate from a bounded live layout query, reproduced inventory/point binding and recognized first sustained selected-object contact. Both arms selected the wrong first block. This validates this initial point selection contract, not arbitrary language/control roles.",
+          "live_evidence": "task/atomic/EXPANSION_STATUS.md#execution-ledger"
         },
         "T": {
           "kind": "pose",
@@ -1023,9 +1024,9 @@
         "T": {
           "kind": "pose",
           "concept": "Source vessel frame at T during transfer.",
-          "status": "G",
-          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-liquid-populated-rpc-1006 pair measured the asset-bound bottle mouth against the asset-bound cup opening at first qualified cohort transfer: 38.60/28.25 mm translation and 164.49/171.72 degrees full orientation. Both reproduce; native success true/false. Historical per-particle source holds/initial region frames are partial evidence. This validates these mouth frames and measured SE(3) values, not passage through the source mouth or whole-fluid transfer.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#material-source-witness-validation"
         },
         "D": {
           "kind": "relative_displacement",
@@ -2137,7 +2138,7 @@
           "kind": "spatial_relation",
           "concept": "Crease between named garment regions.",
           "status": "L",
-          "audit": "The geometry-crease-segments-1006 baseline retained finite endpoint-chord Hausdorff errors of 73.7\u201378.8 mm, independently reproduced. Native success did not imply a qualified fold observer. This validates declared finite material chords, not a curved path or discovery of the newly formed physical crease; curve-pair live evidence is pending.",
+          "audit": "The geometry-material-curves-rpc-1006 matched pair reproduced full connected material-edge Hausdorff errors of 35.09/58.89/70.33 mm baseline and 44.66/27.10/46.58 mm conditioned. Both native tasks failed; the conditioned left-sleeve observer completed. Earlier finite-chord evidence remains separate. This validates the selected anchored path geometry, not discovery of a newly formed physical crease or grasp force.",
           "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation"
         }
       }

@@ -220,7 +220,8 @@ class PhysicalRecognizer:
                     name = lm.get_instance_name(env_idx=session.env_idx, label=label)
                     if str(lm.instance_type_by_env[session.env_idx].get(name)).lower() != 'rigid':
                         raise RuntimeError('rigid material recognition cannot use fluid/cloth/cached articulated geometry')
-            self.source_initial_rotation = _rotation(self.session._resolve(self.c['source_frame'])[3:])
+            self.source_initial_frame = self.session._resolve(self.c['source_frame']).tolist()
+            self.source_initial_rotation = _rotation(self.source_initial_frame[3:])
             for label in self.c['material_labels']:
                 source = self._material_inside(label, 'source')
                 target = self._material_inside(label, 'target')
@@ -231,7 +232,10 @@ class PhysicalRecognizer:
             fluid,source,target=self._fluid_state()
             self.fluid_mass=fluid['nominal_mass_kg']
             self.source_initial_rotation=_rotation(self.session._resolve(self.c['source_frame'])[3:])
-            self.fluid_initial={'ids':fluid['ids'].tolist(),'positions':fluid['positions'].tolist(),'source':fluid['source']}
+            self.fluid_initial={'ids':fluid['ids'].tolist(),'positions':fluid['positions'].tolist(),'source':fluid['source'],
+                'physics_step':session.env._atomic_contacts.steps,
+                'region_frames':deepcopy(self.fluid_region_frames),
+                'initial_in_source':source.tolist(),'initial_in_target':target.tolist()}
             for ident,s,t in zip(fluid['ids'],source,target):
                 self.fluid[int(ident)]={'eligible':bool(s and not t),'previous_in_source':bool(s),
                     'exited_while_held_and_tilted':False,'target_steps':0}
@@ -751,9 +755,10 @@ class PhysicalRecognizer:
         fluid=material_state(self.session.env,self.c['fluid_label'],'fluid',self.session.env_idx)
         if self.fluid and (set(fluid['ids'].tolist())!=set(self.fluid) or fluid['nominal_mass_kg']!=self.fluid_mass):
             raise RuntimeError('fluid particle identity/population or nominal mass changed during observation')
-        masks=[]
+        masks=[];self.fluid_region_frames={}
         for which in ('source','target'):
             frame=self.session._resolve(self.c[which+'_frame'])
+            self.fluid_region_frames[which]=frame.tolist()
             local=(fluid['positions']-frame[:3])@_rotation(frame[3:])
             masks.append(np.all(np.abs(local)<=np.asarray(self.c[which+'_half_extents_m']),axis=1))
         return fluid,*masks
@@ -773,7 +778,9 @@ class PhysicalRecognizer:
                 m.update(exited_while_held_and_tilted=False,target_steps=0)
             elif m['eligible'] and not m['exited_while_held_and_tilted'] and m['previous_in_source'] and hold and tilt>=self.c['min_tilt_rad']:
                 m.update(exited_while_held_and_tilted=True,exit_physics_step=self.contacts.steps,
-                         exit_position=position.tolist(),exit_tilt_rad=tilt)
+                         exit_position=position.tolist(),exit_tilt_rad=tilt,
+                         exit_contact=deepcopy(hold),exit_source_frame=frame.tolist(),
+                         initial_source_frame=self.fluid_initial['region_frames']['source'])
                 self._event('source_exit',particle_id=ident,held_contact=hold,tilt_rad=tilt,particle_position=position.tolist())
             if m['eligible'] and m['exited_while_held_and_tilted'] and t and not s:
                 m['target_steps']+=1
@@ -821,7 +828,8 @@ class PhysicalRecognizer:
             elif m['eligible'] and not m['exited_while_held_and_tilted']:
                 if m['previous_in_source'] and hold and tilt >= self.c['min_tilt_rad']:
                     m.update(exited_while_held_and_tilted=True, exit_physics_step=self.contacts.steps,
-                             exit_contact=deepcopy(hold), exit_tilt_rad=tilt)
+                             exit_contact=deepcopy(hold), exit_tilt_rad=tilt,
+                             exit_source_frame=frame.tolist(),initial_source_frame=self.source_initial_frame)
                     self._event('source_exit', material_label=label, held_contact=hold, tilt_rad=tilt)
             if m['eligible'] and m['exited_while_held_and_tilted'] and inside_target and not inside_source:
                 m['target_steps'] += 1

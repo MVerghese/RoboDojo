@@ -26,6 +26,9 @@ def refresh_recognition_validation(root, result):
             for stage in stages for c in stage['conditions'].values())
         refreshed['recognition_witness_failures'] = sum(s.get('recognition_witness', {}).get('status')
             == 'inconsistent_evidence' for s in stages)
+        refreshed['reproduced_flow_scores'] = sum(row['status']=='reproduced'
+            and row.get('recorded_result',{}).get('status')=='scored'
+            for stage in stages for row in (stage.get('material_flow') or {}).get('crossings',{}).values())
     return refreshed
 
 

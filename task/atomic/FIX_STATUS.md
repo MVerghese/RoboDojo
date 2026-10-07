@@ -4,23 +4,24 @@ Updated 2026-10-07. This page distinguishes implemented fixes from source plans
 and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 [slot/factor coverage](CONDITIONING_AUDIT.md), and [all-task plans](SEGMENTATION.md).
 
-## Current verification snapshot (October 6)
+## Current verification snapshot (October 7)
 
-The current source passes **253 offline atomic tests**. Dated sections below
+The current source passes **257 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
 early contact API installation and
 bounded cleanup after simulator exceptions. Cloth path calibration covers all
-three configured garment models. Fresh curve, selection-query and corrected pour
-pairs require simulator validation; host tests and baked assets do not supply it.
+three configured garment models. Repaired curve, selection-query, liquid and
+ball-pour pairs now have retained checkpoint rollouts; exact observations and
+missing physical witnesses are reported separately.
 
 October 7 transport repair: fresh pinned-client runs reached the policy but
 failed because the demo runner sent `update_obs` to an infer-only checkpoint.
 An explicit local observation cache/inference bridge now preserves action-chunk
 cadence and prompts. Actual demo-runner unit tests and a real websocket/JPEG/
-array/keepalive proof pass. Fresh GPU pairs are required; this is not yet a
-checkpoint rollout validation. Overlay preflight checks the inference signature
+array/keepalive proof pass. Twenty fresh GPU episodes completed across ten
+comparisons, validating the repaired checkpoint transport. Overlay preflight checks the inference signature
 before model initialization. Generated selection prompts now use plain numbers.
 
 October 7 interval repair: a conditioned xylophone retry exposed stale first-
@@ -29,8 +30,10 @@ insertion and supported-release windows now archive their events/geometry/paths
 and reset current measurements. Attempt IDs and adversarial retry tests prevent
 cross-attempt stitching. Cached strike audits now receive independent raw-witness
 validation; incompatible windows are excluded from scalar MD/HTML summaries.
-The original trace and arithmetic audit remain retained. Corrected paired runtime
-validation is the next live check.
+The original trace and arithmetic audit remain retained. The repaired strike
+pair has sixteen consistent impact/retraction witnesses; native success is
+true/false for baseline/conditioned. The new bowl/handover pairs have five
+consistent completed boundary windows and no inconsistent windows.
 
 The broader boundary audit found three additional inconsistent archives in
 retained traces: two conditioned bowl releases and the baseline bottle handover's
@@ -40,7 +43,8 @@ handover archives passed boundary identity checks; 64 incomplete windows remain
 unobserved. These checks do not reconstruct unsaved intermediate force histories.
 Physical completion before a failed native endpoint is also archived on retry;
 it cannot freeze a stale release/entry event. Completed successful stages retain
-their evidence. Fresh bowl/handover runtime validation is being prepared.
+their evidence. Both new bowl and bottle arms have native success; declared
+physical action coverage is lower and remains separately reported.
 
 Live progress: the repaired block-selection pair completed, with 18 checkpoint
 inferences over 550 control actions per arm and 23 arithmetic-reproduced event
@@ -83,18 +87,23 @@ anchored material curves do not locate a newly formed physical crease. Source
 plans cover all 54 task modules, but arbitrary language/game binding and faithful
 full-state replay remain implementation gaps.
 
-Eight held xylophone strikes now have retained live impact/retraction evidence,
-including a separate raw-witness consistency validator. The native task failed;
-its stricter reward-history requirements are separate from these physical atomic
-events. The conditioned partner is pending. Selected cloth patch and finite-chord
-geometry also has specific live reproduction evidence; material curves remain
-queued. The conditioning audit now cites these exact observations.
+The current integrated report has 195 valid episodes, 96 verified A/B pairs and
+861 usable reproduced event scores with zero arithmetic mismatches. Historical
+invalid physical windows stay flagged and excluded. The material-curve pair
+reproduced all six declared curve errors (baseline 35.09/58.89/70.33 mm;
+conditioned 44.66/27.10/46.58 mm), with native failure in both arms. These are
+anchored material-edge paths, not newly detected physical creases.
 
 The calibrated liquid baseline exposed an initially empty upper bottle core.
 The corrected lower core is independently material-free and contains 1,498
-particles in retained initial simulator evidence. Initial population preflight
-and diagnostic runtime cohort errors are implemented; a fresh matched pair is
-required. The stopped original pair supplies no policy adherence results.
+particles in retained calibration evidence. The populated-core pair completed,
+with native success true/false and 159 reproduced sampled destination crossings.
+Per-particle initial-region and held-exit witnesses were missing from its older
+runtime; the independent audit labels all 159 as partial evidence, without
+altering their sampled geometry. Current runtime retains initial frames/masks,
+each particle's source hold and source frame. Independent cohort, exit ordering,
+force/arm/label and tilt checks exclude inconsistent flow witnesses. Two retained
+ball crossings are also partial, without any inconsistent source witnesses.
 
 ## Implemented before the expanded audit
 

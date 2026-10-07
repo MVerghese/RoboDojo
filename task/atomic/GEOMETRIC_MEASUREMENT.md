@@ -1,6 +1,6 @@
 # Geometric conditioning: instrumentation and eval measurements
 
-Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
+Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
 October 7 transport repair: the actual demo runner now explicitly bridges local
@@ -31,6 +31,30 @@ Raw contact rows now also retain native `face_index0/1` and `proto_index0/1`
 when the installed callback provides them. Their actor/collider side ordering
 is preserved. These are collider face/instancer indices, not material vertex IDs;
 missing values or native sentinel values are not mapped to a cloth grasp.
+
+### Material source witness validation
+
+Fluid transfers now retain actual initial particle positions/IDs, source/target
+frames and membership masks even when no transfer completes. Every qualified
+particle exit retains its held-contact manifold, arm/label, contact interval,
+source frame and initial source frame. Rigid material exits also retain the two
+source frames. Destination crossings retain their adjacent raw samples as before.
+
+`material_validation.py` independently recomputes source-only initial membership,
+checks particle identity, sampled exit/crossing order, positive fixed dt, the
+hold's duration/arm/source identity, distinct force-bearing fingers, force step,
+tilt from raw frames and the fluid exit's position outside the declared source
+core. Inconsistent witnesses receive `invalid_source_witness` and are excluded
+from flow scalar summaries; arithmetic results and native outcomes stay intact.
+Historical missing witnesses are `partial_evidence`, preserving reproducible
+sampled destination geometry with the missing source proof explicitly reported.
+The renderer applies these checks to raw evidence even for older cached audits.
+
+The retained populated-liquid pair has 159 sampled crossings with partial source
+evidence and no inconsistent source witnesses. The ball baseline has two partial
+crossings. Source cores are explicitly calibrated subsets; leaving a core is
+not a certified passage through the source mouth. These checks do not measure
+whole fluid volume/density or reconstruct unsaved intermediate contact histories.
 
 October 6 extension: `event: {"kind": "attempt_end"}` samples final object,
 landmark or material state immediately before scene reset. It measures goal

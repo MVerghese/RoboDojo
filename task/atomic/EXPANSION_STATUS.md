@@ -14,6 +14,34 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
+Current October 7 snapshot, 16:07 UTC: all twenty repaired-runtime episodes have
+been collected after recovering local NFS quota failures. The integrated MD/HTML
+contains **195 valid episodes, 96 verified A/B pairs and 861 usable reproduced
+event scores, with zero arithmetic mismatches**. Fresh strike evidence has sixteen
+consistent windows; fresh bowl/handover evidence has five consistent completed
+windows and no inconsistent windows. Historical invalid archives remain flagged.
+
+The material-curve pair reproduced all six full edge-interior Hausdorff errors:
+baseline sleeve-left/right/body 35.09/58.89/70.33 mm; conditioned
+44.66/27.10/46.58 mm. Both native tasks failed; the conditioned left-sleeve observer
+completed. These preserve selected anchored material paths, not discovered creases.
+
+The populated-liquid pair has native success true/false, observed bottle-mouth
+translation errors 38.60/28.25 mm and full orientation errors 164.49/171.72 degrees.
+Its 73/86 destination crossings reproduce numerically, but all have partial
+historical source-witness evidence. The new validator found no inconsistent
+source witnesses. Current runtime saves initial region frames/masks and every
+particle's held-exit manifold; fresh source-witness validation is required.
+
+The node-local checkout and operational state preserve their original home paths
+through symlinks. Cloud artifacts and NFS backups remain retained; collectors and
+MD/HTML refresh have resumed. Audit generators now preserve prior files on write
+failure. A fresh `geometry-cloth-contact-probe-1006` pair is running on clean
+admitted GPUs at high-9000, probing native particle-cloth callbacks without adding
+rigid bodies. Material/finger force correspondence is still unverified.
+
+The following dated snapshots describe earlier stages of the work.
+
 October 7 snapshot, 06:56 UTC: all previously submitted jobs are terminal. The
 integrated report contains **175 valid episodes, 86 verified matched pairs and
 679 reproduced geometric event scores, with zero reproduction mismatches**.

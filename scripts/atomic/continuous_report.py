@@ -34,6 +34,9 @@ METHOD = (
     ' Raw strike, handover, insertion and release witnesses are checked separately from numerical reproduction. '
     'Incompatible impact/retraction attempts are marked invalid_recognition_window '
     'and excluded from scalar summaries; their recorded values and native outcomes remain retained.'
+    ' Material source/cohort, held-exit and adjacent crossing witnesses are also independently checked. '
+    'Partial historical source evidence preserves sampled geometry without certifying missing witnesses; '
+    'inconsistent source witnesses are marked invalid_source_witness and excluded.'
 )
 
 
@@ -209,6 +212,10 @@ def build_report(manifest, result, matrix, root):
                 'conditioned': arm_summary(selected['conditioned'].values()),
                 'shared': shared_summary(selected['baseline'], selected['conditioned'], pair['matched'])})
         task = dict(pair) | {'conditions': conditions, 'conditioning_prompt': b.get('geometric_prompt_append'),
+            'material_source_validation': {mode: [{'stage_id':s['stage_id'],
+                'statuses':s['material_flow']['witness_summary']}
+                for s in row.get('atomic_scores',[]) if (s.get('material_flow') or {}).get('witness_summary')]
+                for mode,row in (('baseline',ra),('conditioned',rb))},
             'recognition_validation': {mode: [{'stage_id': s['stage_id'],
                 'status': s['recognition_witness']['status'],
                 'failed_checks': s['recognition_witness'].get('failed_checks', [])}
@@ -472,6 +479,10 @@ def report_markdown(data):
             if failures:
                 lines += ['**Recognition witness failures (' + mode + '):** `' + json.dumps(failures, sort_keys=True)
                           + '`. Geometry and paths using invalid boundary events are excluded from geometric summaries.', '']
+        for mode, witnesses in task.get('material_source_validation', {}).items():
+            if witnesses:
+                lines += ['**Material source witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
+                          + '`. Partial evidence preserves sampled geometry without certifying missing source contact/cohort witnesses; inconsistent witnesses are excluded.', '']
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             lines += ['No geometric event was observed; continuous error is N/A for both arms.', '']
         for c in task['conditions']:
@@ -521,6 +532,9 @@ def report_html(data):
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 content += '<p><strong>Recognition witness failures (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(failures, sort_keys=True)) + '</code>. Geometry and paths using invalid boundary events are excluded from geometric summaries.</p>'
+        for mode, witnesses in task.get('material_source_validation', {}).items():
+            if witnesses:
+                content += '<p><strong>Material source witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. Partial evidence preserves sampled geometry without certifying missing source contact/cohort witnesses; inconsistent witnesses are excluded.</p>'
         if not task['baseline']['observed'] and not task['conditioned']['observed']:
             content += '<p>No geometric event observed. Error is N/A for both arms.</p>'
         for c in task['conditions']:

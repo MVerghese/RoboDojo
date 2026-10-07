@@ -1,6 +1,6 @@
 # Atomic action success checks
 
-Updated 2026-10-06. Describes the current `benchmark/atomic-geometry` source.
+Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
 October 7: checkpoint API failures before rollout have no atomic success result.
@@ -22,6 +22,22 @@ window. It cannot latch the prior release/entry as the next attempt's boundary.
 Successful completed stages keep their evidence. Boundary validators also check
 handover/insertion/release identity consistency separately from their recorded
 success flags and from numerical geometric reproduction.
+
+Live repaired validation now includes sixteen consistent xylophone impact/
+retraction witnesses and five consistent completed bowl/handover windows, with
+zero incompatible windows in those fresh comparisons. Native success is
+true/false for the strike pair and true/true for both bowl and bottle pairs.
+Declared physical completion remains separate from native full-task success.
+
+Material transfers keep the existing source-qualified, held/tilted exit and
+settled target count predicates. Independent source-witness checks now verify
+retained cohort membership, source/arm contact identity, force, tilt and sampled
+timing separately from arithmetic. Missing historical per-particle holds are
+partial evidence; inconsistent source witnesses exclude geometric flow scores.
+Initial frames/masks and per-particle exit manifolds are now saved for fresh
+runs. A calibrated source-core exit does not certify passage through the source
+mouth or full-volume pouring. One transferred cohort member is not native task
+success unless the native task itself accepts that outcome.
 
 October 6 correction: supported placement preserves an already verified
 two-finger held transport while the same arm releases its jaws one at a time.

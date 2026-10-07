@@ -472,6 +472,17 @@ bounded by the cleanup timeout. Real subprocess tests cover each behavior.
 These are infrastructure outcomes and do not supply atomic action boundaries or
 policy adherence scores. Previously frozen suites keep their original guard.
 
+### Material transfer boundary witnesses
+
+Material flow uses per-particle histories rather than a single retry window.
+Initial particle/region state and each qualified source exit's hold and source
+frame are now retained. A separate validator checks cohort identity, exit/target
+sample ordering, contact interval/force and tilt without inferring unsaved
+history. Historical incomplete archives are partial evidence, and contradictory
+witnesses are excluded from geometric flow summaries. Source-core exit and target
+crossing events remain scoped to the declared regions; a full source-mouth
+passage and whole-fluid accounting still require further implementation.
+
 ### Independent initial-stage execution
 
 Selected-stage execution now accepts every concrete independent root, including

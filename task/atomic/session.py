@@ -670,6 +670,7 @@ class AtomicSession:
             'aborted_recognition_attempts': deepcopy(self.aborted_recognition_attempts),
             'physical_events': deepcopy(self._physical_recognizer.events) if self._physical_recognizer else {},
             'physical_metrics': deepcopy(getattr(self._physical_recognizer, 'metrics', {})),
+            'material_transfer_initial_state': deepcopy(getattr(self._physical_recognizer, 'fluid_initial', None)),
             'material_flow': self._physical_recognizer.flow_observer.summary() if (
                 self._physical_recognizer and self._physical_recognizer.flow_observer) else None,
             'trajectories': self._trajectory_observer.summary() if self._trajectory_observer else {},

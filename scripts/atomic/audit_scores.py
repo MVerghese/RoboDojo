@@ -51,6 +51,29 @@ def audit_flow(flow):
     return {'condition':flow['condition'],'crossings':rows,'sampling_failures':flow['failures']}
 
 
+def apply_flow_validation(atomic, output):
+    config=atomic.get('recognition') or {};raw=atomic.get('material_flow')
+    audited=output.get('material_flow')
+    if not raw or not audited or config.get('kind') not in ('fluid_material_transfer','rigid_material_transfer'):
+        return
+    from collections import Counter
+    from task.atomic.material_validation import initial_fluid_witness,validate_flow_witness
+    cohort=None
+    if config['kind']=='fluid_material_transfer':
+        initial=atomic.get('material_transfer_initial_state') or (atomic.get('interaction_evidence') or {}).get('initial_state')
+        cohort=initial_fluid_witness(config,initial)
+    statuses=Counter()
+    for ident,row in audited['crossings'].items():
+        if ident not in raw['crossings']:continue
+        witness=validate_flow_witness(ident,raw['crossings'][ident],config,cohort)
+        row['source_witness']=witness;statuses[witness['status']]+=1
+        if witness['status']=='inconsistent_evidence':
+            row['numerical_reproduction_status']=row.get('numerical_reproduction_status',row['status'])
+            row['status']='invalid_source_witness'
+            row['reason']='retained source or crossing witnesses fail independent physical checks'
+    audited['witness_summary']=dict(statuses)
+
+
 def audit_selection(selection):
     if not selection:return None
     binding_ok = True
@@ -132,6 +155,7 @@ def validate_cached_recognition(report, scores):
         stage = raw.get((str(score['episode']), score['stage_id']))
         if stage is not None:
             apply_recognition_validation(stage, score)
+            apply_flow_validation(stage, score)
 
 
 def audit_atomic(atomic, variant=None):
@@ -194,6 +218,7 @@ def audit_atomic(atomic, variant=None):
         'material_flow': audit_flow(atomic.get('material_flow')),
     }
     apply_recognition_validation(atomic, output)
+    apply_flow_validation(atomic, output)
     if atomic.get("closest_approach"):
         alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}
         output["closest_approach"] = audit_atomic(alternate, variant)["conditions"]
