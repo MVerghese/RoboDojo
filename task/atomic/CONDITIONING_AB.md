@@ -317,8 +317,8 @@ that task. Any concrete root stage with no dependencies can start in the initial
 scene without a trace, including roots listed after another independent root.
 A trace recording that root at action zero also uses the initial scene; no
 actions, parser reset or robot-origin reset are applied. Dependent stages require
-a **layout-linked simulator action trace** from a linear program with all
-preceding, strictly increasing recorded stage boundaries
+a **layout-linked simulator action trace** from a linear program or a concrete graph
+with a single-ancestor selected route and strictly increasing recorded boundaries
 and successful prefix predicates. LeRobot demonstration videos alone do not
 provide that restart state. See [recording and replay](README.md#record-annotate-run).
 
@@ -344,9 +344,9 @@ linear program, a single environment, joint actions and no scripted support-arm
 controls. Earlier partial boundaries are scheduled from their actual physics
 indices, including distinct boundaries within one command. A whole selected
 boundary with partial predecessors uses `linear_timed_prefix`. Old traces without
-timing metadata, IK actions, graph boundaries and ambiguous/nonincreasing physics
-boundaries are rejected. Multiple partial predecessors have host validation;
-their live simulator proof remains pending. Host
+timing metadata, IK actions, merged graph boundaries and ambiguous/nonincreasing physics
+boundaries are rejected. Multiple partial predecessors have host validation and a completed button
+simulator proof. Host
 tests cover interruption and physical verification. A fresh bowl proof replayed
 87 whole commands plus 7 substeps of command 88, discarded its 3 remaining
 controls and verified the pickup/lift; the selected placement also succeeded.
@@ -742,3 +742,9 @@ An already submitted selected-stage proof can resume its local collector with
 --gpu-memory-ledger ... --detach`. It verifies the submitted job identity, retains
 previous/resumed monitor provenance, avoids replacing a running monitor and locks
 collection per proof. It does not submit another GPU job.
+
+Selected-stage replay also accepts a single-ancestor route inside a concrete
+DAG. `prefix_stage_ids` records the verified route. The complete recorded control
+trace is preserved; independent peer recognizers are omitted. Merged dependencies,
+noninitial route roots and unresolved gates/repeats/choices remain rejected.
+This extension has host validation; its dedicated live proof is pending.

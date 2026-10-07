@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **331 offline atomic tests**. Dated sections below
+The current source passes **336 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -346,3 +346,14 @@ body/environment identity and local points. Contradictory contact measurements
 are excluded even if their arithmetic reproduces. Missing historical bindings
 remain partial. New contact sources serialize the required roots, finger mapping
 and environment origin; fresh matched validation is being prepared.
+
+## October 7, 22:56 UTC follow-up
+
+The multiple-boundary button simulator proof completed: both preceding cycles
+were verified and the selected cycle succeeded. The 16-case contact-binding
+validation suite is submitted from frozen `e0f1d9c`; at 22:56, 12 jobs were Running
+and 4 Starting. The MD/HTML report contains 245 valid full-task episodes, 121
+verified pairs and 1,160 reproduced event scores with zero arithmetic mismatches.
+Stage-only replay proofs remain separate. Single-ancestor routes inside concrete
+dependency graphs are now implemented and host-validated; merged dependencies
+and unresolved stateful programs remain unsupported.

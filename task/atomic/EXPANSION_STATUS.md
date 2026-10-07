@@ -652,3 +652,15 @@ Raw release/settling and named-support force checks pass independently, with
 report hashes in `geometry-release-brush-1006/release-brush-independent-validation.json`.
 The unified MD/HTML reports include these new pairs. See the three measurement,
 success and segmentation docs for remaining proof boundaries.
+
+## October 7, 22:56 UTC follow-up
+
+Multiple-boundary button proof `rb-timed-button-proof-1007-000-6b88` completed
+with both prefix cycles verified and selected cycle success. It replayed 107
+whole commands plus 6 substeps of command 108 and discarded 4 pending controls.
+This is a separate selected-stage proof. The 16-case, eight-task contact-binding
+A/B suite is submitted from `e0f1d9c` at high-9000: 12 Running / 4 Starting at
+22:56. Programs/prompts are unchanged clones with retained source hashes.
+The unified MD/HTML currently includes 245 valid episodes, 121 verified A/B
+pairs and 1,160 reproduced event scores, with zero arithmetic mismatches and
+ten excluded historical recognition windows.

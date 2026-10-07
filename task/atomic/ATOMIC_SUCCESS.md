@@ -3,6 +3,15 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
+Current verification: 336 host tests; completed bowl and multiple-boundary button
+selected-stage replay proofs; independent placement-support and finger-force
+snapshot audits. A fresh 16-run contact-binding A/B batch is running. Single
+ancestry inside a concrete graph has host validation, with dedicated live proof
+being prepared. Cloth force/material correspondence, unique task creases, full
+layering/volume transfer and general graph/game/material state restoration remain
+limited. Dated evidence sections retain their earlier snapshots; latest proof
+details are at the end of this document.
+
 October 7: checkpoint API failures before rollout have no atomic success result.
 The local observation/inference bridge fixes that transport contract without
 altering physical recognizers or native predicates. Fresh rollout validation is
@@ -694,7 +703,7 @@ requirements at that exact synchronized physics boundary. Earlier partial
 predecessors are activated at their own recorded physics boundaries, with no
 rounding to command endpoints. Whole-command verification waits for native
 endpoint updates. Host tests cover multiple partial boundaries and contact loss;
-live proof of the multiple-predecessor path remains pending. A replayed substep
+a fresh button replay verified the multiple-predecessor path. A replayed substep
 count alone cannot certify success. The evaluator stops before the interrupted
 command's native endpoint bookkeeping, retains applied controls and drops its
 unexecuted tail. Host counterexamples cover timing gaps and forbidden scripted
@@ -801,3 +810,27 @@ This verifies retained samples, not force closure or unsaved continuous contact.
 Cloth contact/material correspondence remains unverified. Counterexamples cover
 zero impulse, foreign object/finger/arm/environment, stale timestamps, wrong
 coordinates, nonunit normals and many contact points from a single finger.
+
+### Completed multiple-boundary replay and single-ancestor routes
+
+`rb-timed-button-proof-1007-000-6b88` completed with a verified physical prefix
+and successful selected next-red action. It scheduled confirm activation at
+command 45 / physics 988, replayed 107 complete commands plus 6 substeps of
+command 108, and discarded 4 pending controls. Both preceding button cycles
+pass independent retained joint/contact interval checks. The report SHA256 is
+`81d34ace1ac0449ec4a6ae88bd19f700be429420328e7d4bc9143fbf8f9ff52b`.
+The selected button root residual is 0 mm: this compares a stationary articulation
+root, and does not certify its moving cap, velocities, parser/game or full state.
+The physical cycle witnesses are retained separately.
+
+A concrete dependency graph now permits replay of a selected stage's
+**single-ancestor route**. The observer follows that route's original stage
+definitions and recorded boundaries; every recorded robot control is replayed,
+including controls affecting independent peers. Peer recognizer histories are not
+restored or claimed. The route root must start at the initial scene. A merged
+dependency cannot be replaced by one convenient parent and remains rejected,
+as do unresolved repeats, gates, choices and object-label templates.
+`atomic_start.prefix_stage_ids` identifies exactly which route was verified.
+Host tests cover independent peer order, exact timed activation, trace preservation,
+required contact loss, noninitial roots and merged-parent rejection. Live proof
+of this graph-route extension remains pending.

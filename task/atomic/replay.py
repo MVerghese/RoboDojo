@@ -1,6 +1,29 @@
 """Validate and replay recorded policy actions up to an atomic stage."""
 
 
+def prefix_program(program, selected_stage):
+    """Select a single-ancestor route without changing recorded robot controls.
+
+    Independent peers have no predicates required by this selected-stage window.
+    Merged dependencies, scene gates and runtime expansion remain unsupported.
+    """
+    if program.repeat_counts or program.gates or program.choices or program.label_templates:
+        raise ValueError('prefix replay requires a concrete program without scene gates or choices')
+    dependencies = program.dependencies()
+    path, current = [], selected_stage.id
+    while True:
+        path.append(current)
+        parents = dependencies[current]
+        if len(parents) > 1:
+            raise ValueError('merged graph starts need state restoration; prefix replay requires a single ancestor route')
+        if not parents: break
+        current = parents[0]
+    path.reverse()
+    from dataclasses import replace
+    return replace(program, stages=tuple(program.stage(sid) for sid in path),
+                   stage_dependencies={sid: ([] if i == 0 else [path[i-1]]) for i,sid in enumerate(path)})
+
+
 def validate_start_boundary(program, selected_stage, trace):
     """Permit any concrete root at the initial scene, or a verified linear prefix."""
     if program.repeat_counts or program.gates or program.choices or program.label_templates:
@@ -25,7 +48,11 @@ def validate_start_boundary(program, selected_stage, trace):
     linear = {s.id: ([] if i == 0 else [program.stages[i - 1].id])
               for i, s in enumerate(program.stages)}
     if dependencies != linear:
-        raise ValueError('prefix replay currently requires a linear program; graph starts need state restoration')
+        if not dependencies[selected_stage.id]:
+            raise ValueError('nonzero independent graph starts need state restoration')
+        program = prefix_program(program, selected_stage)
+        stage_ids = [s.id for s in program.stages]
+        selected_index = len(stage_ids) - 1
     if trace.stage_starts.get(stage_ids[0]) != 0:
         raise ValueError('trace must start its first atomic stage at action 0')
     starts = [trace.stage_starts.get(stage_id) for stage_id in stage_ids[:selected_index + 1]]
@@ -79,10 +106,12 @@ def validate_start_boundary(program, selected_stage, trace):
                 'stage_id': selected_stage.id, 'physics_substeps': physics_step - span['start'] if partial else None,
                 'recorded_physics_step': physics_step, 'state_restoration': False,
                 'trace_origin_physics_step':origin, 'prefix_physics_boundaries':records,
+                'prefix_stage_ids':stage_ids[:selected_index + 1],
                 'scope': 'joint-control prefix ending at a synchronized physics boundary; not a simulator snapshot'}
     if any(start is None for start in starts) or any(later <= earlier for earlier,later in zip(starts,starts[1:])):
         raise ValueError('trace stage boundaries must be present and strictly increasing')
     return {'mode': 'linear_prefix', 'action_index': starts[-1], 'stage_id': selected_stage.id,
+            'prefix_stage_ids':stage_ids[:selected_index + 1],
             'state_restoration': False, 'scope': 'whole-action prefix replay, not a full simulator snapshot'}
 
 
@@ -95,6 +124,7 @@ def replay_prefix(program, selected_stage, trace, take_action, stage_succeeded, 
     boundary = validate_start_boundary(program, selected_stage, trace)
     if boundary['mode'] == 'initial_scene':
         return 0
+    program = prefix_program(program, selected_stage)
     if boundary['mode'] == 'linear_substep_prefix' and take_partial_action is None:
         raise ValueError('substep replay requires a physics-boundary action callback')
     stage_ids = [stage.id for stage in program.stages]
@@ -159,6 +189,7 @@ class PrefixReplayObserver:
     native checks, physical recognizers and maintained holds stay unchanged.
     """
     def __init__(self, env, program, selected_stage, env_idx=0, boundary_plan=None):
+        program = prefix_program(program, selected_stage)
         self.env, self.program, self.env_idx = env, program, env_idx
         self.limit = [s.id for s in program.stages].index(selected_stage.id)
         self.index = 0;self.evidence = [];self.current = None

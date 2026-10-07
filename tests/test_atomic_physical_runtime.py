@@ -536,7 +536,7 @@ class GraphTests(unittest.TestCase):
         # Independent roots at zero are initial-scene starts, not prefix replay.
         # A later independent graph boundary still needs state restoration.
         trace = AtomicTrace('test', 0, ({},), {'a': 0, 'b': 1})
-        with self.assertRaisesRegex(ValueError, 'requires a linear program'):
+        with self.assertRaisesRegex(ValueError, 'nonzero independent graph starts'):
             replay_prefix(p, b, trace, lambda _: None, lambda _: True)
 
 

@@ -3,6 +3,15 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
+Current verification: 336 host tests; completed bowl and multiple-boundary button
+selected-stage replay proofs; independent placement-support and finger-force
+snapshot audits. A fresh 16-run contact-binding A/B batch is running. Single
+ancestry inside a concrete graph has host validation, with dedicated live proof
+being prepared. Cloth force/material correspondence, unique task creases, full
+layering/volume transfer and general graph/game/material state restoration remain
+limited. Dated evidence sections retain their earlier snapshots; latest proof
+details are at the end of this document.
+
 October 7: the checkpoint transport bridge preserves action-chunk inference
 cadence and intermediate simulator observations; it does not create action
 boundaries. Failed pre-rollout RPC calls supply no segmentation evidence. Source
@@ -308,7 +317,8 @@ Substep activation saves `at_action_boundary=false` and
 `prefix_replay_supported=false`, and is omitted from `stage_starts`; it is not
 rounded to the end of a chunk. For a whole-action activation the flag indicates
 representable granularity only: program-level linearity/gate/choice checks can
-still reject replay. Graph starts require restoration that is not yet implemented.
+still reject replay. Single-ancestor routes in concrete graphs can use recorded
+prefixes; merged dependencies require restoration that is not yet implemented.
 
 Fresh traces also retain `action_physics_spans` (contact-buffer start/end physics
 indices for each native control action) and `control_timing` (`physics_dt` in
@@ -341,8 +351,8 @@ boundary and retains its history until the next boundary. Whole-command native
 checks run after native endpoint updates. Timing/order divergence is raised by
 the control loop outside the physics callback and discards pending controls.
 Host tests cover two boundaries in one command, a whole-command endpoint after a
-partial predecessor, lost contact and malformed timing. Live proof of multiple
-partial predecessors is still pending. Task-specific memory/game state is not
+partial predecessor, lost contact and malformed timing. A fresh button simulator
+proof also verified multiple partial predecessors. Task-specific memory/game state is not
 restored.
 
 ## 7. What is still needed for all 54 eval tasks
@@ -745,3 +755,27 @@ This verifies retained samples, not force closure or unsaved continuous contact.
 Cloth contact/material correspondence remains unverified. Counterexamples cover
 zero impulse, foreign object/finger/arm/environment, stale timestamps, wrong
 coordinates, nonunit normals and many contact points from a single finger.
+
+### Completed multiple-boundary replay and single-ancestor routes
+
+`rb-timed-button-proof-1007-000-6b88` completed with a verified physical prefix
+and successful selected next-red action. It scheduled confirm activation at
+command 45 / physics 988, replayed 107 complete commands plus 6 substeps of
+command 108, and discarded 4 pending controls. Both preceding button cycles
+pass independent retained joint/contact interval checks. The report SHA256 is
+`81d34ace1ac0449ec4a6ae88bd19f700be429420328e7d4bc9143fbf8f9ff52b`.
+The selected button root residual is 0 mm: this compares a stationary articulation
+root, and does not certify its moving cap, velocities, parser/game or full state.
+The physical cycle witnesses are retained separately.
+
+A concrete dependency graph now permits replay of a selected stage's
+**single-ancestor route**. The observer follows that route's original stage
+definitions and recorded boundaries; every recorded robot control is replayed,
+including controls affecting independent peers. Peer recognizer histories are not
+restored or claimed. The route root must start at the initial scene. A merged
+dependency cannot be replaced by one convenient parent and remains rejected,
+as do unresolved repeats, gates, choices and object-label templates.
+`atomic_start.prefix_stage_ids` identifies exactly which route was verified.
+Host tests cover independent peer order, exact timed activation, trace preservation,
+required contact loss, noninitial roots and merged-parent rejection. Live proof
+of this graph-route extension remains pending.
