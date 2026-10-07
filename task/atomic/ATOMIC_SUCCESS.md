@@ -633,3 +633,14 @@ and robot separation. None of these counters can substitute for completion.
 Raw summaries retain current measurements and across-attempt prerequisite counts.
 Reports show counts separately; a missing event retains N/A conditioning and
 requires inspecting both physical prerequisites and contact instrumentation.
+
+## Cloth endpoint persistence is a diagnostic
+
+An endpoint bend alone is insufficient to call a fold settled. The optional probe
+now retains a bounded full-mesh history and independently checks edge persistence,
+vertex drift and bend-angle change over actual simulation time. This does not
+change fold success: the existing landmark/region recognition gates still apply.
+Even a sampled stable bending component remains a candidate until crease role,
+layering and physical manipulation correspondence are validated. Cloth grasp
+force remains uninstrumented. Endpoint-only archives are not promoted to settled
+fold evidence.

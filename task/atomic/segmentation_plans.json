@@ -7379,7 +7379,7 @@
     },
     {
       "path": "task/atomic/sequence.py",
-      "sha256": "5c4198946eb578a696e90635a61c5f6bd1e40cd8765a5fa1c0e9bf8a3c731a9f"
+      "sha256": "607ccdebb4ec87a7ae6b46b5ff577e08bb3faa518d36226d7a2c68160486ea50"
     },
     {
       "path": "task/atomic/session.py",
@@ -7431,7 +7431,7 @@
     },
     {
       "path": "task/atomic/cloth_bending.py",
-      "sha256": "bc863ee88907c1e0d664d244b252d01931510d1af8fff44e8207d7ac5a0a524b"
+      "sha256": "23c216f775603ae46fe459dfaaf58743f384eb632197ad2e658e0f547d7d1ceb"
     },
     {
       "path": "task/atomic/layers.py",

@@ -14,6 +14,21 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
+October 7 snapshot, 17:48 UTC: both actual-mouth ball cases are collected. Both
+pick up their cup, native tasks fail, and neither produces a completed pour or
+destination crossing. The liquid actual-mouth pair retains 13 fully consistent
+destination witnesses, separate from the older source-core comparisons.
+
+The four fresh prerequisite-diagnostic cases are running from `ae4a2d0`:
+matched `align_blocks` and `press_by_number`. Automatic reports and the retained-
+exception watchdog are alive. The full-mesh cloth endpoint pair continues
+sampling policy controls with no retained simulator exception.
+
+Cloth sampled-persistence implementation now passes 287 host tests. It retains
+eight actual meshes and checks persistent bending plus position/angle stability
+over physical time; it does not modify action success. The three instrumentation
+docs are updated, and a fresh live validation pair is next.
+
 Current October 7 snapshot, 17:41 UTC: the actual-source-mouth liquid A/B pair
 is collected. Native task success is false/true and both atomic partial-cohort
 pour observers succeed. All 10 baseline and 3 conditioned destination crossings

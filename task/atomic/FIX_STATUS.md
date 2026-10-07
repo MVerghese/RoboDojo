@@ -291,3 +291,13 @@ tracked. Success gates remain unchanged. Collector and MD/HTML render these
 counts separately from conditioning errors. Four new counterexample tests and
 the existing full gate pass: **283 tests**. Fresh matched live validation remains
 required for these diagnostic fields.
+
+## Sampled cloth bending persistence (October 7)
+
+The optional endpoint probe now retains eight full material meshes, sampled every
+four physics steps and at finalization. Its independent auditor checks constant
+dt, bounded sample intervals, topology/identity/frame witnesses, matching final
+coordinates, sustained new bending, pairwise vertex drift and angle range.
+Diagnostic bounds are 0.1 s, 2 mm and 2 degrees. Four counterexample tests and the
+full **287-test** gate pass. This is sampled candidate stability, not a unique task
+crease, layering or grasp-force certificate. A fresh live matched pair is required.

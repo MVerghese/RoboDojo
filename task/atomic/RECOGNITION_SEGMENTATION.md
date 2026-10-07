@@ -562,3 +562,18 @@ These diagnostics explain which recorded requirement blocked a boundary. They
 do not create boundaries, classify all missing events as policy failures, or
 validate unobservable sensor channels. The MD/HTML report preserves them in a
 separate requirement table without mixing them into geometric error summaries.
+
+## Sampled persistence of discovered bending candidates
+
+The optional full-cloth probe samples every four physics steps and retains eight
+meshes, forcing capture at episode end. It follows both active and completed
+sessions so a completed observer cannot stop endpoint diagnosis prematurely.
+Duplicate steps are ignored. The independent auditor rejects sampling gaps, dt
+changes, topology/identity changes and a history whose final coordinates do not
+match the scored endpoint.
+
+Current candidate material edges must persist across the declared window and
+remain within measured position/angle stability bounds. These checks are outside
+the action recognizer and do not create segment boundaries. A moving or newly
+bent last-frame garment cannot qualify as sampled stable bending. Unique task
+crease binding and whole-fold layer semantics remain separate implementation work.

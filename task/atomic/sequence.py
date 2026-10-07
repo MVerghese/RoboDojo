@@ -23,6 +23,10 @@ class AtomicSequence:
         self.calibration = snapshot_scene(self.session) if self.session else {'status': 'no_active_action', 'objects': {}}
         self._cloth_bending_enabled = os.environ.get('ATOMIC_CLOTH_BENDING_PROBE') == '1'
         self.cloth_bending_capture = None
+        self._cloth_bending_history = None
+        if self._cloth_bending_enabled:
+            from task.atomic.cloth_bending import ClothEndpointHistory
+            self._cloth_bending_history = ClothEndpointHistory(self.calibration)
 
     @property
     def index(self):
@@ -115,6 +119,9 @@ class AtomicSequence:
                         'attempt':session.summary() if session else None}
 
     def observe_events(self):
+        if self._cloth_bending_history is not None:
+            session=next(iter([*self.sessions.values(),*self._finished_sessions.values()]),None)
+            if session:self._cloth_bending_history.observe(session)
         for session in list(self.sessions.values()):
             session.observe_events()
         count = int(self.env.take_action_cnt[self.env_idx]) if hasattr(self.env, 'take_action_cnt') else 0
@@ -136,6 +143,9 @@ class AtomicSequence:
             session=next(iter([*self.sessions.values(),*self._finished_sessions.values()]),None)
             self.cloth_bending_capture=(capture_cloth_endpoint(session,self.calibration) if session else
                 {'status':'no_started_session','garments':{}})
+            if session:
+                self._cloth_bending_history.observe(session, force=True)
+                self.cloth_bending_capture['temporal_history']=self._cloth_bending_history.summary()
 
     def summary(self):
         rows = []

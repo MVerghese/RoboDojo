@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
-from task.atomic.cloth_bending import ClothBendingTopology
+from task.atomic.cloth_bending import ClothBendingTopology, measure_bending_persistence
 from scripts.atomic.storage import atomic_write_json
 
 DEFAULTS={'min_bend_rad':math.pi/4,'min_increase_rad':math.pi/6,'min_component_length_m':.01}
@@ -35,6 +35,10 @@ def analyze_report(report, thresholds=None):
                             raise ValueError('retained endpoint topology fingerprint differs from initial mesh')
                         row.update(topology.measure(current['ids'],current['positions_world'],**(thresholds or DEFAULTS)))
                         row['physics_step']=current['physics_step'];row['policy_action_index']=current['policy_action_index']
+                        lookup={int(v):i for i,v in enumerate(current['ids'])}
+                        endpoint_positions=[current['positions_world'][lookup[int(v)]] for v in topology.ids]
+                        row['temporal_persistence']=measure_bending_persistence(topology,
+                            {**row,'endpoint_positions':endpoint_positions},capture.get('temporal_history'),label)
                 except (KeyError,ValueError,RuntimeError,TypeError) as error:
                     row.update(status='invalid_or_incomplete_mesh_witness',reason=str(error))
                 rows.append(row)
@@ -42,7 +46,10 @@ def analyze_report(report, thresholds=None):
 
 
 def compact_diagnostics(rows):
-    return [{k:v for k,v in row.items() if k!='components'} | {
+    return [{k:v for k,v in row.items() if k not in ('components','temporal_persistence')} | {
+        'temporal_persistence':{k:v for k,v in row.get('temporal_persistence',{}).items() if k!='components'},
+        'max_candidate_vertex_drift_m':max((c['max_vertex_drift_m'] for c in row.get('temporal_persistence',{}).get('components',[])),default=None),
+        'max_candidate_bend_change_rad':max((c['max_bend_change_rad'] for c in row.get('temporal_persistence',{}).get('components',[])),default=None),
         'component_count':len(row.get('components',[])),
         'length_qualified_components':sum(c['meets_length_threshold'] for c in row.get('components',[])),
         'longest_component_m':max((c['total_edge_length_m'] for c in row.get('components',[])),default=None),

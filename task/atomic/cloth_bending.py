@@ -120,3 +120,104 @@ def capture_cloth_endpoint(session, calibration):
     return {'status':'captured' if rows and all(r['status']=='captured' for r in rows.values())
                      else 'capture_failed' if rows else 'no_initial_garment_readback',
             'garments':rows,'scope':'full endpoint mesh diagnostic; no new action-success or geometric conditioning gate'}
+
+
+class ClothEndpointHistory:
+    """Bounded synchronized full meshes for endpoint persistence diagnostics."""
+    def __init__(self, calibration, stride=4, capacity=8):
+        self.calibration = calibration
+        self.stride, self.capacity = stride, capacity
+        self.samples = []
+        self.last_step = None
+
+    def observe(self, session, force=False):
+        step = getattr(getattr(session.env, '_atomic_contacts', None), 'steps', None)
+        if step is None or step == self.last_step:
+            return
+        if not force and self.last_step is not None and 0 < step-self.last_step < self.stride:
+            return
+        sample = capture_cloth_endpoint(session, self.calibration)
+        sample.update(physics_step=step, dt_s=getattr(session.env, 'dt', None))
+        self.samples.append(sample)
+        del self.samples[:-self.capacity]
+        self.last_step = step
+
+    def summary(self):
+        from copy import deepcopy
+        return {'sampling_stride_steps': self.stride, 'capacity': self.capacity,
+                'samples': deepcopy(self.samples),
+                'scope': 'sampled endpoint persistence; does not certify intermediate motion between samples'}
+
+
+def measure_bending_persistence(topology, endpoint, history, label, *,
+        min_duration_s=.1, max_vertex_drift_m=.002, max_bend_change_rad=np.pi/90):
+    """Check retained candidates over a synchronized, bounded endpoint window.
+
+    These are stable bending candidates, not a crease-to-task-role binding or
+    a self-intersection/cloth-grasp certificate.
+    """
+    thresholds = [min_duration_s, max_vertex_drift_m, max_bend_change_rad]
+    if not np.isfinite(thresholds).all() or min(thresholds) <= 0:
+        raise ValueError('persistence bounds must be finite positive physical values')
+    result = {'status': 'unavailable_temporal_witness', 'components': [],
+        'thresholds': {'min_duration_s': min_duration_s, 'max_vertex_drift_m': max_vertex_drift_m,
+                       'max_bend_change_rad': max_bend_change_rad},
+        'scope': 'sampled stable new bending; not a certified unique physical crease, layering or grasp'}
+    if not history:
+        result['reason'] = 'no_full_mesh_history'
+        return result
+    try:
+        samples = history['samples']; stride = history['sampling_stride_steps']
+        if type(stride) is not int or stride < 1 or len(samples) < 2:
+            raise ValueError('insufficient synchronized mesh samples')
+        steps = [s['physics_step'] for s in samples]
+        if any(type(s) is not int for s in steps) or any(not 0 < b-a <= stride for a,b in zip(steps,steps[1:])):
+            raise ValueError('mesh history has duplicated, reversed or missing sample intervals')
+        dt = [s['dt_s'] for s in samples]
+        if any(isinstance(v,bool) or not isinstance(v,(int,float)) or not np.isfinite(v) or v <= 0 for v in dt) or len(set(dt)) != 1:
+            raise ValueError('mesh history requires a constant finite positive simulation dt')
+        duration = (steps[-1]-steps[0])*dt[0]
+        result.update(sample_count=len(samples), duration_s=duration, first_physics_step=steps[0], last_physics_step=steps[-1])
+        if duration < min_duration_s:
+            result['reason'] = 'mesh_history_duration_below_threshold'
+            return result
+        positions = []; measured = []
+        for sample in samples:
+            row = sample['garments'][label]
+            if (row['status'] != 'captured' or row['physics_step'] != sample['physics_step']
+                    or row['topology_sha256'] != topology.topology_sha256
+                    or row['coordinate_frame'] != 'environment_local_world' or row['length_unit'] != 'metres'):
+                raise ValueError('mesh history frame, time or topology witness is inconsistent')
+            ids,p,_ = _state(row['ids'], row['positions_world'], topology.triangles)
+            if set(ids.tolist()) != set(topology.ids.tolist()):
+                raise ValueError('mesh history persistent particle population changed')
+            lookup = {int(v):i for i,v in enumerate(ids)}
+            positions.append(p[[lookup[int(v)] for v in topology.ids]])
+            measured.append(topology.measure(ids,p,**endpoint['thresholds']))
+        if not np.array_equal(positions[-1], np.asarray(endpoint['endpoint_positions'])):
+            raise ValueError('mesh history does not end at the scored endpoint')
+        edge_lookup = {tuple(map(int,edge)):i for i,edge in enumerate(topology.edges)}
+        angles = [topology._angles(p)[0] for p in positions]
+        positions = np.asarray(positions)
+        for candidate in endpoint['components']:
+            if not candidate['meets_length_threshold']:
+                continue
+            edges = {tuple(e) for e in candidate['edge_ids']}
+            vertex_rows = [topology.lookup[v] for v in sorted({v for e in edges for v in e})]
+            ii = [edge_lookup[e] for e in sorted(edges)]
+            # Pairwise diameter catches out-and-back drift as well as accumulated motion.
+            drift = max(float(np.linalg.norm(a[vertex_rows]-b[vertex_rows],axis=1).max())
+                        for a in positions for b in positions)
+            bend_change = float(np.ptp(np.asarray(angles)[:,ii],axis=0).max())
+            persistent = all(edges <= {tuple(e) for c in m['components'] for e in c['edge_ids']}
+                             for m in measured)
+            accepted = persistent and drift <= max_vertex_drift_m and bend_change <= max_bend_change_rad
+            result['components'].append({'edge_ids':candidate['edge_ids'],
+                'connectivity':candidate['connectivity'], 'total_edge_length_m':candidate['total_edge_length_m'],
+                'persistent_new_bending':persistent, 'max_vertex_drift_m':drift,
+                'max_bend_change_rad':bend_change, 'within_sampled_stability_bounds':accepted})
+        result['stable_candidate_count'] = sum(c['within_sampled_stability_bounds'] for c in result['components'])
+        result['status'] = 'observed_sampled_stable_bending' if result['stable_candidate_count'] else 'no_sampled_stable_candidates'
+    except (KeyError,ValueError,TypeError,IndexError) as error:
+        result.update(status='invalid_temporal_witness', reason=str(error))
+    return result

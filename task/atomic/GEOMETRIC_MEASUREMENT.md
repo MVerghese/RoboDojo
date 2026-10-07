@@ -887,3 +887,23 @@ exists. Counts deduplicate physics steps, preserve sampling-discontinuity counts
 and span retries without joining their displacement anchors. Contact callback
 health still needs separate inspection: absent qualifying contact alone does not
 prove policy failure or sensor completeness.
+
+## Sampled endpoint bending persistence (October 7)
+
+The opt-in cloth bending probe now retains up to eight full meshes at four-physics-
+step spacing, plus the actual final step. The raw history contains persistent
+particle IDs, topology fingerprints, environment-local metre coordinates and
+constant simulation dt. Initial/final dihedral bending and physical topology
+checks remain unchanged. Historical endpoint-only runs have unavailable temporal
+witnesses; their endpoints are preserved.
+
+For each length-qualified new-bending component, the offline auditor checks that
+the same material edges stay above the declared bend/increase thresholds throughout
+a sampled window of at least 0.1 s. It measures the maximum pairwise vertex drift
+and bend-angle range, with diagnostic bounds of 2 mm and 2 degrees. Missing or
+inconsistent time, IDs, frame, topology or final mesh produce explicit unavailable
+or invalid statuses. Report diagnostics use mm, degrees and seconds separately.
+
+This is sampled stability of bending candidates. It does not identify a unique
+crease for a task role, prove motion between samples, check layering/self-
+intersection or measure cloth finger force. A fresh frozen live pair is required.
