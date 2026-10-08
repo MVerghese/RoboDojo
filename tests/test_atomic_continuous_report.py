@@ -134,6 +134,10 @@ class ContinuousReportTests(unittest.TestCase):
             'metrics':{'selected_surface_distances_m':[.0013],'distance_tolerance_m':.002}}}],
             'conditioned':[{'stage_id':'strike','capture':{'status':'partial_evidence','reason':'missing live mesh'},
                 'contact':{'status':'inconsistent_evidence','metrics':{'selected_surface_distances_m':[999]}}}]}
+        combined['tasks'][0]['selection_contact_validation']={'baseline':[{'stage_id':'source',
+            'role':{'family':'pour','slot':'source'},'eligible_candidates':['bottle'],'selected_labels':['cup'],
+            'contact':{'status':'consistent_contact_evidence','consecutive_contact_validation':{
+                'status':'partial_evidence','candidates':[]}}}]}
         md, page = report_markdown(combined), report_html(combined)
         self.assertIn('original target', md)
         self.assertIn('new target <unsafe>', md)
@@ -155,6 +159,9 @@ class ContinuousReportTests(unittest.TestCase):
             self.assertIn('1.3',report)
             self.assertIn('missing live mesh',report)
             self.assertNotIn('999000',report)
+            self.assertIn('Selected candidate force history',report)
+            self.assertIn('Consecutive force evidence',report)
+            self.assertIn('pour / source',report)
 
     def test_flow_path_and_selected_referent_keep_units_and_exclude_unscored_crossing(self):
         rows={'atomic_scores':[{'stage_id':'s','family':'pour','conditions':{},

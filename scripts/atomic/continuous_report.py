@@ -282,6 +282,13 @@ def build_report(manifest, result, matrix, root):
                 for mode, row in (('baseline', ra), ('conditioned', rb))},
             'contact_validation': {mode: contact_witness_summary(row.get('atomic_scores',[]))
                 for mode, row in (('baseline', ra), ('conditioned', rb))},
+            'selection_contact_validation': {mode: [{'stage_id':s['stage_id'],
+                'role':s['selection'].get('role'),
+                'selected_labels':[c['label'] for c in (s['selection'].get('observed') or {}).get('contacts',[])],
+                'eligible_candidates':s['selection'].get('eligible_candidates',[]),
+                'contact':s['selection']['contact_witness']}
+                for s in row.get('atomic_scores',[]) if (s.get('selection') or {}).get('contact_witness')]
+                for mode,row in (('baseline',ra),('conditioned',rb))},
             'program_sha256': {mode: cases[c]['program_sha256'] for mode, c in (
                 ('baseline', a['id']), ('conditioned', b['id']))},
             'delivered_prompts': {mode: sorted({p['instruction'] for episode in row.get('policy_prompt_history', [])
@@ -610,6 +617,23 @@ ABORTED_STRIKE_HEADERS=['Arm','Stage','Attempt','Impact evidence','Measurement e
 ABORTED_STRIKE_SCOPE=('Interrupted strike impacts with separately validated held force/approach and geometry. '
     'They are excluded from completed strikes and the main conditioning summaries. '
     'Partial historical contact bindings remain explicit; contradictory values are excluded.')
+SELECTION_HISTORY_HEADERS=['Arm','Stage','Role','Initial target','Selected candidate','Final force evidence','Consecutive force evidence','Retained samples']
+SELECTION_HISTORY_SCOPE=('Initial target and first selected candidate use immutable candidate geometry and actual force contacts. '
+    'Consecutive evidence checks every retained physics-step force snapshot; missing histories remain partial. '
+    'This does not measure contact between physics samples or force closure.')
+
+
+def selection_history_rows(task):
+    rows=[]
+    for mode,stages in task.get('selection_contact_validation',{}).items():
+        for stage in stages:
+            contact=stage['contact'];history=contact.get('consecutive_contact_validation') or {'status':'partial_evidence'}
+            role=stage.get('role') or {'family':'','slot':'initial object selection'}
+            samples=sum(c.get('retained_samples',0) for c in history.get('candidates',[]))
+            rows.append([mode,stage['stage_id'],role['family']+' / '+role['slot'],
+                ', '.join(stage['eligible_candidates']) or 'unresolved',', '.join(stage['selected_labels']) or 'unobserved',
+                contact['status'],history['status'],str(samples)])
+    return rows
 
 
 def aborted_strike_rows(task):
@@ -761,6 +785,9 @@ def report_markdown(data):
         if aborted_strike_rows(task):
             lines += ['**Interrupted strike impact diagnostics:**','',ABORTED_STRIKE_SCOPE,'',
                 *table(ABORTED_STRIKE_HEADERS,aborted_strike_rows(task)),'']
+        if selection_history_rows(task):
+            lines += ['**Selected candidate force history:**','',SELECTION_HISTORY_SCOPE,'',
+                *table(SELECTION_HISTORY_HEADERS,selection_history_rows(task)),'']
         for mode,boundaries in task.get('material_boundary_validation',{}).items():
             if boundaries:
                 lines += ['**Material boundary validation ('+mode+'):** `'+json.dumps(boundaries,sort_keys=True)+
@@ -861,6 +888,8 @@ def report_html(data):
             content += '<h3>Live strike surface validation</h3><p>'+esc(SURFACE_SCOPE)+'</p>'+html_table(SURFACE_HEADERS,surface_validation_rows(task))
         if aborted_strike_rows(task):
             content += '<h3>Interrupted strike impact diagnostics</h3><p>'+esc(ABORTED_STRIKE_SCOPE)+'</p>'+html_table(ABORTED_STRIKE_HEADERS,aborted_strike_rows(task))
+        if selection_history_rows(task):
+            content += '<h3>Selected candidate force history</h3><p>'+esc(SELECTION_HISTORY_SCOPE)+'</p>'+html_table(SELECTION_HISTORY_HEADERS,selection_history_rows(task))
         for mode,boundaries in task.get('material_boundary_validation',{}).items():
             if boundaries:
                 content += '<p><strong>Material boundary validation ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(boundaries,sort_keys=True))+'</code>. Source exit and first transfer are separate from destination crossing and settled full quantity. Missing historical core frames remain partial; contradictions exclude geometry at affected boundaries.</p>'

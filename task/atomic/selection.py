@@ -1,5 +1,6 @@
 """Score the first contacted referent against an immutable candidate snapshot."""
 from copy import deepcopy
+from collections import deque
 
 from task.atomic.contacts import ContactUnavailable
 from task.atomic.geometry import evaluate_geometry
@@ -108,7 +109,7 @@ class SelectionObserver:
     def __init__(self,session):
         self.session=session; self.c=session.stage.selection
         self.labels, self.binding = resolve_candidates(self.c['candidates'], session.env, session.env_idx)
-        self.snapshot={}; self.holds={}; self.last_step=None; self.observed=None
+        self.snapshot={}; self.holds={}; self.hold_histories={}; self.last_step=None; self.observed=None
         self.candidate_roots={}
         lm=session.env.scene_manager.layout_manager
         for label in self.labels:
@@ -147,19 +148,25 @@ class SelectionObserver:
         if contacts.errors:raise RuntimeError('selection cannot use a broken contact callback')
         step=contacts.steps
         if step==self.last_step:return
-        if self.last_step is not None and step!=self.last_step+1:self.holds.clear()
+        if self.last_step is not None and step!=self.last_step+1:
+            self.holds.clear();self.hold_histories.clear()
         self.last_step=step; qualifying=[]
         for label in self.labels:
             try:
                 _,source=contacts.resolve({'kind':'contact_points','label':label,'arm':self.c['arm'],
                     'min_finger_bodies':self.c['min_finger_bodies']},self.session.env_idx)
             except ContactUnavailable:
-                self.holds.pop(label,None);continue
+                self.holds.pop(label,None);self.hold_histories.pop(label,None);continue
             previous=self.holds.get(label)
             count=previous[1]+1 if previous and previous[0]==source['resolved_arm'] else 1
             self.holds[label]=(source['resolved_arm'],count)
+            capacity=min(256,self.c['min_contact_steps'])
+            if count==1:self.hold_histories[label]=deque(maxlen=capacity)
+            history=self.hold_histories[label];history.append(deepcopy(source))
             if count>=self.c['min_contact_steps']:
-                qualifying.append({'label':label,'contact_source':deepcopy(source),'contact_steps':count})
+                qualifying.append({'label':label,'contact_source':deepcopy(source),'contact_steps':count,
+                    'contact_history':{'sources':list(history),'capacity':capacity,
+                        'retained_count':len(history),'observed_count':count,'truncated':len(history)<count}})
         if qualifying:
             self.observed={'physics_step':step,'policy_action_index':self.session._action_index(),'contacts':qualifying,
                 'status':'selected' if len(qualifying)==1 else 'ambiguous_contact',

@@ -151,12 +151,57 @@ def validate_contact_witness(source, measurement=None, measured=None):
     return _result(failed,unavailable,scope)
 
 
+def _selection_history(selection,row,step,minimum):
+    """Validate every retained force sample; a declared count is not a history."""
+    history=row.get('contact_history')
+    scope='retained consecutive physics-step force samples; not contact between physics samples or force closure'
+    if history is None:return {'status':'partial_evidence','unavailable':['selection_contact_history_absent'],'scope':scope}
+    failed,unavailable=[],[]
+    try:
+        sources=history['sources'];count=row['contact_steps'];capacity=history['capacity']
+        if (not isinstance(sources,list) or not sources or type(capacity) is not int
+                or capacity!=min(256,minimum) or type(history['retained_count']) is not int
+                or history['retained_count']!=len(sources) or type(history['observed_count']) is not int
+                or history['observed_count']!=count or len(sources)!=min(count,capacity)
+                or type(history['truncated']) is not bool or history['truncated']!=(count>len(sources))):
+            raise ValueError('selection force history bounds')
+        if history['truncated']:unavailable.append('selection_force_history_truncated')
+        if sources[-1]!=row['contact_source']:failed.append('selection_history_final_contact_copy')
+        root=(selection.get('candidate_roots') or {}).get(row['label'])
+        env=selection.get('environment_index');snapshot=selection.get('snapshot_physics_step')
+        if root is None or env is None or snapshot is None:unavailable.append('selection_history_initial_binding')
+        elif step-count+1<snapshot:failed.append('selection_history_before_activation')
+        request={'label':row['label'],'arm':selection['definition']['arm'],
+            'min_finger_bodies':selection['definition']['min_finger_bodies']}
+        arm=row['contact_source']['resolved_arm']
+        for i,source in enumerate(sources):
+            witness=validate_contact_witness(source,request)
+            failed.extend(witness.get('failed_checks',[]));unavailable.extend(witness.get('unavailable',[]))
+            if source.get('kind') is None:unavailable.append('selection_history_finger_source')
+            elif source['kind']!='contact_points':failed.append('selection_history_finger_source')
+            if source.get('physics_step') is None:unavailable.append('selection_history_sample_clock')
+            elif type(source['physics_step']) is not int or source['physics_step']!=step-len(sources)+i+1:
+                failed.append('selection_history_contiguous_steps')
+            if source.get('resolved_arm')!=arm:failed.append('selection_history_same_arm')
+            if root is not None:
+                if source.get('object_root') is None:unavailable.append('selection_history_candidate_root')
+                elif source['object_root']!=root:failed.append('selection_history_candidate_root')
+            if env is not None:
+                if source.get('environment_index') is None:unavailable.append('selection_history_environment')
+                elif source['environment_index']!=env:failed.append('selection_history_environment')
+    except (KeyError,ValueError,TypeError,IndexError,AttributeError):failed.append('malformed_selection_contact_history')
+    return {'status':'inconsistent_evidence' if failed else 'partial_evidence' if unavailable else 'consistent_evidence',
+        'failed_checks':sorted(set(failed)),'unavailable':sorted(set(unavailable)),
+        'retained_samples':len(history.get('sources',[])) if isinstance(history,dict) and isinstance(history.get('sources'),list) else 0,
+        'scope':scope}
+
+
 def validate_selection_contact_witness(selection):
     """Audit the recorded first selected referent independently of geometry."""
     scope='retained first-selection force snapshot and recorded contact count; not unsaved consecutive persistence'
     observed=selection.get('observed')
     if observed is None:return {'status':'unobserved_selection_contact','scope':scope}
-    failed,unavailable,snapshots=[],[],[]
+    failed,unavailable,snapshots,histories=[],[],[],[]
     try:
         definition=selection['definition'];step=observed['physics_step'];contacts=observed['contacts']
         if type(step) is not int or step<0 or not isinstance(contacts,list):raise ValueError('selection observation')
@@ -187,6 +232,12 @@ def validate_selection_contact_witness(selection):
             count=row['contact_steps'];minimum=definition['min_contact_steps']
             if type(count) is not int or type(minimum) is not int or minimum<2 or count<minimum:
                 failed.append('recorded_selection_contact_count')
+            else:
+                history=_selection_history(selection,row,step,minimum);histories.append({'label':row['label'],**history})
+                if history['status']=='inconsistent_evidence':failed.extend(history['failed_checks'])
     except KeyError:unavailable.append('incomplete_selection_contact_fields')
     except (ValueError,TypeError,IndexError,AttributeError):failed.append('malformed_selection_contact_fields')
-    return {**_result(failed,unavailable,scope),'snapshots':snapshots}
+    return {**_result(failed,unavailable,scope),'snapshots':snapshots,
+        'consecutive_contact_validation':{'status':'inconsistent_evidence' if any(h['status']=='inconsistent_evidence' for h in histories)
+            else 'partial_evidence' if not histories or any(h['status']=='partial_evidence' for h in histories) else 'consistent_evidence',
+            'candidates':histories}}

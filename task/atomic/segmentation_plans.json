@@ -7415,7 +7415,7 @@
     },
     {
       "path": "task/atomic/selection.py",
-      "sha256": "297672741787c75fa99376b4d66ee94bfb1f8d3f8d6e085542386613e03af911"
+      "sha256": "db1cc0ecc6f4b28706bd83b09a92ed73f460e44d40438f240cfae5ff50a88068"
     },
     {
       "path": "task/atomic/trajectory.py",
@@ -7507,7 +7507,7 @@
     },
     {
       "path": "task/atomic/contact_validation.py",
-      "sha256": "ce6a29ddb272a783872b632f96e2eebbb6fb84bfaf3931f7ec24b92049be7c5e"
+      "sha256": "6bf0485cb6bcb362a8ed419f4675032d84d4d9bbe21dd3c9cd02c0a170107386"
     },
     {
       "path": "task/atomic/target_regions.py",

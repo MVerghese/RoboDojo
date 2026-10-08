@@ -1238,3 +1238,31 @@ whole-object support/containment, a completed grasp, completed pour or fluid
 quantity. Fresh live observations are required before upgrading taxonomy cells.
 
 Source-role offline gate: **441 atomic tests passed**, including moved-candidate selection, ambiguous orientation and role/report grouping checks.
+
+
+## October 8: independently checked selection force history
+
+Fresh `SelectionObserver` recordings retain an immutable force source for every
+physics step that qualifies the first selected candidate. Missing contacts,
+changed arms and skipped physics samples restart the interval. The first
+selection records the contact count, retained count, capacity and truncation
+flag together with those snapshots. Storage is bounded to the smaller of the
+requested hold length and **256** samples; a longer requested interval is
+explicitly truncated and cannot receive complete independent-history status.
+
+`contact_validation._selection_history` independently checks contiguous sample
+clocks, actual named candidate scene roots, environment and contacting arm,
+per-sample distinct fingers/positive impulses/raw force clocks, interval order
+after activation, declared storage bounds and the exact final-contact copy.
+Contradictions invalidate the selected-referent geometric score without changing
+the recorded native/atomic result. Missing old histories are a separate partial
+history status: a valid final force snapshot remains a valid snapshot. The
+MD/HTML **Selected candidate force history** table shows initial target, actual
+choice, final force status, consecutive-history status and retained sample count.
+
+This proves the retained consecutive physics samples only; it does not infer
+contact between physics samples or force closure. The eighteen source-selection
+runs already frozen under `5377a1b` keep their original snapshot/count evidence.
+A fresh immutable pair is needed to validate this new history capture live.
+
+Selection history gate: **444 atomic tests passed**, including earlier-sample corruption, gaps, contact loss, capped-history partial status and MD/HTML evidence separation.
