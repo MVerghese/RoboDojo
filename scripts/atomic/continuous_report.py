@@ -594,7 +594,7 @@ FINITE_MATERIAL_SCOPE = ('Initialization bounds independently recomputed from th
     'Open mesh seams do not establish solid volume; the enclosing disk is a conservative sampled-plane fit.')
 
 
-SURFACE_HEADERS = ['Arm','Stage','Live mesh capture','Contact validation','Max surface distance (mm)','Tolerance (mm)']
+SURFACE_HEADERS = ['Arm','Stage','Live mesh capture','Contact validation','Max surface distance (mm)','Tolerance (mm)','USD collision configuration']
 SURFACE_SCOPE = ('Actual scaled USD collision-mesh region bound to the reviewed model/file, triangles and authored landmark. '
     'Distance uses face interiors, edges and vertices of that region. Missing contacts are N/A; inconsistent metrics are excluded. '
     'This does not certify cooked collider part identity, exclusive key contact, sound or timing.')
@@ -608,9 +608,12 @@ def surface_validation_rows(task):
             metrics=contact.get('metrics',{}) if contact['status']=='consistent_evidence' else {}
             distances=metrics.get('selected_surface_distances_m',[])
             status=capture['status'] + (': '+capture['reason'] if capture.get('reason') else '')
+            configuration=capture.get('collision_configuration') or {'status':'partial_evidence'}
+            config_text=configuration['status'] + ''.join('; '+r['relative_path']+': enabled='+str(r['collision_enabled'])+
+                ', approximation='+str(r['approximation']) for r in configuration.get('meshes',[]))
             rows.append([mode,stage['stage_id'],status,contact['status'],
                 number(max(distances)*1000) if distances else 'N/A',
-                number(metrics['distance_tolerance_m']*1000) if 'distance_tolerance_m' in metrics else 'N/A'])
+                number(metrics['distance_tolerance_m']*1000) if 'distance_tolerance_m' in metrics else 'N/A',config_text])
     return rows
 
 

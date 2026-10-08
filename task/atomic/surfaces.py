@@ -47,6 +47,22 @@ class ObjectSurfaces:
         self.centers = {}
         self.bounds = {}
 
+    def collision_metadata(self,label,env_idx,mesh_paths):
+        """Actual composed collision settings for selected live USD mesh prims."""
+        import omni.usd
+        from pxr import UsdGeom,UsdPhysics
+        from task.atomic.collision_metadata import describe_mesh_collision
+        lm=self.env.scene_manager.layout_manager
+        obj=lm.get_scene_object(env_idx,lm.get_instance_name(env_idx,label))
+        root=getattr(obj,'usd_prim_path',None) or getattr(obj,'prim_path',None)
+        if not root:raise RuntimeError('actual object root unavailable for collision configuration')
+        stage=omni.usd.get_context().get_stage();rows=[]
+        for path in mesh_paths:
+            prim=stage.GetPrimAtPath(root+'/'+path)
+            if not prim or not prim.IsA(UsdGeom.Mesh):raise RuntimeError('selected collision mesh is unavailable')
+            rows.append({'relative_path':path,**describe_mesh_collision(prim,UsdPhysics)})
+        return rows
+
     def resolve(self, label, env_idx, pose, mesh_paths=None):
         lm=self.env.scene_manager.layout_manager
         if hasattr(lm,'instance_type_by_env'):

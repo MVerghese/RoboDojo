@@ -15,6 +15,11 @@ import sys
 from pathlib import Path
 import numpy as np
 from pxr import Gf, Usd, UsdGeom, UsdPhysics
+try:
+    from task.atomic.collision_metadata import describe_mesh_collision
+except ModuleNotFoundError:
+    # The CPU evidence worker ships this module beside the standalone exporter.
+    from collision_metadata import describe_mesh_collision
 
 
 ASSETS = [('Rigid','key',0),('Geometry','key_slot',0),('Rigid','cup',6),
@@ -52,7 +57,8 @@ def export_asset(asset_root, section, category, model):
             faces.extend([[base+face[0],base+face[i],base+face[i+1]] for i in range(1,count-1)])
         triangles.extend(faces)
         meshes.append({'path':str(prim.GetPath()),'point_offset':base,'points':len(values),
-                       'triangles':len(faces),'has_collision_api':prim.HasAPI(UsdPhysics.CollisionAPI)})
+                       'triangles':len(faces),'has_collision_api':prim.HasAPI(UsdPhysics.CollisionAPI),
+                       'collision_configuration':describe_mesh_collision(prim,UsdPhysics)})
     vertices=np.asarray(points)
     if not len(triangles):raise RuntimeError('asset contains no triangle geometry')
     metadata_path=folder/'metadata.json'

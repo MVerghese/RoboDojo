@@ -97,6 +97,8 @@ def apply_surface_capture_validation(atomic,output):
     capture=atomic.get('target_surface_binding')
     output['target_surface_validation']=validate_capture(capture,config['target_surface'])
     output['target_surface_validation']['capture_status']=(capture or {}).get('status','absent')
+    from task.atomic.collision_metadata import validate_collision_configuration
+    output['target_surface_validation']['collision_configuration']=validate_collision_configuration(capture)
     if (capture or {}).get('reason'):output['target_surface_validation']['reason']=capture['reason']
     event_name='impact' if config['kind']=='held_tool_strike' else 'contact'
     event=atomic.get('physical_events',{}).get(event_name)

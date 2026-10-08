@@ -7459,7 +7459,11 @@
     },
     {
       "path": "task/atomic/strike_surfaces.py",
-      "sha256": "e13311ebf209c9b6b0a9c029e56acb4323018740b906c2d50e6453858197409c"
+      "sha256": "25a0f3029dca3e226d13d3c0b9b68a6ae950795ed583acad76001448b9577efb"
+    },
+    {
+      "path": "task/atomic/collision_metadata.py",
+      "sha256": "7deef5a92e72f3eac8868ca8f00406637c70ff15032c05ae61597186a6a4ed27"
     },
     {
       "path": "env/scene_manager/objects/fluid.py",

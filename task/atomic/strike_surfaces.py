@@ -64,6 +64,11 @@ def capture_surface(session,config):
         packet.update(status='observed_model_mesh_region',object_root=geometry['prim_path'],
             model_frame_proof=proof,mesh_paths=geometry['selected_mesh_paths'],triangle_indices=indices.tolist(),
             local_triangles_m=triangles.tolist(),root_pose_at_capture=root.tolist(),landmark_pose_at_capture=landmark.tolist())
+        try:
+            packet['collision_configuration']={'status':'observed_composed_usd',
+                'meshes':session.env._atomic_surfaces.collision_metadata(label,session.env_idx,profile['mesh_paths'])}
+        except Exception as error:
+            packet['collision_configuration']={'status':'unavailable','reason':type(error).__name__+': '+str(error)}
     except Exception as error:packet.update(status='unavailable',reason=type(error).__name__+': '+str(error))
     return packet
 

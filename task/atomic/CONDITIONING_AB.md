@@ -1219,3 +1219,27 @@ Sampled particle centers, a one-particle prototype and open-mesh finite bounds
 do not certify total fluid volume/density/spill, full native quantity, whole
 solid volume or continuous passage through a thick mouth wall. One episode per
 arm and different crossing populations do not establish statistical steering.
+
+## October 8: collision configuration provenance
+
+Asset exports and fresh live strike surface captures now retain the actual USD
+CollisionAPI and MeshCollisionAPI presence, composed collision-enabled value,
+approximation mode, applied schemas and relevant PhysX collision attributes.
+Every attribute separates its effective value from whether a value opinion is
+authored. Missing mesh schemas do not default to an assumed triangle-mesh mode.
+Live settings come from the actual selected mesh prim under the task root; baked
+asset settings are separate evidence and can differ from scene overrides.
+
+The retained-configuration validator checks selected mesh/root paths, source,
+value types and duplicate effective-value consistency. MD/HTML show enabled and
+approximation settings separately from surface-distance metrics. Historical
+missing configuration remains partial; malformed configuration hides its values
+and does not change numerical surface distances or recorded action outcomes.
+Two tests cover schema fallbacks, authored settings, absent mesh schemas, disabled
+collision and contradictory root/effective-value records.
+
+These are **USD configuration values**, not a readback of cooked PhysX shape
+topology or a mapping from callback face indices to authored USD triangles. The
+first fresh surface pair (`cdd22a9`) was frozen before this additional provenance
+capture; it remains immutable. A further fresh capture is needed to validate
+these live configuration fields.
