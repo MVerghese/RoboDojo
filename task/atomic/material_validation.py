@@ -39,7 +39,7 @@ def initial_fluid_witness(config, initial):
     return {'checks':checks,'unavailable':unavailable,'ids':ids,'eligible_ids':eligible,'source_frame':source_frame}
 
 
-def validate_flow_witness(identifier, row, config, cohort=None):
+def validate_flow_witness(identifier, row, config, cohort=None, material_bounds=None):
     checks={};unavailable=[]
     def check(name,value):checks[name]=bool(value)
     try:
@@ -116,6 +116,19 @@ def validate_flow_witness(identifier, row, config, cohort=None):
                     root[:3]+_rotation(root[3:])@local_pose[:3],pose[:3],rtol=1e-7,atol=1e-9))
                 check('source_'+name+'_frame_rotation_binding',np.allclose(
                     _rotation(root[3:])@_rotation(local_pose[3:]),_rotation(pose[3:]),rtol=1e-7,atol=1e-9))
+        for name,definition,sample in [('target',config.get('flow',{}),after),
+                ('source',config.get('source_exit',{}),(p.get('source_mouth_crossing') or {}).get('after',{}))]:
+            if not definition.get('finite_material_bound'):continue
+            from task.atomic.finite_material import validate_material_bound
+            bound=sample['material_bound'];validate_material_bound(bound)
+            check(name+'_finite_material_identity',bound['label']==str(identifier)
+                and config.get('kind')=='rigid_material_transfer')
+            check(name+'_finite_material_capture_precedes_crossing',bound['physics_step']<=sample['physics_step'])
+            if 'environment_index' not in hold:unavailable.append('finite_material_contact_environment_absent')
+            else:check(name+'_finite_material_environment',bound['environment_index']==hold['environment_index'])
+            if not material_bounds or str(identifier) not in material_bounds:
+                unavailable.append('initial_finite_material_bound_absent')
+            else:check(name+'_finite_material_activation_binding',bound==material_bounds[str(identifier)])
     except KeyError as error:
         unavailable.append(str(error))
     except (TypeError,ValueError,IndexError) as error:

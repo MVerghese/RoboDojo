@@ -65,13 +65,29 @@ def apply_flow_validation(atomic, output):
     statuses=Counter()
     for ident,row in audited['crossings'].items():
         if ident not in raw['crossings']:continue
-        witness=validate_flow_witness(ident,raw['crossings'][ident],config,cohort)
+        witness=validate_flow_witness(ident,raw['crossings'][ident],config,cohort,atomic.get('material_bounds'))
         row['source_witness']=witness;statuses[witness['status']]+=1
         if witness['status']=='inconsistent_evidence':
             row['numerical_reproduction_status']=row.get('numerical_reproduction_status',row['status'])
             row['status']='invalid_source_witness'
             row['reason']='retained source or crossing witnesses fail independent physical checks'
     audited['witness_summary']=dict(statuses)
+
+
+def audit_material_bounds(bounds):
+    from task.atomic.finite_material import validate_material_bound
+    output={}
+    for label,row in (bounds or {}).items():
+        if row.get('status')=='unavailable':
+            output[label]={'status':'unavailable','reason':row.get('reason')};continue
+        try:
+            radius=validate_material_bound(row)
+            if row['label']!=label:raise ValueError('material map label differs from bound label')
+            output[label]={'status':'consistent_evidence','enclosing_radius_m':radius,
+                           'closed_oriented_mesh':row['closed_oriented_mesh']}
+        except (KeyError,TypeError,ValueError,AttributeError) as error:
+            output[label]={'status':'inconsistent_evidence','reason':str(error)}
+    return output
 
 
 def audit_selection(selection):
@@ -292,6 +308,7 @@ def audit_atomic(atomic, variant=None):
         'trajectories': audit_trajectories(atomic.get('trajectories',{})),
         'selection': audit_selection(atomic.get('selection')),
         'material_flow': audit_flow(atomic.get('material_flow')),
+        'material_bounds':audit_material_bounds(atomic.get('material_bounds')),
     }
     apply_recognition_validation(atomic, output)
     apply_flow_validation(atomic, output)

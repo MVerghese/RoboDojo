@@ -8,7 +8,7 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[2]))
-from scripts.atomic.audit_scores import audit_flow,apply_flow_validation
+from scripts.atomic.audit_scores import audit_flow,apply_flow_validation,audit_material_bounds
 from scripts.atomic.storage import atomic_write_json
 from scripts.atomic.validate_recognition_windows import validate_report
 
@@ -37,6 +37,7 @@ def validate_report_materials(report):
                     'crossings':len(flow.get('crossings',{})),
                     'source_witness_summary':flow.get('witness_summary',{}),
                     'flow_statuses':dict(Counter(r['status'] for r in flow.get('crossings',{}).values()))})
+                stages[-1]['material_bounds']=audit_material_bounds(stage.get('material_bounds'))
             episodes.append({'episode':str(ident),'layout_id':detail.get('layout_id'),
                 'native_success':detail.get('success'),'cloth_probe':cloth,'stages':stages})
     return {'episodes':episodes,'boundary_windows':validate_report(report)}

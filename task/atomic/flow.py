@@ -10,12 +10,14 @@ from task.atomic.fit import aperture_polygon
 
 def validate_flow(config, validate_selector):
     fields = {'opening', 'aperture_profile', 'target_xy_m', 'position_tolerance_m', 'angle_tolerance_rad'}
-    if not isinstance(config, dict) or not fields.issubset(config) or set(config)-fields-{'expected_velocity_direction'}:
+    if not isinstance(config, dict) or not fields.issubset(config) or set(config)-fields-{'expected_velocity_direction','finite_material_bound'}:
         raise ValueError('flow needs opening, aperture, XY target and independent position/angular tolerances')
     validate_selector(config['opening'], 'flow.opening')
     if config['opening']['kind'] not in ('functional_point', 'support_point', 'object_pose','calibrated_frame','model_calibrated_frame') or config['opening'].get('time','live') != 'live':
         raise ValueError('flow opening needs a live calibrated frame')
     aperture_polygon(config['aperture_profile'])
+    if 'finite_material_bound' in config and config['finite_material_bound'] is not True:
+        raise ValueError('finite_material_bound must be explicitly true when requested')
     target = np.asarray(config['target_xy_m'], dtype=float)
     if target.shape != (2,) or not np.isfinite(target).all(): raise ValueError('flow target must be finite XY metres')
     direction=np.asarray(config.get('expected_velocity_direction',[0,0,-1]),dtype=float)
@@ -52,17 +54,34 @@ def score_crossing(config, before, after):
     from shapely.geometry import Point
     aperture=aperture_polygon(config['aperture_profile']);cross=Point(point[:2])
     aperture_error=float(cross.distance(aperture))
-    return {'status':'scored','passed':bool(error<=config['position_tolerance_m'] and angle<=config['angle_tolerance_rad'] and aperture.covers(cross)),
+    result={'status':'scored','passed':bool(error<=config['position_tolerance_m'] and angle<=config['angle_tolerance_rad'] and aperture.covers(cross)),
             'components':{'crossing_position_error_m':error,'aperture_overrun_m':aperture_error,
                           'velocity_angle_rad':angle,'relative_speed_m_s':speed},
             'point_in_opening_m':point.tolist(),'relative_velocity_m_s':velocity.tolist(),'substep_fraction':alpha}
+    return _finite_result(config,result,aperture,point,after)
+
+
+def _finite_result(config,result,aperture,point,after):
+    if not config.get('finite_material_bound'):return result
+    try:
+        from task.atomic.finite_material import bound_aperture_result
+        passed,components=bound_aperture_result(aperture,point,after['material_bound'])
+        result['passed']=result['passed'] and passed
+        # Source exit has top-level scalars; target flow uses components.
+        if 'components' in result:result['components'].update(components)
+        else:result.update(components)
+        result['finite_fit_scope']='conservative whole rigid-mesh enclosing disk at sampled center crossing; no thick-wall or continuous-path claim'
+        if 'scope' in result:result['scope']=result['finite_fit_scope']
+    except (KeyError,ValueError,TypeError,AttributeError) as error:
+        result.update(status='finite_material_bound_unavailable',passed=None,bound_reason=str(error))
+    return result
 
 
 class FlowObserver:
     def __init__(self,config):
         self.config=deepcopy(config);self.previous={};self.crossings={};self.failures=[];self.last_step=None
 
-    def observe(self,positions,opening,qualified,step,dt,action_index=None):
+    def observe(self,positions,opening,qualified,step,dt,action_index=None,material_bounds=None):
         if step==self.last_step:return
         if self.last_step is not None and step!=self.last_step+1:
             self.previous.clear();self.failures.append({'physics_step':step,'status':'sampling_gap'})
@@ -70,6 +89,8 @@ class FlowObserver:
         current={str(ident):{'position':np.asarray(position).tolist(),'opening':np.asarray(opening).tolist(),
                             'physics_step':step,'dt_s':float(dt),'policy_action_index':action_index}
                  for ident,position in positions.items()}
+        if self.config.get('finite_material_bound'):
+            for ident,row in current.items():row['material_bound']=(material_bounds or {}).get(ident)
         for ident,row in current.items():
             if ident in self.crossings or ident not in self.previous or ident not in qualified:continue
             if not (qualified[ident].get('eligible') and qualified[ident].get('exited_while_held_and_tilted')):continue
@@ -89,7 +110,7 @@ class FlowObserver:
 
 
 def validate_source_exit(config, validate_selector, label):
-    if not isinstance(config, dict) or set(config) != {'opening', 'aperture_profile'}:
+    if not isinstance(config, dict) or set(config)-{'finite_material_bound'} != {'opening', 'aperture_profile'}:
         raise ValueError('source_exit needs an actual opening frame and aperture profile')
     selector = config['opening']
     validate_selector(selector, 'source_exit.opening')
@@ -97,6 +118,8 @@ def validate_source_exit(config, validate_selector, label):
             or selector.get('time', 'live') != 'live' or selector['label'] != label):
         raise ValueError('source_exit requires a live calibrated source mouth frame')
     aperture_polygon(config['aperture_profile'])
+    if 'finite_material_bound' in config and config['finite_material_bound'] is not True:
+        raise ValueError('finite_material_bound must be explicitly true when requested')
 
 
 def score_source_exit(config, before, after):
@@ -122,11 +145,12 @@ def score_source_exit(config, before, after):
     alpha = float(-local0[2]/(local1[2]-local0[2]))
     point = (1-alpha)*local0+alpha*local1
     overrun = float(Point(point[:2]).distance(aperture_polygon(config['aperture_profile'])))
-    return {'status': 'scored', 'passed': bool(aperture_polygon(config['aperture_profile']).covers(Point(point[:2]))),
+    result={'status': 'scored', 'passed': bool(aperture_polygon(config['aperture_profile']).covers(Point(point[:2]))),
             'point_in_opening_m': point.tolist(), 'substep_fraction': alpha,
             'aperture_overrun_m': overrun,
             'relative_velocity_m_s': ((_rotation(f1[3:]).T@((p1-p0)-(f1[:3]-f0[:3])))/dt).tolist(),
             'scope': 'sampled material center crosses outward through calibrated source aperture; not whole-material fit'}
+    return _finite_result(config,result,aperture_polygon(config['aperture_profile']),point,after)
 
 
 class SourceExitObserver:
@@ -140,7 +164,7 @@ class SourceExitObserver:
         self.previous = {};self.opening = None;self.step = None;self.dt = None
         self.failures = [];self.candidate_count = 0;self.reentries = set();self.outcomes = Counter()
 
-    def observe(self, positions, opening, eligible, step, dt, action_index=None, opening_source=None):
+    def observe(self, positions, opening, eligible, step, dt, action_index=None, opening_source=None, material_bounds=None):
         frame = np.asarray(opening, dtype=float)
         current = {str(i): np.asarray(p, dtype=float) for i, p in positions.items()}
         candidates = {}
@@ -158,7 +182,10 @@ class SourceExitObserver:
                     for index in np.flatnonzero((local0[:, 2] >= 0) & (local1[:, 2] < 0)):
                         a = {'position': new[index], 'opening': frame, 'dt_s': dt}
                         b = {'position': old[index], 'opening': self.opening, 'dt_s': dt}
-                        if score_source_exit(self.config, a, b)['passed'] is True:
+                        if self.config.get('finite_material_bound'):
+                            b['material_bound']=(material_bounds or {}).get(ids[index])
+                        reentry_config={k:v for k,v in self.config.items() if k!='finite_material_bound'}
+                        if score_source_exit(reentry_config, a, b)['passed'] is True:
                             self.reentries.add(ids[index])
                     for index in np.flatnonzero((local0[:, 2] < 0) & (local1[:, 2] >= 0)):
                         ident = ids[index]
@@ -167,6 +194,8 @@ class SourceExitObserver:
                         after = {'position': new[index].tolist(), 'opening': frame.tolist(),
                                  'physics_step': step, 'dt_s': float(dt), 'policy_action_index': action_index}
                         if opening_source is not None:after['opening_source']=deepcopy(opening_source)
+                        if self.config.get('finite_material_bound'):
+                            after['material_bound']=(material_bounds or {}).get(ident)
                         candidates[ident] = {'before': before, 'after': after,
                                              'result': score_source_exit(self.config, before, after)}
         if step != self.step:

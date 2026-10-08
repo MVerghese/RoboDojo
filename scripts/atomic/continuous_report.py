@@ -40,7 +40,8 @@ METHOD = (
     'Coverage is observed/declared conditions, including optional object candidates. '
     'Shared-event delta is mean(conditioned measurement − baseline measurement) over identical '
     'stage/condition identities observed in both arms of a verified pair, in the stated unit. '
-    'Negative error delta is better; positive overlap delta is better. Signed separation '
+    'Negative error delta is better; positive overlap delta is better. Positive finite-mesh '
+    'clearance means spare aperture space. Signed separation '
     'depends on the requested relation and has no universal improvement direction. '
     'Different observed populations can change the separate arm means. Summaries group by '
     'action, condition, modifier and slot, weighting each observed condition equally rather '
@@ -351,6 +352,8 @@ def component_names(condition):
             underlying = definition['condition']['kind']
             if underlying != 'selection':
                 expected += component_names(dict(condition,kind=underlying))
+    if condition['kind']=='stream_crossing' and any(d['condition'].get('finite_material_bound') for d in condition.get('definitions',[])):
+        expected += ['finite_bound_radius_m','finite_bound_clearance_m','finite_bound_shortfall_m']
     return sorted(set(expected) | condition['baseline']['components'].keys() |
                   condition['conditioned']['components'].keys())
 

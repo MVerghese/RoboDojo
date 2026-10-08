@@ -101,6 +101,8 @@ def validate_recognition(config, family, validate_selector):
     if 'source_exit' in config:
         from task.atomic.flow import validate_source_exit
         validate_source_exit(config['source_exit'], validate_selector, config['label'])
+    if any(config.get(k,{}).get('finite_material_bound') for k in ('flow','source_exit')) and kind!='rigid_material_transfer':
+        raise ValueError('finite material mesh bounds require rigid material transfer; fluid radius is not inferred')
     for key in fields & {'label', 'arm', 'giver_arm', 'receiver_arm', 'target_label', 'joint_name', 'joint_tag','fluid_label'}:
         if not isinstance(config[key], str) or not config[key]:
             raise ValueError(f'{kind}.{key} must be a nonempty name')
@@ -212,6 +214,7 @@ class PhysicalRecognizer:
         self.eligibility = {}
         self.button_unpressed_sample = None
         self.material = {}
+        self.material_bounds = {}
         self.fluid = {}
         self.flow_observer = None
         self.source_exit_observer = None
@@ -242,6 +245,9 @@ class PhysicalRecognizer:
             self.source_initial_frame = self.session._resolve(self.c['source_frame']).tolist()
             self.source_initial_rotation = _rotation(self.source_initial_frame[3:])
             for label in self.c['material_labels']:
+                if any(self.c.get(k,{}).get('finite_material_bound') for k in ('flow','source_exit')):
+                    from task.atomic.finite_material import capture_material_bound
+                    self.material_bounds[label]=capture_material_bound(self.session,label)
                 source = self._material_inside(label, 'source')
                 target = self._material_inside(label, 'target')
                 self.material[label] = {'initial_in_source': source, 'initial_in_target': target,
@@ -472,7 +478,7 @@ class PhysicalRecognizer:
                 provenance = {label:m for label,m in self.material.items() if m['eligible'] and m['exited_while_held_and_tilted']}
             opening = self.session._resolve(self.c['flow']['opening'])
             self.flow_observer.observe(positions,opening,provenance,self.contacts.steps,
-                                       self.session.env.dt,self.session._action_index())
+                self.session.env.dt,self.session._action_index(),self.material_bounds)
 
     def _fold_state(self):
         states={'sources':{}}
@@ -1131,7 +1137,7 @@ class PhysicalRecognizer:
         opening, source = self.session._resolve_with_source(self.c['source_exit']['opening'])
         return self.source_exit_observer.observe(positions, opening,
             {str(i) for i,m in provenance.items() if m['eligible']}, self.contacts.steps,
-            self.session.env.dt, self.session._action_index(), source)
+            self.session.env.dt, self.session._action_index(), source, self.material_bounds)
 
 
 def live_joint_state(env, label, joint_name, env_idx, resolved_body_path=None):

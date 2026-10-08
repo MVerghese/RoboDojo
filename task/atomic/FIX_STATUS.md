@@ -544,3 +544,93 @@ restoration, and they do not change atomic success or geometric conditioning.
 Six regressions cover immutable coupled capture, mixed units/full turns, bad
 binding/clock/source/nonfinite data, adjacent robots/environments, live USD joint
 ambiguity and separate report units. Fresh capture/replay evidence is pending.
+
+
+### Live twelve-state settling validation (October 7 local / October 8 UTC)
+
+`geometry-settling-history-1006` completed both bowl prompt arms. Native success,
+required pickup and selected placement were true in both. Both twelve-state
+settling histories independently validate with no contradictions, and all four
+geometric-condition scores reproduce. Actual simulation dt is 4 ms, so each
+window spans 44 ms. Maximum retained motion is:
+
+| Measurement | Baseline | Conditioned |
+| --- | --- | --- |
+| Position change per adjacent state (mm) | 0.372703 | 0.462446 |
+| Rotation change per adjacent state (degrees) | 0.508325 | 0.369913 |
+| Position from settling anchor (mm) | 2.606504 | 2.486047 |
+| Rotation from settling anchor (degrees) | 3.282015 | 2.646970 |
+
+Bounds are 2 mm / 0.05 rad per step and 5 mm / 0.1 rad from the anchor,
+identical in both arms. The observed bounded-motion interval certifies this
+sampled settling event, not zero velocity or future immobility. The retained
+artifact is `geometry-settling-history-1006/independent-contact-batch-validation.json`.
+The fresh robot-joint captures and named-target twist histories are separate
+pending runs; historical metadata is not filled in retroactively.
+
+
+### Finite rigid material fit at sampled mouth crossings
+
+Rigid material transfers can set `finite_material_bound: true` independently in
+`recognition.source_exit` and `recognition.flow`. This is unsupported for fluid
+particles: no solver particle radius is invented. Apply the same recognizer
+configuration to both prompt arms. Fresh stages capture each material object's
+actual complete scaled root-relative USD mesh, physical root, label, environment
+and activation step. The center is its actual mesh-bounds center, and the bound
+radius is the maximum vertex distance from that center. Every triangle is inside
+this enclosing sphere. Open seams are recorded with `closed_oriented_mesh: false`;
+they are not sealed and do not establish solid volume.
+
+At the adjacent sampled center crossing, the projected enclosing disk must fit
+inside the reviewed aperture, including every hole. Clearance is the signed
+center distance to the nearest aperture boundary minus the measured radius;
+negative clearance is a finite-fit shortfall. This conservative check can reject
+a non-spherical object whose exact local section would fit. A positive result
+certifies all captured mesh triangles fit within this projected bound at this
+sampled crossing plane. It does not establish continuous passage, thick-wall
+clearance, collision response, fluid volume or an unseen curved trajectory.
+Existing center-only profiles retain their declared semantics.
+
+Target-flow reports expose radius, signed clearance and nonnegative shortfall in
+separate mm measurements, including explicit N/A columns when an event is absent.
+Source-mouth raw witnesses retain the same scalars. Missing, malformed or stale
+bounds leave fit unavailable, without center-only fallback. Independent audits
+recompute the bound from raw vertices/topology and bind each crossing to the
+correct material, environment and immutable activation capture. Changed captures
+or wrong material identity exclude otherwise numerically reproduced flow scores.
+An inward center crossing clears an earlier exit even if its finite fit failed.
+
+The retained seed-0 asset calibration has seven ball meshes, each with a measured
+5.0000003 mm enclosing radius and open exported topology. Eight regressions cover
+edge/hole overruns, missing/forged/topologically inconsistent bounds, target
+flow/report units, grazing reentry, unsupported fluid bounds, actual rigid-runtime
+capture and source-witness exclusion. Live finite-mouth evidence is pending.
+
+
+### Live robot captures and target-bound twist intervals
+
+`geometry-robot-joints-capture-1006` completed both bowl arms with native and
+atomic pickup/placement success. Each selected placement activation retained two
+actual articulations with eight solver DOFs each, including grippers. This is
+live joint-readback evidence; the selected-stage replay comparison is still
+pending separately.
+
+`geometry-twist-target-binding-1006` completed both screw arms. Native task success
+was false in baseline and true with conditioning. All six pickups were observed,
+but no nut reached the separate 90 degree constrained-rotation gate. Five retained
+partial rotation intervals independently validate pose arithmetic, force rows,
+declared labels/frame and same actual constraint roots; baseline nut0 has no
+valid retained interval. Clockwise progress/off-axis sums in degrees are:
+
+| Nut | Baseline progress / off-axis | Conditioned progress / off-axis |
+| --- | --- | --- |
+| nut0 | N/A | 7.024942 / 6.430205 |
+| nut1 | 75.500796 / 19.872551 | 64.054478 / 19.808941 |
+| nut2 | 0.107279 / 1.632637 | 45.093453 / 19.776772 |
+
+These are the greatest net directional progress among saved valid current or
+interrupted intervals, not a complete-turn witness or mechanical thread proof.
+Native fasten_screws checks alignment/depth and arm reset, without a 90 degree
+rotation requirement. One episode per arm does not support a statistical steering
+claim. The independent artifact retains report hashes and all failed/unobserved
+completion events; historical compact partial histories remain partial.

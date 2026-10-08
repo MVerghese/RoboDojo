@@ -759,3 +759,55 @@ windows. A fresh twelve-state bowl pair is submitted at high-9000 from that
 runtime with original prompts/geometric targets. The screw pose/force-history
 pair from `21405e1` is still running. Completed historical runs with no settling
 pose history remain partial for that separate validation.
+
+
+### Live twelve-state settling validation (October 7 local / October 8 UTC)
+
+`geometry-settling-history-1006` completed both bowl prompt arms. Native success,
+required pickup and selected placement were true in both. Both twelve-state
+settling histories independently validate with no contradictions, and all four
+geometric-condition scores reproduce. Actual simulation dt is 4 ms, so each
+window spans 44 ms. Maximum retained motion is:
+
+| Measurement | Baseline | Conditioned |
+| --- | --- | --- |
+| Position change per adjacent state (mm) | 0.372703 | 0.462446 |
+| Rotation change per adjacent state (degrees) | 0.508325 | 0.369913 |
+| Position from settling anchor (mm) | 2.606504 | 2.486047 |
+| Rotation from settling anchor (degrees) | 3.282015 | 2.646970 |
+
+Bounds are 2 mm / 0.05 rad per step and 5 mm / 0.1 rad from the anchor,
+identical in both arms. The observed bounded-motion interval certifies this
+sampled settling event, not zero velocity or future immobility. The retained
+artifact is `geometry-settling-history-1006/independent-contact-batch-validation.json`.
+The fresh robot-joint captures and named-target twist histories are separate
+pending runs; historical metadata is not filled in retroactively.
+
+
+### Live robot captures and target-bound twist intervals
+
+`geometry-robot-joints-capture-1006` completed both bowl arms with native and
+atomic pickup/placement success. Each selected placement activation retained two
+actual articulations with eight solver DOFs each, including grippers. This is
+live joint-readback evidence; the selected-stage replay comparison is still
+pending separately.
+
+`geometry-twist-target-binding-1006` completed both screw arms. Native task success
+was false in baseline and true with conditioning. All six pickups were observed,
+but no nut reached the separate 90 degree constrained-rotation gate. Five retained
+partial rotation intervals independently validate pose arithmetic, force rows,
+declared labels/frame and same actual constraint roots; baseline nut0 has no
+valid retained interval. Clockwise progress/off-axis sums in degrees are:
+
+| Nut | Baseline progress / off-axis | Conditioned progress / off-axis |
+| --- | --- | --- |
+| nut0 | N/A | 7.024942 / 6.430205 |
+| nut1 | 75.500796 / 19.872551 | 64.054478 / 19.808941 |
+| nut2 | 0.107279 / 1.632637 | 45.093453 / 19.776772 |
+
+These are the greatest net directional progress among saved valid current or
+interrupted intervals, not a complete-turn witness or mechanical thread proof.
+Native fasten_screws checks alignment/depth and arm reset, without a 90 degree
+rotation requirement. One episode per arm does not support a statistical steering
+claim. The independent artifact retains report hashes and all failed/unobserved
+completion events; historical compact partial histories remain partial.

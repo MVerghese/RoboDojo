@@ -7383,7 +7383,7 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "a6ef7e2c479bb6d8783d2c70e6567c4dbfade5aa10a980fb2fc7528fce8a33f4"
+      "sha256": "88ea63559790b1c44178876084a7bc602e20bc1f19f5b44f771603a29187f8b3"
     },
     {
       "path": "task/atomic/spec.py",
@@ -7391,7 +7391,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "d15f9c6549e110dc07e4e8b7be9f2a29bc975ca905fe65ee286f45caece162df"
+      "sha256": "3cb60613cbdc7ea360dc81f0ee7cb61c89b5ab1760e0c19d086393ae656488b3"
     },
     {
       "path": "task/atomic/twist_validation.py",
@@ -7431,7 +7431,7 @@
     },
     {
       "path": "task/atomic/flow.py",
-      "sha256": "48cfe1077cb0e70909be98ae8f99f6eaa5a9d175d5db3258c13f1fc538800a15"
+      "sha256": "3f819d06c81f6ed9fcc442751d1121eb9571cf72323762f28fe0bac4b7471a29"
     },
     {
       "path": "task/atomic/fold.py",
@@ -7479,7 +7479,7 @@
     },
     {
       "path": "task/atomic/material_validation.py",
-      "sha256": "7143b6590e5d68b3d4c1b09fec3a4fe2dee9181ae97deaf258baaf012d04524b"
+      "sha256": "68ec318a7571c0748e1f73f9d1eb86d059639efcbae7f36712fa4c51bcd9178b"
     },
     {
       "path": "task/atomic/support_validation.py",
@@ -7504,6 +7504,10 @@
     {
       "path": "task/atomic/robot_kinematics.py",
       "sha256": "db20ca96c916691985e459f057dda15887c42acc35c16eab5cd93597dcf84847"
+    },
+    {
+      "path": "task/atomic/finite_material.py",
+      "sha256": "6dfb100dae5bad845da35ea10f816e38c11d2e596de4eee1cb22e7b1961a391f"
     },
     {
       "path": "src/eval_client/eval_env.py",
