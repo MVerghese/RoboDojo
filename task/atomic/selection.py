@@ -71,8 +71,14 @@ def resolve_candidates(candidates, env, env_idx):
 
 def validate_selection(c,validate_condition):
     fields={'candidates','conditions','arm','min_finger_bodies','min_contact_steps'}
-    if not isinstance(c,dict) or set(c)!=fields:
+    if not isinstance(c,dict) or not fields<=set(c) or set(c)-fields-{'role'}:
         raise ValueError('selection needs candidates, conditions and an explicit contact rule')
+    if 'role' in c:
+        from task.atomic.spec import FAMILIES
+        role=c['role']
+        if (not isinstance(role,dict) or set(role)!={'family','slot'}
+                or role['family'] not in FAMILIES or not isinstance(role['slot'],str) or not role['slot'].strip()):
+            raise ValueError('selection role requires a known action family and nonempty slot')
     labels=c['candidates']
     if isinstance(labels, dict):
         validate_candidate_query(labels)
@@ -87,6 +93,8 @@ def validate_selection(c,validate_condition):
         raise ValueError('selection needs unique geometric condition IDs')
     for condition in conditions:
         validate_condition(condition)
+        if 'role' in c and condition['slot']!=c['role']['slot']:
+            raise ValueError('selection condition slot must match its declared role')
         if ('event' in condition or condition['measurement'].get('label')!='@candidate'
                 or condition['measurement']['kind'] not in ('object_pose','object_position','object_center_pose','object_center_position')):
             raise ValueError('selection conditions measure @candidate object frames/points at activation; no outcome events')

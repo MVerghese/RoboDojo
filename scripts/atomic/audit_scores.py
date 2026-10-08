@@ -2,6 +2,7 @@
 """Recompute geometric scores from saved simulator states, optionally for new targets."""
 
 import argparse
+from copy import deepcopy
 import json
 from pathlib import Path
 import sys
@@ -127,6 +128,13 @@ def audit_selection(selection):
     if not selection:return None
     binding_ok = True
     binding_error = None
+    if selection.get('definition',{}).get('role') is not None:
+        try:
+            from task.atomic.selection import validate_selection
+            from task.atomic.spec import _validate_condition
+            validate_selection(selection['definition'],_validate_condition)
+        except (ValueError,KeyError,TypeError) as error:
+            binding_ok=False;binding_error=str(error)
     definition = selection.get('definition', {}).get('candidates')
     if isinstance(definition, dict):
         try:
@@ -154,6 +162,7 @@ def audit_selection(selection):
     matches=(binding_ok and eligible==selection['eligible_candidates'] and target_status==selection['target_status']
              and passed==selection['passed'] and all(r['status']=='reproduced' for rows in candidates.values() for r in rows.values()))
     return {'status':'reproduced' if matches else 'score_mismatch','candidates':candidates,
+            'role':deepcopy(selection.get('definition',{}).get('role')) if binding_ok else None,
             'candidate_binding_reproduced':binding_ok,'candidate_binding_error':binding_error,
             'eligible_candidates':eligible,'target_status':target_status,'passed':passed,'observed':observed}
 
@@ -257,6 +266,17 @@ def validate_cached_recognition(report, scores):
     for score in scores:
         stage = raw.get((str(score['episode']), score['stage_id']))
         if stage is not None:
+            if score.get('selection'):
+                definition=(stage.get('selection') or {}).get('definition',{})
+                role=definition.get('role')
+                if role is not None:
+                    try:
+                        from task.atomic.selection import validate_selection
+                        from task.atomic.spec import _validate_condition
+                        validate_selection(definition,_validate_condition)
+                    except (ValueError,KeyError,TypeError):
+                        role=None;score['selection']['status']='score_mismatch'
+                score['selection']['role']=deepcopy(role)
             apply_recognition_validation(stage, score)
             apply_flow_validation(stage, score)
             apply_support_validation(stage, score)

@@ -27,7 +27,7 @@
     "task/atomic/bindings.py": "590447b67c177665633dd5ea6a2881b4553c2962330d6265e928fb85665a8549",
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
     "task/atomic/materials.py": "0b42ca82fd5101a7b0dd409139181d629b443a8ed62d2253f545a60f5b9241b8",
-    "task/atomic/selection.py": "b3b113574d1000e65d02a29ab580122e8ab1899871aa0627ee1a1dba7fc8494c",
+    "task/atomic/selection.py": "297672741787c75fa99376b4d66ee94bfb1f8d3f8d6e085542386613e03af911",
     "task/atomic/trajectory.py": "8d783293da9fc57cf8d9d5cc52e72361806bb821aab6c3acb08706552a791d82",
     "task/atomic/regions.py": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753",
     "task/atomic/fit.py": "9b92e845e0309301ff083d61b5ccdf7d666855d2490a6ec43c6e8254c73ed509",

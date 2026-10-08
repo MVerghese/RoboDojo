@@ -1438,3 +1438,41 @@ and policy controls are unchanged. This repair does not regenerate queued
 experimental evidence. Results and live coverage await collection and audit.
 
 Offline validation for the interrupted-impact and scheduler repair changes: **439 atomic tests passed**.
+
+
+## October 8: explicit initial pour-source selection roles
+
+Selection definitions now accept an optional `role: {family: pour, slot: source}`.
+The existing initial source pickup stage observes which candidate first has
+two distinct actual finger bodies in sustained contact for two physics steps.
+The declared role controls report grouping; it does not change the physical
+pickup/pour recognizer or native task. Independent audit validates the role
+definition, initial candidate arithmetic, unique target, actual selected scene
+root/environment, finger/arm force and sample clocks. Cached reports also retain
+the role. Programs without the field keep their historical selection grouping.
+
+`generate_source_selection_suite.py` creates isolated source-role A/B pairs for
+`pour_liquid_into_cup` (bottle/cup candidates) and `pour_balls_into_vase` (cup/vase).
+Targets are calibrated from the retained **pre-policy initial** scaled mesh
+bounds and roots, not grasp outcomes or final positions. Each run freezes those
+initial candidate states even when a vessel moves. Both arms retain the original
+recognition and scoring; only the conditioned append contains the isolated
+selection factor. Existing downstream geometric scores remain diagnostics and
+are not claimed to have been prompted.
+
+| Factor | Selection target and reported units | Liquid pair | Ball pair |
+|---|---|---|---|
+| Point | Initial center XYZ in environment-local world; Euclidean error in mm, 20 mm tolerance | Unique | Unique |
+| SE(3) pose | Initial center offset and full root orientation in initial destination-center axes; mm/degree errors, 20 mm/10 degree tolerances | Unique | Unique |
+| Displacement | Initial source center relative to initial destination center, in destination axes; mm, 20 mm tolerance | Unique | Unique |
+| Orientation | Initial full root orientation relative to initial destination axes; degrees, 10 degree tolerance | Blocked: bottle and cup both match | Unique |
+| Relation | Initial center relation along the axis with the largest horizontal separation; margin is half that initial separation; shortfall in mm, 5 mm tolerance | Unique | Unique |
+
+This yields **nine matched pairs / eighteen intended episodes** across five
+suites. The liquid orientation-only factor is retained in `blocked-factors.json`
+with both matching candidates; no identity guess substitutes for geometry.
+This adapter measures a first contacted source role, not semantic understanding,
+whole-object support/containment, a completed grasp, completed pour or fluid
+quantity. Fresh live observations are required before upgrading taxonomy cells.
+
+Source-role offline gate: **441 atomic tests passed**, including moved-candidate selection, ambiguous orientation and role/report grouping checks.

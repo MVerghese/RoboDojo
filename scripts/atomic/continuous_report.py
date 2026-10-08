@@ -140,6 +140,7 @@ def collect_events(row):
                              'recorded_result':{'components':result.get('components',{})}}}
         selection = stage.get('selection')
         if selection:
+            role=selection.get('role') or {'family':stage.get('family','unknown'),'slot':'initial object selection'}
             observed = selection.get('observed') or {}; contacts = observed.get('contacts',[])
             valid = selection.get('status') == 'reproduced' and selection.get('target_status') == 'resolved' and len(contacts) == 1
             label = contacts[0]['label'] if valid else None
@@ -147,8 +148,8 @@ def collect_events(row):
             for ident, candidate in next(iter(selection.get('candidates',{}).values()),{}).items():
                 score = selection['candidates'][label][ident] if valid else {'status':
                     selection['status'] if selection.get('status')!='reproduced' else 'selection_not_resolved'}
-                events[(stage['stage_id'],'selection/'+ident)] = {'family':stage.get('family','unknown'),
-                    'score':dict(score,slot='initial object selection',kind='selection',
+                events[(stage['stage_id'],'selection/'+ident)] = {'family':role['family'],
+                    'score':dict(score,slot=role['slot'],kind='selection',
                                  condition_id='selection/'+ident)}
     return events
 
@@ -219,7 +220,8 @@ def build_report(manifest, result, matrix, root):
             if flow:
                 definitions[(stage['family'],'opening_crossing','stream_crossing','opening')].append({'stage_id':stage['id'],'condition':flow})
             for c in stage.get('selection',{}).get('conditions',[]):
-                definitions[(stage['family'],'selection/'+c['id'],'selection','initial object selection')].append({'stage_id':stage['id'],'condition':c})
+                role=stage['selection'].get('role') or {'family':stage['family'],'slot':'initial object selection'}
+                definitions[(role['family'],'selection/'+c['id'],'selection',role['slot'])].append({'stage_id':stage['id'],'condition':c})
         events = {'baseline': collect_events(ra), 'conditioned': collect_events(rb)}
         groups = set(definitions)
         for arm in events.values():
