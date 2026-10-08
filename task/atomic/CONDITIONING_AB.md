@@ -858,3 +858,11 @@ above with its recorded trace. Historical source traces cannot supply missing
 activation velocities. Prefix proof reports retain source/trace hashes and
 separate mm, degree, mm/s and degree/s residuals. Missing readbacks stay N/A.
 These diagnostics cover named rigid roots, not complete simulator restoration.
+
+### Independent twist-history audit
+
+Fresh screw/twist runs retain relative root/pivot pose histories and selected raw
+finger/constraint force rows. Running `scripts/atomic/audit_scores.py` applies
+independent history validation automatically, including cached-report refresh.
+Old/truncated histories stay partial. Keep both arms on a newly frozen runtime;
+changing requested orientations cannot replace missing physical twist history.

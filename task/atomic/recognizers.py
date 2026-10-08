@@ -207,6 +207,7 @@ class PhysicalRecognizer:
         self.hold_observation_steps = {}
         self.events = {}
         self.attempt_index = 0
+        self.best_twist_interval = None
         self.metrics = {}
         self.eligibility = {}
         self.button_unpressed_sample = None
@@ -332,9 +333,14 @@ class PhysicalRecognizer:
         Completed evidence is immutable. Source-qualified material transfers
         have per-particle histories rather than this single interaction window.
         """
+        if self.kind=='contact_constrained_twist' and len(self.state.get('rotation_samples',[]))>=2:
+            interval=self.twist_interval()
+            if interval is not None and (self.best_twist_interval is None or
+                    self.c['direction']*interval['signed_angle_rad']>self.c['direction']*self.best_twist_interval['signed_angle_rad']):
+                self.best_twist_interval=interval
         if (self.events and not self.session.success and self.kind in {
                 'held_tool_strike', 'grip_transfer', 'held_insertion',
-                'held_multi_tip_insertion', 'supported_release'}):
+                'held_multi_tip_insertion', 'supported_release', 'contact_constrained_twist'}):
             self.session.abort_recognition_attempt(self.events, reason, self.attempt_index, self.evidence)
             self.events.clear()
             self.evidence = None
@@ -945,6 +951,7 @@ class PhysicalRecognizer:
             return
         rotation = _rotation(pivot[3:]).T @ _rotation(pose[3:])
         if self.state.get('arm') != raw_hold['resolved_arm']:
+            self._reset_attempt('arm_changed')
             self.state.update(arm=raw_hold['resolved_arm'], rotation=rotation.copy(), angle=0., off_axis=0.)
         delta = rotation @ self.state['rotation'].T
         # Rotation log for substeps below pi. Do not alias ambiguous large jumps.
@@ -963,11 +970,39 @@ class PhysicalRecognizer:
             return
         self.state['angle'] += signed
         self.state['rotation'] = rotation.copy()
+        from task.atomic.twist_validation import rotation_sample
+        history=self.state.setdefault('rotation_samples',[])
+        if len(history)<16384:
+            history.append(rotation_sample(self.contacts.steps,pose,pivot,raw_hold,pair))
+            self.state['last_valid_angles']=(self.state['angle'],self.state['off_axis'])
+        else:
+            self.state['rotation_history_truncated']=True
         self.metrics.update(signed_angle_rad=float(self.state['angle']),
                             off_axis_rotation_rad=float(self.state['off_axis']))
         if hold and self.c['direction'] * self.state['angle'] >= self.c['min_angle_rad']:
             self._emit(held_contact=hold, constraint_contact=pair, signed_angle_rad=self.state['angle'],
-                off_axis_rotation_rad=self.state['off_axis'], radius_m=radius, depth_m=depth)
+                off_axis_rotation_rad=self.state['off_axis'], radius_m=radius, depth_m=depth,
+                rotation_samples=history,rotation_history_truncated=self.state.get('rotation_history_truncated',False))
+
+    def twist_interval(self):
+        """Current or retained interrupted net rotation; never an action outcome."""
+        if self.kind!='contact_constrained_twist':return None
+        history=self.state.get('rotation_samples',[])
+        if len(history)<2:return deepcopy(self.best_twist_interval)
+        last=history[-1];hold=last['held_contact']
+        if hold['consecutive_contact_steps']<self.c['min_contact_steps']:return deepcopy(self.best_twist_interval)
+        pose,pivot=np.asarray(last['object_pose']),np.asarray(last['pivot_pose'])
+        axis=np.asarray(self.c['axis'],dtype=float);axis/=np.linalg.norm(axis)
+        local=_rotation(pivot[3:]).T@(pose[:3]-pivot[:3]);depth=-float(local@axis)
+        angle,off_axis=self.state['last_valid_angles']
+        interval={'physics_step':last['physics_step'],'attempt_index':self.attempt_index,
+            'signed_angle_rad':angle,'off_axis_rotation_rad':off_axis,
+            'radius_m':float(np.linalg.norm(local-(local@axis)*axis)),'depth_m':depth,
+            'held_contact':deepcopy(hold),'rotation_samples':deepcopy(history),
+            'rotation_history_truncated':self.state.get('rotation_history_truncated',False)}
+        if self.best_twist_interval is not None and self.c['direction']*self.best_twist_interval['signed_angle_rad']>self.c['direction']*angle:
+            return deepcopy(self.best_twist_interval)
+        return interval
 
     def _fluid_state(self):
         from task.atomic.materials import material_state

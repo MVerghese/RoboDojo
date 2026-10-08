@@ -7383,7 +7383,7 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "d3a06984a4bc92b32611ed0dec93df5cd44785c6756c9ea549c5a46d7461b4c3"
+      "sha256": "b9716289d5c365676add74ac7de5c2eb061d155452b3dc9fcad51fccbdcace66"
     },
     {
       "path": "task/atomic/spec.py",
@@ -7391,7 +7391,11 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "660a517b22a4201cdb1de991b821edddc173b2e5529ec9cf6414ece970f8f574"
+      "sha256": "f4c7668d360719a8844a5ec4f5a8315fc6b7392eafef8060c3a7f51a7b84aa1a"
+    },
+    {
+      "path": "task/atomic/twist_validation.py",
+      "sha256": "67c94c6144d26207d339d3a3e6316306dc7c6f0fe9407975db0fafed186756bf"
     },
     {
       "path": "task/atomic/diagnostics.py",

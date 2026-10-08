@@ -111,7 +111,12 @@ def audit_selection(selection):
 
 def apply_recognition_validation(atomic, output):
     config=atomic.get('recognition') or {}
-    if config.get('kind') == 'held_tool_landmark_contact' and 'target_candidates' in config:
+    if config.get('kind') == 'contact_constrained_twist':
+        from task.atomic.twist_validation import validate_twist,validate_twist_diagnostic
+        witness=validate_twist(atomic)
+        output['twist_rotation_diagnostic']=validate_twist_diagnostic(atomic)
+        invalid={'rotation'} if witness['status']=='inconsistent_evidence' else set()
+    elif config.get('kind') == 'held_tool_landmark_contact' and 'target_candidates' in config:
         from task.atomic.target_regions import validate_target_region_witness
         event=atomic.get('physical_events',{}).get('contact')
         checks=validate_target_region_witness(config,event) if event is not None else {}

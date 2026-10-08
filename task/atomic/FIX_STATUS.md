@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **370 offline atomic tests**. Dated sections below
+The current source passes **378 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -418,3 +418,38 @@ a fidelity pass/fail certificate. Robot joints, drives, contact warm starts,
 materials and game state are not covered. A fresh bowl A/B capture is being
 prepared; live source capture plus a separately verified prefix replay is needed
 before claiming observed kinematic replay evidence.
+
+
+### Independently checked twist histories and retries
+
+Fresh constrained twists retain every valid physics-step object/pivot pose up to
+16384 samples per attempt, with hold interval/arm identity, one actual force row
+per contacting finger and one actual part/target constraint force row. These
+selected force rows certify the required quorum, not the complete contact
+manifold. Final geometric contact scoring still retains its own actual points.
+The recognizer's angle and off-axis limits remain independent of conditioning.
+
+An independent validator reconstructs relative SO(3) increments using quaternion
+axis-angle arithmetic, sums signed axial and off-axis rotation, and checks
+contiguous steps, radii/depth, hold identity/counts, raw force and actor binding,
+final timestamp and declared thresholds. An identical endpoint quaternion cannot
+prove a full turn; moving the pivot and object together cannot claim relative
+rotation. Wrong histories are excluded from rotation-event geometric aggregates,
+while numerical errors and native/atomic flags remain available for diagnosis.
+Old or explicitly truncated histories are partial evidence, not invented failures.
+No torque or physical thread engagement is inferred.
+
+Contact loss, arm change, sampling gaps or invalid twist constraints now archive
+an earlier completed rotation if its native endpoint had not succeeded. The next
+attempt cannot borrow its event-conditioned geometry. Completed successful stages
+remain immutable. Eight targeted regressions cover full/reversed turns, moving
+pivots, force/root/step corruption, cached-score exclusion and a full-turn retry.
+A fresh screw A/B pair is needed for live history validation.
+
+Incomplete twists also retain the greatest net directional progress among the
+valid current/interrupted intervals saved by the observer. A separate
+`twist_rotation_diagnostic` validator checks its pose/force history without
+requiring the completed-turn threshold. A measured 90 degree partial turn
+therefore stays a diagnostic with an unobserved completion event, not a successful
+twist or native task. The history cap is explicit; truncated histories remain
+partial. Empty invalid intervals do not repeatedly copy retained histories.

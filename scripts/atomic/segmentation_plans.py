@@ -28,6 +28,7 @@ DEPENDENCIES = (
     'task/atomic/session.py',
     'task/atomic/spec.py',
     'task/atomic/recognizers.py',
+    'task/atomic/twist_validation.py',
     'task/atomic/diagnostics.py',
     'task/atomic/bindings.py',
     'task/atomic/landmarks.py',
