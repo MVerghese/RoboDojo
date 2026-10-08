@@ -245,6 +245,14 @@ def build_report(manifest, result, matrix, root):
                 'statuses':s['material_flow']['witness_summary']}
                 for s in row.get('atomic_scores',[]) if (s.get('material_flow') or {}).get('witness_summary')]
                 for mode,row in (('baseline',ra),('conditioned',rb))},
+            'twist_interval_diagnostics': {mode: [{'stage_id': s['stage_id'],
+                'definition': next((stage.get('recognition', {}) for stage in programs[0]['stages']
+                                    if stage['id'] == s['stage_id']), {}), **s['twist_rotation_diagnostic']}
+                for s in row.get('atomic_scores', []) if s.get('twist_rotation_diagnostic')]
+                for mode, row in (('baseline', ra), ('conditioned', rb))},
+            'finite_material_validation': {mode: [{'stage_id': s['stage_id'], 'label': label, **bound}
+                for s in row.get('atomic_scores', []) for label, bound in s.get('material_bounds', {}).items()]
+                for mode, row in (('baseline', ra), ('conditioned', rb))},
             'recognition_validation': {mode: [{'stage_id': s['stage_id'],
                 'status': s['recognition_witness']['status'],
                 'failed_checks': s['recognition_witness'].get('failed_checks', [])}
@@ -558,6 +566,48 @@ def replay_validation_rows(data):
     return rows
 
 
+TWIST_DIAGNOSTIC_HEADERS = ['Arm', 'Stage', 'Evidence', 'Signed rotation (degrees)',
+    'Rotation in requested direction (degrees)', 'Off-axis rotation (degrees)', 'Required rotation (degrees)']
+FINITE_MATERIAL_HEADERS = ['Arm', 'Stage / material', 'Evidence', 'Enclosing radius (mm)', 'Closed oriented mesh']
+TWIST_DIAGNOSTIC_SCOPE = ('Net rotation over one retained held/contact-constrained interval. '
+    'This is diagnostic progress, separate from completed action and conditioning-event scores. '
+    'It is not torque, thread engagement, or summed rotation across regrasp intervals. '
+    'Partial evidence retains missing binding/history caveats; contradictory metrics are excluded.')
+FINITE_MATERIAL_SCOPE = ('Initialization bounds independently recomputed from the actual captured scaled mesh. '
+    'A valid bound alone does not establish any observed or successful aperture crossing. '
+    'Open mesh seams do not establish solid volume; the enclosing disk is a conservative sampled-plane fit.')
+
+
+def twist_diagnostic_rows(task):
+    rows = []
+    for mode, intervals in task.get('twist_interval_diagnostics', {}).items():
+        for interval in intervals:
+            config = interval.get('definition', {})
+            metrics = interval.get('metrics', {}) if interval['status'] in ('consistent_evidence', 'partial_evidence') else {}
+            signed, off_axis = metrics.get('signed_angle_rad'), metrics.get('off_axis_rotation_rad')
+            direction = config.get('direction')
+            degrees = lambda value: number(value * 180 / math.pi) if value is not None else 'N/A'
+            status = interval['status']
+            detail = interval.get('failed_checks') or interval.get('unavailable')
+            if detail: status += ': ' + ', '.join(detail)
+            rows.append([mode, interval['stage_id'], status, degrees(signed),
+                degrees(signed * direction) if signed is not None and direction is not None else 'N/A',
+                degrees(off_axis), degrees(config.get('min_angle_rad'))])
+    return rows
+
+
+def finite_material_rows(task):
+    rows = []
+    for mode, bounds in task.get('finite_material_validation', {}).items():
+        for bound in bounds:
+            valid = bound['status'] == 'consistent_evidence'
+            status = bound['status'] + (': ' + bound['reason'] if bound.get('reason') else '')
+            rows.append([mode, bound['stage_id'] + ' / ' + bound['label'], status,
+                number(bound['enclosing_radius_m'] * 1000) if valid else 'N/A',
+                str(bound['closed_oriented_mesh']) if valid else 'N/A'])
+    return rows
+
+
 def bending_display(value):
     """Use report mm/degree units while preserving raw diagnostic evidence."""
     if not isinstance(value,dict):
@@ -601,6 +651,12 @@ def report_markdown(data):
                   '; conditioned ' + str(task['actual_layouts']['conditioned']) + '.', '',
                   '**Conditioning supplied to the policy:**', '', '> ' + (task['conditioning_prompt'] or 'No append recorded.'), '',
                   *table(CONDITION_HEADERS, condition_rows(task)), '']
+        if twist_diagnostic_rows(task):
+            lines += ['**Retained twist intervals:**', '', TWIST_DIAGNOSTIC_SCOPE, '',
+                *table(TWIST_DIAGNOSTIC_HEADERS, twist_diagnostic_rows(task)), '']
+        if finite_material_rows(task):
+            lines += ['**Finite material mesh bounds:**', '', FINITE_MATERIAL_SCOPE, '',
+                *table(FINITE_MATERIAL_HEADERS, finite_material_rows(task)), '']
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 lines += ['**Recognition witness failures (' + mode + '):** `' + json.dumps(failures, sort_keys=True)
@@ -687,6 +743,10 @@ def report_html(data):
         content += '<p>Actual layouts: baseline ' + esc(str(task['actual_layouts']['baseline'])) + '; conditioned ' + esc(str(task['actual_layouts']['conditioned'])) + '.</p>'
         content += '<h3>Conditioning supplied to the policy</h3><blockquote>' + esc(task['conditioning_prompt'] or 'No append recorded.') + '</blockquote>'
         content += html_table(CONDITION_HEADERS, condition_rows(task))
+        if twist_diagnostic_rows(task):
+            content += '<h3>Retained twist intervals</h3><p>' + esc(TWIST_DIAGNOSTIC_SCOPE) + '</p>' + html_table(TWIST_DIAGNOSTIC_HEADERS, twist_diagnostic_rows(task))
+        if finite_material_rows(task):
+            content += '<h3>Finite material mesh bounds</h3><p>' + esc(FINITE_MATERIAL_SCOPE) + '</p>' + html_table(FINITE_MATERIAL_HEADERS, finite_material_rows(task))
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 content += '<p><strong>Recognition witness failures (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(failures, sort_keys=True)) + '</code>. Geometry and paths using invalid boundary events are excluded from geometric summaries.</p>'

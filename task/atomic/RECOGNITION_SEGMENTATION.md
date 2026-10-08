@@ -1179,3 +1179,29 @@ The current gate passes 411 offline atomic tests, including six completion-event
 counterexample and independent-audit tests. MD and HTML expose completion
 witness status separately from scalar geometry. Fresh pickup/settled-placement
 and push A/B validation is the next live check; offline tests are not live proof.
+
+## October 7: diagnostic scalar tables and finite-ball observation
+
+The MD/HTML report now includes a separate retained-twist-interval table in
+degrees: signed net rotation, progress in the requested direction, off-axis
+rotation and required travel. Consistent or explicitly partial interval
+evidence is shown; contradictory values are excluded. These are diagnostics
+from one contact-constrained interval, not completed-action scores, torque or
+summed rotation across regrasp intervals.
+
+A separate finite-material table reports independently reconstructed enclosing
+mesh radius in mm and recorded closure. `geometry-ball-finite-mouth-1006`
+completed both arms from frozen `3d9fd79`: both native tasks and both pour stages
+failed; both cup pickups succeeded. Four actual sphere mesh bounds independently
+validated, each approximately 5.000000257 mm; their meshes have open seams, so
+no solid volume is inferred. Six contact snapshots and six geometry scores
+reproduced. No source-qualified target crossing occurred. Initialization bounds
+and candidate aperture passage alone do not establish a held-and-tilted exit.
+
+The baseline recorded two outward candidates (one passing the sampled finite
+aperture fit and one exceeding the opening-rotation sampling guard). The
+conditioned arm recorded four candidates (two passing and two failing fit).
+Historical candidate summaries do not retain the per-crossing hold/tilt state,
+so those specific missing physical gates cannot be independently diagnosed from
+the summary counts. Retaining bounded raw candidate witnesses with same-step
+qualification evidence is the next instrumentation priority.

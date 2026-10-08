@@ -211,8 +211,25 @@ class ContinuousReportTests(unittest.TestCase):
             'status': 'partial_evidence', 'unavailable': ['qualified_completion_metadata_absent']}],
             'conditioned': [{'stage_id': 'pick', 'condition_id': 'completion',
             'status': 'inconsistent_evidence', 'failed_checks': ['completion_current_grasp']}]}
+        task['twist_interval_diagnostics'] = {'baseline': [{'stage_id': 'twist',
+            'status': 'consistent_evidence', 'metrics': {'signed_angle_rad': -.5, 'off_axis_rotation_rad': .02},
+            'definition': {'direction': -1, 'min_angle_rad': math.pi/2}}],
+            'conditioned': [{'stage_id': 'twist', 'status': 'inconsistent_evidence',
+            'metrics': {'signed_angle_rad': 999, 'off_axis_rotation_rad': 999},
+            'definition': {'direction': -1, 'min_angle_rad': math.pi/2}}]}
+        task['finite_material_validation'] = {'baseline': [{'stage_id': 'pour', 'label': 'ball',
+            'status': 'consistent_evidence', 'enclosing_radius_m': .005, 'closed_oriented_mesh': False}]}
         md, page = report_markdown(data), report_html(data)
+        from scripts.atomic.continuous_report import twist_diagnostic_rows, finite_material_rows
+        interval_rows = twist_diagnostic_rows(task)
+        self.assertEqual(interval_rows[0][3:5], ['-28.648', '28.648'])
+        self.assertEqual(interval_rows[1][3:6], ['N/A', 'N/A', 'N/A'])
+        self.assertEqual(finite_material_rows(task)[0][-2:], ['5.000', 'False'])
         for rendered in (md, page):
+            self.assertIn('Retained twist intervals', rendered)
+            self.assertIn('Enclosing radius (mm)', rendered)
+            self.assertIn('diagnostic progress', rendered)
+            self.assertIn('does not establish any observed', rendered)
             self.assertIn('Stage-success qualification', rendered)
             self.assertIn('qualified_completion_metadata_absent', rendered)
             self.assertIn('completion_current_grasp', rendered)
