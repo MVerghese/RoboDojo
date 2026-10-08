@@ -210,6 +210,8 @@ def validate_cached_recognition(report, scores):
             apply_support_validation(stage, score)
             apply_contact_validation(stage, score)
             apply_stage_success_validation(stage,score)
+            from task.atomic.source_candidates import audit_source_candidates
+            score['source_candidate_diagnostic']=audit_source_candidates(stage)
 
 
 def apply_contact_validation(atomic, output):
@@ -323,6 +325,8 @@ def audit_atomic(atomic, variant=None):
         'material_flow': audit_flow(atomic.get('material_flow')),
         'material_bounds':audit_material_bounds(atomic.get('material_bounds')),
     }
+    from task.atomic.source_candidates import audit_source_candidates
+    output['source_candidate_diagnostic']=audit_source_candidates(atomic)
     apply_recognition_validation(atomic, output)
     apply_flow_validation(atomic, output)
     apply_support_validation(atomic, output)

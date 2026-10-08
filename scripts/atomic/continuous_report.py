@@ -253,6 +253,10 @@ def build_report(manifest, result, matrix, root):
             'finite_material_validation': {mode: [{'stage_id': s['stage_id'], 'label': label, **bound}
                 for s in row.get('atomic_scores', []) for label, bound in s.get('material_bounds', {}).items()]
                 for mode, row in (('baseline', ra), ('conditioned', rb))},
+            'source_candidate_diagnostics': {mode: [{'stage_id': s['stage_id'], **s['source_candidate_diagnostic']}
+                for s in row.get('atomic_scores', []) if s.get('source_candidate_diagnostic', {}).get('status')
+                not in (None, 'not_applicable')]
+                for mode, row in (('baseline', ra), ('conditioned', rb))},
             'recognition_validation': {mode: [{'stage_id': s['stage_id'],
                 'status': s['recognition_witness']['status'],
                 'failed_checks': s['recognition_witness'].get('failed_checks', [])}
@@ -569,6 +573,14 @@ def replay_validation_rows(data):
 TWIST_DIAGNOSTIC_HEADERS = ['Arm', 'Stage', 'Evidence', 'Signed rotation (degrees)',
     'Rotation in requested direction (degrees)', 'Off-axis rotation (degrees)', 'Required rotation (degrees)']
 FINITE_MATERIAL_HEADERS = ['Arm', 'Stage / material', 'Evidence', 'Enclosing radius (mm)', 'Closed oriented mesh']
+SOURCE_CANDIDATE_HEADERS = ['Arm', 'Stage / material / physics step', 'Evidence',
+    'Aperture overrun (mm)', 'Finite clearance (mm)', 'Source tilt (degrees)', 'Required tilt (degrees)',
+    'Sustained hold observed', 'Inside source core', 'Qualified at crossing']
+SOURCE_CANDIDATE_SCOPE = ('First 32 sampled outward candidates, including rejected crossings, '
+    'with independent arithmetic and same-step observed hold/tilt/core checks. '
+    'These diagnostics are separate from destination-crossing conditioning and successful pours. '
+    'A missing observed hold does not independently prove absent contact. Historical summaries '
+    'retain counts with N/A per-crossing measurements; truncated histories do not establish complete distributions.')
 TWIST_DIAGNOSTIC_SCOPE = ('Net rotation over one retained held/contact-constrained interval. '
     'This is diagnostic progress, separate from completed action and conditioning-event scores. '
     'It is not torque, thread engagement, or summed rotation across regrasp intervals. '
@@ -605,6 +617,33 @@ def finite_material_rows(task):
             rows.append([mode, bound['stage_id'] + ' / ' + bound['label'], status,
                 number(bound['enclosing_radius_m'] * 1000) if valid else 'N/A',
                 str(bound['closed_oriented_mesh']) if valid else 'N/A'])
+    return rows
+
+
+def source_candidate_rows(task):
+    rows = []
+    for mode, stages in task.get('source_candidate_diagnostics', {}).items():
+        for stage in stages:
+            summary = stage['status'] + '; recorded candidates=' + str(stage.get('candidate_crossings'))
+            if stage.get('history_truncated'): summary += '; history truncated'
+            if stage.get('history_counts_consistent') is False: summary += '; inconsistent history counts'
+            if not stage.get('candidates'):
+                rows.append([mode, stage['stage_id'], summary, *(['N/A'] * 7)])
+            for candidate in stage.get('candidates', []):
+                valid = candidate['status'] in ('consistent_evidence', 'partial_evidence')
+                result = (candidate.get('result') or {}) if valid else {}
+                q = (candidate.get('qualification') or {}) if valid else {}
+                scalar = lambda value,scale: number(value * scale) if value is not None else 'N/A'
+                state = lambda key: str(q[key]) if key in q else 'N/A'
+                status = candidate['status']
+                if candidate.get('failed_checks'): status += ': ' + ', '.join(candidate['failed_checks'])
+                if candidate.get('unavailable'): status += ': ' + ', '.join(candidate['unavailable'])
+                rows.append([mode, stage['stage_id'] + ' / ' + str(candidate['material_id']) + ' / ' + str(candidate['physics_step']),
+                    summary + '; ' + status, scalar(result.get('aperture_overrun_m'),1000),
+                    scalar(result.get('finite_bound_clearance_m'),1000), scalar(q.get('tilt_rad'),180/math.pi),
+                    scalar(candidate.get('required_tilt_rad'),180/math.pi),
+                    str(q['held_contact'] is not None) if 'held_contact' in q else 'N/A',
+                    state('inside_source'), state('eligible_for_source_exit')])
     return rows
 
 
@@ -657,6 +696,9 @@ def report_markdown(data):
         if finite_material_rows(task):
             lines += ['**Finite material mesh bounds:**', '', FINITE_MATERIAL_SCOPE, '',
                 *table(FINITE_MATERIAL_HEADERS, finite_material_rows(task)), '']
+        if source_candidate_rows(task):
+            lines += ['**Source-mouth candidate diagnostics:**', '', SOURCE_CANDIDATE_SCOPE, '',
+                *table(SOURCE_CANDIDATE_HEADERS, source_candidate_rows(task)), '']
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 lines += ['**Recognition witness failures (' + mode + '):** `' + json.dumps(failures, sort_keys=True)
@@ -747,6 +789,8 @@ def report_html(data):
             content += '<h3>Retained twist intervals</h3><p>' + esc(TWIST_DIAGNOSTIC_SCOPE) + '</p>' + html_table(TWIST_DIAGNOSTIC_HEADERS, twist_diagnostic_rows(task))
         if finite_material_rows(task):
             content += '<h3>Finite material mesh bounds</h3><p>' + esc(FINITE_MATERIAL_SCOPE) + '</p>' + html_table(FINITE_MATERIAL_HEADERS, finite_material_rows(task))
+        if source_candidate_rows(task):
+            content += '<h3>Source-mouth candidate diagnostics</h3><p>' + esc(SOURCE_CANDIDATE_SCOPE) + '</p>' + html_table(SOURCE_CANDIDATE_HEADERS, source_candidate_rows(task))
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 content += '<p><strong>Recognition witness failures (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(failures, sort_keys=True)) + '</code>. Geometry and paths using invalid boundary events are excluded from geometric summaries.</p>'

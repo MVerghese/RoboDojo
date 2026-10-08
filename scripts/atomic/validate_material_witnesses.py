@@ -38,6 +38,8 @@ def validate_report_materials(report):
                     'source_witness_summary':flow.get('witness_summary',{}),
                     'flow_statuses':dict(Counter(r['status'] for r in flow.get('crossings',{}).values()))})
                 stages[-1]['material_bounds']=audit_material_bounds(stage.get('material_bounds'))
+                from task.atomic.source_candidates import audit_source_candidates
+                stages[-1]['source_candidate_diagnostic']=audit_source_candidates(stage)
             episodes.append({'episode':str(ident),'layout_id':detail.get('layout_id'),
                 'native_success':detail.get('success'),'cloth_probe':cloth,'stages':stages})
     return {'episodes':episodes,'boundary_windows':validate_report(report)}

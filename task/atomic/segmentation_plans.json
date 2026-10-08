@@ -7391,7 +7391,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "3cb60613cbdc7ea360dc81f0ee7cb61c89b5ab1760e0c19d086393ae656488b3"
+      "sha256": "7bca9190c2e0234f1c55732a3270ddd7b1a8ceb102813fb5f14c8fe352fedf1a"
     },
     {
       "path": "task/atomic/twist_validation.py",
@@ -7431,7 +7431,7 @@
     },
     {
       "path": "task/atomic/flow.py",
-      "sha256": "3f819d06c81f6ed9fcc442751d1121eb9571cf72323762f28fe0bac4b7471a29"
+      "sha256": "76b6eff90095bafc71381a8a189e3fdbeb0fbdd576ce8e2b0c4ddcf9b35e036a"
     },
     {
       "path": "task/atomic/fold.py",
@@ -7480,6 +7480,10 @@
     {
       "path": "task/atomic/material_validation.py",
       "sha256": "68ec318a7571c0748e1f73f9d1eb86d059639efcbae7f36712fa4c51bcd9178b"
+    },
+    {
+      "path": "task/atomic/source_candidates.py",
+      "sha256": "6e5ecef0b73c429b31a33489c1d3bb47a6db5b5831940679ff01d3ca12a18c34"
     },
     {
       "path": "task/atomic/support_validation.py",

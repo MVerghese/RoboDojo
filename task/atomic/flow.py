@@ -163,6 +163,7 @@ class SourceExitObserver:
         self.config = deepcopy(config)
         self.previous = {};self.opening = None;self.step = None;self.dt = None
         self.failures = [];self.candidate_count = 0;self.reentries = set();self.outcomes = Counter()
+        self.candidate_witnesses = [];self.candidate_witness_limit = 32
 
     def observe(self, positions, opening, eligible, step, dt, action_index=None, opening_source=None, material_bounds=None):
         frame = np.asarray(opening, dtype=float)
@@ -201,13 +202,25 @@ class SourceExitObserver:
         if step != self.step:
             self.previous, self.opening, self.step, self.dt = current, frame.copy(), step, dt
             self.candidate_count += len(candidates)
-            for row in candidates.values():
+            for ident,row in candidates.items():
                 result=row['result']
                 self.outcomes['inside_aperture' if result['passed'] is True else
                               'outside_aperture' if result['passed'] is False else result['status']] += 1
+                if len(self.candidate_witnesses)<self.candidate_witness_limit:
+                    self.candidate_witnesses.append({'material_id':ident,**deepcopy(row)})
         return candidates
+
+    def annotate_candidate(self, identifier, step, qualification, material_pose=None):
+        for row in self.candidate_witnesses:
+            if row['material_id']==str(identifier) and row['after']['physics_step']==step:
+                row['qualification']=deepcopy(qualification)
+                if material_pose is not None:row['after']['material_pose']=np.asarray(material_pose).tolist()
+                break
 
     def summary(self):
         return {'condition': deepcopy(self.config), 'candidate_crossings': self.candidate_count,
                 'candidate_outcomes':dict(self.outcomes), 'failures': deepcopy(self.failures),
+                'candidate_witnesses':deepcopy(self.candidate_witnesses),
+                'candidate_witness_limit':self.candidate_witness_limit,
+                'candidate_history_truncated':self.candidate_count>len(self.candidate_witnesses),
                 'scope': 'outward center crossing candidates; accepted witnesses also require source hold and tilt'}

@@ -14,7 +14,7 @@ and settling proofs completed; the new finite-mouth and drive-target pairs are
 running. Detailed dated evidence below distinguishes observations from pending
 capture/replay checks. No completed 90 degree screw twist was observed.
 
-The current source passes **411 offline atomic tests**. Dated sections below
+The current source passes **416 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -722,7 +722,7 @@ while its arithmetic result and native/action outcome remain available. These
 flags do not reconstruct unsaved force or hold histories. Historical endpoint
 measurements without the new metadata remain explicitly partial evidence.
 
-The current gate passes 411 offline atomic tests, including six completion-event
+The current gate passes 416 offline atomic tests, including six completion-event
 counterexample and independent-audit tests. MD and HTML expose completion
 witness status separately from scalar geometry. Fresh pickup/settled-placement
 and push A/B validation is the next live check; offline tests are not live proof.
@@ -752,3 +752,43 @@ Historical candidate summaries do not retain the per-crossing hold/tilt state,
 so those specific missing physical gates cannot be independently diagnosed from
 the summary counts. Retaining bounded raw candidate witnesses with same-step
 qualification evidence is the next instrumentation priority.
+
+## October 7: bounded source-mouth candidate qualification diagnostics
+
+`SourceExitObserver` now retains the first 32 outward candidate crossings,
+including rejected fit/sampling cases, their adjacent raw positions/opening
+poses, actual finite mesh bound when requested, numerical result, physics
+clock and action index. Total counts and outcomes continue over the whole
+episode; a truncation flag prevents treating the retained subset as a complete
+distribution. Returned snapshots are immutable copies.
+
+At each retained candidate, both fluid and rigid recognizers add the same-step
+source/core frame, initial source frame, observed sustained-hold contact snapshot
+(or explicit unavailable hold), source tilt, inside-core flag, initial eligibility,
+reentry and previous-qualification flags, and the actual source-exit eligibility
+decision. Rigid candidates additionally retain the actual material root pose.
+This does not change recognition thresholds, physical qualification or prompts.
+
+`source_candidates.py` independently reproduces geometry, adjacent clocks/dt,
+calibrated mouth/core composition, tilt from raw frames, contact identity/force
+snapshot and sustained-hold clock/count when present, finite bound identity and
+center, current whole-mesh source-box containment or fluid-center containment,
+fluid initial cohort, and the Boolean qualification decision. Contradictory
+diagnostic values are excluded; missing historical candidate geometry/contact
+bindings remain partial. Initial rigid cohort flags are retained, not a new
+reconstruction of initial solid containment. A missing observed hold does not
+independently prove absent physical contact. No unsaved hold history, torque,
+whole fluid volume, continuous finite-body passage or destination transfer is
+inferred.
+
+MD and HTML show a separate per-candidate diagnostic table with aperture overrun
+and finite clearance in mm, measured and required tilt in degrees, and physical
+gate state. It is separate from successful-pour and destination-conditioning
+scores. Older summary-only candidates have N/A per-crossing scalars.
+
+All 416 offline atomic tests pass. Five new candidate tests cover named raw
+forces/tilt/mesh binding and corrupted snapshots, geometrically valid unheld or
+insufficiently tilted exits, real observer unheld/reentry/held transitions, bounded
+immutable history with full counts, and fluid cohort/core/legacy evidence. Fresh
+ball and liquid pairs with unchanged programs/prompts are the next live validation;
+these offline checks are not checkpoint rollout proof.

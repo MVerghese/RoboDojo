@@ -219,8 +219,20 @@ class ContinuousReportTests(unittest.TestCase):
             'definition': {'direction': -1, 'min_angle_rad': math.pi/2}}]}
         task['finite_material_validation'] = {'baseline': [{'stage_id': 'pour', 'label': 'ball',
             'status': 'consistent_evidence', 'enclosing_radius_m': .005, 'closed_oriented_mesh': False}]}
+        task['source_candidate_diagnostics'] = {'baseline': [{'stage_id': 'pour', 'status': 'consistent_evidence',
+            'candidate_crossings': 1, 'candidates': [{'material_id': 'ball', 'physics_step': 12,
+            'status': 'consistent_evidence', 'result': {'aperture_overrun_m': 0., 'finite_bound_clearance_m': .004},
+            'qualification': {'tilt_rad': .5, 'held_contact': None, 'inside_source': False,
+                'eligible_for_source_exit': False}, 'required_tilt_rad': .3}]}],
+            'conditioned': [{'stage_id': 'pour', 'status': 'partial_evidence', 'candidate_crossings': 2}]}
         md, page = report_markdown(data), report_html(data)
-        from scripts.atomic.continuous_report import twist_diagnostic_rows, finite_material_rows
+        from scripts.atomic.continuous_report import twist_diagnostic_rows, finite_material_rows, source_candidate_rows
+        candidates = source_candidate_rows(task)
+        self.assertEqual(candidates[0][3:7], ['0.000', '4.000', '28.648', '17.189'])
+        self.assertEqual(candidates[0][7:], ['False', 'False', 'False'])
+        self.assertEqual(candidates[1][3:], ['N/A'] * 7)
+        self.assertIn('Source-mouth candidate diagnostics', md)
+        self.assertIn('Source-mouth candidate diagnostics', page)
         interval_rows = twist_diagnostic_rows(task)
         self.assertEqual(interval_rows[0][3:5], ['-28.648', '28.648'])
         self.assertEqual(interval_rows[1][3:6], ['N/A', 'N/A', 'N/A'])

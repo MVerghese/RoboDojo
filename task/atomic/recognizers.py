@@ -1051,6 +1051,7 @@ class PhysicalRecognizer:
         transferred=[]
         for ident,s,t,position in zip(fluid['ids'],source,target,fluid['positions']):
             ident=int(ident);m=self.fluid[ident]
+            self._record_source_candidate(ident,m,bool(s),hold,tilt,frame,mouth_exits)
             if s or (self.source_exit_observer and str(ident) in self.source_exit_observer.reentries):
                 m.update(exited_while_held_and_tilted=False,target_steps=0)
             elif (m['eligible'] and not m['exited_while_held_and_tilted']
@@ -1104,6 +1105,7 @@ class PhysicalRecognizer:
                   'initially_eligible': sum(m['eligible'] for m in self.material.values())}
         for label, m in self.material.items():
             inside_source, inside_target = self._material_inside(label, 'source'), self._material_inside(label, 'target')
+            self._record_source_candidate(label,m,inside_source,hold,tilt,frame,mouth_exits)
             counts['in_source'] += int(inside_source)
             counts['in_target'] += int(inside_target)
             counts['outside_both'] += int(not inside_source and not inside_target)
@@ -1131,6 +1133,25 @@ class PhysicalRecognizer:
         if counts['transferred'] >= self.c['required_count']:
             self._emit(counts=counts, materials=self.material,
                        containment='whole rigid mesh in explicitly calibrated convex interior boxes')
+
+    def _record_source_candidate(self, identifier, material, inside_source, hold, tilt, frame, candidates):
+        ident=str(identifier)
+        if self.source_exit_observer is None or ident not in candidates:return
+        reentered=ident in self.source_exit_observer.reentries
+        qualifies=bool(material['eligible'] and not inside_source and not reentered
+            and not material['exited_while_held_and_tilted']
+            and candidates[ident]['result']['passed'] is True and hold and tilt>=self.c['min_tilt_rad'])
+        initial=(self.fluid_initial['region_frames']['source'] if self.kind=='fluid_material_transfer'
+                 else self.source_initial_frame)
+        self.source_exit_observer.annotate_candidate(ident,self.contacts.steps,{
+            'context':'source_exit_candidate_qualification',
+            'initial_cohort_eligible':bool(material['eligible']),
+            'inside_source':bool(inside_source),'reentered_source':reentered,
+            'already_qualified_before':bool(material['exited_while_held_and_tilted']),
+            'held_contact':deepcopy(hold),'tilt_rad':tilt,
+            'source_frame':np.asarray(frame).tolist(),'initial_source_frame':deepcopy(initial),
+            'eligible_for_source_exit':qualifies},
+            self._pose(identifier) if self.kind=='rigid_material_transfer' else None)
 
     def _source_mouth_exits(self, positions, provenance):
         if self.source_exit_observer is None:return {}
