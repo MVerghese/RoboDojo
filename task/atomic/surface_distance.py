@@ -53,6 +53,39 @@ def _triangles(vertices,faces):
     return q[regular],int((~regular).sum())
 
 
+def point_surface_distances(points,vertices,faces):
+    """Exact nearest triangle-boundary distance for each finite XYZ point.
+
+    Points inside a closed solid still have distance to its boundary. This is
+    neither solid containment nor point-to-vertex distance. Chunking bounds
+    temporary storage for dense calibrated meshes.
+    """
+    points=np.asarray(points,dtype=float)
+    if points.ndim!=2 or points.shape[1]!=3 or not np.isfinite(points).all():
+        raise ValueError('surface distance needs finite XYZ points')
+    triangles,_=_triangles(vertices,faces)
+    a,b,c=triangles[:,0],triangles[:,1],triangles[:,2]
+    u,v=b-a,c-a;n=np.cross(u,v);n2=np.einsum('ij,ij->i',n,n)
+    output=[]
+    for point in points:
+        best=float('inf')
+        for start in range(0,len(triangles),4096):
+            stop=start+4096;aa,bb,cc=a[start:stop],b[start:stop],c[start:stop]
+            uu,vv,nn,nn2=u[start:stop],v[start:stop],n[start:stop],n2[start:stop]
+            w=point-aa;signed=np.einsum('ij,ij->i',w,nn)
+            projected=w-nn*(signed/nn2)[:,None]
+            beta=np.einsum('ij,ij->i',np.cross(projected,vv),nn)/nn2
+            gamma=np.einsum('ij,ij->i',np.cross(uu,projected),nn)/nn2
+            distance=np.where((beta>=0)&(gamma>=0)&(beta+gamma<=1),np.abs(signed)/np.sqrt(nn2),np.inf)
+            for p,q in [(aa,bb),(bb,cc),(cc,aa)]:
+                edge=q-p;length=np.einsum('ij,ij->i',edge,edge)
+                alpha=np.clip(np.einsum('ij,ij->i',point-p,edge)/length,0,1)
+                distance=np.minimum(distance,np.linalg.norm(point-p-edge*alpha[:,None],axis=1))
+            best=min(best,float(distance.min()))
+        output.append(best)
+    return np.asarray(output)
+
+
 class _Node:
     def __init__(self,q,ids):
         self.low=q[ids].min(axis=(0,1));self.high=q[ids].max(axis=(0,1));self.children=();self.ids=ids

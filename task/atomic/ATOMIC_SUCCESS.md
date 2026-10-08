@@ -1298,3 +1298,94 @@ insufficiently tilted exits, real observer unheld/reentry/held transitions, boun
 immutable history with full counts, and fluid cohort/core/legacy evidence. Fresh
 ball and liquid pairs with unchanged programs/prompts are the next live validation;
 these offline checks are not checkpoint rollout proof.
+
+## October 8: live qualified completion and command-buffer replay
+
+`geometry-qualified-completion-1006` completed all four full-task cases from
+frozen `700d387`. Both bowl native tasks, pickups and supported placements
+succeeded. The four new stage-success snapshots independently passed completion
+clock/qualification checks; 16 retained contacts and two release/settling windows
+also validated. Eight geometry scores reproduced. At qualified bowl pickup, worst
+vertical contact error was **24.102474 mm baseline / 5.936854 mm conditioned**,
+against 10 mm. At qualified supported settling, full orientation error was
+**14.173171 / 19.002117 degrees**, against 30 degrees. This is one episode per
+arm, with different observed contact populations, not a statistical steering
+estimate. Both T-block native/action goals failed; two stage-success targets
+were unobserved and ten contact conditions had no eligible contact at their
+required event. Missing measurements remain N/A.
+
+The command-buffer capture pair from `3467649` also completed both native bowl
+tasks and both pick/place observers. Its selected-stage replay
+`geometry-drive-targets-replay-validation-1006` from `700d387` verified the
+physical pickup prefix: 82 complete controls plus eight substeps of control 83,
+discarding two, activated at physics step 1368. All 16 actual solver joints and
+16 separate position/velocity command buffers were compared with no unavailable
+readbacks. Maximum residuals:
+
+| Readback | Revolute position | Revolute rate | Prismatic position | Prismatic rate |
+| --- | ---: | ---: | ---: | ---: |
+| Actual solver state | 0.000232226 degrees | 0.099811262 degrees/s | 0.004944741 mm | 2.730621025 mm/s |
+| Separate command buffers | 0.000013660 degrees | 0 degrees/s | 0.000027008 mm | 0 mm/s |
+
+Bowl-root residuals were 0.007167137 mm, 0.009353926 degrees, 5.431972716 mm/s
+and 5.311638728 degrees/s. The selected placement failed despite the verified
+prefix; the full source capture succeeded. This does not establish identical
+policy cache, future contact evolution, full controller state or full-state
+restoration. No arbitrary fidelity threshold was applied. Replay is excluded
+from full-task A/B counts.
+
+Report SHA-256:
+`81edffc7cd4eafb340b89c02dbaf62543db4d999b5a2ff902eb9d8afcc9a42bf`.
+Proof SHA-256:
+`505be7292d8b67defbdf2efd936935c41a65276c7600bbba36725dca8c131779`.
+
+The ball/liquid candidate-witness quartet from `f18acbb` is running at
+high-9000 with byte-identical source programs/prompts. Only the existing seed-0
+25k checkpoint was found in a nontruncated inventory of this known training
+lineage; no additional checkpoint outcome is inferred.
+
+## October 8: authored xylophone key-surface calibration
+
+A CPU-only job exported the actual pinned-image xylophone and mallet USD meshes.
+The xylophone has separate visual/collision meshes with 23,832 triangles each.
+`calibrate_strike_surfaces.py` partitions only the explicitly selected collision
+mesh into 42 connected components using a declared 0.0001 mm positional welding
+tolerance for connectivity. Distance always uses unchanged actual triangle
+coordinates. Each of eight authored `hit_*` points uniquely binds a different
+668-triangle component, with a 17.018494–19.545991 mm gap to the next nearest
+component. Landmarks are **5.164799–5.225569 mm from their key surfaces**; they
+are annotated reference points, not actual surface contact points.
+
+`point_surface_distances` measures exact face-interior/edge/vertex boundary
+distance, including slivers and explicit degenerate-face exclusions. It does not
+use nearest mesh vertices, bounding boxes or solid containment. Ambiguous/tied
+surfaces, aliased landmarks and unreviewed annotation scaling are rejected.
+
+`audit_strike_surfaces.py` reconstructs a root from archived functional frames,
+checks all eight frame/position bindings and same-step force points/model actor,
+and compares recorded impacts with these authored surface components. The
+previous strict-region pair has eight baseline / four conditioned impacts, all
+with partial surface evidence and zero contradictions: selected-surface distance
+0.116525–1.766269 mm, nearest other key distance 19.235888–32.626368 mm. This
+archive reconstruction lacks live selected-mesh/scale capture, so it does not
+upgrade live coverage or assert cooked-collider part identity, exclusive impact,
+acoustics or native task success. Capturing those actual live USD triangles and
+bindings is the next runtime step.
+
+Artifacts:
+`/home/mverghese/robodojo-expansion-state/xylophone-asset-calibration-1006/`.
+Calibration can be reproduced using the exported `asset-geometry.json`:
+
+```bash
+python scripts/atomic/calibrate_strike_surfaces.py \
+  --assets /path/asset-geometry.json --asset-key Geometry/xylophone/00000 \
+  --mesh /World/collision --tags hit_0 hit_1 hit_2 hit_3 hit_4 hit_5 hit_6 hit_7 \
+  --output /tmp/key-surface-calibration.json
+python scripts/atomic/audit_strike_surfaces.py \
+  --profile /tmp/key-surface-calibration.json --report /path/eval_report.json \
+  --output /tmp/contact-surface-validation.json
+```
+
+The source passes 422 offline atomic tests, including face/edge/sliver distance,
+collision-versus-visual selection, surface ambiguity/alias/scale rejection and
+archive frame/force/clock/model/origin corruption counterexamples.

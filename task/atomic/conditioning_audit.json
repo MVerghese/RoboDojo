@@ -35,7 +35,7 @@
     "task/atomic/layers.py": "d29f4dadf9aa609579a73fe4750ab6be62bce8f39bc99761d413a04bb736977f",
     "task/atomic/segments.py": "0db90560f0aca5eae711f56658f5422e42f41c8fdfbfbb83b3885aa4f8e34cb5",
     "task/atomic/curves.py": "1f9192a9d689617e68819ef996a591b62759dd0a4fd67cfe5e69388d01fad4cb",
-    "task/atomic/surface_distance.py": "3179a7c419d7ebde3e5c5b36eecb946906e32ff21bb7e4a684b26f4901099317",
+    "task/atomic/surface_distance.py": "05cafdffa14ec745a6742e4d0c8ac64637f14affd2bfbecdae6798baeec5e73d",
     "task/atomic/cloth_calibration.py": "3cf223d1139d2ed9a45d233c5343ee1dc5b2ba449c36211a15159aa2f950e903",
     "task/atomic/calibration.py": "0d7ee58e0106d273bccbcd2314f126e540cafff69eba5fbe28ef6336d2e5f747",
     "task/atomic/model_frames.py": "b14ad157c616a8074ecd1ec92f79c7fb590814ce2a06c273b529c83b9b4322f6",

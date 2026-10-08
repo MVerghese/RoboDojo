@@ -1,10 +1,24 @@
 import unittest
 import numpy as np
-from task.atomic.surface_distance import mesh_surface_gap,triangle_gap
+from task.atomic.surface_distance import mesh_surface_gap,triangle_gap,point_surface_distances
 from task.atomic.geometry import evaluate_geometry
 
 
 class SurfaceDistanceTests(unittest.TestCase):
+    def test_point_distance_uses_face_interior_edges_and_vertices_with_rigid_invariance(self):
+        triangle=np.array([[0,0,0],[2,0,0],[0,2,0.]])
+        points=np.array([[.5,.5,.003],[1.5,1.5,0],[3,0,0],[.5,.5,0.]])
+        expected=[.003,np.sqrt(.5),1.,0.]
+        np.testing.assert_allclose(point_surface_distances(points,triangle,[[0,1,2]]),expected,atol=1e-12)
+        rotation=np.array([[0,0,1],[1,0,0],[0,1,0]]);shift=[10,20,30]
+        np.testing.assert_allclose(point_surface_distances(points@rotation+shift,triangle@rotation+shift,[[0,1,2]]),expected,atol=1e-12)
+
+    def test_point_distance_handles_sliver_and_ignored_degenerate_faces_without_solid_inference(self):
+        v=np.array([[0,0,0],[1,0,0],[1,1e-8,0.]])
+        self.assertAlmostEqual(point_surface_distances([[.75,2e-9,.004]],v,[[0,1,2],[0,0,0]])[0],.004)
+        with self.assertRaisesRegex(ValueError,'nondegenerate'):point_surface_distances([[0,0,0]],v,[[0,0,0]])
+        with self.assertRaisesRegex(ValueError,'finite XYZ'):point_surface_distances([[np.nan,0,0]],v,[[0,1,2]])
+
     def test_edge_piercing_and_coplanar_crossing_without_near_vertices(self):
         a=np.array([[-1,-1,0],[1,-1,0],[0,1,0.]])
         b=np.array([[0,0,-1],[0,0,1],[2,0,1.]])

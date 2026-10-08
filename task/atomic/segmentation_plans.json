@@ -7455,7 +7455,7 @@
     },
     {
       "path": "task/atomic/surface_distance.py",
-      "sha256": "3179a7c419d7ebde3e5c5b36eecb946906e32ff21bb7e4a684b26f4901099317"
+      "sha256": "05cafdffa14ec745a6742e4d0c8ac64637f14affd2bfbecdae6798baeec5e73d"
     },
     {
       "path": "env/scene_manager/objects/fluid.py",
