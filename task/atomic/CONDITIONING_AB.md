@@ -968,3 +968,29 @@ Native fasten_screws checks alignment/depth and arm reset, without a 90 degree
 rotation requirement. One episode per arm does not support a statistical steering
 claim. The independent artifact retains report hashes and all failed/unobserved
 completion events; historical compact partial histories remain partial.
+
+
+### Drive command targets at action activation
+
+Fresh robot captures separately save the current IsaacLab `joint_pos_target` and
+`joint_vel_target` buffers, with the same actual solver DOF names, live USD joint
+paths/types and activation timestamp as the physical joint capture. These are
+command targets. They do not replace measured `joint_pos`/`joint_vel`, and an
+absent or failed target-buffer readback leaves physical-state evidence available.
+The native RobotManager writes arm position/velocity targets and gripper position
+targets through the articulation setters before simulation steps.
+
+Replay compares retained command buffers independently of physical state. A
+physically identical joint configuration can therefore have a nonzero command
+difference. Revolute target position/rate residuals are degrees and degrees/s;
+prismatic residuals are mm and mm/s. Per-DOF results remain in the proof, with
+maxima of each joint type in a separate MD/HTML table. No full-turn wrapping or
+combined score across joint types is used. Historical missing buffers remain N/A.
+Wrong source APIs, names, paths, indices, units and nonfinite buffers cannot
+certify command equality. Target equality does not prove equal stiffness,
+damping, effort, actuator memory or full controller state.
+
+Five targeted regressions check immutable commanded-versus-measured captures,
+equal physical states with changed commands, missing-buffer independence,
+invalid source/binding and separate report units. Fresh live target-buffer
+capture and replay evidence are pending; no existing frozen run is relabeled.

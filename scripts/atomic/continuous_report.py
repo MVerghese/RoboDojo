@@ -505,6 +505,29 @@ REPLAY_SCOPE = ('Selected-stage replay jobs are excluded from full-task A/B coun
                 'Missing joint captures remain N/A; revolute residuals do not wrap full turns. '
                 'This does not establish drive, effort, material, game or full simulator-state fidelity.')
 
+DRIVE_HEADERS=['Task','Stage','Compared target DOFs',
+    'Revolute position target error (degrees)','Revolute velocity target error (degrees/s)',
+    'Prismatic position target error (mm)','Prismatic velocity target error (mm/s)']
+DRIVE_SCOPE=('Command targets are current IsaacLab position/velocity target buffers, compared separately '
+    'from measured joint motion. Columns show maxima within each live USD joint type. '
+    'Historical absent captures are N/A. Target equality does not prove equal gains, efforts, '
+    'actuator memory or full controller state.')
+
+
+def drive_validation_rows(data):
+    rows=[]
+    for proof in data.get('replay_validations',[]):
+        for episode in proof['episodes']:
+            comparison=episode.get('boundary_position_comparison') or {}
+            targets=comparison.get('robot_kinematics',{}).get('drive_targets',{}).get('joints',[])
+            values=[]
+            for kind in ('revolute','prismatic'):
+                for key in ('position_target_error','velocity_target_error'):
+                    found=[r[key] for r in targets if r['kind']==kind]
+                    values.append(f'{max(found):.4f}' if found else 'N/A')
+            rows.append([proof['task'],episode['atomic_start'].get('stage_id'),len(targets),*values])
+    return rows
+
 
 def replay_validation_rows(data):
     rows = []
@@ -560,6 +583,8 @@ def report_markdown(data):
         *(['## Original screen and expansion suites', '', *table(RUN_HEADERS, run_rows(data)), ''] if data.get('runs') else []),
         *(['## Atomic start validation', '', REPLAY_SCOPE, '',
            *table(REPLAY_HEADERS, replay_validation_rows(data)), ''] if data.get('replay_validations') else []),
+        *(['### Drive command targets at activation', '',DRIVE_SCOPE,'',
+           *table(DRIVE_HEADERS,drive_validation_rows(data)),''] if data.get('replay_validations') else []),
         '## Matched-pair summary', '', *table((['Suite'] if data.get('runs') else []) + SUMMARY_HEADERS, summary_rows(data)), '',
         '## Task index', '', *table(([TASK_HEADERS[0], 'Suite', *TASK_HEADERS[1:]] if data.get('runs') else TASK_HEADERS), task_rows(data)), '', '## Conditioning and results by task', '']
     for task in data['tasks']:
@@ -642,7 +667,9 @@ def report_html(data):
     cards = []
     if data.get('replay_validations'):
         cards.append('<section class="method"><h2>Atomic start validation</h2><p>' + esc(REPLAY_SCOPE)
-                     + '</p>' + html_table(REPLAY_HEADERS, replay_validation_rows(data)) + '</section>')
+                     + '</p>' + html_table(REPLAY_HEADERS, replay_validation_rows(data))
+                     + '<h3>Drive command targets at activation</h3><p>'+esc(DRIVE_SCOPE)+'</p>'
+                     + html_table(DRIVE_HEADERS,drive_validation_rows(data)) + '</section>')
     for task in data['tasks']:
         content = '<p class="status">' + esc('Verified A/B pair' if task['matched'] else 'Excluded: ' + '; '.join(task['exclusions'])) + '</p>'
         if 'suite' in task:

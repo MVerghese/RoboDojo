@@ -52,7 +52,7 @@ def _container(root, environment_root, expression):
 
 
 def capture_robot_joints(session):
-    """Capture actual positions/velocities, including gripper DOFs; never targets."""
+    """Capture solver state and separately identified commanded drive targets."""
     result = {}; step = getattr(getattr(session.env, '_atomic_contacts', None), 'steps', None)
     manager = getattr(session.env, 'robot_manager', None)
     if manager is None or not getattr(manager, 'robot_list', None):
@@ -89,12 +89,29 @@ def capture_robot_joints(session):
                     'velocity_api': 'IsaacLab.Articulation.data.joint_vel',
                     'binding_api': 'root_physx_view.prim_paths + joint_names + live USD joint types',
                     'articulation_class': type(key).__name__})
+            row['drive_targets']=_capture_drive_targets(key,session.env_idx,joints)
             result[root] = row
         except Exception as error:
             row.update(status='unavailable', reason=type(error).__name__ + ': ' + str(error))
             result['robot_manager_index_' + str(index)] = row
     return {'status': 'observed_robot_joints' if any(r['status'] == 'observed_robot_joints' for r in result.values())
             else 'unavailable', 'articulations': result}
+
+
+def _capture_drive_targets(key,env_idx,joints):
+    try:
+        positions=_values(key.data.joint_pos_target[env_idx],len(joints))
+        velocities=_values(key.data.joint_vel_target[env_idx],len(joints))
+        rows=[]
+        for i,joint in enumerate(joints):
+            rows.append({**{k:joint[k] for k in ('name','joint_path','kind','solver_index','position_unit','velocity_unit')},
+                'position_target':float(positions[i]),'velocity_target':float(velocities[i])})
+        return {'status':'observed_command_targets','joints':rows,
+            'source':{'position_api':'IsaacLab.Articulation.data.joint_pos_target',
+                      'velocity_api':'IsaacLab.Articulation.data.joint_vel_target'},
+            'scope':'current IsaacLab command buffers; not measured position, torque or solver drive effort'}
+    except Exception as error:
+        return {'status':'unavailable','reason':type(error).__name__+': '+str(error)}
 
 
 def _bound_joints(row, root, step):
@@ -132,8 +149,9 @@ def _bound_joints(row, root, step):
 
 def compare_robot_joints(recorded, replayed, recorded_step, replayed_step):
     """Per-joint absolute residuals without angle wrapping or a fidelity threshold."""
-    scope = 'activation robot solver DOF positions/velocities only; no drive targets, effort, root state or full simulator restoration'
+    scope = 'activation robot solver DOF positions/velocities and separate command-target buffers; no effort, root state or full simulator restoration'
     rows = []; unavailable = []
+    drives=[];drive_unavailable=[]
     old = recorded.get('articulations') if isinstance(recorded, dict) else None
     new = replayed.get('articulations') if isinstance(replayed, dict) else None
     if not isinstance(old, dict) or not isinstance(new, dict) or not old or not new:
@@ -157,7 +175,43 @@ def compare_robot_joints(recorded, replayed, recorded_step, replayed_step):
                     'velocity_error_unit': 'degrees_per_second' if angular else 'mm_per_second',
                     'recorded': deepcopy(x), 'replayed': deepcopy(y)})
             rows.extend(pending)
+            try:
+                da=_bound_drive_targets(old[root],a);db=_bound_drive_targets(new[root],b)
+                for name in sorted(a):
+                    x,y=da[name],db[name];angular=a[name]['kind']=='revolute';scale=180/math.pi if angular else 1000
+                    drives.append({'articulation_root':root,'name':name,'kind':a[name]['kind'],'joint_path':a[name]['joint_path'],
+                        'position_target_error':abs(y['position_target']-x['position_target'])*scale,
+                        'velocity_target_error':abs(y['velocity_target']-x['velocity_target'])*scale,
+                        'position_target_error_unit':'degrees' if angular else 'mm',
+                        'velocity_target_error_unit':'degrees_per_second' if angular else 'mm_per_second',
+                        'recorded':deepcopy(x),'replayed':deepcopy(y)})
+            except (KeyError,ValueError,TypeError,AttributeError) as error:
+                drive_unavailable.append({'articulation_root':root,'reason':str(error)})
         except (KeyError, ValueError, TypeError, AttributeError) as error:
             unavailable.append({'articulation_root': root, 'reason': str(error)})
+            drive_unavailable.append({'articulation_root':root,'reason':'physical joint binding unavailable'})
     return {'status': 'observed_joint_comparison' if rows else 'unavailable',
-            'joints': rows, 'unavailable': unavailable, 'scope': scope}
+            'joints': rows, 'unavailable': unavailable, 'scope': scope,
+            'drive_targets':{'status':'observed_command_target_comparison' if drives else 'unavailable',
+                'joints':drives,'unavailable':drive_unavailable,
+                'scope':'current IsaacLab position/velocity target buffers only; not gains, efforts, actuator memory or full controller-state fidelity'}}
+
+
+def _bound_drive_targets(row,physical):
+    targets=row['drive_targets']
+    if targets.get('status')!='observed_command_targets':raise ValueError('command target buffers unavailable')
+    source=targets['source']
+    if (source.get('position_api')!='IsaacLab.Articulation.data.joint_pos_target'
+            or source.get('velocity_api')!='IsaacLab.Articulation.data.joint_vel_target'):
+        raise ValueError('unrecognized command target source')
+    rows=targets['joints'];bound={}
+    if len(rows)!=len(physical):raise ValueError('command target DOF count mismatch')
+    for joint in rows:
+        name=joint['name']
+        if name in bound or name not in physical:raise ValueError('command target joint name mismatch')
+        if any(joint[k]!=physical[name][k] for k in ('name','joint_path','kind','solver_index','position_unit','velocity_unit')):
+            raise ValueError('command target physical joint binding or units mismatch')
+        if any(type(joint[k]) not in (int,float) or not math.isfinite(joint[k]) for k in ('position_target','velocity_target')):
+            raise ValueError('nonfinite command target')
+        bound[name]=joint
+    return bound

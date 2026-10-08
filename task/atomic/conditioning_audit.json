@@ -14,7 +14,7 @@
     "task/atomic/contact_validation.py": "ce6a29ddb272a783872b632f96e2eebbb6fb84bfaf3931f7ec24b92049be7c5e",
     "task/atomic/target_regions.py": "49309d9d5c592f62d76cbabb87dd3dea50e515297bc742860e82ea08025061fa",
     "task/atomic/kinematics.py": "e419af221937a6621f12a7b8b69326f0df7a14a2bf2296c3faae01f825aeffed",
-    "task/atomic/robot_kinematics.py": "db20ca96c916691985e459f057dda15887c42acc35c16eab5cd93597dcf84847",
+    "task/atomic/robot_kinematics.py": "675add9b085f2a8e5dd53ab07f3cbb900130d7db12f6ce5a3e3da9ceb48e241a",
     "task/atomic/finite_material.py": "6dfb100dae5bad845da35ea10f816e38c11d2e596de4eee1cb22e7b1961a391f",
     "task/atomic/recognizers.py": "3cb60613cbdc7ea360dc81f0ee7cb61c89b5ab1760e0c19d086393ae656488b3",
     "task/atomic/twist_validation.py": "6a626e43cc4c0efdd5301df664190187091b3c0e5fab9b64846645d0027247a8",
