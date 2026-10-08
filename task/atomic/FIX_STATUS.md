@@ -923,3 +923,61 @@ This measures a region of the actual scaled USD collision mesh. It does not
 certify a separately cooked key collider, exclusive single-key impact, sound
 or musical timing. Authored hit landmarks are about 5.2 mm from the key surfaces;
 contact-to-landmark distance and contact-to-surface distance are distinct metrics.
+
+## October 8: completed source-candidate validation
+
+All four `geometry-source-candidates-1006` episodes from `f18acbb` were collected
+and independently audited. Native task success was false in all four. Both
+liquid prototype pours succeeded with **required_count=1**; both finite-ball
+prototype pours failed with **required_count=2**. These requirements differ
+from the native liquid quantity predicate.
+
+| Measurement | Baseline | Conditioned |
+|---|---:|---:|
+| Liquid destination crossings, reproduced with consistent source witnesses | 7 | 9 |
+| Liquid opening point XY error, mean (mm) | 5.922746 | 8.179372 |
+| Liquid relative velocity direction error, mean (degrees) | 15.994118 | 17.353837 |
+| Liquid opening aperture overrun, mean (mm) | 0 | 0 |
+| Bottle mouth pose translation at prototype transfer (mm) | 36.463563 | 28.027000 |
+| Bottle mouth pose full orientation at prototype transfer (degrees) | 165.820867 | 168.038982 |
+| Ball destination crossings, reproduced with consistent source witnesses | 2 | 0 |
+| Ball opening point XY error, mean over observed crossings (mm) | 20.244652 | N/A |
+| Ball finite bound clearance at destination crossing, mean (mm) | 3.161606 | N/A |
+| Ball relative velocity direction error, mean (degrees) | 19.271728 | N/A |
+| Ball sphere_1 final core containment error (mm) | 8.219149 | 379.298721 |
+| Ball sphere_6 final core containment error (mm) | 9.446685 | 338.338551 |
+
+The liquid target is **[4,0] mm** in the opening XY plane, within **8 mm**;
+the crossing fixes the normal coordinate. Relative velocity should align with
+the declared opening normal within **20 degrees**. The central opening window is
+**20 x 20 mm**. The mouth pose target is **[0,0,80] mm** above the opening, with
+**minus 90 degrees about opening-frame y** (25 mm translation and 30 degree
+full orientation tolerances). The
+finite-ball opening target remains its separately frozen vase target; its
+center-error mean above is not pooled with the liquid target. Programs and
+delivered prompts are unchanged from their corresponding source pairs.
+
+Source-mouth history retained all **4/24 ball candidates**, all independently
+consistent, and the first **32/32 liquid candidates**, all independently
+consistent, out of **37/38 observed**. Liquid histories are explicitly truncated.
+Baseline ball source exit qualification passed for two candidates; a later pair
+of outward center-plane crossings failed the finite aperture fit by about
+165–168 mm. In the conditioned ball run, 23 candidates failed the finite fit;
+the one fitting candidate had no sustained hold snapshot and was rejected.
+Twenty later conditioned candidates retained a hold, but no candidate met the
+full physical source exit gate. An absent observed hold does not independently
+prove absent force at unrecorded contacts.
+
+The separate contact audit found **167 consistent retained snapshots**, four
+consistent initialized material bounds, ten reproduced event geometry scores
+and two unobserved transfer events. Source/flow audits retained report hashes in
+`runs/*/independent-material-validation.json`; contact results are in
+`independent-contact-batch-validation.json`. No contradictions were found.
+
+The taxonomy now records narrowly validated live opening **point, relative
+velocity orientation and aperture-entry relation** factors for this liquid pair.
+Opening SE(3) and explicit displacement variants still need matched live tests.
+Sampled particle centers, a one-particle prototype and open-mesh finite bounds
+do not certify total fluid volume/density/spill, full native quantity, whole
+solid volume or continuous passage through a thick mouth wall. One episode per
+arm and different crossing populations do not establish statistical steering.

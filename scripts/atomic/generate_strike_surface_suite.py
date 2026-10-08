@@ -17,7 +17,7 @@ def generate(output,source,profile_path):
     if len(cases)!=2 or {c['prompt_mode'] for c in cases}!={'baseline','conditioned'}:
         raise ValueError('one matched xylophone pair required')
     profile_raw=profile_path.read_bytes();profile=json.loads(profile_raw)
-    if profile['asset_key']!='Geometry/xylophone/00000' or profile['mesh_path']!='/World/collision':
+    if profile['asset_key']!='Geometry/xylophone/00000' or profile['mesh_path']!='collision':
         raise ValueError('reviewed xylophone collision profile required')
     programs=[]
     for case in cases:

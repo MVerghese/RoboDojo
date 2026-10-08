@@ -47,9 +47,9 @@
   "slots": 54,
   "factor_cells": 270,
   "status_counts": {
-    "L": 26,
+    "L": 29,
     "C": 0,
-    "G": 141,
+    "G": 138,
     "F": 0,
     "S": 70,
     "M": 5,
@@ -946,9 +946,9 @@
         "P": {
           "kind": "point",
           "concept": "Aim stream at opening point P.",
-          "status": "G",
-          "audit": "Persistent source-qualified material crossings measure XY opening error, aperture overrun, relative velocity direction and speed. Raw consecutive physics samples reproduce independently; excessive opening rotation or gaps are unscored. Vessel cavity/mouth calibration and fresh liquid USD readback validation remain. Nominal particle mass is not measured liquid volume or density.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-source-candidates-1006 liquid pair reproduced 7/9 source-qualified destination plane crossings: mean XY distance from requested [4,0] mm at the opening was 5.9227/8.1794 mm. The crossing plane fixes the normal coordinate. Actual adjacent particle/opening samples and source hold/tilt/cohort bindings independently reproduced. This validates this sampled opening-point target, not arbitrary 3D stream steering, whole-fluid delivery or statistical improvement.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-source-candidate-validation"
         },
         "T": {
           "kind": "pose",
@@ -967,16 +967,16 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Stream direction relative to opening normal.",
-          "status": "G",
-          "audit": "Persistent source-qualified material crossings measure XY opening error, aperture overrun, relative velocity direction and speed. Raw consecutive physics samples reproduce independently; excessive opening rotation or gaps are unscored. Vessel cavity/mouth calibration and fresh liquid USD readback validation remain. Nominal particle mass is not measured liquid volume or density.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The same liquid pair independently reproduced actual relative particle velocity angle to the requested opening-normal direction: mean 15.9941/17.3538 degrees across 7/9 source-qualified destination crossings (20-degree tolerance). Opening motion is subtracted. These are sampled velocity directions, not bottle/link orientations or whole stream distributions.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-source-candidate-validation"
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Stream enters interior of destination.",
-          "status": "G",
-          "audit": "Persistent source-qualified material crossings measure XY opening error, aperture overrun, relative velocity direction and speed. Raw consecutive physics samples reproduce independently; excessive opening rotation or gaps are unscored. Vessel cavity/mouth calibration and fresh liquid USD readback validation remain. Nominal particle mass is not measured liquid volume or density.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The same liquid pair measured entry into the declared central 20 x 20 mm destination opening window: all 7/9 retained source-qualified crossing centers had 0 mm aperture overrun. Both prototype pours qualified at least one transferred particle in the calibrated target core; both native tasks failed. This validates sampled particle-center opening entry and the prototype cohort, not 97-percent native quantity, whole particle volume, thick-wall clearance or continuous fluid containment.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-source-candidate-validation"
         }
       }
     },
@@ -1038,8 +1038,8 @@
           "kind": "pose",
           "concept": "Source vessel frame at T during transfer.",
           "status": "L",
-          "audit": "The geometry-liquid-populated-rpc-1006 pair measured the asset-bound bottle mouth against the asset-bound cup opening at first qualified cohort transfer: 38.60/28.25 mm translation and 164.49/171.72 degrees full orientation. Both reproduce; native success true/false. Historical per-particle source holds/initial region frames are partial evidence. This validates these mouth frames and measured SE(3) values, not passage through the source mouth or whole-fluid transfer.",
-          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#material-source-witness-validation"
+          "audit": "The geometry-source-candidates-1006 pair measured the actual model/file/scale-bound bottle mouth at first qualified cohort transfer: 36.4636/28.0270 mm translation and 165.8209/168.0390 degrees full orientation. Both atomic prototype pours passed (required_count=1), both native tasks failed. All 16 retained destination crossings reproduced with consistent source hold/tilt/cohort witnesses. This validates these named mouth frames and SE(3) measurements, not whole-fluid quantity, volume or continuous finite-body passage.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-source-candidate-validation"
         },
         "D": {
           "kind": "relative_displacement",
