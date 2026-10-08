@@ -1047,3 +1047,81 @@ meshes have no CollisionAPI. These baked settings do not certify the effective
 live scene or cooked hull topology. The fresh `geometry-strike-collision-config-1006`
 pair from `f018b9f` captures actual scene settings without changing the 2 mm
 surface gate, geometric targets or prompts.
+
+## October 8: isolated spout conditioning trials
+
+`scripts/atomic/generate_spout_factor_suite.py` clones the calibrated one-particle
+liquid prototype into five separate matched A/B pairs. Source recognition,
+initialization, target/source cores and existing numerical scoring are unchanged.
+Both arms gain the same new geometry at the **first qualified source-mouth exit**;
+the conditioned arm replaces the previous broad geometric append with only the
+selected factor text. Existing transfer/grasp/stream scores remain diagnostics
+without claiming their targets were supplied in this isolated append.
+
+| Factor | New conditioning | Scalar units |
+|---|---|---|
+| Point | Bottle mouth at [0,0,80] mm in the cup opening frame frozen at initial stage activation; 25 mm tolerance | mm XYZ distance |
+| Pose | Bottle mouth offset [0,0,80] mm from live cup opening, minus 90 degrees about its y; 25 mm / 30 degree tolerances | mm translation and degrees full rotation, separately |
+| Displacement | Bottle mouth offset [0,0,80] mm in live opening axes; 25 mm tolerance | mm XYZ vector error |
+| Orientation | Bottle mouth local z along negative live opening x; 30 degree tolerance; roll unrestricted | degrees direction error |
+| Relation | Mouth point at least 40 mm above opening, and inside a 20 x 20 mm column between 40 and 120 mm above opening; 1 mm tolerance | mm separation shortfall and point-box outside distance, separately |
+
+The point target stays fixed when the cup moves; the displacement follows the
+live opening. Relation semantics apply to the actual mouth point and its
+projection, not whole-bottle footprint or cavity containment. These are prototype
+targets with explicit mouth frames; arbitrary IK/contact reachability remains
+unverified. They do not test full native quantity or establish statistical
+steering from a single episode per arm.
+
+`model_calibrated_position` is the origin of an actual model/file/scale-bound
+frame, returned as XYZ only. It preserves calibration/root provenance and
+rejects pose/orientation and whole-object relation use. It enables point-scope
+spout/feature relations without treating a calibrated frame as the entire body.
+Known-geometry tests distinguish fixed versus moving targets and reject an
+above-but-horizontally-misaligned mouth.
+
+```bash
+python scripts/atomic/generate_spout_factor_suite.py \
+  --source-suite /path/source-candidate/suite.json \
+  --factor spatial_relation --output-dir /path/fresh-spout-relation-pair
+python scripts/atomic/run_suite.py --suite /path/fresh-spout-relation-pair/suite.json \
+  --base-run /path/base-run --dry-run
+```
+
+Allowed factors are `point`, `pose`, `displacement`, `orientation` and
+`spatial_relation`. Freeze first, then run using the existing reservation,
+checkpoint and clean-GPU admission options. Live results remain pending and
+these spout cells retain their pre-run coverage status.
+
+## October 8: completed live strike surface pair
+
+`geometry-strike-live-surfaces-1006` from `cdd22a9` collected both arms. All
+**16 actual model/file/scale/triangle/landmark captures** independently matched
+the reviewed key-region bindings. Baseline recognized **8** complete held
+approach/impact/retraction strikes; conditioned recognized **7**, with key 5
+unobserved. All 15 complete strike windows and impact surface witnesses were
+independently consistent. Both native tasks failed.
+
+| Key | Baseline maximum retained impact surface distance (mm) | Conditioned maximum retained impact surface distance (mm) |
+|---|---:|---:|
+| 0 | 0.372148 | 1.283060 |
+| 1 | 0.653616 | 0.837523 |
+| 2 | 1.062969 | 1.187282 |
+| 3 | 0.475721 | 0.715376 |
+| 4 | 0.528549 | 0.658812 |
+| 5 | 0.128881 | N/A — impact unobserved |
+| 6 | 1.705307 | 0.622222 |
+| 7 | 0.444033 | 0.304263 |
+
+Both arms used the same **2 mm** surface gate. Surface distance is an independent
+physical qualification diagnostic; the conditioned prompt keeps the original
+contact-offset/frame/held-retraction targets. The contact audit found **126**
+consistent retained force snapshots, **49** reproduced geometric event scores
+and **3** unobserved condition events. Full raw report hashes and independent
+proofs are retained in `runs/*/independent-strike-surface-validation.json` and
+`independent-contact-batch-validation.json`. No contradiction was found.
+
+This validates these live scaled USD regions and force-bearing strikes. It does
+not establish cooked collider component identity, exclusive impacts, musical
+timing or native-task success. The later collision-configuration pair remains
+separate and immutable. All **436** offline atomic tests pass.

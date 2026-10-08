@@ -7383,11 +7383,11 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "158c32c542b031d7e594919691468369ec81cd4eecae83e6aeeacaa01fee85dc"
+      "sha256": "1bddb76f9014e92538d4ac8d80ddc3bef89c4d61ec9a31e88bcc9bf164d53b56"
     },
     {
       "path": "task/atomic/spec.py",
-      "sha256": "4b3a434c9e24a319cc5c38a3ee068dc7edb916a69be4b0d54aec47ebe068feda"
+      "sha256": "78f12b2656d7ce20877754ff67ce69e2f56173259c2badd05d9bb93ff5c9f1cd"
     },
     {
       "path": "task/atomic/recognizers.py",

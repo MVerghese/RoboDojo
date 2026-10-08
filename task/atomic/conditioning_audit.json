@@ -3,9 +3,9 @@
   "scope": "source/semantics audit, not universal live validation",
   "source_sha256": {
     "task/atomic/TAXONOMY.md": "7dc2ba4b19bd2f697c315db850db5b3bb27b0f1027132a8e69b7acc9e4db04a4",
-    "task/atomic/spec.py": "4b3a434c9e24a319cc5c38a3ee068dc7edb916a69be4b0d54aec47ebe068feda",
+    "task/atomic/spec.py": "78f12b2656d7ce20877754ff67ce69e2f56173259c2badd05d9bb93ff5c9f1cd",
     "task/atomic/geometry.py": "8e7d53416e439bbf029525a599db2ee7fd87fac1cc51851461810522775c817e",
-    "task/atomic/session.py": "158c32c542b031d7e594919691468369ec81cd4eecae83e6aeeacaa01fee85dc",
+    "task/atomic/session.py": "1bddb76f9014e92538d4ac8d80ddc3bef89c4d61ec9a31e88bcc9bf164d53b56",
     "task/atomic/cloth_bending.py": "23c216f775603ae46fe459dfaaf58743f384eb632197ad2e658e0f547d7d1ceb",
     "task/atomic/surfaces.py": "05fcc4d0d876684f1d7cefe8f4e88c95f24d678c63f880234d4167da0a9e9c0f",
     "task/atomic/contacts.py": "6a35bfae2d344ebbca1096a9004c48922367f3b0dd0afc9f4a886adcefeb9ed4",
@@ -1712,22 +1712,22 @@
           "kind": "pose",
           "concept": "Tool-target contact pose T.",
           "status": "L",
-          "audit": "The geometry-contact-frames-1006 xylophone pair retained eight/five completed physical strikes, all thirteen retained strike windows consistent. Twenty-six added tool contact-frame pose/z scores independently reproduced from same-step raw pair forces and named mallet beat axes. Both native tasks failed. Recognition used overlapping 40 mm target neighborhoods; a stronger nearest-landmark target-region profile now requires a fresh pair. These axes are not surface normals, exact bar identity or musical timing.",
-          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch"
+          "audit": "The geometry-strike-live-surfaces-1006 matched pair retained eight/seven complete force-held strikes. All 16 actual model/file/scale/selected USD key-triangle captures and 15 completed approach/impact/retraction witnesses independently reproduced. Selected-surface impact distances ranged 0.128881-1.705307 mm baseline and 0.304263-1.283060 mm conditioned against the common 2 mm gate. Forty-nine event geometry scores reproduced; key 5 conditioned was unobserved. Both native tasks failed. This validates named actual tool/contact-frame geometry and selected scaled USD regions, not cooked collider face identity, exclusive impact, sound or timing.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-live-strike-surface-pair"
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Strike offset from target center.",
           "status": "L",
-          "audit": "The geometry-tool-contacts-1006 xylophone baseline retained eight held impacts/retractions and actual mallet/xylophone contact-location errors of 1.23\u20136.33 mm. Raw contact, approach-speed and retraction-pose witnesses passed a separate consistency validator. Native task failed. The conditioned partner has seven consistent strike windows and one incompatible aborted-impact/completion window, excluded from scalar summaries. Current runtime archives interrupted event scores/paths and binds retries by attempt ID. This covers these impacts, not every tool/asset or musical timing.",
-          "live_evidence": "task/atomic/EXPANSION_STATUS.md#live-held-strike-witness-validation"
+          "audit": "The geometry-strike-live-surfaces-1006 matched pair retained eight/seven complete force-held strikes. All 16 actual model/file/scale/selected USD key-triangle captures and 15 completed approach/impact/retraction witnesses independently reproduced. Selected-surface impact distances ranged 0.128881-1.705307 mm baseline and 0.304263-1.283060 mm conditioned against the common 2 mm gate. Forty-nine event geometry scores reproduced; key 5 conditioned was unobserved. Both native tasks failed. This validates named actual tool/contact-frame geometry and selected scaled USD regions, not cooked collider face identity, exclusive impact, sound or timing.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-live-strike-surface-pair"
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Tool orientation relative to target normal.",
           "status": "L",
-          "audit": "The geometry-contact-frames-1006 xylophone pair retained eight/five completed physical strikes, all thirteen retained strike windows consistent. Twenty-six added tool contact-frame pose/z scores independently reproduced from same-step raw pair forces and named mallet beat axes. Both native tasks failed. Recognition used overlapping 40 mm target neighborhoods; a stronger nearest-landmark target-region profile now requires a fresh pair. These axes are not surface normals, exact bar identity or musical timing.",
-          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch"
+          "audit": "The geometry-strike-live-surfaces-1006 matched pair retained eight/seven complete force-held strikes. All 16 actual model/file/scale/selected USD key-triangle captures and 15 completed approach/impact/retraction witnesses independently reproduced. Selected-surface impact distances ranged 0.128881-1.705307 mm baseline and 0.304263-1.283060 mm conditioned against the common 2 mm gate. Forty-nine event geometry scores reproduced; key 5 conditioned was unobserved. Both native tasks failed. This validates named actual tool/contact-frame geometry and selected scaled USD regions, not cooked collider face identity, exclusive impact, sound or timing.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-live-strike-surface-pair"
         },
         "R": {
           "kind": "spatial_relation",
