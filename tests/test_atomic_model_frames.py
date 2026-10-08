@@ -10,7 +10,7 @@ import numpy as np
 
 from test_atomic_physical_runtime import World
 from task.atomic.session import AtomicSession
-from task.atomic.spec import AtomicStage, _validate_selector
+from task.atomic.spec import AtomicStage, _validate_selector, _validate_condition
 
 
 class ModelFrameTests(unittest.TestCase):
@@ -68,6 +68,23 @@ class ModelFrameTests(unittest.TestCase):
             selector['models']['mug/00015'].update(update)
             with self.assertRaises(ValueError):
                 _validate_selector(selector,'mouth')
+
+    def test_calibrated_origin_point_has_no_orientation_or_whole_object_extent(self):
+        selector=deepcopy(self.selector);selector['kind']='model_calibrated_position'
+        _validate_selector(selector,'mouth point')
+        value,source=self.session._resolve_with_source(selector)
+        np.testing.assert_allclose(value,[-.014,0,.0376]);self.assertEqual(source['kind'],'model_calibrated_position')
+        condition={'id':'mouth_region','slot':'spout','kind':'spatial_relation','relation_scope':'points',
+            'measurement':selector,'reference':self.selector,'expected':'above','margin':.04,
+            'tolerance':.001,'event':{'kind':'attempt_end'}}
+        _validate_condition(condition)
+        broken=deepcopy(condition);broken['relation_scope']='objects'
+        with self.assertRaises(ValueError):_validate_condition(broken)
+        broken=deepcopy(condition);broken['measurement']=self.selector
+        with self.assertRaises(ValueError):_validate_condition(broken)
+        broken={'id':'false_orientation','slot':'spout','kind':'relative_orientation','measurement':selector,
+            'reference':self.selector,'expected':[1,0,0,0],'tolerance':.1,'event':{'kind':'attempt_end'}}
+        with self.assertRaisesRegex(ValueError,'actual frame'):_validate_condition(broken)
 
 
 if __name__ == '__main__':

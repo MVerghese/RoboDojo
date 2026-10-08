@@ -261,6 +261,9 @@ def build_report(manifest, result, matrix, root):
                 'capture':s['target_surface_validation'],'contact':s.get('target_surface_contact_validation')}
                 for s in row.get('atomic_scores',[]) if s.get('target_surface_validation')]
                 for mode,row in (('baseline',ra),('conditioned',rb))},
+            'material_boundary_validation': {mode: [{'stage_id':s['stage_id'],**s['material_boundary_validation']}
+                for s in row.get('atomic_scores',[]) if s.get('material_boundary_validation')]
+                for mode,row in (('baseline',ra),('conditioned',rb))},
             'recognition_validation': {mode: [{'stage_id': s['stage_id'],
                 'status': s['recognition_witness']['status'],
                 'failed_checks': s['recognition_witness'].get('failed_checks', [])}
@@ -729,6 +732,10 @@ def report_markdown(data):
         if surface_validation_rows(task):
             lines += ['**Live strike surface validation:**','',SURFACE_SCOPE,'',
                 *table(SURFACE_HEADERS,surface_validation_rows(task)),'']
+        for mode,boundaries in task.get('material_boundary_validation',{}).items():
+            if boundaries:
+                lines += ['**Material boundary validation ('+mode+'):** `'+json.dumps(boundaries,sort_keys=True)+
+                    '`. Source exit and first transfer are separate from destination crossing and settled full quantity. Missing historical core frames remain partial; contradictions exclude geometry at affected boundaries.','']
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 lines += ['**Recognition witness failures (' + mode + '):** `' + json.dumps(failures, sort_keys=True)
@@ -823,6 +830,9 @@ def report_html(data):
             content += '<h3>Source-mouth candidate diagnostics</h3><p>' + esc(SOURCE_CANDIDATE_SCOPE) + '</p>' + html_table(SOURCE_CANDIDATE_HEADERS, source_candidate_rows(task))
         if surface_validation_rows(task):
             content += '<h3>Live strike surface validation</h3><p>'+esc(SURFACE_SCOPE)+'</p>'+html_table(SURFACE_HEADERS,surface_validation_rows(task))
+        for mode,boundaries in task.get('material_boundary_validation',{}).items():
+            if boundaries:
+                content += '<p><strong>Material boundary validation ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(boundaries,sort_keys=True))+'</code>. Source exit and first transfer are separate from destination crossing and settled full quantity. Missing historical core frames remain partial; contradictions exclude geometry at affected boundaries.</p>'
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 content += '<p><strong>Recognition witness failures (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(failures, sort_keys=True)) + '</code>. Geometry and paths using invalid boundary events are excluded from geometric summaries.</p>'

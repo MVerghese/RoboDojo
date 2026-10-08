@@ -154,7 +154,32 @@ def audit_selection(selection):
 
 def apply_recognition_validation(atomic, output):
     config=atomic.get('recognition') or {}
-    if config.get('kind') == 'contact_constrained_twist':
+    if config.get('kind') in ('fluid_material_transfer','rigid_material_transfer'):
+        from task.atomic.material_boundaries import validate_material_event
+        boundaries={name:validate_material_event(atomic,name) for name in ('source_exit','first_transfer')}
+        output['material_boundary_validation']=boundaries
+        invalid={name for name,row in boundaries.items() if row['status']=='inconsistent_evidence'}
+        observed=[row for row in boundaries.values() if row['status']!='unobserved']
+        witness={'status':'inconsistent_evidence' if invalid else 'unobserved' if not observed
+            else 'partial_evidence' if any(r['status']=='partial_evidence' for r in observed) else 'consistent_evidence',
+            'failed_checks':[name+':'+failure for name,row in boundaries.items() for failure in row.get('failed_checks',[])],
+            'invalid_event_names':sorted(invalid)}
+        for ident,raw in atomic.get('geometry',{}).items():
+            event=raw.get('event',{});name=event.get('name')
+            if event.get('kind')!='recognition_event' or name not in boundaries or ident not in output['conditions']:continue
+            saved=raw.get('event_evidence');actual=atomic.get('physical_events',{}).get(name)
+            if saved is None or raw.get('measurement_physics_step') is None:
+                check={'status':'partial_evidence','unavailable':['material_event_measurement_binding_absent']}
+            else:
+                valid=(actual is not None and saved==actual and type(raw['measurement_physics_step']) is int
+                    and raw['measurement_physics_step']==actual['physics_step'])
+                check={'status':'consistent_evidence' if valid else 'inconsistent_evidence'}
+                if not valid:
+                    score=output['conditions'][ident]
+                    score['numerical_reproduction_status']=score.get('numerical_reproduction_status',score['status'])
+                    score.update(status='invalid_recognition_window',reason='material boundary measurement clock or event copy is inconsistent')
+            output['conditions'][ident]['material_event_measurement_validation']=check
+    elif config.get('kind') == 'contact_constrained_twist':
         from task.atomic.twist_validation import validate_twist,validate_twist_diagnostic
         witness=validate_twist(atomic)
         output['twist_rotation_diagnostic']=validate_twist_diagnostic(atomic)

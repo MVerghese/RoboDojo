@@ -23,6 +23,7 @@ MEASUREMENT_KINDS = frozenset({"object_pose", "object_position", "object_center_
 CURVE_KINDS = frozenset({'cloth_curve', 'cloth_model_curve'})
 MEASUREMENT_KINDS |= {'cloth_points','cloth_landmark','cloth_patch_frame','cloth_patch_surface','cloth_model_patch','cloth_tag_frame','cloth_line_frame','fluid_points','calibrated_frame','model_calibrated_frame'} | CURVE_KINDS
 FRAME_KINDS = (MEASUREMENT_KINDS - {'object_position', 'object_center_position','cloth_points','cloth_landmark','fluid_points'} - CONTACT_KINDS - CURVE_KINDS) | CONTACT_POSE_KINDS
+MEASUREMENT_KINDS |= {'model_calibrated_position'}
 OBJECT_FRAME_KINDS = {'object_pose', 'object_center_pose','articulated_link_pose','joint_link_pose','calibrated_frame','model_calibrated_frame','cloth_patch_surface','cloth_model_patch'}
 SPATIAL_RELATIONS = frozenset({'above', 'below', 'left_of', 'right_of', 'in_front_of', 'behind',
                                'near', 'inside_box', 'inside_region', 'inside_aperture', 'inside_trace_aperture', 'on_top','layered_over','intersects_segment','coincides_with_segment','intersects_curve','coincides_with_curve'})
@@ -76,6 +77,7 @@ def _validate_selector(selector, name):
     common = {'kind', 'time'}
     fields = {'robot_ee_pose': {'arm', 'label', 'min_finger_bodies'},
               'model_calibrated_frame': {'label', 'models'},
+              'model_calibrated_position': {'label','models'},
               'calibrated_frame': {'label', 'local_pose', 'calibration_id', 'asset_uuid','asset_model'},
               'object_pose': {'label', 'mesh_paths', 'calibration_id', 'asset_uuid','asset_model'},
               'functional_point': {'label', 'tag', 'type', 'index'},
@@ -113,7 +115,7 @@ def _validate_selector(selector, name):
             raise ValueError('calibrated frame orientation must be nonzero')
         if not isinstance(selector.get('calibration_id'),str) or not selector['calibration_id']:
             raise ValueError('calibrated frame needs reviewed calibration provenance')
-    if selector['kind'] == 'model_calibrated_frame':
+    if selector['kind'] in ('model_calibrated_frame','model_calibrated_position'):
         import re
         models = selector.get('models')
         if not isinstance(models, dict) or not models:

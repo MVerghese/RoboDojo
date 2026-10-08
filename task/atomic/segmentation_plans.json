@@ -7391,7 +7391,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "50034de2f3869a9d7cc0c27c253df8540bdfd10a903440c15613c7c971feef94"
+      "sha256": "7ac2e5da2b05fa858d0af2eb4807bac28d941c6c533cf0396a7359576869e67e"
     },
     {
       "path": "task/atomic/twist_validation.py",
@@ -7488,6 +7488,10 @@
     {
       "path": "task/atomic/material_validation.py",
       "sha256": "68ec318a7571c0748e1f73f9d1eb86d059639efcbae7f36712fa4c51bcd9178b"
+    },
+    {
+      "path": "task/atomic/material_boundaries.py",
+      "sha256": "c7662fadfb1ac83c82aa11a088bfd887e12ce38aded3bfd802ac257b054b4337"
     },
     {
       "path": "task/atomic/source_candidates.py",

@@ -1082,10 +1082,13 @@ class PhysicalRecognizer:
                          exit_contact=deepcopy(hold),exit_source_frame=frame.tolist(),
                          initial_source_frame=self.fluid_initial['region_frames']['source'])
                 if self.source_exit_observer:m['source_mouth_crossing']=deepcopy(mouth_exits[str(ident)])
-                self._event('source_exit',particle_id=ident,held_contact=hold,tilt_rad=tilt,particle_position=position.tolist())
+                self._event('source_exit',particle_id=ident,held_contact=hold,tilt_rad=tilt,particle_position=position.tolist(),
+                    source_exit_provenance=deepcopy(m))
             if m['eligible'] and m['exited_while_held_and_tilted'] and t and not s:
                 m['target_steps']+=1
-                self._event('first_transfer',particle_id=ident,position=position.tolist(),source_exit=deepcopy(m))
+                if 'first_transfer' not in self.events:
+                    self._event('first_transfer',particle_id=ident,position=position.tolist(),source_exit=deepcopy(m),
+                        **self._transfer_region_state())
             else:m['target_steps']=0
             if m['target_steps']>=self.c['settle_steps']:transferred.append(ident)
             m['previous_in_source']=bool(s)
@@ -1139,10 +1142,13 @@ class PhysicalRecognizer:
                              exit_contact=deepcopy(hold), exit_tilt_rad=tilt,
                              exit_source_frame=frame.tolist(),initial_source_frame=self.source_initial_frame)
                     if self.source_exit_observer:m['source_mouth_crossing']=deepcopy(mouth_exits[label])
-                    self._event('source_exit', material_label=label, held_contact=hold, tilt_rad=tilt)
+                    self._event('source_exit', material_label=label, held_contact=hold, tilt_rad=tilt,
+                        source_exit_provenance=deepcopy(m))
             if m['eligible'] and m['exited_while_held_and_tilted'] and inside_target and not inside_source:
                 m['target_steps'] += 1
-                self._event('first_transfer', material_label=label, source_exit=deepcopy(m))
+                if 'first_transfer' not in self.events:
+                    self._event('first_transfer', material_label=label, source_exit=deepcopy(m),
+                        material_pose=self._pose(label).tolist(),**self._transfer_region_state())
             else:
                 m['target_steps'] = 0
             counts['transferred'] += int(m['target_steps'] >= self.c['settle_steps'])
@@ -1152,6 +1158,16 @@ class PhysicalRecognizer:
         if counts['transferred'] >= self.c['required_count']:
             self._emit(counts=counts, materials=self.material,
                        containment='whole rigid mesh in explicitly calibrated convex interior boxes')
+
+    def _transfer_region_state(self):
+        frames={};sources={}
+        for region in ('source','target'):
+            selector=self.c[region+'_frame'];pose,source=self.session._resolve_with_source(selector)
+            frames[region]=np.asarray(pose).tolist()
+            sources[region]={**source,'physics_step':self.contacts.steps,
+                'root_pose':self.session._object_pose(selector['label']).tolist()}
+        return {'current_region_frames':frames,'current_region_sources':sources,
+            'environment_index':self.session.env_idx}
 
     def _record_source_candidate(self, identifier, material, inside_source, hold, tilt, frame, candidates):
         ident=str(identifier)

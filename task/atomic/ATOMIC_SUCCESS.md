@@ -1511,3 +1511,45 @@ topology or a mapping from callback face indices to authored USD triangles. The
 first fresh surface pair (`cdd22a9`) was frozen before this additional provenance
 capture; it remains immutable. A further fresh capture is needed to validate
 these live configuration fields.
+
+## October 8: source-exit and first-transfer boundary qualification
+
+The independent material boundary validator now checks the source qualification
+used by geometry sampled at `source_exit` and `first_transfer`, including source
+cohort identity, actual source-mouth samples, held force binding, tilt and event
+ordering. A retained same-material candidate, when available, independently
+checks source-core containment, mesh/particle identity and the accepted physical
+gate. The source-mouth window is used only to check source evidence; it is not
+scored or relabeled as a destination crossing.
+
+Fresh recognizers retain an immutable source-exit provenance copy at the first
+source exit. At first transfer they capture the same-step source and target core
+frames, actual root/model/file/scale sources, environment identity and (for rigid
+contents) the current material root pose. The validator recomputes fluid-center
+or whole captured rigid-mesh inclusion in the target core and exclusion from
+the source core. This is first sampled entry, separate from settling and native
+quantity. It cannot certify whole-fluid volume or unrecorded intermediate force.
+
+Geometry measurement clocks and event copies must agree with the named retained
+boundary. Contradictory physical source or boundary evidence excludes condition
+and path scores using that boundary, retaining numerical reproduction and
+recorded native/atomic outcomes. Historical missing core frames or source-mouth
+windows remain partial; missing events remain unobserved. MD/HTML expose the
+per-boundary validation separately from destination stream scores.
+
+Four new tests check actual source and current-core geometry, bad force/order,
+wrong target/root/material poses, historical partial evidence, measurement clock
+and event-copy exclusion, and live-adapter capture through the host runtime
+fixture. Additional live matched trials are required before upgrading coverage.
+
+### Baked collision configuration result
+
+The CPU-only export `xylophone-collision-asset-calibration-1006` completed in
+29 seconds. The xylophone `/World/collision` and mallet `/World/collision` both
+have enabled collision and authored **convexDecomposition** approximation;
+settings include maxConvexHulls=64 and hullVertexLimit=16. The mallet also has
+enabled Cylinder/Sphere mesh colliders with **convexHull** approximation. Visual
+meshes have no CollisionAPI. These baked settings do not certify the effective
+live scene or cooked hull topology. The fresh `geometry-strike-collision-config-1006`
+pair from `f018b9f` captures actual scene settings without changing the 2 mm
+surface gate, geometric targets or prompts.
