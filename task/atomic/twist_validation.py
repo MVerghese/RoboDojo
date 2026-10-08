@@ -19,7 +19,8 @@ def rotation_sample(step,pose,pivot,hold,pair):
         ('label','resolved_arm','finger_bodies','physics_step','consecutive_contact_steps',
          'contact_interval_start_step','object_root','environment_index')}
     held['contacts']=force_rows(hold.get('contacts',[]),'finger_body')
-    constrained={k:deepcopy(v) for k,v in pair.items() if k in ('object_roots','physics_step','environment_index')}
+    constrained={k:deepcopy(v) for k,v in pair.items() if k in
+        ('label','other_label','frame','object_roots','physics_step','environment_index')}
     constrained['contacts']=force_rows(pair.get('contacts',[]))
     return {'physics_step':step,'object_pose':np.asarray(pose).tolist(),'pivot_pose':np.asarray(pivot).tolist(),
             'held_contact':held,'constraint_contact':constrained}
@@ -41,6 +42,13 @@ def validate_twist(stage,require_completion=True):
             and np.isfinite(impulse).all() and np.linalg.norm(impulse)>1e-9)
     def under(path,root):return path==root or path.startswith(root.rstrip('/')+'/')
     try:
+        canonical=event.get('constraint_contact',samples[-1]['constraint_contact'])
+        if not {'label','other_label','frame'}<=set(canonical):
+            unavailable.append('declared_constraint_label_frame_binding_absent')
+        else:
+            checks['rotation_declared_pair_binding']=(canonical['label']==config['label']
+                and canonical['other_label']==config['target_label'] and canonical['frame']=='environment_local_world')
+        canonical_roots=canonical.get('object_roots')
         axis=np.asarray(config['axis'],dtype=float);axis/=np.linalg.norm(axis)
         steps=[s['physics_step'] for s in samples]
         checks['rotation_contiguous_samples']=(len(samples)>=2 and all(type(n) is int and n>=0 for n in steps)
@@ -86,6 +94,11 @@ def validate_twist(stage,require_completion=True):
             pair=sample['constraint_contact'];rows=pair.get('contacts',[])
             checks['rotation_constraint_forces']=checks.get('rotation_constraint_forces',True) and bool(rows) and all(force(r,step) for r in rows)
             roots=pair.get('object_roots')
+            if canonical_roots is not None:
+                checks['rotation_same_constraint_roots']=checks.get('rotation_same_constraint_roots',True) and roots==canonical_roots
+            for key,expected in [('label',config['label']),('other_label',config['target_label']),('frame','environment_local_world')]:
+                if key in pair:
+                    checks['rotation_sample_pair_binding']=checks.get('rotation_sample_pair_binding',True) and pair[key]==expected
             if roots is None:unavailable.append('sampled_constraint_actor_roots_absent')
             else:
                 checks['rotation_constraint_actor_binding']=checks.get('rotation_constraint_actor_binding',True) and (

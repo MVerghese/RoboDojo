@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **384 offline atomic tests**. Dated sections below
+The current source passes **386 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -507,3 +507,15 @@ Report SHA256: `c9eeed91769eb47a923fd0b7df86cf1f6ff4f5df0aff8a38e2313ce879ff4ae4
 Proof SHA256: `ecb497d19fd786057bf5308f1743bc8e61b02845c6689738f31e857d919b9f53`.
 Retained artifact: `geometry-kinematics-replay-validation-1006/prefix-validation.json`.
 MD/HTML now displays the four separate residuals.
+
+
+### Twist target binding in retained histories
+
+Twist validation now checks the declared part/target labels and environment-frame
+marker, plus the same actual constraint roots throughout the sampled interval.
+Well-formed force rows from a different target cannot certify the requested
+rotation. Full completion witnesses can bind earlier compact samples through
+their retained named final pair; older partial diagnostics without those saved
+labels remain partial. Fresh compact samples and partial-interval diagnostics
+retain actual resolver label/frame metadata themselves. This is an archive
+binding check; no missing labels are inferred from collider names.

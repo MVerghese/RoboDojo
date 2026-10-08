@@ -19,7 +19,8 @@ def retained_twist():
               'contact_interval_start_step':10,'consecutive_contact_steps':i+1,
               'contacts':[{'finger_body':f,'arm':'left','actor0':f,'actor1':'/object',
                            'impulse':[.01,0,0],'force_report_physics_step':step} for f in ('/f0','/f1')]}
-        pair={'object_roots':['/object','/target'],'contacts':[{'actor0':'/object','actor1':'/target',
+        pair={'label':'object','other_label':'target','frame':'environment_local_world',
+              'object_roots':['/object','/target'],'contacts':[{'actor0':'/object','actor1':'/target',
                     'impulse':[0,0,.01],'force_report_physics_step':step}]}
         samples.append({'physics_step':step,'object_pose':[0,0,-.01,math.cos(angle/2),0,0,math.sin(angle/2)],
                         'pivot_pose':[0,0,0,1,0,0,0],'held_contact':hold,'constraint_contact':pair})
@@ -29,6 +30,23 @@ def retained_twist():
 
 
 class TwistWitnessTests(unittest.TestCase):
+    def test_well_formed_forces_cannot_borrow_another_named_target(self):
+        s=retained_twist()
+        for row in s['physical_events']['rotation']['rotation_samples']:
+            row['constraint_contact']['other_label']='other'
+        self.assertIn('rotation_declared_pair_binding',validate_twist(s)['failed_checks'])
+        s=retained_twist();pair=s['physical_events']['rotation']['rotation_samples'][3]['constraint_contact']
+        pair['object_roots'][1]='/other';pair['contacts'][0]['actor1']='/other'
+        self.assertIn('rotation_same_constraint_roots',validate_twist(s)['failed_checks'])
+
+    def test_old_partial_diagnostics_with_no_label_binding_remain_partial(self):
+        s=retained_twist()
+        for row in s['physical_events']['rotation']['rotation_samples']:
+            for key in ('label','other_label','frame'):row['constraint_contact'].pop(key)
+        result=validate_twist(s)
+        self.assertEqual(result['status'],'partial_evidence')
+        self.assertIn('declared_constraint_label_frame_binding_absent',result['unavailable'])
+
     def test_partial_interval_is_measured_without_claiming_completed_turn(self):
         s=retained_twist();event=s['physical_events']['rotation'];event['rotation_samples']=event['rotation_samples'][:5]
         event.update(physics_step=14,signed_angle_rad=math.pi/2,

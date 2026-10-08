@@ -1012,6 +1012,7 @@ class PhysicalRecognizer:
             'signed_angle_rad':angle,'off_axis_rotation_rad':off_axis,
             'radius_m':float(np.linalg.norm(local-(local@axis)*axis)),'depth_m':depth,
             'held_contact':deepcopy(hold),'rotation_samples':deepcopy(history),
+            'constraint_contact':deepcopy(last['constraint_contact']),
             'rotation_history_truncated':self.state.get('rotation_history_truncated',False)}
         if self.best_twist_interval is not None and self.c['direction']*self.best_twist_interval['signed_angle_rad']>self.c['direction']*angle:
             return deepcopy(self.best_twist_interval)
