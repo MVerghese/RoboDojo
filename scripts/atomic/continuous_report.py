@@ -491,12 +491,16 @@ def requirement_rows(diagnostics):
 REPLAY_HEADERS = ['Task', 'Stage', 'Mode', 'Boundary command', 'Substeps in command',
                   'Discarded tail', 'Prefix verified', 'Stage success', 'Root start error (mm)',
                   'Rigid root rotation error (degrees)', 'Rigid linear velocity error (mm/s)',
-                  'Rigid angular velocity error (degrees/s)']
+                  'Rigid angular velocity error (degrees/s)',
+                  'Revolute joint position error (degrees)', 'Revolute joint velocity error (degrees/s)',
+                  'Prismatic joint position error (mm)', 'Prismatic joint velocity error (mm/s)']
 REPLAY_SCOPE = ('Selected-stage replay jobs are excluded from full-task A/B counts. '
                 'Root residuals compare recorded and replayed starts in the same frame. '
                 'Rotation and velocity are reported only for retained, bound activation-time rigid solver readbacks; '
                 'missing historical fields are N/A. Columns show maxima over the compared named roots. '
-                'This does not establish robot-joint, drive, material, game or full simulator-state fidelity.')
+                'Robot columns show maxima over bound solver DOFs of each live USD joint type, including grippers. '
+                'Missing joint captures remain N/A; revolute residuals do not wrap full turns. '
+                'This does not establish drive, effort, material, game or full simulator-state fidelity.')
 
 
 def replay_validation_rows(data):
@@ -510,6 +514,11 @@ def replay_validation_rows(data):
             for component in ('orientation_error_deg','linear_velocity_error_mm_s','angular_velocity_error_deg_s'):
                 values=[r[component] for r in kinematics]
                 residuals.append(f'{max(values):.4f}' if values else 'N/A')
+            joints=comparison.get('robot_kinematics',{}).get('joints',[])
+            for kind in ('revolute','prismatic'):
+                for component in ('position_error','velocity_error'):
+                    values=[j[component] for j in joints if j['kind']==kind]
+                    residuals.append(f'{max(values):.4f}' if values else 'N/A')
             rows.append([proof['task'], start.get('stage_id'), start.get('mode'), start.get('action_index'),
                 start.get('replayed_physics_substeps', 'N/A'), start.get('discarded_control_substeps', 'N/A'),
                 episode.get('prefix_verified'), episode.get('selected_stage_success'),

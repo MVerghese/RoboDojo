@@ -68,9 +68,13 @@ def compare_start_positions(root, detail):
         from task.atomic.kinematics import compare_rigid_roots
         kinematics=compare_rigid_roots(before.get('initial_object_states',{}),atomic.get('initial_object_states',{}),
             boundary['physics_step'],atomic.get('initial_state_physics_step'))
+        from task.atomic.robot_kinematics import compare_robot_joints
+        robot=compare_robot_joints(before.get('initial_robot_state'),atomic.get('initial_robot_state'),
+            boundary['physics_step'],atomic.get('initial_state_physics_step'))
         return {'status':'observed_position_comparison', 'positions':positions,
                 'unmatched_labels':sorted(old.keys() ^ new.keys()), 'scope':scope,
                 'rigid_kinematics':kinematics,
+                'robot_kinematics':robot,
                 'source_report':str(original_path), 'source_report_sha256':hashlib.sha256(data).hexdigest()}
     except (KeyError, ValueError, TypeError, OSError) as error:
         return unavailable(type(error).__name__)

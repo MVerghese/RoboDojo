@@ -1426,3 +1426,28 @@ their retained named final pair; older partial diagnostics without those saved
 labels remain partial. Fresh compact samples and partial-interval diagnostics
 retain actual resolver label/frame metadata themselves. This is an archive
 binding check; no missing labels are inferred from collider names.
+
+
+### Robot joint state at activation and replay
+
+Fresh stages capture actual `IsaacLab.Articulation.data.joint_pos` and
+`joint_vel` after the simulator scene update, for every solver DOF, including
+grippers. Coupled arms sharing an articulation are captured once. The actual
+`root_physx_view.prim_paths` root must belong to the selected environment and
+configured robot subtree. Each solver joint name must uniquely match a live USD
+revolute or prismatic joint there; ambiguous, absent or unsupported types and
+failed/nonfinite readbacks remain unavailable. Commands and drive targets are
+not substituted for physical state. Captures are immutable and timestamped at
+the activation physics step.
+
+Replay compares the same environment, articulation and typed joint paths.
+Revolute position/velocity residuals are degrees and degrees/s; prismatic
+residuals are mm and mm/s. They remain separate columns in MD and HTML, with
+per-joint values in the proof. Rotation residuals do not wrap a full turn to zero.
+Columns show maxima within each joint type, with historical missing captures
+N/A. No arbitrary fidelity threshold is introduced. These readbacks do not prove
+equal drives, efforts, robot root state, contact warm starts or full simulator
+restoration, and they do not change atomic success or geometric conditioning.
+Six regressions cover immutable coupled capture, mixed units/full turns, bad
+binding/clock/source/nonfinite data, adjacent robots/environments, live USD joint
+ambiguity and separate report units. Fresh capture/replay evidence is pending.

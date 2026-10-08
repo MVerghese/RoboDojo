@@ -7383,7 +7383,7 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "b9716289d5c365676add74ac7de5c2eb061d155452b3dc9fcad51fccbdcace66"
+      "sha256": "a6ef7e2c479bb6d8783d2c70e6567c4dbfade5aa10a980fb2fc7528fce8a33f4"
     },
     {
       "path": "task/atomic/spec.py",
@@ -7500,6 +7500,10 @@
     {
       "path": "task/atomic/kinematics.py",
       "sha256": "e419af221937a6621f12a7b8b69326f0df7a14a2bf2296c3faae01f825aeffed"
+    },
+    {
+      "path": "task/atomic/robot_kinematics.py",
+      "sha256": "db20ca96c916691985e459f057dda15887c42acc35c16eab5cd93597dcf84847"
     },
     {
       "path": "src/eval_client/eval_env.py",

@@ -30,10 +30,11 @@ class KinematicsTests(unittest.TestCase):
         data={'replay_validations':[{'task':'task','episodes':[{'atomic_start':{'stage_id':'s'},
             'boundary_position_comparison':comparison}]}]}
         row=replay_validation_rows(data)[0]
-        self.assertEqual(row[-4:],['0.5000','2.0000','3.0000','4.0000'])
+        self.assertEqual(row[-8:-4],['0.5000','2.0000','3.0000','4.0000'])
+        self.assertEqual(row[-4:],['N/A']*4)
         self.assertEqual(len(row),len(REPLAY_HEADERS))
         comparison.pop('rigid_kinematics')
-        self.assertEqual(replay_validation_rows(data)[0][-3:],['N/A','N/A','N/A'])
+        self.assertEqual(replay_validation_rows(data)[0][-7:],['N/A']*7)
 
     def test_activation_capture_is_immutable_and_uses_actual_solver_velocity(self):
         w=capture_world()

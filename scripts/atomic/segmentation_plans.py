@@ -46,7 +46,7 @@ DEPENDENCIES = (
     'env/scene_manager/objects/garment.py',
     'task/atomic/contacts.py',
     'task/atomic/replay.py', 'task/atomic/recognition_validation.py', 'task/atomic/material_validation.py',
-    'task/atomic/support_validation.py', 'task/atomic/settling_validation.py', 'task/atomic/contact_validation.py', 'task/atomic/target_regions.py', 'task/atomic/kinematics.py',
+    'task/atomic/support_validation.py', 'task/atomic/settling_validation.py', 'task/atomic/contact_validation.py', 'task/atomic/target_regions.py', 'task/atomic/kinematics.py', 'task/atomic/robot_kinematics.py',
     'src/eval_client/eval_env.py',
 )
 
