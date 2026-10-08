@@ -257,6 +257,10 @@ def build_report(manifest, result, matrix, root):
                 for s in row.get('atomic_scores', []) if s.get('source_candidate_diagnostic', {}).get('status')
                 not in (None, 'not_applicable')]
                 for mode, row in (('baseline', ra), ('conditioned', rb))},
+            'target_surface_validation': {mode: [{'stage_id': s['stage_id'],
+                'capture':s['target_surface_validation'],'contact':s.get('target_surface_contact_validation')}
+                for s in row.get('atomic_scores',[]) if s.get('target_surface_validation')]
+                for mode,row in (('baseline',ra),('conditioned',rb))},
             'recognition_validation': {mode: [{'stage_id': s['stage_id'],
                 'status': s['recognition_witness']['status'],
                 'failed_checks': s['recognition_witness'].get('failed_checks', [])}
@@ -590,6 +594,26 @@ FINITE_MATERIAL_SCOPE = ('Initialization bounds independently recomputed from th
     'Open mesh seams do not establish solid volume; the enclosing disk is a conservative sampled-plane fit.')
 
 
+SURFACE_HEADERS = ['Arm','Stage','Live mesh capture','Contact validation','Max surface distance (mm)','Tolerance (mm)']
+SURFACE_SCOPE = ('Actual scaled USD collision-mesh region bound to the reviewed model/file, triangles and authored landmark. '
+    'Distance uses face interiors, edges and vertices of that region. Missing contacts are N/A; inconsistent metrics are excluded. '
+    'This does not certify cooked collider part identity, exclusive key contact, sound or timing.')
+
+
+def surface_validation_rows(task):
+    rows=[]
+    for mode,stages in task.get('target_surface_validation',{}).items():
+        for stage in stages:
+            capture=stage['capture'];contact=stage.get('contact') or {'status':'unobserved'}
+            metrics=contact.get('metrics',{}) if contact['status']=='consistent_evidence' else {}
+            distances=metrics.get('selected_surface_distances_m',[])
+            status=capture['status'] + (': '+capture['reason'] if capture.get('reason') else '')
+            rows.append([mode,stage['stage_id'],status,contact['status'],
+                number(max(distances)*1000) if distances else 'N/A',
+                number(metrics['distance_tolerance_m']*1000) if 'distance_tolerance_m' in metrics else 'N/A'])
+    return rows
+
+
 def twist_diagnostic_rows(task):
     rows = []
     for mode, intervals in task.get('twist_interval_diagnostics', {}).items():
@@ -699,6 +723,9 @@ def report_markdown(data):
         if source_candidate_rows(task):
             lines += ['**Source-mouth candidate diagnostics:**', '', SOURCE_CANDIDATE_SCOPE, '',
                 *table(SOURCE_CANDIDATE_HEADERS, source_candidate_rows(task)), '']
+        if surface_validation_rows(task):
+            lines += ['**Live strike surface validation:**','',SURFACE_SCOPE,'',
+                *table(SURFACE_HEADERS,surface_validation_rows(task)),'']
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 lines += ['**Recognition witness failures (' + mode + '):** `' + json.dumps(failures, sort_keys=True)
@@ -791,6 +818,8 @@ def report_html(data):
             content += '<h3>Finite material mesh bounds</h3><p>' + esc(FINITE_MATERIAL_SCOPE) + '</p>' + html_table(FINITE_MATERIAL_HEADERS, finite_material_rows(task))
         if source_candidate_rows(task):
             content += '<h3>Source-mouth candidate diagnostics</h3><p>' + esc(SOURCE_CANDIDATE_SCOPE) + '</p>' + html_table(SOURCE_CANDIDATE_HEADERS, source_candidate_rows(task))
+        if surface_validation_rows(task):
+            content += '<h3>Live strike surface validation</h3><p>'+esc(SURFACE_SCOPE)+'</p>'+html_table(SURFACE_HEADERS,surface_validation_rows(task))
         for mode, failures in task.get('recognition_validation', {}).items():
             if failures:
                 content += '<p><strong>Recognition witness failures (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(failures, sort_keys=True)) + '</code>. Geometry and paths using invalid boundary events are excluded from geometric summaries.</p>'

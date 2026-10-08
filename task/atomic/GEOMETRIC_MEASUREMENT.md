@@ -1660,8 +1660,7 @@ qualification evidence is the next instrumentation priority.
 `SourceExitObserver` now retains the first 32 outward candidate crossings,
 including rejected fit/sampling cases, their adjacent raw positions/opening
 poses, actual finite mesh bound when requested, numerical result, physics
-clock and action index. Total counts and outcomes continue over the whole
-episode; a truncation flag prevents treating the retained subset as a complete
+clock and action index. Total counts and outcomes continue over the observed steps of the stage; a truncation flag prevents treating the retained subset as a complete
 distribution. Returned snapshots are immutable copies.
 
 At each retained candidate, both fluid and rigid recognizers add the same-step
@@ -1785,3 +1784,44 @@ python scripts/atomic/audit_strike_surfaces.py \
 The source passes 422 offline atomic tests, including face/edge/sliver distance,
 collision-versus-visual selection, surface ambiguity/alias/scale rejection and
 archive frame/force/clock/model/origin corruption counterexamples.
+
+## October 8: live strike surface-region instrumentation
+
+The optional `recognition.target_surface` binding is supported by
+`held_tool_strike` and `held_tool_landmark_contact`. It names a reviewed asset
+model, file SHA-256, scaled whole-mesh bounds, root-relative collision mesh paths,
+source triangle indices and their calibrated coordinates, and the authored
+functional-point frame (index 0). At stage activation the adapter resolves the
+actual model/file and live scaled USD mesh, verifies every selected triangle
+and landmark transform, and retains an immutable root-local capture. Missing or
+changed geometry remains unavailable.
+
+At each candidate force-bearing tool/target encounter, actual environment-local
+contact points are transformed into the current target root frame. Distance is
+the Euclidean distance to the selected triangle region, including face interiors,
+edges and vertices. `distance_tolerance_m` is in metres. With `require_contact: true`,
+only contacts within that tolerance can contribute to the physical contact/strike
+recognizer; sustained hold, landmark neighbourhoods, force, approach and retraction
+requirements continue to apply. With `false`, the surface distance is diagnostic.
+
+The independent validator checks model/file/scale/triangle/landmark bindings,
+capture and event clocks, contact selection, positive impulses, unit force
+normals, same-step reports, target actor identity, environment origin conversion
+and target-root/landmark consistency. Contradictory surface evidence excludes
+condition and path scores using the affected recognition boundaries while
+preserving numerical arithmetic and recorded native/atomic outcomes. Missing
+historical captures stay partial. MD and HTML show capture/contact statuses and
+maximum selected surface distance and tolerance separately in **mm**.
+
+Five counterexample tests exercise changed actual asset/mesh, landmark proximity
+without surface contact, stale/zero-force reports, wrong actor/origin/root and
+invalid selected indices, and cached-window score exclusion. These are offline
+tests; a fresh live matched pair is required to establish live mesh capture.
+The xylophone pair applies the same **2 mm** surface gate to both arms without
+changing geometric targets or delivered prompt text from the earlier strict
+target-region pair.
+
+This measures a region of the actual scaled USD collision mesh. It does not
+certify a separately cooked key collider, exclusive single-key impact, sound
+or musical timing. Authored hit landmarks are about 5.2 mm from the key surfaces;
+contact-to-landmark distance and contact-to-surface distance are distinct metrics.

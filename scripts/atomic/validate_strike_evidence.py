@@ -59,6 +59,10 @@ def validate_strike(stage):
         if 'target_candidates' in config:
             from task.atomic.target_regions import validate_target_region_witness
             checks.update(validate_target_region_witness(config,impact))
+        if 'target_surface' in config:
+            from task.atomic.strike_surfaces import validate_surface_event
+            surface=validate_surface_event(config,impact,stage.get('target_surface_binding'))
+            checks.update(surface.get('checks',{}));unavailable.extend(surface.get('unavailable',[]))
         distances = {}
         for side in ('tool', 'target'):
             distances[side] = np.linalg.norm(points-np.asarray(impact[f'{side}_landmark_position']), axis=1)

@@ -760,6 +760,7 @@ class AtomicSession:
             'twist_rotation_diagnostic': self._physical_recognizer.twist_interval() if self._physical_recognizer else None,
             'material_transfer_initial_state': deepcopy(getattr(self._physical_recognizer, 'fluid_initial', None)),
             'material_bounds':deepcopy(getattr(self._physical_recognizer,'material_bounds',{})),
+            'target_surface_binding':deepcopy(getattr(self._physical_recognizer,'target_surface_binding',None)),
             'material_flow': self._physical_recognizer.flow_observer.summary() if (
                 self._physical_recognizer and self._physical_recognizer.flow_observer) else None,
             'trajectories': self._trajectory_observer.summary() if self._trajectory_observer else {},

@@ -7383,7 +7383,7 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "52264deaf99553988b310bf9b9dcdd957b9f8e4c02ee25eb505852f813e602b5"
+      "sha256": "158c32c542b031d7e594919691468369ec81cd4eecae83e6aeeacaa01fee85dc"
     },
     {
       "path": "task/atomic/spec.py",
@@ -7391,7 +7391,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "7bca9190c2e0234f1c55732a3270ddd7b1a8ceb102813fb5f14c8fe352fedf1a"
+      "sha256": "50034de2f3869a9d7cc0c27c253df8540bdfd10a903440c15613c7c971feef94"
     },
     {
       "path": "task/atomic/twist_validation.py",
@@ -7456,6 +7456,10 @@
     {
       "path": "task/atomic/surface_distance.py",
       "sha256": "05cafdffa14ec745a6742e4d0c8ac64637f14affd2bfbecdae6798baeec5e73d"
+    },
+    {
+      "path": "task/atomic/strike_surfaces.py",
+      "sha256": "e13311ebf209c9b6b0a9c029e56acb4323018740b906c2d50e6453858197409c"
     },
     {
       "path": "env/scene_manager/objects/fluid.py",

@@ -85,7 +85,7 @@ def validate_recognition(config, family, validate_selector):
     fields = SCHEMAS[kind][1] | {'kind'}
     optional = {'flow', 'source_exit'} if kind in ('rigid_material_transfer', 'fluid_material_transfer') else set()
     if kind in ('held_tool_strike','held_tool_landmark_contact'):
-        optional={'target_candidates','target_identity_margin_m'}
+        optional={'target_candidates','target_identity_margin_m','target_surface'}
     if set(config) - optional != fields:
         raise ValueError(f'{kind} requires exactly {sorted(fields)}')
     if {'target_candidates','target_identity_margin_m'} & set(config):
@@ -93,6 +93,9 @@ def validate_recognition(config, family, validate_selector):
             raise ValueError('target regions require both candidates and identity margin')
         from task.atomic.target_regions import validate_target_regions
         validate_target_regions(config,validate_selector)
+    if 'target_surface' in config:
+        from task.atomic.strike_surfaces import validate_definition
+        validate_definition(config['target_surface'],config)
     if 'flow' in config:
         from task.atomic.flow import validate_flow
         validate_flow(config['flow'], validate_selector)
@@ -218,6 +221,10 @@ class PhysicalRecognizer:
         self.fluid = {}
         self.flow_observer = None
         self.source_exit_observer = None
+        self.target_surface_binding = None
+        if 'target_surface' in self.c:
+            from task.atomic.strike_surfaces import capture_surface
+            self.target_surface_binding=capture_surface(session,self.c)
         if 'flow' in self.c:
             from task.atomic.flow import FlowObserver
             self.flow_observer = FlowObserver(self.c['flow'])
@@ -693,10 +700,22 @@ class PhysicalRecognizer:
                 'physics_step':self.contacts.steps,'frame':'environment_local_world',
                 'all_contact_points':points.tolist(),'all_contact_assignments':membership,
                 **{key:np.asarray(values)[eligible].tolist() for key,values in membership.items() if key!='eligible'}}
+        surface=None
+        if 'target_surface' in self.c:
+            from task.atomic.strike_surfaces import contact_surface
+            surface,mask=contact_surface(self.target_surface_binding,self.c['target_surface'],points,
+                self._pose(self.c['target_label']),self.contacts.steps,pair.get('environment_origin_world_m'))
+            self.metrics['target_surface_status']=surface['status']
+            if surface.get('reason'):self.metrics['target_surface_reason']=surface['reason']
+            if self.c['target_surface']['require_contact']:eligible &= mask
+            surface['selected_point_indices']=np.flatnonzero(eligible).tolist()
+            if identity is not None:
+                identity.update({key:np.asarray(values)[eligible].tolist() for key,values in membership.items() if key!='eligible'})
         rows = [row for row, accept in zip(pair['contacts'], eligible) if accept]
         impulse = sum(float(np.linalg.norm(row['impulse'])) for row in rows)
         return {'tool_target_contacts':rows,'contact_points':points[eligible].tolist(),'total_impulse_ns':impulse,
                 **({'target_identity':identity} if identity is not None else {}),
+                **({'target_surface_witness':surface} if surface is not None else {}),
                 'tool_landmark_position':tool.tolist(),'target_landmark_position':target.tolist(),
                 'tool_landmark_distances_m':tool_distance[eligible].tolist(),
                 'target_landmark_distances_m':target_distance[eligible].tolist()}

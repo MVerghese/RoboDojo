@@ -90,6 +90,19 @@ def audit_material_bounds(bounds):
     return output
 
 
+def apply_surface_capture_validation(atomic,output):
+    config=atomic.get('recognition') or {}
+    if 'target_surface' not in config:return
+    from task.atomic.strike_surfaces import validate_capture,validate_surface_event
+    capture=atomic.get('target_surface_binding')
+    output['target_surface_validation']=validate_capture(capture,config['target_surface'])
+    output['target_surface_validation']['capture_status']=(capture or {}).get('status','absent')
+    if (capture or {}).get('reason'):output['target_surface_validation']['reason']=capture['reason']
+    event_name='impact' if config['kind']=='held_tool_strike' else 'contact'
+    event=atomic.get('physical_events',{}).get(event_name)
+    if event is not None:output['target_surface_contact_validation']=validate_surface_event(config,event,capture)
+
+
 def apply_stage_success_validation(atomic,output):
     from task.atomic.completion_validation import validate_stage_success
     for ident,raw in atomic.get('geometry',{}).items():
@@ -144,13 +157,18 @@ def apply_recognition_validation(atomic, output):
         witness=validate_twist(atomic)
         output['twist_rotation_diagnostic']=validate_twist_diagnostic(atomic)
         invalid={'rotation'} if witness['status']=='inconsistent_evidence' else set()
-    elif config.get('kind') == 'held_tool_landmark_contact' and 'target_candidates' in config:
+    elif config.get('kind') == 'held_tool_landmark_contact' and ('target_candidates' in config or 'target_surface' in config):
         from task.atomic.target_regions import validate_target_region_witness
         event=atomic.get('physical_events',{}).get('contact')
-        checks=validate_target_region_witness(config,event) if event is not None else {}
+        checks=validate_target_region_witness(config,event) if event is not None and 'target_candidates' in config else {}
+        unavailable=[]
+        if event is not None and 'target_surface' in config:
+            from task.atomic.strike_surfaces import validate_surface_event
+            surface=validate_surface_event(config,event,atomic.get('target_surface_binding'))
+            checks.update(surface.get('checks',{}));unavailable.extend(surface.get('unavailable',[]))
         failed=[key for key,value in checks.items() if not value]
-        witness={'status':'unobserved' if event is None else 'inconsistent_evidence' if failed else 'consistent_evidence',
-                 'checks':checks,'failed_checks':failed}
+        witness={'status':'unobserved' if event is None else 'inconsistent_evidence' if failed else 'partial_evidence' if unavailable else 'consistent_evidence',
+                 'checks':checks,'failed_checks':failed,'unavailable':unavailable}
         invalid={'contact'} if failed else set()
     elif config.get('kind') == 'held_tool_strike':
         from scripts.atomic.validate_strike_evidence import validate_strike
@@ -158,6 +176,7 @@ def apply_recognition_validation(atomic, output):
         window_errors = {'event_order', 'elapsed_steps', 'same_arm_hold_interval',
                          'retraction_rise_from_raw_poses', 'contiguous_retraction_samples'}
         window_errors.update(name for name in witness.get('failed_checks',[]) if name.startswith('target_region_'))
+        window_errors.update(name for name in witness.get('failed_checks',[]) if name.startswith('surface_'))
         invalid = {'impact', 'retracted', 'strike'} if window_errors.intersection(witness.get('failed_checks', [])) else set()
     else:
         from task.atomic.recognition_validation import validate_recognition_window
@@ -212,6 +231,7 @@ def validate_cached_recognition(report, scores):
             apply_stage_success_validation(stage,score)
             from task.atomic.source_candidates import audit_source_candidates
             score['source_candidate_diagnostic']=audit_source_candidates(stage)
+            apply_surface_capture_validation(stage,score)
 
 
 def apply_contact_validation(atomic, output):
@@ -327,6 +347,7 @@ def audit_atomic(atomic, variant=None):
     }
     from task.atomic.source_candidates import audit_source_candidates
     output['source_candidate_diagnostic']=audit_source_candidates(atomic)
+    apply_surface_capture_validation(atomic,output)
     apply_recognition_validation(atomic, output)
     apply_flow_validation(atomic, output)
     apply_support_validation(atomic, output)

@@ -113,6 +113,11 @@ class ContinuousReportTests(unittest.TestCase):
         combined['tasks'][0]['cloth_bending_diagnostics']={'conditioned':[{'largest_component_total_edge_length_m':.01,'max_new_bend_rad':math.pi/2}]}
         combined['tasks'][0]['physical_requirement_diagnostics']={'baseline':[{'stage_id':'tool',
             'eligibility':{'gate_counts':{'tool_target_contact':{'true':2,'false':8,'not_evaluated':1}}}}]}
+        combined['tasks'][0]['target_surface_validation']={'baseline':[{'stage_id':'strike',
+            'capture':{'status':'consistent_evidence'},'contact':{'status':'consistent_evidence',
+            'metrics':{'selected_surface_distances_m':[.0013],'distance_tolerance_m':.002}}}],
+            'conditioned':[{'stage_id':'strike','capture':{'status':'partial_evidence','reason':'missing live mesh'},
+                'contact':{'status':'inconsistent_evidence','metrics':{'selected_surface_distances_m':[999]}}}]}
         md, page = report_markdown(combined), report_html(combined)
         self.assertIn('original target', md)
         self.assertIn('new target <unsafe>', md)
@@ -129,6 +134,11 @@ class ContinuousReportTests(unittest.TestCase):
             self.assertIn('Observed recognition requirements',report)
             self.assertIn('tool_target_contact',report)
             self.assertIn('Not evaluated steps',report)
+            self.assertIn('Live strike surface validation',report)
+            self.assertIn('Max surface distance (mm)',report)
+            self.assertIn('1.3',report)
+            self.assertIn('missing live mesh',report)
+            self.assertNotIn('999000',report)
 
     def test_flow_path_and_selected_referent_keep_units_and_exclude_unscored_crossing(self):
         rows={'atomic_scores':[{'stage_id':'s','family':'pour','conditions':{},
