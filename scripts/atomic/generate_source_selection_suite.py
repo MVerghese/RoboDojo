@@ -18,7 +18,10 @@ from scripts.atomic.storage import atomic_write_json
 TASKS={
     'pour_liquid_into_cup':('bottle','cup',{'wuliangye'},{'mug','goblet'}),
     'pour_balls_into_vase':('cup','vase',{'cup'},{'vase'}),
+    'play_Xylophone':('mallet','xylophone',{'mallet'},{'xylophone'}),
 }
+ROLES={task:{'family':'pour','slot':'source'} for task in TASKS if task!='play_Xylophone'}
+ROLES['play_Xylophone']={'family':'touch_with_tool','slot':'tool'}
 FACTORS=('point','pose','displacement','orientation','relation')
 
 
@@ -38,7 +41,8 @@ def probes(scene,task):
     ref=poses[target];offset=_rotation(ref[3:]).T@(poses[source][:3]-ref[:3])
     q=matrix_quaternion(_rotation(ref[3:]).T@_rotation(poses[source][3:])).tolist()
     reference={'kind':'object_center_pose','label':target}
-    common={'id':'initial_source','slot':'source','measurement':{'kind':'object_center_position','label':'@candidate'}}
+    role=ROLES[task]
+    common={'id':'initial_'+role['slot'],'slot':role['slot'],'measurement':{'kind':'object_center_position','label':'@candidate'}}
     axis=int(np.argmax(np.abs(offset[:2])));sign=1 if offset[axis]>0 else -1
     relation={(0,1):'right_of',(0,-1):'left_of',(1,1):'in_front_of',(1,-1):'behind'}[axis,sign]
     # Half the measured separation gives a discriminating initial center relation.
@@ -61,20 +65,22 @@ def probes(scene,task):
         if eligible!=[source]:
             blocked[factor]={'reason':'initial geometric factor does not uniquely select source','eligible':eligible,'preflight':results}
             continue
-        text='Begin by choosing the pour source vessel using its initial scaled mesh-bounds center and root axes. '
+        description='pour source vessel' if role['family']=='pour' else 'tool for touching the xylophone'
+        text='Begin by choosing the '+description+' using its initial scaled mesh-bounds center and root axes. '
         if factor=='point':text+='Its initial center must be at '+json.dumps([v*1000 for v in c['expected']])+' mm in environment-local world XYZ, within 20 mm Euclidean distance. '
         else:
             text+='Use the initial '+target+' mesh-bounds-center frame, whose initial world XYZ is '+json.dumps((ref[:3]*1000).tolist())+' mm and wxyz orientation is '+json.dumps(ref[3:].tolist())+'. '
             if factor in ('pose','displacement'):text+='The initial source center offset must be '+json.dumps((offset*1000).tolist())+' mm in those initial reference axes, within 20 mm Euclidean error. '
             if factor in ('pose','orientation'):text+='Its initial root orientation relative to those axes must match wxyz '+json.dumps(q)+', within 10 degrees full orientation error. '
             if factor=='relation':text+=f'Its initial center must be {relation} the reference center, at least {margin*1000:.9f} mm along the named reference axis, allowing 5 mm shortfall. This is a center-point relation. '
-        text+='These candidate positions and orientations refer to the beginning of the episode and stay fixed when objects move. Selection is measured at the first sustained two-finger contact with either candidate; this does not certify a completed pour.'
+        text+='These candidate positions and orientations refer to the beginning of the episode and stay fixed when objects move. Selection is measured at the first sustained two-finger contact with either candidate; this does not certify a completed action.'
         rows[factor]={'condition':c,'target':source,'preflight':results,'prompt':text}
     return rows,blocked
 
 
-def generate(output,source_suite,calibration_reports):
+def generate(output,source_suite,calibration_reports,suite_prefix='geometry-source-selection'):
     if output.exists() and any(output.iterdir()):raise ValueError('use a fresh empty output directory')
+    if suite_prefix not in ('geometry-source-selection','geometry-tool-selection'):raise ValueError('reviewed suite prefix required')
     source_manifest=json.loads(source_suite.read_text());pairs={};calibrations={};blocked={}
     for task,path in calibration_reports.items():
         cases=[c for c in source_manifest['cases'] if c['task']==task]
@@ -98,9 +104,9 @@ def generate(output,source_suite,calibration_reports):
     for factor in FACTORS:
         eligible=[task for task,pair in pairs.items() if factor in pair[2]]
         if not eligible:continue
-        root=output/f'geometry-source-selection-{factor}-1006';root.mkdir()
+        root=output/f'{suite_prefix}-{factor}-1006';root.mkdir()
         manifest={**deepcopy(source_manifest),'cases':[],'phase':'initial_source_'+factor,
-            'calibration':deepcopy(calibrations),'scope':'first selected pour-source initial geometry; no completed-pour or language-role inference'}
+            'calibration':deepcopy(calibrations),'scope':'first selected object-role initial geometry; no completed-action or language-role inference'}
         if 'coverage' in manifest:manifest['coverage']=[r for r in manifest['coverage'] if r['task'] in eligible]
         for task in eligible:
             cases,original,rows=pairs[task];row=rows[factor];base=deepcopy(original)
@@ -108,7 +114,7 @@ def generate(output,source_suite,calibration_reports):
             if len(pickups)!=1 or base['stage_dependencies'].get(pickups[0]['id'])!=[]:raise ValueError('initial source pickup stage required')
             stage=pickups[0]
             if stage.get('selection'):raise ValueError('existing selector must be preserved rather than replaced')
-            stage['selection']={'role':{'family':'pour','slot':'source'},'candidates':list(TASKS[task][:2]),
+            stage['selection']={'role':deepcopy(ROLES[task]),'candidates':list(TASKS[task][:2]),
                 'arm':'any','min_finger_bodies':2,'min_contact_steps':2,'conditions':[row['condition']]}
             for old in cases:
                 program=deepcopy(base)
@@ -120,13 +126,16 @@ def generate(output,source_suite,calibration_reports):
         validate_suite(manifest);atomic_write_json(root/'suite.json',manifest)
         atomic_write_json(root/'clone-provenance.json',{'source_suite':str(source_suite.resolve()),'calibration':calibrations,
             'factor':factor,'preflight':{t:pairs[t][2][factor] for t in eligible},
-            'changes':'identical initial pour-source selection observer in both arms; append isolates selection factor; existing recognition and scored action targets retained'})
+            'changes':'identical initial object-role selection observer in both arms; append isolates selection factor; existing recognition and scored action targets retained'})
         suites.append(root)
     return suites
 
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('--output-dir',type=Path,required=True)
-    p.add_argument('--source-suite',type=Path,required=True);p.add_argument('--liquid-calibration',type=Path,required=True)
-    p.add_argument('--balls-calibration',type=Path,required=True);a=p.parse_args()
-    print('\n'.join(map(str,generate(a.output_dir,a.source_suite,{'pour_liquid_into_cup':a.liquid_calibration,'pour_balls_into_vase':a.balls_calibration}))))
+    p.add_argument('--source-suite',type=Path,required=True);p.add_argument('--liquid-calibration',type=Path)
+    p.add_argument('--balls-calibration',type=Path);p.add_argument('--xylophone-calibration',type=Path)
+    p.add_argument('--suite-prefix',choices=['geometry-source-selection','geometry-tool-selection'],default='geometry-source-selection');a=p.parse_args()
+    reports={task:path for task,path in [('pour_liquid_into_cup',a.liquid_calibration),('pour_balls_into_vase',a.balls_calibration),('play_Xylophone',a.xylophone_calibration)] if path is not None}
+    if not reports:p.error('at least one reviewed task calibration report is required')
+    print('\n'.join(map(str,generate(a.output_dir,a.source_suite,reports,a.suite_prefix))))

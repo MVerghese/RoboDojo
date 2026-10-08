@@ -2217,3 +2217,25 @@ conditioned append names only the vessel-center goal. This trial preserves
 physical recognition and does not certify full fluid quantity or density.
 
 Mouth/body metadata and target-composition gate: **446 atomic tests passed**.
+
+
+## October 8: initial tool-role factor calibration
+
+The same role-selection generator now supports the reviewed `play_Xylophone`
+initial mallet/xylophone candidates with `role: {family: touch_with_tool, slot: tool}`.
+Native task source/config and saved pre-policy model identities, scaled bounds
+and root orientations were reviewed. Point, SE(3), relative displacement, full
+relative orientation and point-scope spatial relation each uniquely select the
+mallet in this initial scene. Each factor gets a separate immutable A/B pair,
+with unchanged physical strike recognition and existing numeric diagnostics.
+The conditioned append names only the chosen initial tool factor.
+
+These are **five pairs / ten intended episodes**. They use the current force
+history capture, but require collection and independent audit before claiming
+live tool-slot coverage. Selection means the first sustained two-finger contact
+with one candidate and scores its immutable initial geometry; it does not
+recognize a tool/target impact or infer semantic tool identity. The fixed
+geometry xylophone is a contrasting contact candidate, not a claim it can be
+lifted. Tool-tip, target-key and contact-region slots remain separate contracts.
+
+Initial tool-role calibration gate: **447 atomic tests passed**.

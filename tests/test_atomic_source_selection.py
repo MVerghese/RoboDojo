@@ -12,7 +12,11 @@ from scripts.atomic.audit_scores import audit_atomic
 
 
 def scene(task):
-    labels,models,angles=(('bottle','cup'),('wuliangye','mug'),(0,0)) if task=='pour_liquid_into_cup' else (('cup','vase'),('cup','vase'),(55,10))
+    configurations={
+        'pour_liquid_into_cup':(('bottle','cup'),('wuliangye','mug'),(0,0)),
+        'pour_balls_into_vase':(('cup','vase'),('cup','vase'),(55,10)),
+        'play_Xylophone':(('mallet','xylophone'),('mallet','xylophone'),(55,170))}
+    labels,models,angles=configurations[task]
     data={'coordinate_frame':'environment_local_world','quaternion_order':'wxyz','objects':{}}
     for label,model,angle,x in zip(labels,models,angles,(-.2,.1)):
         q=[math.cos(math.radians(angle)/2),0,0,math.sin(math.radians(angle)/2)]
@@ -22,6 +26,17 @@ def scene(task):
 
 
 class SourceSelectionTests(unittest.TestCase):
+    def test_tool_role_factors_require_actual_reviewed_tool_geometry(self):
+        rows,blocked=probes(scene('play_Xylophone'),'play_Xylophone')
+        self.assertEqual(set(rows),{'point','pose','displacement','orientation','relation'})
+        self.assertEqual(blocked,{})
+        for row in rows.values():
+            self.assertEqual(row['target'],'mallet');self.assertEqual(row['condition']['slot'],'tool')
+            self.assertEqual([l for l,r in row['preflight'].items() if r['passed']],['mallet'])
+        bad=scene('play_Xylophone');bad['objects']['mallet']['initial_root_pose'][3:]=bad['objects']['xylophone']['initial_root_pose'][3:]
+        rows,blocked=probes(bad,'play_Xylophone')
+        self.assertNotIn('orientation',rows);self.assertEqual(blocked['orientation']['eligible'],['mallet','xylophone'])
+
     def test_role_selection_uses_initial_candidate_geometry_not_moved_outcome(self):
         world=runtime.World();world.goal=False;world.poses['other'][0]=.2
         selection=runtime.selection_definition(role={'family':'pour','slot':'source'})
