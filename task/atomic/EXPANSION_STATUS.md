@@ -14,6 +14,32 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
+October 8 UTC / October 7 local, 02:40 UTC: combined MD/HTML has **287 valid
+episodes, 142 verified A/B pairs, 1423 reproduced event scores**, zero arithmetic
+mismatches and ten separately excluded historical windows. All new contact,
+referent, nominal-frame and distinct-region pairs are collected. The fork pushed
+`21405e1` and passes 378 tests. New independent proofs:
+
+- Distinct strike regions: 12 consistent completed witnesses, 102 consistent
+  contact snapshots, no contradictions; 8/4 physical strikes and native false/false.
+- Nominal grasp frames: 29 consistent snapshots, all 16 added scores reproduced;
+  both pickups in each arm. Full rotations 0.73–0.74 degrees baseline versus
+  0.33–0.41 degrees conditioned; native false/false. One conditioned contact is
+  0.1064 mm outside the position bound. One episode per arm is descriptive only.
+- Isolated initial referents: all eight cases collected, all candidate/force
+  witnesses consistent; every first selection wrong. Point selection's fresh
+  force/root pair is also collected with consistent witnesses in both arms.
+- Both bowl capture pairs: native true/true, all 16 activation readbacks observed
+  across the two profiles. The later boundary has actual nonzero solver velocities.
+- New high-9000 jobs: scoped kinematic replay `rb-kinematics-replay-1007-000-5z4z`
+  and the two-case screw history batch from `21405e1`. No completion is inferred
+  until collection/proof. Replay monitor submitted it after validating the source.
+
+The latest twelve GPU admission observations since 00:00 UTC had no existing
+allocations and no rejection. Raw ledgers and adjacent-user evidence are retained.
+No healthy evaluation was cancelled.
+
+
 October 8 UTC / October 7 local, 00:14 UTC: all sixteen contact-binding and all
 eight contact-frame cases are collected. Independent contact-binding checks:
 455 consistent snapshots, 16 historical partial pair snapshots, zero

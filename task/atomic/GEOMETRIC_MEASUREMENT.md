@@ -4,14 +4,14 @@ Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
 Current verification: 378 host tests; completed bowl, multiple-boundary button
-and single-ancestry graph selected-stage replay proofs; independent support,
-finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
-binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
-validation; all eight additional matched contact-frame runs are collected. A fresh pair
-with distinct strike target regions is being prepared at high-9000. Cloth force/material correspondence, unique task creases, full
-layering/volume transfer and general graph/game/material state restoration remain
-limited. Dated evidence sections retain their earlier snapshots; latest proof
-details are at the end of this document.
+and single-ancestry graph selected-stage replay proofs. All sixteen contact-binding,
+eight contact-frame, eight isolated referent-factor, two nominal grasp-frame and
+two distinct strike-region cases are collected and independently audited.
+Fresh bowl captures retain actual solver pose/velocity; a later-boundary kinematic
+replay and a screw history pair are submitted at high-9000. Cloth force/material
+correspondence, unique task creases, full layering/volume transfer and general
+graph/game/material state restoration remain limited. Dated sections retain their
+earlier snapshots; latest proof details are at the end of this document.
 
 ### Explicit contact pose and orientation (October 7)
 
@@ -1236,9 +1236,9 @@ Evidence: `geometry-contact-frames-1006/independent-contact-batch-validation.jso
 Fresh initial selection suites isolate SE(3) pose, displacement, full orientation
 and point-scope spatial relation. Preflight identifies one initial geometric
 target among three actual seed-0 cube frames; snapshot poses do not move with
-later selections. Seven episodes are collected and independently reproduce
+later selections. All eight episodes are collected and independently reproduce
 candidate binding/geometry and selected roots/finger forces/arm/timing; the
-remaining displacement baseline is pending at this snapshot. Every observed
+displacement pair is now complete. Every observed
 first selection is `block_2`, while pose/displacement/orientation target `block_0`
 and spatial relation targets `block_1`. Native tasks failed.
 
@@ -1310,3 +1310,55 @@ requiring the completed-turn threshold. A measured 90 degree partial turn
 therefore stays a diagnostic with an unobserved completion event, not a successful
 twist or native task. The history cap is explicit; truncated histories remain
 partial. Empty invalid intervals do not repeatedly copy retained histories.
+
+### Live nominal grasp-frame calibration
+
+The `geometry-calibrated-contact-frames-1006` pair scores orientations known to
+have occurred during a successful source grasp, retaining the original 30 mm
+contact-center and box constraints. Both arms made both physical pickups, with
+native task failure in both. All sixteen added scores reproduced and 29 contact
+snapshots were consistent. These descriptive observations are one episode per
+arm, not a causal or statistical estimate.
+
+| Stage | Arm | Worst contact translation | Full link orientation | Local-z orientation |
+| --- | --- | --- | --- | --- |
+| pick_block_1 | baseline | 24.0602 mm | 0.7420 degrees | 0.7417 degrees |
+| pick_block_1 | conditioned | 23.0201 mm | 0.4057 degrees | 0.4048 degrees |
+| pick_block_2 | baseline | 24.7466 mm | 0.7301 degrees | 0.7281 degrees |
+| pick_block_2 | conditioned | 30.1064 mm | 0.3336 degrees | 0.3331 degrees |
+
+The second conditioned pose fails its 30 mm translation bound by 0.1064 mm;
+orientation still meets the declared 15 degree bounds. A calibration target
+witnessed once is not a certificate that arbitrary perturbed axes are reachable.
+Evidence: `geometry-calibrated-contact-frames-1006/independent-contact-batch-validation.json`.
+
+### Live distinct strike-region validation
+
+The fresh `geometry-strike-target-regions-1006` pair recognizes eight baseline
+and four conditioned strikes; both native tasks failed. Every accepted point is
+in its declared target's nearest-landmark region with the 2 mm margin. The minimum
+accepted distance advantage is 26.6625 mm baseline / 25.8051 mm conditioned.
+All twelve retained approach/impact/retraction/target-region witnesses and 102
+contact snapshots are consistent, with no contradictory windows. Four later
+conditioned strikes remain unobserved. Prompts and geometric scoring definitions
+were preserved from the source treatment, while both arms use the stronger
+recognition settings. Different rollouts/counts do not isolate a causal effect.
+
+Evidence: `geometry-strike-target-regions-1006/independent-contact-batch-validation.json`.
+This validates the declared target regions, not physical bar geometry, exclusive
+single-key hits or musical timing.
+
+### Live rigid activation capture
+
+Both fresh bowl capture pairs succeeded natively. The general independent-root
+pair saves twelve observed activation rigid readbacks; the explicit pick-to-place
+pair saves four. No velocity fallback was needed. The selected conditioned
+placement activates at physics step 1286 after a successful held pickup, with
+actual bowl root linear velocity [-0.1250, -0.2014, 0.1016] m/s and angular velocity
+[-0.4863, 0.5222, 0.8568] rad/s. Frame/API/actor/step metadata is retained.
+
+The replay job uses that actual source trace: 74 whole controls plus six substeps
+of control 75, with four substeps dropped. Its scoped orientation/velocity
+comparison is pending; observed source capture does not prove replay fidelity.
+Evidence: `geometry-kinematics-prefix-capture-1006/runs/*/eval_report.json` and
+`geometry-kinematics-replay-validation-1006/capture-source.json`.

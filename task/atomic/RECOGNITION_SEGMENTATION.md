@@ -4,14 +4,14 @@ Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
 Current verification: 378 host tests; completed bowl, multiple-boundary button
-and single-ancestry graph selected-stage replay proofs; independent support,
-finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
-binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
-validation; all eight additional matched contact-frame runs are collected. A fresh pair
-with distinct strike target regions is being prepared at high-9000. Cloth force/material correspondence, unique task creases, full
-layering/volume transfer and general graph/game/material state restoration remain
-limited. Dated evidence sections retain their earlier snapshots; latest proof
-details are at the end of this document.
+and single-ancestry graph selected-stage replay proofs. All sixteen contact-binding,
+eight contact-frame, eight isolated referent-factor, two nominal grasp-frame and
+two distinct strike-region cases are collected and independently audited.
+Fresh bowl captures retain actual solver pose/velocity; a later-boundary kinematic
+replay and a screw history pair are submitted at high-9000. Cloth force/material
+correspondence, unique task creases, full layering/volume transfer and general
+graph/game/material state restoration remain limited. Dated sections retain their
+earlier snapshots; latest proof details are at the end of this document.
 
 ### Live single-ancestry graph start proof (October 7)
 
@@ -898,3 +898,21 @@ requiring the completed-turn threshold. A measured 90 degree partial turn
 therefore stays a diagnostic with an unobserved completion event, not a successful
 twist or native task. The history cap is explicit; truncated histories remain
 partial. Empty invalid intervals do not repeatedly copy retained histories.
+
+
+### Latest live recognition and boundary evidence
+
+The fresh nearest-landmark-region strike pair has eight/four completed physical
+strikes with twelve consistent raw approach/impact/retraction/region witnesses;
+both native tasks failed. Four later conditioned strikes remain absent. The
+nominal grasp-frame pair has both pickups in each arm, with independently valid
+contact/axes scores and native failure. All eight isolated referent-factor arms
+have consistent actual candidate/force bindings and the wrong first selection.
+Geometry being measurable does not make the action or task successful.
+
+Both explicit bowl pick-to-placement captures succeeded natively and retain
+actual solver pose and linear/angular velocity at the later activation boundary.
+A verified-prefix replay is now submitted from the conditioned source: 74 whole
+controls plus six physics substeps of control 75. Its kinematic residuals remain
+pending. The fresh screw history pair is also submitted; host twist validation
+is not yet live completion evidence. Current MD/HTML retains these distinctions.
