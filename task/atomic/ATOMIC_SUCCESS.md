@@ -1173,3 +1173,36 @@ Five targeted regressions check immutable commanded-versus-measured captures,
 equal physical states with changed commands, missing-buffer independence,
 invalid source/binding and separate report units. Fresh live target-buffer
 capture and replay evidence are pending; no existing frozen run is relabeled.
+
+
+### Live replay comparison of actual robot DOFs
+
+`geometry-robot-joints-replay-validation-1006` completed with a verified required
+pickup prefix and successful selected placement. It replayed 82 whole controls
+and two physics substeps of control 83, discarding the remaining eight substeps.
+Activation is at recorded physics step 1362. Both named robot articulations have
+actual, independently bound readbacks: twelve revolute DOFs and four prismatic
+gripper DOFs, with no unavailable joint comparisons. Maximum differences are:
+
+| Activation measurement | Difference |
+| --- | --- |
+| Revolute joint position (degrees) | 0.001575 |
+| Revolute joint velocity (degrees/s) | 0.103488 |
+| Prismatic joint position (mm) | 0.024606 |
+| Prismatic joint velocity (mm/s) | 8.925289 |
+| Bowl root position (mm) | 0.321322 |
+| Bowl root orientation (degrees) | 0.379657 |
+| Bowl linear velocity (mm/s) | 26.821973 |
+| Bowl angular velocity (degrees/s) | 68.966259 |
+
+The largest prismatic rate difference belongs to robot1 joint7. Small joint
+position differences do not establish equal contact dynamics; the larger object
+velocity differences remain visible. These are scoped measured residuals without
+an arbitrary fidelity pass threshold. The runtime predates command-target
+captures, so it provides no drive-buffer comparison. The new command-target
+capture/replay pair remains separate. This selected-stage proof is excluded from
+full-task A/B episode counts.
+
+Report SHA256: `ded403aabfc22ca147bcf4d0693166ef48b57c85d57cf755d54821755179da65`.
+Proof SHA256: `b7ec4b1d3b0a0905f848638bb8ca3afdb4a596e116a5df93005c9612e2e42dd6`.
+The raw artifact is `geometry-robot-joints-replay-validation-1006/prefix-validation.json`.
