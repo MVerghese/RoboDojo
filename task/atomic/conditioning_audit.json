@@ -38,9 +38,9 @@
   "slots": 54,
   "factor_cells": 270,
   "status_counts": {
-    "L": 12,
-    "C": 4,
-    "G": 147,
+    "L": 16,
+    "C": 2,
+    "G": 145,
     "F": 0,
     "S": 74,
     "M": 5,
@@ -97,16 +97,16 @@
         "P": {
           "kind": "point",
           "concept": "Grasp at a surface point.",
-          "status": "C",
-          "audit": "Actual same-step finger/object manifold points. P/D/R score every contact location. Explicit contact_pose combines those positions with named contacting-arm link axes for T/O; these are not surface-normal axes.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-contact-frames-1006 block-language baseline independently reproduced actual force-contact position errors of 22.1696/24.6074 mm at two successful 25 mm held lifts, with 11/8 retained points. Raw fingers/root/environment/origin/physics bindings were consistent. This validates these grasps; its conditioned partner and broader assets remain separate.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation"
         },
         "T": {
           "kind": "pose",
           "concept": "Match gripper contact pose.",
-          "status": "G",
-          "audit": "contact_pose measures every actual finger/object contact position with the same-step named contacting-arm link axes. The frame must resolve the measured contacting arm; EEF translation is not substituted for contact position. Independent force, identity, coordinate and orientation-frame counterexamples pass. These are explicit link-axis conditions, not surface-normal orientation; per-task binding and live validation remain.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The same block-language baseline measured actual contact positions plus named same-step physical end-effector link axes: 22.1696/24.6074 mm translation and 119.8604/120.2787 degrees full orientation against the declared prototype. Independent force/frame witnesses and arithmetic reproduced. Position never comes from EEF translation. This is link-axis geometry, not a contact-normal frame or proof of arbitrary target feasibility.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation"
         },
         "D": {
           "kind": "relative_displacement",
@@ -118,16 +118,16 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Align gripper with handle orientation.",
-          "status": "G",
-          "audit": "contact_pose measures every actual finger/object contact position with the same-step named contacting-arm link axes. The frame must resolve the measured contacting arm; EEF translation is not substituted for contact position. Independent force, identity, coordinate and orientation-frame counterexamples pass. These are explicit link-axis conditions, not surface-normal orientation; per-task binding and live validation remain.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The same two live force-held lifts measured named end-effector local-z direction relative to the object frame: 89.7412/90.4179 degrees. Independent contacting-arm/link/physics/quaternion checks passed. The local z direction is the named physical link axis, not an inferred gripper approach or surface normal.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation"
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Grasp above/below/around a named feature.",
-          "status": "C",
-          "audit": "Actual same-step finger/object manifold points. P/D/R score every contact location. Explicit contact_pose combines those positions with named contacting-arm link axes for T/O; these are not surface-normal axes.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "Every retained actual finger contact in the same two live pickups lay within the declared object-center box with 30 mm half extents; maximum outside distance was 0 mm for both. Point-scope contact-region arithmetic and raw force/binding witnesses passed. This is not whole-object containment or force closure.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation"
         }
       }
     },

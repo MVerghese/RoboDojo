@@ -118,6 +118,24 @@ Both arms must be prepared and frozen together before submission using the
 run commands below. An absent qualifying contact/action remains unobserved.
 Frame adapter source validation is separate from live policy adherence.
 
+For nominal contact-frame targets with actual feasibility evidence, use:
+
+```bash
+python scripts/atomic/generate_calibrated_contact_frames.py \
+  --output-dir /path/to/new-calibrated-contact-suite \
+  --source-suite /path/to/contact-frame-suite/suite.json \
+  --report /path/to/contact-frame-baseline/eval_report.json \
+  --prior-suite /path/to/original-contact-binding-suite/suite.json
+```
+
+This currently binds the two block-language pickups. It requires actual
+successful grasps, consistent raw force/frame witnesses and an observed pose
+satisfying the position target. The report hash and exact relative axes are
+retained. Both arms receive the same calibrated geometry; the conditioned prompt
+names the measured physical link and its three directions in object axes.
+Initial native/physical success gates stay unchanged. This witnessed nominal
+target does not certify arbitrary orientation perturbations as feasible.
+
 ### Calibrated initial referent factors
 
 `generate_referent_factor_suite.py` creates four separate paired suites for

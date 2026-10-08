@@ -62,6 +62,10 @@ SLOTS = {
              'target region': 'deformable', 'grasp point': 'deformable', 'final orientation': 'deformable'},
 }
 LIVE = {
+    ('pick', 'grasp region', 'P'): 'The geometry-contact-frames-1006 block-language baseline independently reproduced actual force-contact position errors of 22.1696/24.6074 mm at two successful 25 mm held lifts, with 11/8 retained points. Raw fingers/root/environment/origin/physics bindings were consistent. This validates these grasps; its conditioned partner and broader assets remain separate.',
+    ('pick', 'grasp region', 'T'): 'The same block-language baseline measured actual contact positions plus named same-step physical end-effector link axes: 22.1696/24.6074 mm translation and 119.8604/120.2787 degrees full orientation against the declared prototype. Independent force/frame witnesses and arithmetic reproduced. Position never comes from EEF translation. This is link-axis geometry, not a contact-normal frame or proof of arbitrary target feasibility.',
+    ('pick', 'grasp region', 'O'): 'The same two live force-held lifts measured named end-effector local-z direction relative to the object frame: 89.7412/90.4179 degrees. Independent contacting-arm/link/physics/quaternion checks passed. The local z direction is the named physical link axis, not an inferred gripper approach or surface normal.',
+    ('pick', 'grasp region', 'R'): 'Every retained actual finger contact in the same two live pickups lay within the declared object-center box with 30 mm half extents; maximum outside distance was 0 mm for both. Point-scope contact-region arithmetic and raw force/binding witnesses passed. This is not whole-object containment or force closure.',
     ('pick', 'object', 'P'): 'The geometry-selection-query-rpc-1006 block pair resolved the same unique initial XYZ candidate from a bounded live layout query, reproduced inventory/point binding and recognized first sustained selected-object contact. Both arms selected the wrong first block. This validates this initial point selection contract, not arbitrary language/control roles.',
     ('pick', 'grasp region', 'D'): 'Cup/charger pilot and later mallet grasp-band scores observed. The tool-contact mallet baseline retained a contact-held lift and 2.30 mm worst-point height error. Scissors lift event remained unobserved. Applies to these finger contacts, not every pick/asset.',
     ('push', 'contact', 'D'): 'Baseline T first-motion finger-contact score observed; conditioned run lacked finger evidence at that event.',
@@ -76,6 +80,10 @@ LIVE = {
     ('fold', 'final orientation', 'O'): 'The geometry-surface-gaps-1006 conditioned episode measured actual material tangent-normal direction errors for all three observers, independently reproduced. This covers the declared local normal axes, not every global cloth orientation or physical grasp. Native task and all fold observers failed; scalar final geometry remained observed.',
 }
 LIVE_EVIDENCE = {
+    ('pick', 'grasp region', 'P'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation',
+    ('pick', 'grasp region', 'T'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation',
+    ('pick', 'grasp region', 'O'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation',
+    ('pick', 'grasp region', 'R'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation',
     ('pick', 'object', 'P'): 'task/atomic/EXPANSION_STATUS.md#execution-ledger',
     ('pour', 'source pour pose', 'T'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#material-source-witness-validation',
     ('touch_with_tool', 'contact', 'D'): 'task/atomic/EXPANSION_STATUS.md#live-held-strike-witness-validation',

@@ -3,7 +3,7 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 356 host tests; completed bowl, multiple-boundary button
+Current verification: 359 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
@@ -36,8 +36,37 @@ Host counterexamples cover distant EEF origins, two simultaneous contacting arms
 wrong arm/link/step/quaternion, corrupt contact positions, zero pair impulses,
 separate axis/full-orientation scores and independent worst translation. These
 checks validate measurement semantics; the new matched GPU cases supply live
-validation separately. The eight former F cells now have explicit frame adapters
-and are G in the coverage audit. They are not promoted to live L cells yet.
+validation separately. The eight former F cells now have explicit frame adapters and were initially
+marked G. Subsequent live pickup validation is recorded below; other frame
+combinations still need their own simulator evidence.
+
+### Live contact-frame validation
+
+The first `geometry-contact-frames-1006` block-language baseline completed with
+two successful held pickups and native task failure. Both contact/frame witnesses
+and all eight added geometric scores independently reproduced:
+
+| Stage | Contact translation | Full frame orientation | Local-z direction | Outside 30 mm contact box |
+| --- | --- | --- | --- | --- |
+| `pick_block_1` | 22.1696 mm | 119.8604 degrees | 89.7412 degrees | 0 mm |
+| `pick_block_2` | 24.6074 mm | 120.2787 degrees | 90.4179 degrees | 0 mm |
+
+There were 11/8 retained manifold points respectively. All-point position error
+uses actual forces; orientation uses the named physical end-effector link.
+The unconditioned policy did not receive these targets. Its conditioned partner
+is separate; these numbers do not establish a prompt effect. The report SHA256 is
+`8104826b2d318769f475b99b4053ccb31ee5151fe34da320e36f1f414e5b98aa`.
+These four exact pickup cells are now live L; the other frame adapters remain G.
+
+The prototype's negative-local-z link target is distinct from gripper approach
+direction. `generate_calibrated_contact_frames.py` now creates a second matched
+pair using actual independently verified successful grasp axes as nominal
+orientation targets, with 15-degree full/direction tolerances. It rejects failed
+pickups, contradictory forces, changed frame/reference/event bindings and a
+nominal pose whose translation cannot be satisfied by the source contact points.
+The witnessed nominal state establishes feasibility for those targets; arbitrary
+rotated targets need their own feasibility evidence. Runtime conditions and
+recognizers remain identical between that fresh pair's arms.
 
 ### Selected referent force witness (October 7)
 
