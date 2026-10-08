@@ -207,7 +207,16 @@ class ContinuousReportTests(unittest.TestCase):
                 'method': 'Physical units only.', 'summary': [dict(condition, checkpoint_id='cp')],
                 'tasks': [task], 'coverage': [{'task': task['task'], 'included': True, 'unbound_families': []}],
                 'limitations': [], 'scope': 'partial'}
+        task['completion_validation'] = {'baseline': [{'stage_id': 'pick', 'condition_id': 'completion',
+            'status': 'partial_evidence', 'unavailable': ['qualified_completion_metadata_absent']}],
+            'conditioned': [{'stage_id': 'pick', 'condition_id': 'completion',
+            'status': 'inconsistent_evidence', 'failed_checks': ['completion_current_grasp']}]}
         md, page = report_markdown(data), report_html(data)
+        for rendered in (md, page):
+            self.assertIn('Stage-success qualification', rendered)
+            self.assertIn('qualified_completion_metadata_absent', rendered)
+            self.assertIn('completion_current_grasp', rendered)
+            self.assertIn('partial', rendered)
         self.assertIn('displacement (mm)', md)
         self.assertIn('2.000 / 2.000', md)
         self.assertIn('first_lift', md)

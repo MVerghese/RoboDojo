@@ -522,13 +522,16 @@ active sessions/sequences in that callback and also checks action-chunk boundari
 | `first_contact` | First qualifying live finger/object or object/object contact according to the event's separate contact selector. |
 | `before_contact` | The immediately preceding synchronized noncontact sample; retain both its measurement and reference. Missing prior step gives `preceding_sample_missing`. |
 | `recognition_event` | Same physics sample as a named physical recognizer transition, such as release, impact, entry or transfer. |
-| `stage_success` | First sample where the stage's endpoint `success_checks` pass, before applying the physical recognition/maintained-hold gate. |
+| `stage_success` | First sample where endpoint checks and configured physical recognition, current pick hold/lift and maintained-hold gates all pass. |
 
-**Current implementation detail:** ordinary `stage_success` geometry may be saved
-even if `action_success` remains false. It is endpoint geometry, not proof of
-recognized action completion. For geometry at a physical transition use
-`recognition_event`. Trajectory window `stage_success` uses the later, physically
-gated completion value instead; these two uses are currently different.
+Fresh ordinary geometry and trajectory `stage_success` events share the same
+qualified atomic completion gate. Their saved completion flags, physics clock
+and pick lift bounds are audited separately. A contradictory tagged witness
+excludes its geometry as `invalid_stage_success_witness`. Frozen older runs could
+sample endpoint predicates before physical qualification; their absent modern
+metadata stays partial endpoint evidence. They are not relabeled as physically
+qualified completions. For geometry at another physical transition use
+`recognition_event`; for failure-inclusive endpoint diagnostics use `attempt_end`.
 
 Each condition latches once. A contact missing at its triggered event is saved as
 `contact_not_observed_at_event`; later contacts do not replace it. An event that
@@ -1600,3 +1603,28 @@ full-task A/B episode counts.
 Report SHA256: `ded403aabfc22ca147bcf4d0693166ef48b57c85d57cf755d54821755179da65`.
 Proof SHA256: `b7ec4b1d3b0a0905f848638bb8ca3afdb4a596e116a5df93005c9612e2e42dd6`.
 The raw artifact is `geometry-robot-joints-replay-validation-1006/prefix-validation.json`.
+
+## October 7: qualified stage-success measurement events
+
+`stage_success` geometry now uses the same completion gate as atomic success:
+the native endpoint, required physical interaction, contact-coupled held lift
+for pickup, and maintained-hold requirements must pass together. An endpoint
+reached by unsupported motion or a later catch cannot latch completion geometry.
+For supported placement, completion measurements wait for transport, release and
+the configured supported settling window. Geometry failure still does not change
+the action success flag.
+
+Each new completion measurement retains the synchronized physics/action clock,
+native and qualified completion flags, recognizer kind, physical-interaction
+flag and maintained-hold failure count. Pickup additionally retains the current
+grasp, contact-coupled displacement and required lift threshold. Independent
+`completion_validation.py` checks those saved fields, clock/binding and lift
+math; contradictory geometry is excluded as `invalid_stage_success_witness`
+while its arithmetic result and native/action outcome remain available. These
+flags do not reconstruct unsaved force or hold histories. Historical endpoint
+measurements without the new metadata remain explicitly partial evidence.
+
+The current gate passes 411 offline atomic tests, including six completion-event
+counterexample and independent-audit tests. MD and HTML expose completion
+witness status separately from scalar geometry. Fresh pickup/settled-placement
+and push A/B validation is the next live check; offline tests are not live proof.

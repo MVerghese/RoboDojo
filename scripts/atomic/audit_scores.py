@@ -90,6 +90,18 @@ def audit_material_bounds(bounds):
     return output
 
 
+def apply_stage_success_validation(atomic,output):
+    from task.atomic.completion_validation import validate_stage_success
+    for ident,raw in atomic.get('geometry',{}).items():
+        witness=validate_stage_success(atomic,raw)
+        if witness['status']=='not_applicable' or ident not in output['conditions']:continue
+        row=output['conditions'][ident];row['stage_success_witness']=witness
+        if witness['status']=='inconsistent_evidence':
+            row['numerical_reproduction_status']=row.get('numerical_reproduction_status',row['status'])
+            row['status']='invalid_stage_success_witness'
+            row['reason']='stage-success completion flags, physical gate, lift bound or measurement clock contradict qualification'
+
+
 def audit_selection(selection):
     if not selection:return None
     binding_ok = True
@@ -197,6 +209,7 @@ def validate_cached_recognition(report, scores):
             apply_flow_validation(stage, score)
             apply_support_validation(stage, score)
             apply_contact_validation(stage, score)
+            apply_stage_success_validation(stage,score)
 
 
 def apply_contact_validation(atomic, output):
@@ -314,6 +327,7 @@ def audit_atomic(atomic, variant=None):
     apply_flow_validation(atomic, output)
     apply_support_validation(atomic, output)
     apply_contact_validation(atomic, output)
+    apply_stage_success_validation(atomic,output)
     if atomic.get("closest_approach"):
         alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}
         output["closest_approach"] = audit_atomic(alternate, variant)["conditions"]

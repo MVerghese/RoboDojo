@@ -7383,7 +7383,7 @@
     },
     {
       "path": "task/atomic/session.py",
-      "sha256": "88ea63559790b1c44178876084a7bc602e20bc1f19f5b44f771603a29187f8b3"
+      "sha256": "52264deaf99553988b310bf9b9dcdd957b9f8e4c02ee25eb505852f813e602b5"
     },
     {
       "path": "task/atomic/spec.py",
@@ -7508,6 +7508,10 @@
     {
       "path": "task/atomic/finite_material.py",
       "sha256": "6dfb100dae5bad845da35ea10f816e38c11d2e596de4eee1cb22e7b1961a391f"
+    },
+    {
+      "path": "task/atomic/completion_validation.py",
+      "sha256": "2dca6df6f8e2b6052edc8b86faf7b5a26eea9818fc5ccb4552cc40d25e154966"
     },
     {
       "path": "src/eval_client/eval_env.py",

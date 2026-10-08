@@ -450,7 +450,21 @@ class AtomicSession:
                 self._event_evidence[self._selector_key(event)] = deepcopy(self.finalization_evidence)
             return self._finalizing
         if kind == "stage_success":
-            return success_now
+            if not self._qualified_success(success_now):return False
+            recognition=self.stage.recognition
+            self._event_evidence[self._selector_key(event)]={
+                'context':'qualified_atomic_stage_success',
+                'physics_step':getattr(getattr(self.env,'_atomic_contacts',None),'steps',None),
+                'policy_action_index':self._action_index(),
+                'native_endpoint_passed':bool(success_now),'qualified_action_success':True,
+                'recognition_kind':recognition['kind'] if recognition else None,
+                'physical_interaction_observed':bool(self._physical_recognizer.ready if self._physical_recognizer
+                    else self.interaction_observed) if recognition else None,
+                'maintained_hold_failure_count':len(self.maintained_hold_failures),
+                'current_hold_observed':bool(self.current_hold_observed) if self.stage.family=='pick' else None,
+                'contact_coupled_displacement_m':self._recognition_current_displacement.tolist() if self.stage.family=='pick' else None,
+                'required_held_lift_m':self._held_lift_required if self.stage.family=='pick' else None}
+            return True
         if kind == 'recognition_event':
             recognizer = self._physical_recognizer
             evidence = recognizer.events.get(event['name']) if recognizer else None

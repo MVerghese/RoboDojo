@@ -994,3 +994,28 @@ Five targeted regressions check immutable commanded-versus-measured captures,
 equal physical states with changed commands, missing-buffer independence,
 invalid source/binding and separate report units. Fresh live target-buffer
 capture and replay evidence are pending; no existing frozen run is relabeled.
+
+## October 7: qualified stage-success measurement events
+
+`stage_success` geometry now uses the same completion gate as atomic success:
+the native endpoint, required physical interaction, contact-coupled held lift
+for pickup, and maintained-hold requirements must pass together. An endpoint
+reached by unsupported motion or a later catch cannot latch completion geometry.
+For supported placement, completion measurements wait for transport, release and
+the configured supported settling window. Geometry failure still does not change
+the action success flag.
+
+Each new completion measurement retains the synchronized physics/action clock,
+native and qualified completion flags, recognizer kind, physical-interaction
+flag and maintained-hold failure count. Pickup additionally retains the current
+grasp, contact-coupled displacement and required lift threshold. Independent
+`completion_validation.py` checks those saved fields, clock/binding and lift
+math; contradictory geometry is excluded as `invalid_stage_success_witness`
+while its arithmetic result and native/action outcome remain available. These
+flags do not reconstruct unsaved force or hold histories. Historical endpoint
+measurements without the new metadata remain explicitly partial evidence.
+
+The current gate passes 411 offline atomic tests, including six completion-event
+counterexample and independent-audit tests. MD and HTML expose completion
+witness status separately from scalar geometry. Fresh pickup/settled-placement
+and push A/B validation is the next live check; offline tests are not live proof.

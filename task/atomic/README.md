@@ -54,8 +54,9 @@ observed trace labels. Inspect one with
 - `AtomicSession` measures events and physical completion at physics-step resolution,
   with additional checks after each policy action chunk. The result keeps **action
   success** and **geometry adherence** separate in `eval_result.details[*].atomic`.
-  Ordinary `stage_success` geometry samples endpoint predicate success before the
-  physical completion gate; see [measurement semantics](GEOMETRIC_MEASUREMENT.md).
+  Fresh `stage_success` geometry uses the same qualified physical completion gate
+  as action success; historical endpoint-only snapshots retain partial evidence.
+  See [measurement semantics](GEOMETRIC_MEASUREMENT.md).
   `geometry_pass_rate` is null until a condition is observed; `geometry_coverage`
   reports how many conditions fired.
 - A `first_predicate` event can capture geometry when any or all read-only RoboDojo predicates first become true at a physics step. The `pour_balls_into_vase` program uses this to measure cup placement when the first ball enters the vase.

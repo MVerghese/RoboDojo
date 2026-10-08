@@ -140,10 +140,11 @@ sample, with additional checks at policy action boundaries:
 
 1. Update physical recognizer and continuous maintained-hold evidence.
 2. Evaluate every `success_checks` predicate; all must pass.
-3. Record triggered endpoint geometry and selection independently.
-4. Require the configured physical completion evidence, if a recognizer exists.
-5. For pick, also require a current sustained grasp and the full held lift.
-6. Require no recorded maintained-hold failure, then latch `action_success`.
+3. Qualify completion with configured physical evidence, current pick grasp/full
+   held lift, and no recorded maintained-hold failure.
+4. Record geometry at each declared event. `stage_success` uses this qualified
+   completion; other event types retain their separately declared semantics.
+5. Update path/selection observations and latch qualified `action_success`.
 
 For pick/push, physical motion evidence is in
 `interaction_observed`/`interaction_evidence`. For the other implemented
@@ -1206,3 +1207,28 @@ full-task A/B episode counts.
 Report SHA256: `ded403aabfc22ca147bcf4d0693166ef48b57c85d57cf755d54821755179da65`.
 Proof SHA256: `b7ec4b1d3b0a0905f848638bb8ca3afdb4a596e116a5df93005c9612e2e42dd6`.
 The raw artifact is `geometry-robot-joints-replay-validation-1006/prefix-validation.json`.
+
+## October 7: qualified stage-success measurement events
+
+`stage_success` geometry now uses the same completion gate as atomic success:
+the native endpoint, required physical interaction, contact-coupled held lift
+for pickup, and maintained-hold requirements must pass together. An endpoint
+reached by unsupported motion or a later catch cannot latch completion geometry.
+For supported placement, completion measurements wait for transport, release and
+the configured supported settling window. Geometry failure still does not change
+the action success flag.
+
+Each new completion measurement retains the synchronized physics/action clock,
+native and qualified completion flags, recognizer kind, physical-interaction
+flag and maintained-hold failure count. Pickup additionally retains the current
+grasp, contact-coupled displacement and required lift threshold. Independent
+`completion_validation.py` checks those saved fields, clock/binding and lift
+math; contradictory geometry is excluded as `invalid_stage_success_witness`
+while its arithmetic result and native/action outcome remain available. These
+flags do not reconstruct unsaved force or hold histories. Historical endpoint
+measurements without the new metadata remain explicitly partial evidence.
+
+The current gate passes 411 offline atomic tests, including six completion-event
+counterexample and independent-audit tests. MD and HTML expose completion
+witness status separately from scalar geometry. Fresh pickup/settled-placement
+and push A/B validation is the next live check; offline tests are not live proof.

@@ -56,6 +56,9 @@ METHOD = (
     ' Named-support force signs and body identities are audited separately. Inconsistent raw '
     'support witnesses are excluded as invalid_support_witness; historical booleans without '
     'raw forces remain partial physical evidence even when their geometry reproduces.'
+    ' Fresh stage-success geometry requires qualified atomic completion. Tagged completion '
+    'flags, clocks and pick lift bounds are audited; contradictory snapshots are excluded. '
+    'Older endpoint-only stage-success snapshots retain partial evidence rather than being relabeled.'
 )
 
 
@@ -246,6 +249,9 @@ def build_report(manifest, result, matrix, root):
                 'status': s['recognition_witness']['status'],
                 'failed_checks': s['recognition_witness'].get('failed_checks', [])}
                 for s in row.get('atomic_scores', []) if s.get('recognition_witness', {}).get('status') == 'inconsistent_evidence']
+                for mode, row in (('baseline', ra), ('conditioned', rb))},
+            'completion_validation': {mode: [{'stage_id': s['stage_id'], 'condition_id': ident, **c['stage_success_witness']}
+                for s in row.get('atomic_scores', []) for ident, c in s['conditions'].items() if c.get('stage_success_witness')]
                 for mode, row in (('baseline', ra), ('conditioned', rb))},
             'support_validation': {mode: [{'stage_id': s['stage_id'], 'condition_id': ident, **c['support_witness']}
                 for s in row.get('atomic_scores', []) for ident, c in s['conditions'].items() if c.get('support_witness')]
@@ -603,6 +609,10 @@ def report_markdown(data):
             if witnesses:
                 lines += ['**Material source witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
                           + '`. Partial evidence preserves sampled geometry without certifying missing source contact/cohort witnesses; inconsistent witnesses are excluded.', '']
+        for mode, witnesses in task.get('completion_validation', {}).items():
+            if witnesses:
+                lines += ['**Stage-success qualification (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
+                    + '`. Historical missing completion metadata remains partial. Contradictory completion evidence is excluded; saved flags do not reconstruct unsaved force or hold histories.', '']
         for mode, witnesses in task.get('support_validation', {}).items():
             if witnesses:
                 lines += ['**Named-support witness validation (' + mode + '):** `' + json.dumps(witnesses,sort_keys=True)
@@ -683,6 +693,9 @@ def report_html(data):
         for mode, witnesses in task.get('material_source_validation', {}).items():
             if witnesses:
                 content += '<p><strong>Material source witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. Partial evidence preserves sampled geometry without certifying missing source contact/cohort witnesses; inconsistent witnesses are excluded.</p>'
+        for mode, witnesses in task.get('completion_validation', {}).items():
+            if witnesses:
+                content += '<p><strong>Stage-success qualification (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. Historical missing completion metadata remains partial. Contradictory completion evidence is excluded; saved flags do not reconstruct unsaved force or hold histories.</p>'
         for mode, witnesses in task.get('support_validation', {}).items():
             if witnesses:
                 content += '<p><strong>Named-support witness validation (' + esc(mode) + '):</strong> <code>' + esc(json.dumps(witnesses,sort_keys=True)) + '</code>. Force signs/body identity are separate from geometric arithmetic. Missing raw force or sleep-history proof remains partial; inconsistent witnesses are excluded.</p>'
