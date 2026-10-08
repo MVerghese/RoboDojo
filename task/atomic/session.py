@@ -111,6 +111,9 @@ class AtomicSession:
         if stage.selection:
             from task.atomic.selection import SelectionObserver
             self._selection_observer = SelectionObserver(self)
+        from task.atomic.kinematics import capture_rigid_roots
+        self.initial_state_physics_step=getattr(getattr(env,'_atomic_contacts',None),'steps',None)
+        self.initial_object_states=capture_rigid_roots(self,self.initial_positions)
 
     def _action_index(self):
         return int(self.env.take_action_cnt[self.env_idx]) if hasattr(self.env, 'take_action_cnt') else None
@@ -750,4 +753,6 @@ class AtomicSession:
             'finalization_evidence': deepcopy(self.finalization_evidence),
             'recognition_checks': deepcopy(list(self.stage.success_checks)),
             'initial_object_positions': {k: v.tolist() for k, v in self.initial_positions.items()},
+            'initial_state_physics_step': self.initial_state_physics_step,
+            'initial_object_states': deepcopy(self.initial_object_states),
         }

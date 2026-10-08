@@ -3,7 +3,7 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 365 host tests; completed bowl, multiple-boundary button
+Current verification: 370 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
@@ -889,3 +889,29 @@ or musical timing. Multiple simultaneous contacts may include other regions.
 Geometric conditioning still measures all pair contacts at the event, so its
 maximum contact error can exceed the qualifying subset's recognition radius.
 Older frozen radius-only reports retain their declared scope.
+
+
+### Activation-time rigid kinematics and replay fidelity
+
+Every fresh stage retains immutable `initial_object_states` for its observed
+initial-position labels, with a capture physics step. For actual rigid bodies,
+this contains environment-local root pose (metres and wxyz), live solver linear
+velocity (m/s), live solver angular velocity (rad/s), actor path, environment and
+readback API metadata. Velocities come from `SingleRigidPrim` getters inherited
+by RoboDojo `RigidObject`; constructor defaults, policy commands and pose finite
+differences are not used. Missing, failed or nonfinite APIs and nonrigid bodies
+remain explicitly unavailable. The diagnostics do not change completion gates.
+
+Selected-stage proofs compare bound source/replay captures at their respective
+activation physics boundaries, linked to the source trace/report hashes.
+MD/HTML adds separate root rotation (degrees), linear velocity (mm/s) and angular
+velocity (degrees/s) residuals. Matching positions cannot hide changed rotation
+or motion; opposite quaternion signs represent the same rotation. Wrong actor,
+environment, timestamp, frame, units or API bindings are not comparable.
+Historical captures with positions alone retain N/A in these new columns.
+
+This is a scoped kinematic comparison, not a full simulator snapshot/restore or
+a fidelity pass/fail certificate. Robot joints, drives, contact warm starts,
+materials and game state are not covered. A fresh bowl A/B capture is being
+prepared; live source capture plus a separately verified prefix replay is needed
+before claiming observed kinematic replay evidence.

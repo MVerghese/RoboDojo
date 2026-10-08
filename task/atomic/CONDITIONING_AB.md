@@ -848,3 +848,13 @@ it does not create a new prompt treatment. Freeze/package both arms together.
 The provenance file lists source hashes and the exact changed fields. These
 regions distinguish overlapping contact neighborhoods; they are not a claim
 of calibrated bar surfaces, exclusive single-key contact or musical timing.
+
+### Replay fidelity beyond root positions
+
+Fresh capture runs save stage `initial_object_states` from actual rigid solver
+pose/linear/angular velocity readbacks. Run a new source episode after packaging
+this runtime, then use `run_prefix_validation.py prepare/start/proof` as described
+above with its recorded trace. Historical source traces cannot supply missing
+activation velocities. Prefix proof reports retain source/trace hashes and
+separate mm, degree, mm/s and degree/s residuals. Missing readbacks stay N/A.
+These diagnostics cover named rigid roots, not complete simulator restoration.

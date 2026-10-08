@@ -14,6 +14,29 @@ for regeneration commands and preserved original backups.
 
 ## Execution ledger
 
+October 8 UTC / October 7 local, 00:14 UTC: all sixteen contact-binding and all
+eight contact-frame cases are collected. Independent contact-binding checks:
+455 consistent snapshots, 16 historical partial pair snapshots, zero
+contradictions. Contact-frame checks: 149 consistent snapshots and thirteen
+consistent declared-radius strike windows; 46 added scores observed and
+reproduced, 18 events absent, four contacts absent at the event. Missing tool-push
+contacts remain explicit. The fork passes 365 tests and pushed `ace3b02`.
+
+A fresh nearest-landmark-region strike pair is Running at high-9000 from
+`ace3b02`; all eight target frames and a 2 mm distance margin prevent neighboring
+40 mm neighborhoods from qualifying the wrong requested landmark. Prompts and
+geometric scoring definitions remain byte-equivalent to the source treatment.
+Physical bar identity/timing is not inferred from the merged collision actor.
+
+Seven of eight isolated referent-factor cases are collected: every observed
+first choice was block_2, not the calibrated target. Candidate geometry and actual
+root/finger-force/arm/timing witnesses reproduced without contradiction. The
+point-selection root/force pair has its conditioned arm collected and baseline
+Running. Both attainable nominal grasp-frame arms are Running. Pending results
+are not included as completed pairs. New evidence sections in the three detailed
+docs distinguish recognition, measurement and policy success.
+
+
 October 7 snapshot, 23:42 UTC: the integrated MD/HTML contains **259 valid
 episodes, 128 verified A/B pairs and 1237 usable reproduced event scores**, with
 zero arithmetic mismatches and ten historical incompatible recognition windows

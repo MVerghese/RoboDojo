@@ -79,6 +79,11 @@ LIVE = {
     ('fold', 'target region', 'R'): 'Actual fixed-ID target material patches served as the live references in the same patch/chord episodes, with coverage, planar distance and overlapping-region gap reproduction. This applies to these selected material regions; full layer order, force-bearing contact and global self-intersection remain unresolved.',
     ('fold', 'final orientation', 'O'): 'The geometry-surface-gaps-1006 conditioned episode measured actual material tangent-normal direction errors for all three observers, independently reproduced. This covers the declared local normal axes, not every global cloth orientation or physical grasp. Native task and all fold observers failed; scalar final geometry remained observed.',
 }
+LIVE.update({
+    **{('push','contact',factor): 'The geometry-contact-frames-1006 conditioned T rollout measured a force-bearing first-motion contact: 81.5329 mm point/pose translation, 131.9453 degrees full link orientation, 98.7784 degrees link-z error and 0.7719 mm outside the 40 mm contact box. All four scores and same-step raw force/link/coordinates independently reproduced. Baseline contact event was absent and both native/atomic goals failed. This validates this event measurement, not task success or every push.' for factor in 'PTOR'},
+    **{('touch_with_tool','contact',factor): 'The geometry-contact-frames-1006 xylophone pair retained eight/five completed physical strikes, all thirteen retained strike windows consistent. Twenty-six added tool contact-frame pose/z scores independently reproduced from same-step raw pair forces and named mallet beat axes. Both native tasks failed. Recognition used overlapping 40 mm target neighborhoods; a stronger nearest-landmark target-region profile now requires a fresh pair. These axes are not surface normals, exact bar identity or musical timing.' for factor in 'TO'},
+    **{('pick','object',factor): 'The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in seven collected episodes (displacement baseline still pending at this snapshot). Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.' for factor in 'TDOR'},
+})
 LIVE_EVIDENCE = {
     ('pick', 'grasp region', 'P'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation',
     ('pick', 'grasp region', 'T'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-contact-frame-validation',
@@ -92,6 +97,12 @@ LIVE_EVIDENCE = {
     ('fold', 'target region', 'R'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#live-cloth-validation-and-component-observation',
     ('fold', 'final orientation', 'O'): 'task/atomic/EXPANSION_STATUS.md#live-selected-surface-gap-validation',
 }
+LIVE_EVIDENCE.update({
+    **{('push','contact',factor): 'task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch' for factor in 'PTOR'},
+    **{('touch_with_tool','contact',factor): 'task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch' for factor in 'TO'},
+    **{('pick','object',factor): 'task/atomic/GEOMETRIC_MEASUREMENT.md#isolated-initial-referent-factors' for factor in 'TDOR'},
+})
+
 
 
 def build():
@@ -144,7 +155,7 @@ def build():
     fingerprints = {str(p): hashlib.sha256((REPO / p).read_bytes()).hexdigest() for p in (
         Path('task/atomic/TAXONOMY.md'), Path('task/atomic/spec.py'), Path('task/atomic/geometry.py'),
         Path('task/atomic/session.py'), Path('task/atomic/cloth_bending.py'), Path('task/atomic/surfaces.py'), Path('task/atomic/contacts.py'),
-        Path('task/atomic/support_validation.py'), Path('task/atomic/contact_validation.py'), Path('task/atomic/target_regions.py'),
+        Path('task/atomic/support_validation.py'), Path('task/atomic/contact_validation.py'), Path('task/atomic/target_regions.py'), Path('task/atomic/kinematics.py'),
         Path('task/atomic/recognizers.py'), Path('task/atomic/diagnostics.py'), Path('task/atomic/recognition_validation.py'), Path('task/atomic/material_validation.py'), Path('task/atomic/bindings.py'), Path('task/atomic/landmarks.py'), Path('task/atomic/materials.py'), Path('task/atomic/selection.py'), Path('task/atomic/trajectory.py'), Path('task/atomic/regions.py'), Path('task/atomic/fit.py'), Path('task/atomic/flow.py'), Path('task/atomic/fold.py'), Path('task/atomic/layers.py'), Path('task/atomic/segments.py'), Path('task/atomic/curves.py'), Path('task/atomic/surface_distance.py'), Path('task/atomic/cloth_calibration.py'), Path('task/atomic/calibration.py'), Path('task/atomic/model_frames.py'), Path('env/scene_manager/objects/fluid.py'), Path('env/scene_manager/objects/garment.py'))}
     counts = {code: sum(cell['status'] == code for row in rows for cell in row['factors'].values())
               for code in ('L', 'C', 'G', 'F', 'S', 'M', 'NA')}

@@ -5,13 +5,14 @@
     "task/atomic/TAXONOMY.md": "7dc2ba4b19bd2f697c315db850db5b3bb27b0f1027132a8e69b7acc9e4db04a4",
     "task/atomic/spec.py": "4b3a434c9e24a319cc5c38a3ee068dc7edb916a69be4b0d54aec47ebe068feda",
     "task/atomic/geometry.py": "8e7d53416e439bbf029525a599db2ee7fd87fac1cc51851461810522775c817e",
-    "task/atomic/session.py": "1eec86a36ebcc3e9444479a33e4e899113b1cb24eea9e9ac8b20dc73c7185426",
+    "task/atomic/session.py": "d3a06984a4bc92b32611ed0dec93df5cd44785c6756c9ea549c5a46d7461b4c3",
     "task/atomic/cloth_bending.py": "23c216f775603ae46fe459dfaaf58743f384eb632197ad2e658e0f547d7d1ceb",
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "6a35bfae2d344ebbca1096a9004c48922367f3b0dd0afc9f4a886adcefeb9ed4",
     "task/atomic/support_validation.py": "5ce41213101b6ed6f373208f8d6aeaac5d17a334f266b45598178bc4e0c7ed9a",
     "task/atomic/contact_validation.py": "ce6a29ddb272a783872b632f96e2eebbb6fb84bfaf3931f7ec24b92049be7c5e",
     "task/atomic/target_regions.py": "49309d9d5c592f62d76cbabb87dd3dea50e515297bc742860e82ea08025061fa",
+    "task/atomic/kinematics.py": "e419af221937a6621f12a7b8b69326f0df7a14a2bf2296c3faae01f825aeffed",
     "task/atomic/recognizers.py": "660a517b22a4201cdb1de991b821edddc173b2e5529ec9cf6414ece970f8f574",
     "task/atomic/diagnostics.py": "8a012fc51aad60c978bde7206497e880cb869893c3b1c9140225806f64b1c569",
     "task/atomic/recognition_validation.py": "3e6c49ee5584ef536678151972bfb18d93aca342c73de6bd3beaca105d431001",
@@ -39,11 +40,11 @@
   "slots": 54,
   "factor_cells": 270,
   "status_counts": {
-    "L": 16,
-    "C": 2,
-    "G": 145,
+    "L": 26,
+    "C": 0,
+    "G": 141,
     "F": 0,
-    "S": 74,
+    "S": 70,
     "M": 5,
     "NA": 28
   },
@@ -63,30 +64,30 @@
         "T": {
           "kind": "pose",
           "concept": "Select by initial pose T.",
-          "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in seven collected episodes (displacement baseline still pending at this snapshot). Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#isolated-initial-referent-factors"
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select object offset from a named landmark.",
-          "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in seven collected episodes (displacement baseline still pending at this snapshot). Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#isolated-initial-referent-factors"
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select object rotated relative to a landmark.",
-          "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in seven collected episodes (displacement baseline still pending at this snapshot). Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#isolated-initial-referent-factors"
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object left of/inside another object.",
-          "status": "S",
-          "audit": "Explicit labels and bounded initial-layout prefix/category/model queries retain immutable object-root/mesh-center snapshots, actual candidate scene-root/environment bindings, binding inventories, unique geometric target resolution and first sustained contact identity. Root aliases are rejected; independent raw selected-finger force/identity/timing validation complements numerical reproduction. Per-control/tip/cloth candidates, categorical language roles and further query live validation remain. Moved final poses do not replace initial candidates.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in seven collected episodes (displacement baseline still pending at this snapshot). Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#isolated-initial-referent-factors"
         }
       }
     },
@@ -392,16 +393,16 @@
         "P": {
           "kind": "point",
           "concept": "First effective contact at surface point P.",
-          "status": "C",
-          "audit": "Actual same-step finger/object manifold points. P/D/R score every contact location. Explicit contact_pose combines those positions with named contacting-arm link axes for T/O; these are not surface-normal axes.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-contact-frames-1006 conditioned T rollout measured a force-bearing first-motion contact: 81.5329 mm point/pose translation, 131.9453 degrees full link orientation, 98.7784 degrees link-z error and 0.7719 mm outside the 40 mm contact box. All four scores and same-step raw force/link/coordinates independently reproduced. Baseline contact event was absent and both native/atomic goals failed. This validates this event measurement, not task success or every push.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch"
         },
         "T": {
           "kind": "pose",
           "concept": "Match hand contact pose T.",
-          "status": "G",
-          "audit": "contact_pose measures every actual finger/object contact position with the same-step named contacting-arm link axes. The frame must resolve the measured contacting arm; EEF translation is not substituted for contact position. Independent force, identity, coordinate and orientation-frame counterexamples pass. These are explicit link-axis conditions, not surface-normal orientation; per-task binding and live validation remain.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-contact-frames-1006 conditioned T rollout measured a force-bearing first-motion contact: 81.5329 mm point/pose translation, 131.9453 degrees full link orientation, 98.7784 degrees link-z error and 0.7719 mm outside the 40 mm contact box. All four scores and same-step raw force/link/coordinates independently reproduced. Baseline contact event was absent and both native/atomic goals failed. This validates this event measurement, not task success or every push.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch"
         },
         "D": {
           "kind": "relative_displacement",
@@ -413,16 +414,16 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Hand orientation relative to object face.",
-          "status": "G",
-          "audit": "contact_pose measures every actual finger/object contact position with the same-step named contacting-arm link axes. The frame must resolve the measured contacting arm; EEF translation is not substituted for contact position. Independent force, identity, coordinate and orientation-frame counterexamples pass. These are explicit link-axis conditions, not surface-normal orientation; per-task binding and live validation remain.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-contact-frames-1006 conditioned T rollout measured a force-bearing first-motion contact: 81.5329 mm point/pose translation, 131.9453 degrees full link orientation, 98.7784 degrees link-z error and 0.7719 mm outside the 40 mm contact box. All four scores and same-step raw force/link/coordinates independently reproduced. Baseline contact event was absent and both native/atomic goals failed. This validates this event measurement, not task success or every push.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch"
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Contact on left/right/back side of object.",
-          "status": "C",
-          "audit": "Actual same-step finger/object manifold points. P/D/R score every contact location. Explicit contact_pose combines those positions with named contacting-arm link axes for T/O; these are not surface-normal axes.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-contact-frames-1006 conditioned T rollout measured a force-bearing first-motion contact: 81.5329 mm point/pose translation, 131.9453 degrees full link orientation, 98.7784 degrees link-z error and 0.7719 mm outside the 40 mm contact box. All four scores and same-step raw force/link/coordinates independently reproduced. Baseline contact event was absent and both native/atomic goals failed. This validates this event measurement, not task success or every push.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch"
         }
       }
     },
@@ -1701,9 +1702,9 @@
         "T": {
           "kind": "pose",
           "concept": "Tool-target contact pose T.",
-          "status": "G",
-          "audit": "object_contact_pose combines actual tool/target force-contact positions with same-step named physical axes on the contacting tool. Explicit object, functional or calibrated frames are supported. Independent pair-force, coordinate and frame checks are implemented; active-part calibration and live validation remain. This is not a surface-normal orientation or proof of tool hold.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-contact-frames-1006 xylophone pair retained eight/five completed physical strikes, all thirteen retained strike windows consistent. Twenty-six added tool contact-frame pose/z scores independently reproduced from same-step raw pair forces and named mallet beat axes. Both native tasks failed. Recognition used overlapping 40 mm target neighborhoods; a stronger nearest-landmark target-region profile now requires a fresh pair. These axes are not surface normals, exact bar identity or musical timing.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch"
         },
         "D": {
           "kind": "relative_displacement",
@@ -1715,9 +1716,9 @@
         "O": {
           "kind": "relative_orientation",
           "concept": "Tool orientation relative to target normal.",
-          "status": "G",
-          "audit": "object_contact_pose combines actual tool/target force-contact positions with same-step named physical axes on the contacting tool. Explicit object, functional or calibrated frames are supported. Independent pair-force, coordinate and frame checks are implemented; active-part calibration and live validation remain. This is not a surface-normal orientation or proof of tool hold.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-contact-frames-1006 xylophone pair retained eight/five completed physical strikes, all thirteen retained strike windows consistent. Twenty-six added tool contact-frame pose/z scores independently reproduced from same-step raw pair forces and named mallet beat axes. Both native tasks failed. Recognition used overlapping 40 mm target neighborhoods; a stronger nearest-landmark target-region profile now requires a fresh pair. These axes are not surface normals, exact bar identity or musical timing.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#completed-contact-frame-batch"
         },
         "R": {
           "kind": "spatial_relation",

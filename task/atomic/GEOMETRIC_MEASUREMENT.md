@@ -3,7 +3,7 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 365 host tests; completed bowl, multiple-boundary button
+Current verification: 370 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
@@ -1213,3 +1213,65 @@ or musical timing. Multiple simultaneous contacts may include other regions.
 Geometric conditioning still measures all pair contacts at the event, so its
 maximum contact error can exceed the qualifying subset's recognition radius.
 Older frozen radius-only reports retain their declared scope.
+
+### Completed contact-frame batch
+
+All eight `geometry-contact-frames-1006` reports are collected. Independent
+validation reproduced 46 newly added scores; 18 lacked events and four lacked
+contact at the event. Across source and new snapshots, 149 contact witnesses
+were consistent, with no contradictions. Both tool-push arms lack force-bearing
+tool/block contact, so no tool-push conditioning score is inferred. All eight
+native tasks failed. Block picks and thirteen declared-radius strike windows
+completed; the latter still have the neighborhood ambiguity described above.
+
+The conditioned T-push first-motion contact measured 81.5329 mm point/pose
+translation, 131.9453 degrees full link rotation, 98.7784 degrees local-z direction
+and 0.7719 mm outside its 40 mm contact box. All reproduced from raw force/frame
+witnesses. Its atomic/native goal failed; the baseline first-motion contact was
+unobserved. These are measured contact errors, not successful task completion.
+Evidence: `geometry-contact-frames-1006/independent-contact-batch-validation.json`.
+
+### Isolated initial referent factors
+
+Fresh initial selection suites isolate SE(3) pose, displacement, full orientation
+and point-scope spatial relation. Preflight identifies one initial geometric
+target among three actual seed-0 cube frames; snapshot poses do not move with
+later selections. Seven episodes are collected and independently reproduce
+candidate binding/geometry and selected roots/finger forces/arm/timing; the
+remaining displacement baseline is pending at this snapshot. Every observed
+first selection is `block_2`, while pose/displacement/orientation target `block_0`
+and spatial relation targets `block_1`. Native tasks failed.
+
+Observed selected-candidate pose errors are 92.6161 mm translation and 39.1275
+degrees full orientation. The isolated orientation error is also 39.1275 degrees;
+the point-scope negative-reference-x separation shortfall is 300 mm. Each factor
+retains its separate units and targets in MD/HTML. This validates geometric
+measurement on a wrong selection, not successful policy conditioning or arbitrary
+language/whole-object selection. Evidence is retained as
+`geometry-referent-{factor}-1006/independent-contact-batch-validation.json`.
+
+
+### Activation-time rigid kinematics and replay fidelity
+
+Every fresh stage retains immutable `initial_object_states` for its observed
+initial-position labels, with a capture physics step. For actual rigid bodies,
+this contains environment-local root pose (metres and wxyz), live solver linear
+velocity (m/s), live solver angular velocity (rad/s), actor path, environment and
+readback API metadata. Velocities come from `SingleRigidPrim` getters inherited
+by RoboDojo `RigidObject`; constructor defaults, policy commands and pose finite
+differences are not used. Missing, failed or nonfinite APIs and nonrigid bodies
+remain explicitly unavailable. The diagnostics do not change completion gates.
+
+Selected-stage proofs compare bound source/replay captures at their respective
+activation physics boundaries, linked to the source trace/report hashes.
+MD/HTML adds separate root rotation (degrees), linear velocity (mm/s) and angular
+velocity (degrees/s) residuals. Matching positions cannot hide changed rotation
+or motion; opposite quaternion signs represent the same rotation. Wrong actor,
+environment, timestamp, frame, units or API bindings are not comparable.
+Historical captures with positions alone retain N/A in these new columns.
+
+This is a scoped kinematic comparison, not a full simulator snapshot/restore or
+a fidelity pass/fail certificate. Robot joints, drives, contact warm starts,
+materials and game state are not covered. A fresh bowl A/B capture is being
+prepared; live source capture plus a separately verified prefix replay is needed
+before claiming observed kinematic replay evidence.

@@ -65,8 +65,12 @@ def compare_start_positions(root, detail):
             positions.append({'label':label, 'recorded_position_m':a, 'replayed_position_m':b,
                               'axis_difference_mm':delta, 'position_error_mm':math.sqrt(sum(v*v for v in delta))})
         if not positions: return unavailable('no_comparable_object_roots')
+        from task.atomic.kinematics import compare_rigid_roots
+        kinematics=compare_rigid_roots(before.get('initial_object_states',{}),atomic.get('initial_object_states',{}),
+            boundary['physics_step'],atomic.get('initial_state_physics_step'))
         return {'status':'observed_position_comparison', 'positions':positions,
                 'unmatched_labels':sorted(old.keys() ^ new.keys()), 'scope':scope,
+                'rigid_kinematics':kinematics,
                 'source_report':str(original_path), 'source_report_sha256':hashlib.sha256(data).hexdigest()}
     except (KeyError, ValueError, TypeError, OSError) as error:
         return unavailable(type(error).__name__)
