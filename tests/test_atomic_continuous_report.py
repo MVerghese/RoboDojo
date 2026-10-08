@@ -138,6 +138,8 @@ class ContinuousReportTests(unittest.TestCase):
             'role':{'family':'pour','slot':'source'},'eligible_candidates':['bottle'],'selected_labels':['cup'],
             'contact':{'status':'consistent_contact_evidence','consecutive_contact_validation':{
                 'status':'partial_evidence','candidates':[]}}}]}
+        combined['tasks'][0]['point_relation_observations']={'baseline':[{'stage_id':'pour','condition_id':'height',
+            'status':'reproduced_from_raw_state','reference_relative_xyz_m':[.03,.01,.07]}]}
         md, page = report_markdown(combined), report_html(combined)
         self.assertIn('original target', md)
         self.assertIn('new target <unsafe>', md)
@@ -162,6 +164,8 @@ class ContinuousReportTests(unittest.TestCase):
             self.assertIn('Selected candidate force history',report)
             self.assertIn('Consecutive force evidence',report)
             self.assertIn('pour / source',report)
+            self.assertIn('Point relation observations',report)
+            self.assertIn('Reference z (mm)',report)
 
     def test_flow_path_and_selected_referent_keep_units_and_exclude_unscored_crossing(self):
         rows={'atomic_scores':[{'stage_id':'s','family':'pour','conditions':{},

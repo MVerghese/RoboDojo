@@ -88,6 +88,7 @@ LIVE.update({
     **{('push','contact',factor): 'The geometry-contact-frames-1006 conditioned T rollout measured a force-bearing first-motion contact: 81.5329 mm point/pose translation, 131.9453 degrees full link orientation, 98.7784 degrees link-z error and 0.7719 mm outside the 40 mm contact box. All four scores and same-step raw force/link/coordinates independently reproduced. Baseline contact event was absent and both native/atomic goals failed. This validates this event measurement, not task success or every push.' for factor in 'PTOR'},
     **{('pick','object',factor): 'The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in all eight collected episodes. Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.' for factor in 'TDOR'},
 })
+LIVE[('pour','spout','R')]='The isolated geometry-spout-spatial-relation-1006 pair measured actual source-mouth origin at the first qualified source exit: height shortfall 0/0 mm to a 40 mm above-opening margin, but outside distance 26.8457/19.1581 mm from the central 20x20 mm, z=40..120 mm point corridor (1 mm tolerance). Actual heights were 76.7347/62.3796 mm and relative x offsets -36.8457/-29.1581 mm. Both prototype pours qualified; native true/false. All source-exit/first-transfer witnesses and event clocks independently reproduced. This is named spout point geometry, not whole-vessel footprint overlap or continuous finite passage.'
 # Historical source-pose mouth selector is semantically a spout frame.
 LIVE.pop(('pour','source pour pose','T'),None)
 LIVE.update({
@@ -110,7 +111,7 @@ LIVE_EVIDENCE = {
     ('fold', 'final orientation', 'O'): 'task/atomic/EXPANSION_STATUS.md#live-selected-surface-gap-validation',
 }
 LIVE_EVIDENCE.update({
-    **{('pour','spout',factor): 'task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-mouth-and-vessel-slot-correction' for factor in 'PTDO'},
+    **{('pour','spout',factor): 'task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-mouth-and-vessel-slot-correction' for factor in 'PTDOR'},
     **{('touch_with_tool','contact',factor): 'task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-live-strike-surface-pair' for factor in 'TDO'},
     **{('pour','opening',factor): 'task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-source-candidate-validation' for factor in 'POR'},
     ('pour','source pour pose','T'): 'task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-source-candidate-validation',

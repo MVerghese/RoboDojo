@@ -294,6 +294,10 @@ def build_report(manifest, result, matrix, root):
             'slot_validation': {mode: [{'stage_id':s['stage_id'],'condition_id':ident,**c['slot_validation']}
                 for s in row.get('atomic_scores',[]) for ident,c in s['conditions'].items() if c.get('slot_validation')]
                 for mode,row in (('baseline',ra),('conditioned',rb))},
+            'point_relation_observations': {mode: [{'stage_id':s['stage_id'],'condition_id':ident,**c['point_relation_observation']}
+                for s in row.get('atomic_scores',[]) for ident,c in s['conditions'].items()
+                if c.get('status')=='reproduced' and c.get('point_relation_observation')]
+                for mode,row in (('baseline',ra),('conditioned',rb))},
             'program_sha256': {mode: cases[c]['program_sha256'] for mode, c in (
                 ('baseline', a['id']), ('conditioned', b['id']))},
             'delivered_prompts': {mode: sorted({p['instruction'] for episode in row.get('policy_prompt_history', [])
@@ -626,6 +630,16 @@ SELECTION_HISTORY_HEADERS=['Arm','Stage','Role','Initial target','Selected candi
 SELECTION_HISTORY_SCOPE=('Initial target and first selected candidate use immutable candidate geometry and actual force contacts. '
     'Consecutive evidence checks every retained physics-step force snapshot; missing histories remain partial. '
     'This does not measure contact between physics samples or force closure.')
+POINT_RELATION_HEADERS=['Arm','Stage','Condition','Reference x (mm)','Reference y (mm)','Reference z (mm)']
+POINT_RELATION_SCOPE=('Actual point coordinates reconstructed from raw measured and reference state, in the declared reference axes. '
+    'These are signed positions, separate from the relation shortfall/outside-distance errors. A corridor frame can have a requested center offset. '
+    'They do not certify whole-object footprint overlap.')
+
+
+def point_relation_rows(task):
+    return [[mode,row['stage_id'],row['condition_id'],*[number(v*1000) for v in row['reference_relative_xyz_m']]]
+        for mode,rows in task.get('point_relation_observations',{}).items() for row in rows
+        if row.get('status')=='reproduced_from_raw_state']
 
 
 def selection_history_rows(task):
@@ -793,6 +807,9 @@ def report_markdown(data):
         if selection_history_rows(task):
             lines += ['**Selected candidate force history:**','',SELECTION_HISTORY_SCOPE,'',
                 *table(SELECTION_HISTORY_HEADERS,selection_history_rows(task)),'']
+        if point_relation_rows(task):
+            lines += ['**Point relation observations:**','',POINT_RELATION_SCOPE,'',
+                *table(POINT_RELATION_HEADERS,point_relation_rows(task)),'']
         for mode,corrections in task.get('slot_validation',{}).items():
             if corrections:lines += ['**Slot metadata correction ('+mode+'):** `'+json.dumps(corrections,sort_keys=True)+'`. Measured values and frozen inputs are unchanged.','']
         for mode,boundaries in task.get('material_boundary_validation',{}).items():
@@ -897,6 +914,8 @@ def report_html(data):
             content += '<h3>Interrupted strike impact diagnostics</h3><p>'+esc(ABORTED_STRIKE_SCOPE)+'</p>'+html_table(ABORTED_STRIKE_HEADERS,aborted_strike_rows(task))
         if selection_history_rows(task):
             content += '<h3>Selected candidate force history</h3><p>'+esc(SELECTION_HISTORY_SCOPE)+'</p>'+html_table(SELECTION_HISTORY_HEADERS,selection_history_rows(task))
+        if point_relation_rows(task):
+            content += '<h3>Point relation observations</h3><p>'+esc(POINT_RELATION_SCOPE)+'</p>'+html_table(POINT_RELATION_HEADERS,point_relation_rows(task))
         for mode,corrections in task.get('slot_validation',{}).items():
             if corrections:content += '<p><strong>Slot metadata correction ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(corrections,sort_keys=True))+'</code>. Measured values and frozen inputs are unchanged.</p>'
         for mode,boundaries in task.get('material_boundary_validation',{}).items():

@@ -1480,3 +1480,39 @@ geometry xylophone is a contrasting contact candidate, not a claim it can be
 lifted. Tool-tip, target-key and contact-region slots remain separate contracts.
 
 Initial tool-role calibration gate: **447 atomic tests passed**.
+
+
+## October 8: complete isolated spout-factor validation
+
+All **ten** spout episodes are collected. Independent raw-state validation
+reproduced all **20** source-exit/first-transfer boundary witnesses and all
+requested spout event geometry/measurement clocks. Every episode qualified
+the one-particle pour prototype. The relation pair has native success true/false.
+
+| Source-exit relation measurement | Baseline | Conditioned | Units |
+|---|---:|---:|---|
+| Actual mouth height in opening axes | 76.734664 | 62.379597 | mm |
+| Actual mouth x in opening axes | -36.845716 | -29.158142 | mm |
+| Actual mouth y in opening axes | 8.205991 | -4.299668 | mm |
+| Height shortfall below 40 mm | 0 | 0 | mm |
+| Outside distance from 20 x 20 mm, z=40..120 mm point corridor | 26.845716 | 19.158142 | mm |
+
+Height and corridor tolerances are 1 mm. Both mouths meet the height threshold
+and miss the requested horizontal alignment. `audit_scores` reconstructs signed
+point coordinates directly from the raw measured/reference poses after all
+physical and numerical checks. The MD/HTML **Point relation observations** table
+shows x/y/z in mm separately from shortfall/outside-distance errors; the shifted
+corridor frame has a center 80 mm above the opening, so its displayed z is
+relative to that center. Saved `observed` display metadata is not trusted as a
+coordinate source. Invalid physical or arithmetic observations are excluded.
+Neither the score components in frozen reports nor their original flags change.
+
+The spout taxonomy now has narrow live examples for **P/T/D/O/R**. Each covers
+these named initial/live mouth targets and measured one-particle source-qualified
+exits, not arbitrary target feasibility, full-fluid volume, continuous containment
+or statistical steering. Independent proof files, raw report and validator
+hashes are retained in `independent-spout-boundary-summary-v2.json`; older
+proofs remain. The separate actual vessel-center trial and source/tool selection
+trials retain their own immutable runtimes and targets.
+
+Point-relation reporting and full spout-factor gate: **448 atomic tests passed**.

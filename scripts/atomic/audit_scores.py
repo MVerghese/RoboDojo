@@ -121,6 +121,23 @@ def apply_slot_semantics(atomic,output):
             row.update(slot=slot,slot_validation=correction)
 
 
+def apply_point_relation_observations(atomic,output):
+    """Show measured reference-axis position separately from relation shortfall."""
+    from task.atomic.geometry import _observed_pose,_pose,_rotation
+    for ident,raw in atomic.get('geometry',{}).items():
+        row=output['conditions'].get(ident);condition=raw.get('condition',{})
+        if row is None:continue
+        row.pop('point_relation_observation',None)
+        if (row.get('status')!='reproduced' or condition.get('kind')!='spatial_relation'
+                or condition.get('relation_scope','points')!='points'):continue
+        try:
+            point,_=_observed_pose(raw['measured_state']);reference,q=_pose(raw.get('reference_state'),'reference')
+            local=_rotation(q).T@(point-reference)
+            row['point_relation_observation']={'status':'reproduced_from_raw_state','reference_relative_xyz_m':local.tolist(),
+                'scope':'measured point coordinates in the actual reference axes; separate from relation shortfall and whole-object footprint'}
+        except (KeyError,ValueError,TypeError):continue
+
+
 def apply_stage_success_validation(atomic,output):
     from task.atomic.completion_validation import validate_stage_success
     for ident,raw in atomic.get('geometry',{}).items():
@@ -296,6 +313,7 @@ def validate_cached_recognition(report, scores):
             apply_surface_capture_validation(stage,score)
             apply_aborted_strike_validation(stage,score)
             apply_slot_semantics(stage,score)
+            apply_point_relation_observations(stage,score)
 
 
 def apply_contact_validation(atomic, output):
@@ -419,6 +437,7 @@ def audit_atomic(atomic, variant=None):
     apply_contact_validation(atomic, output)
     apply_stage_success_validation(atomic,output)
     apply_slot_semantics(atomic,output)
+    apply_point_relation_observations(atomic,output)
     if atomic.get("closest_approach"):
         alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}
         output["closest_approach"] = audit_atomic(alternate, variant)["conditions"]

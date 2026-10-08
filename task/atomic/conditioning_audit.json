@@ -50,9 +50,9 @@
   "slots": 54,
   "factor_cells": 270,
   "status_counts": {
-    "L": 32,
+    "L": 33,
     "C": 0,
-    "G": 135,
+    "G": 134,
     "F": 0,
     "S": 70,
     "M": 5,
@@ -935,9 +935,9 @@
         "R": {
           "kind": "spatial_relation",
           "concept": "Spout above/inside opening.",
-          "status": "G",
-          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The isolated geometry-spout-spatial-relation-1006 pair measured actual source-mouth origin at the first qualified source exit: height shortfall 0/0 mm to a 40 mm above-opening margin, but outside distance 26.8457/19.1581 mm from the central 20x20 mm, z=40..120 mm point corridor (1 mm tolerance). Actual heights were 76.7347/62.3796 mm and relative x offsets -36.8457/-29.1581 mm. Both prototype pours qualified; native true/false. All source-exit/first-transfer witnesses and event clocks independently reproduced. This is named spout point geometry, not whole-vessel footprint overlap or continuous finite passage.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-mouth-and-vessel-slot-correction"
         }
       }
     },

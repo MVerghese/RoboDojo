@@ -3,9 +3,9 @@ from copy import deepcopy
 import unittest
 import numpy as np
 from task.atomic.slot_semantics import condition_slot
-from scripts.atomic.audit_scores import apply_slot_semantics
+from scripts.atomic.audit_scores import apply_slot_semantics,audit_atomic,apply_point_relation_observations
 from scripts.atomic.generate_vessel_pose_suite import vessel_condition
-from task.atomic.geometry import _rotation
+from task.atomic.geometry import _rotation,evaluate_geometry
 
 
 def stage():
@@ -18,6 +18,20 @@ def stage():
 
 
 class SlotSemanticsTests(unittest.TestCase):
+    def test_point_relation_coordinates_come_from_raw_states_not_saved_observed_metadata(self):
+        c={'id':'height','slot':'spout','kind':'spatial_relation','expected':'above','relation_scope':'points',
+            'margin':.04,'tolerance':.001,'measurement':{'kind':'object_position','label':'bottle'}}
+        measured=[.03,.01,.07];reference=[0,0,0,1,0,0,0]
+        result=evaluate_geometry(c,measured,reference).as_dict();result['observed']=[99,99,99]
+        raw={'stage_id':'pour','family':'pour','action_success':False,'geometry_coverage':1,
+            'conditions':[c],'geometry':{'height':{'condition':c,'measured_state':measured,'reference_state':reference,'result':result}}}
+        audited=audit_atomic(raw);row=audited['conditions']['height']
+        self.assertEqual(row['status'],'reproduced')
+        np.testing.assert_allclose(row['point_relation_observation']['reference_relative_xyz_m'],measured)
+        self.assertEqual(row['recorded_result']['components']['relation_error_m'],0)
+        row['status']='invalid_recognition_window';apply_point_relation_observations(raw,audited)
+        self.assertNotIn('point_relation_observation',row)
+
     def test_exact_source_opening_relabels_only_derived_group_and_preserves_numbers(self):
         raw=stage();before=deepcopy(raw);c=raw['conditions'][0]
         self.assertEqual(condition_slot(raw,c)[0],'spout')
