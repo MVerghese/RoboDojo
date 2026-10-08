@@ -1337,7 +1337,7 @@ these spout cells retain their pre-run coverage status.
 **16 actual model/file/scale/triangle/landmark captures** independently matched
 the reviewed key-region bindings. Baseline recognized **8** complete held
 approach/impact/retraction strikes; conditioned recognized **7**, with key 5
-unobserved. All 15 complete strike windows and impact surface witnesses were
+lacking a completed strike (three qualified interrupted impacts are described below). All 15 complete strike windows and impact surface witnesses were
 independently consistent. Both native tasks failed.
 
 | Key | Baseline maximum retained impact surface distance (mm) | Conditioned maximum retained impact surface distance (mm) |
@@ -1347,7 +1347,7 @@ independently consistent. Both native tasks failed.
 | 2 | 1.062969 | 1.187282 |
 | 3 | 0.475721 | 0.715376 |
 | 4 | 0.528549 | 0.658812 |
-| 5 | 0.128881 | N/A — impact unobserved |
+| 5 | 0.128881 | N/A — no retained completed-strike impact |
 | 6 | 1.705307 | 0.622222 |
 | 7 | 0.444033 | 0.304263 |
 
@@ -1363,3 +1363,78 @@ This validates these live scaled USD regions and force-bearing strikes. It does
 not establish cooked collider component identity, exclusive impacts, musical
 timing or native-task success. The later collision-configuration pair remains
 separate and immutable. All **436** offline atomic tests pass.
+
+
+## October 8: interrupted impacts and live collision-configuration validation
+
+An interrupted strike can contain a valid impact without completing the required
+held retraction. `aborted_strike_diagnostics.py` audits archived attempts against
+raw adjacent approach samples, force clocks/impulses, finger/arm bindings,
+landmark neighborhoods, selected actual USD triangles, attempt index and abort
+clock. Geometry must independently reproduce and use the exact impact event
+and measurement step. Contradictory values are excluded; missing historical
+contact bindings remain explicitly partial. The MD and HTML render these
+measurements separately from completed-strike scores and main conditioning
+summaries. Recorded atomic and native outcomes are preserved.
+
+### Corrected diagnosis for conditioned key 5
+
+In `geometry-strike-live-surfaces-1006`, key 5 has **three independently
+consistent qualified impacts**, followed by interrupted attempts. Its main
+completion-conditioned fields are N/A because no retained completed-strike
+impact exists. Contact and geometry instrumentation did produce evidence.
+The archive records `physical_interval_invalidated`; it does not retain enough
+information to assign each interruption to hold loss versus another reset gate.
+
+| Attempt | Selected surface distance (mm) | Contact offset error (mm) | Contact pose translation error (mm) | Full contact pose orientation error (degrees) | Tool-z direction error (degrees) |
+|---|---:|---:|---:|---:|---:|
+| 0 | 0.197955 | 6.182466 | 8.980220 | 168.294719 | 168.213536 |
+| 1 | 1.228694 | 34.734538 | 34.995173 | 166.825598 | 158.609376 |
+| 2 | 1.589471 | 37.553646 | 37.856693 | 169.608379 | 157.741851 |
+
+The common surface gate was 2 mm. Prompted contact offset tolerance was 8 mm;
+orientation and pose targets remain those frozen in that suite. These attempts
+are measurable failures of the full strike completion contract, not additional
+successful strikes. They are not pooled with the later pair.
+
+### Fresh pair with live composed USD settings
+
+`geometry-strike-collision-config-1006` ran the immutable `f018b9f` runtime.
+Both arms recognized **8/8 complete strikes**; both native tasks failed. All
+16 actual model/file/scale/selected-triangle captures, 16 surface impacts and
+16 approach/impact/retraction witnesses independently reproduced. All 16 live
+composed mesh configurations bound to the selected `collision` mesh: collision
+enabled, `MeshCollisionAPI` present, approximation `convexDecomposition`.
+The independent contact audit reproduced **134** retained force snapshots
+and **52** geometric scores without contradiction.
+
+| Key | Baseline maximum impact surface distance (mm) | Conditioned maximum impact surface distance (mm) |
+|---|---:|---:|
+| 0 | 0.296201 | 0.842526 |
+| 1 | 0.597019 | 0.835609 |
+| 2 | 0.802765 | 0.824894 |
+| 3 | 0.456132 | 0.909865 |
+| 4 | 0.647504 | 0.247591 |
+| 5 | 0.033215 | 0.677330 |
+| 6 | 1.638713 | 1.391463 |
+| 7 | 0.469650 | 0.204923 |
+
+The common gate is 2 mm. Composed USD configuration is independently retained
+provenance, not the cooked PhysX hull topology or a guarantee that the target
+key was the only collider touched. These single-episode pairs do not establish
+statistical steerability, audio/musical timing or native-task success. Proofs,
+report hashes and validator hashes are retained beside the raw reports in
+`independent-strike-surface-validation-v2.json`; previous proof files remain.
+
+### Spout execution and scheduler repair
+
+Five isolated pairs test a fixed initial-frame point, a live SE(3) pose, live
+relative displacement, named-axis orientation and above/point-corridor relations
+at the first qualified source-mouth exit. All ten jobs are accepted at
+`high-9000`. The relation pair initially failed the scheduler's 41-character
+name limit before submission. A deterministic shorter scheduler label is now
+recorded as a scheduling amendment; both frozen programs, archives, runtime
+and policy controls are unchanged. This repair does not regenerate queued
+experimental evidence. Results and live coverage await collection and audit.
+
+Offline validation for the interrupted-impact and scheduler repair changes: **439 atomic tests passed**.

@@ -214,6 +214,17 @@ class DynamicTests(unittest.TestCase):
                 self.assertEqual(json.loads((run/'run_plan.json').read_text())['scheduling']['priority_class'],'high-9000')
                 self.assertEqual(json.loads((run/'run_plan.json').read_text())['scheduling']['excluded_nodes'],['bad'])
                 self.assertEqual(json.loads((run/'j.atomic-job-spec.json').read_text())['spec']['affinity']['allowed_nodes_in_node_group'],['bad','good'])
+                original=json.loads((run/'j.atomic-job-spec.json').read_text())
+                original['metadata']={'name':'rb-spout-spatial-relation-1008-000-000'}
+                (run/'j.atomic-job-spec.json').write_text(json.dumps(original))
+                frozen=freeze_case(run,program,'t')
+                submit_frozen_case(run,program,'t',Path('credentials'))
+                shortened=submit.call_args.args[1]['metadata']['name']
+                self.assertLessEqual(len(shortened),36)
+                self.assertEqual(read_frozen_case(run,program,'t'),frozen)
+                submit_frozen_case(run,program,'t',Path('credentials'))
+                self.assertEqual(submit.call_args.args[1]['metadata']['name'],shortened)
+                self.assertEqual(json.loads((run/'j.atomic-job-spec.json').read_text())['metadata'],original['metadata'])
                 submit.reset_mock()
                 with self.assertRaisesRegex(ValueError,'every prepared eligible node'):
                     submit_frozen_case(run,program,'t',Path('credentials'),excluded_nodes=['bad','good'])

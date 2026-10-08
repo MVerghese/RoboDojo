@@ -87,6 +87,11 @@ def submit_frozen_case(run, program, task, credentials, priority_class=None, exc
     plan_path = run / 'run_plan.json'
     plan = json.loads(plan_path.read_text())
     patched = json.loads((run / f"{plan['jobs'][0]}.atomic-job-spec.json").read_text())
+    # Lepton appends a five-character identifier within its 41-character limit.
+    # Amend only the scheduler label, retaining every frozen experimental input.
+    prepared_name = patched.get('metadata', {}).get('name')
+    if prepared_name and len(prepared_name) > 36:
+        patched['metadata']['name'] = prepared_name[:27].rstrip('-') + '-' + hashlib.sha256(prepared_name.encode()).hexdigest()[:8]
     if priority_class is not None:
         if not re.fullmatch(r'[a-z0-9][a-z0-9-]*', priority_class):
             raise ValueError('priority_class must be a scheduler class name')
@@ -106,6 +111,8 @@ def submit_frozen_case(run, program, task, credentials, priority_class=None, exc
     submitted_spec = run / f"{plan['jobs'][0]}.submission-spec.json"
     atomic_write_json(submitted_spec, patched)
     scheduling = {'priority_class': patched['spec'].get('queue_config', {}).get('priority_class'),
+                  'prepared_job_name': prepared_name,
+                  'submitted_job_name': patched.get('metadata', {}).get('name'),
                   'excluded_nodes': excluded_nodes,
                   'allowed_nodes_in_node_group': patched['spec'].get('affinity', {}).get('allowed_nodes_in_node_group'),
                   'prepared_spec_sha256': frozen['spec_sha256'],

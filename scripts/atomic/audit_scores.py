@@ -105,6 +105,12 @@ def apply_surface_capture_validation(atomic,output):
     if event is not None:output['target_surface_contact_validation']=validate_surface_event(config,event,capture)
 
 
+def apply_aborted_strike_validation(atomic,output):
+    from scripts.atomic.aborted_strike_diagnostics import audit_aborted_strikes
+    rows=audit_aborted_strikes(atomic)
+    if rows:output['aborted_strike_diagnostics']=rows
+
+
 def apply_stage_success_validation(atomic,output):
     from task.atomic.completion_validation import validate_stage_success
     for ident,raw in atomic.get('geometry',{}).items():
@@ -259,6 +265,7 @@ def validate_cached_recognition(report, scores):
             from task.atomic.source_candidates import audit_source_candidates
             score['source_candidate_diagnostic']=audit_source_candidates(stage)
             apply_surface_capture_validation(stage,score)
+            apply_aborted_strike_validation(stage,score)
 
 
 def apply_contact_validation(atomic, output):
@@ -375,6 +382,7 @@ def audit_atomic(atomic, variant=None):
     from task.atomic.source_candidates import audit_source_candidates
     output['source_candidate_diagnostic']=audit_source_candidates(atomic)
     apply_surface_capture_validation(atomic,output)
+    apply_aborted_strike_validation(atomic,output)
     apply_recognition_validation(atomic, output)
     apply_flow_validation(atomic, output)
     apply_support_validation(atomic, output)

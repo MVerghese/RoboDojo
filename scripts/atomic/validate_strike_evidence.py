@@ -18,12 +18,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from task.atomic.geometry import _rotation
 
 
-def validate_strike(stage):
+def validate_strike(stage, *, impact_only=False):
     config = stage.get('recognition') or {}
     if config.get('kind') != 'held_tool_strike':
         return {'status': 'not_applicable'}
     events = stage.get('physical_events', {})
-    if not {'impact', 'retracted', 'strike'} <= events.keys():
+    required={'impact'} if impact_only else {'impact','retracted','strike'}
+    if not required <= events.keys():
         return {'status': 'unobserved', 'reason': 'complete_strike_events_absent'}
     checks, metrics, unavailable = {}, {}, []
 
@@ -31,12 +32,15 @@ def validate_strike(stage):
         checks[name] = bool(np.allclose(observed, expected, rtol=1e-7, atol=1e-9))
 
     try:
-        impact, final = events['impact'], events['strike']
-        start, end = impact['physics_step'], final['physics_step']
-        checks['event_order'] = (type(start) is int and type(end) is int and
-            start < end == events['retracted']['physics_step'] and
-            end-start <= config['max_retraction_steps'])
-        close('elapsed_steps', final['elapsed_physics_steps'], end-start)
+        impact=events['impact'];start=impact['physics_step']
+        if impact_only:
+            checks['impact_clock']=type(start) is int and start>=0
+        else:
+            final=events['strike'];end=final['physics_step']
+            checks['event_order'] = (type(start) is int and type(end) is int and
+                start < end == events['retracted']['physics_step'] and
+                end-start <= config['max_retraction_steps'])
+            close('elapsed_steps', final['elapsed_physics_steps'], end-start)
         samples = impact['approach_samples']
         checks['contiguous_preimpact_samples'] = (len(samples) == 2 and
             [s['physics_step'] for s in samples] == [start-2, start-1])
@@ -77,7 +81,7 @@ def validate_strike(stage):
             and row['force_report_physics_step'] == start for row in rows))
         metrics['impact_impulse_ns'] = impulse
         arms = []
-        for boundary, event in (('impact', impact), ('completion', final)):
+        for boundary, event in ([('impact',impact)] if impact_only else [('impact',impact),('completion',final)]):
             hold = event['held_contact']; step = event['physics_step']
             fingers = set(row['finger_body'] for row in hold['contacts'])
             checks[f'{boundary}_hold'] = (len(fingers) >= 2 and fingers == set(hold['finger_bodies'])
@@ -88,6 +92,12 @@ def validate_strike(stage):
                     np.isfinite(row['impulse']).all() and np.linalg.norm(row['impulse']) > 1e-9
                     for row in hold['contacts']))
             arms.append(hold['resolved_arm'])
+        if impact_only:
+            checks['finite_metrics']=all(math.isfinite(v) for v in metrics.values())
+            failed=[name for name,ok in checks.items() if not ok]
+            return {'status':'inconsistent_evidence' if failed else 'partial_evidence' if unavailable else 'consistent_evidence',
+                'checks':checks,'failed_checks':failed,'unavailable':unavailable,'metrics':metrics if not failed else {},
+                'scope':'retained held impact force and sampled approach only; no completed strike or retraction claim'}
         checks['same_arm_hold_interval'] = arms[0] == arms[1] and final['held_contact']['contact_interval_start_step'] <= start
         checks['reported_retraction_threshold'] = (final['rise_m'] >= config['min_retraction_m']
             and final['separated_steps'] >= config['min_retraction_steps'])
@@ -118,7 +128,7 @@ def validate_strike(stage):
     failed = [name for name, ok in checks.items() if not ok]
     return {'status': 'inconsistent_evidence' if failed else 'partial_evidence' if unavailable else 'consistent_evidence',
         'checks': checks, 'failed_checks': failed, 'unavailable': unavailable, 'metrics': metrics,
-        'scope': 'recorded impact/completion contacts and sampled approach/retraction kinematics; intermediate contact persistence is not independently reconstructed'}
+        'scope': 'retained held impact only; no completed strike claim' if impact_only else 'recorded impact/completion contacts and sampled approach/retraction kinematics; intermediate contact persistence is not independently reconstructed'}
 
 
 def main():

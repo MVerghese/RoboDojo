@@ -264,6 +264,9 @@ def build_report(manifest, result, matrix, root):
             'material_boundary_validation': {mode: [{'stage_id':s['stage_id'],**s['material_boundary_validation']}
                 for s in row.get('atomic_scores',[]) if s.get('material_boundary_validation')]
                 for mode,row in (('baseline',ra),('conditioned',rb))},
+            'aborted_strike_diagnostics': {mode:[{'stage_id':s['stage_id'],**attempt}
+                for s in row.get('atomic_scores',[]) for attempt in s.get('aborted_strike_diagnostics',[])]
+                for mode,row in (('baseline',ra),('conditioned',rb))},
             'recognition_validation': {mode: [{'stage_id': s['stage_id'],
                 'status': s['recognition_witness']['status'],
                 'failed_checks': s['recognition_witness'].get('failed_checks', [])}
@@ -601,6 +604,27 @@ SURFACE_HEADERS = ['Arm','Stage','Live mesh capture','Contact validation','Max s
 SURFACE_SCOPE = ('Actual scaled USD collision-mesh region bound to the reviewed model/file, triangles and authored landmark. '
     'Distance uses face interiors, edges and vertices of that region. Missing contacts are N/A; inconsistent metrics are excluded. '
     'This does not certify cooked collider part identity, exclusive key contact, sound or timing.')
+ABORTED_STRIKE_HEADERS=['Arm','Stage','Attempt','Impact evidence','Measurement evidence','Measurement','Value','Units']
+ABORTED_STRIKE_SCOPE=('Interrupted strike impacts with separately validated held force/approach and geometry. '
+    'They are excluded from completed strikes and the main conditioning summaries. '
+    'Partial historical contact bindings remain explicit; contradictory values are excluded.')
+
+
+def aborted_strike_rows(task):
+    rows=[]
+    for mode,attempts in task.get('aborted_strike_diagnostics',{}).items():
+        for attempt in attempts:
+            prefix=[mode,attempt['stage_id'],str(attempt['attempt_index']),attempt['impact_validation']['status']]
+            for ident,condition in attempt['conditions'].items():
+                for key,value in condition.get('components',{}).items():
+                    if key in ('contact_points','material_points'):continue
+                    label,scale=component_unit(key)
+                    metric,unit=(label.rsplit(' (',1)[0],label.rsplit(' (',1)[1].rstrip(')')) if ' (' in label else (label,'dimensionless')
+                    rows.append(prefix+[condition['status'],ident+' / '+metric,number(value*scale),unit])
+            surface=attempt.get('surface_validation') or {}
+            distances=surface.get('metrics',{}).get('selected_surface_distances_m',[]) if surface.get('status')=='consistent_evidence' else []
+            if distances:rows.append(prefix+[surface['status'],'max selected surface distance',number(max(distances)*1000),'mm'])
+    return rows
 
 
 def surface_validation_rows(task):
@@ -732,6 +756,9 @@ def report_markdown(data):
         if surface_validation_rows(task):
             lines += ['**Live strike surface validation:**','',SURFACE_SCOPE,'',
                 *table(SURFACE_HEADERS,surface_validation_rows(task)),'']
+        if aborted_strike_rows(task):
+            lines += ['**Interrupted strike impact diagnostics:**','',ABORTED_STRIKE_SCOPE,'',
+                *table(ABORTED_STRIKE_HEADERS,aborted_strike_rows(task)),'']
         for mode,boundaries in task.get('material_boundary_validation',{}).items():
             if boundaries:
                 lines += ['**Material boundary validation ('+mode+'):** `'+json.dumps(boundaries,sort_keys=True)+
@@ -830,6 +857,8 @@ def report_html(data):
             content += '<h3>Source-mouth candidate diagnostics</h3><p>' + esc(SOURCE_CANDIDATE_SCOPE) + '</p>' + html_table(SOURCE_CANDIDATE_HEADERS, source_candidate_rows(task))
         if surface_validation_rows(task):
             content += '<h3>Live strike surface validation</h3><p>'+esc(SURFACE_SCOPE)+'</p>'+html_table(SURFACE_HEADERS,surface_validation_rows(task))
+        if aborted_strike_rows(task):
+            content += '<h3>Interrupted strike impact diagnostics</h3><p>'+esc(ABORTED_STRIKE_SCOPE)+'</p>'+html_table(ABORTED_STRIKE_HEADERS,aborted_strike_rows(task))
         for mode,boundaries in task.get('material_boundary_validation',{}).items():
             if boundaries:
                 content += '<p><strong>Material boundary validation ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(boundaries,sort_keys=True))+'</code>. Source exit and first transfer are separate from destination crossing and settled full quantity. Missing historical core frames remain partial; contradictions exclude geometry at affected boundaries.</p>'

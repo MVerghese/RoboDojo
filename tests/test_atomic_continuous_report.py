@@ -6,7 +6,7 @@ import unittest
 from scripts.atomic.continuous_report import (
     arm_summary, component_names, condition_parameters, measurement_row, report_html, report_markdown,
     shared_summary,
-    collect_events, component_unit,
+    collect_events, component_unit, aborted_strike_rows, ABORTED_STRIKE_HEADERS,
 )
 
 
@@ -19,6 +19,22 @@ def event(components=None, status='reproduced'):
 
 
 class ContinuousReportTests(unittest.TestCase):
+    def test_interrupted_impact_units_and_partial_bindings_remain_separate(self):
+        task={'aborted_strike_diagnostics':{'conditioned':[{'stage_id':'key5','attempt_index':0,
+            'impact_validation':{'status':'consistent_evidence'},
+            'conditions':{'offset':{'status':'partial_evidence','components':{
+                'displacement_m':.006,'orientation_rad':math.pi/2}}},
+            'surface_validation':{'status':'consistent_evidence','metrics':{
+                'selected_surface_distances_m':[.0002]}}}]}}
+        rows=aborted_strike_rows(task)
+        self.assertTrue(all(len(r)==len(ABORTED_STRIKE_HEADERS) for r in rows))
+        self.assertEqual(rows[0][4],'partial_evidence')
+        self.assertEqual(rows[0][-1],'mm')
+        self.assertEqual(float(rows[0][-2]),6.)
+        self.assertEqual(rows[1][-1],'deg')
+        self.assertEqual(float(rows[1][-2]),90.)
+        self.assertEqual(float(rows[2][-2]),.2)
+
     def test_invalid_strike_window_is_not_hidden_by_numerically_scored_path(self):
         rows={'atomic_scores':[{'stage_id':'strike','family':'touch_with_tool','conditions':{},
             'trajectories':{'path':{'status':'invalid_recognition_window',
