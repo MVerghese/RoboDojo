@@ -744,3 +744,18 @@ A/B suite is submitted from `e0f1d9c` at high-9000: 12 Running / 4 Starting at
 The unified MD/HTML currently includes 245 valid episodes, 121 verified A/B
 pairs and 1,160 reproduced event scores, with zero arithmetic mismatches and
 ten excluded historical recognition windows.
+
+### Latest scoped replay and settling audit
+
+The live kinematic replay finished with a verified prefix and successful selected
+placement: 74 full controls + six substeps of control 75, four dropped. Bowl-root
+residuals: 0.004078 mm position, 0.006229 degrees rotation, 3.261018 mm/s linear
+velocity and 2.470848 degrees/s angular velocity. Both activation clocks are 1286.
+This is one named-root comparison, not full-state restoration; source/proof hashes
+are in the three detailed docs. The report keeps this outside full-task A/B counts.
+
+Source `179dd5f` passes 384 tests and adds independent bounded settling pose/support
+windows. A fresh twelve-state bowl pair is submitted at high-9000 from that
+runtime with original prompts/geometric targets. The screw pose/force-history
+pair from `21405e1` is still running. Completed historical runs with no settling
+pose history remain partial for that separate validation.

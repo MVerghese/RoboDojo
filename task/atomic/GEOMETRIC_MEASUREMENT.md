@@ -1386,3 +1386,31 @@ bowl pair uses twelve states in both arms instead of the earlier three, with
 identical task prompts and geometric targets. Its measured duration and pose/force
 proof are pending. Six host regressions cover hidden intermediate motion/rotation,
 clock/force/root/recontact corruption, cached exclusion and runtime history reset.
+
+
+### Live kinematic replay proof (October 7 local / October 8 UTC)
+
+`geometry-kinematics-replay-validation-1006` replayed 74 whole controls and six
+physics substeps of control 75, dropping its remaining four substeps. The required
+force-held pickup and selected activation verified; the subsequent selected bowl
+placement succeeded. Recorded and replayed activation physics steps are both 1286.
+The named bowl root retained actual solver state in the same environment frame:
+
+| Residual | Observed difference |
+| --- | --- |
+| Root position | 0.004078 mm |
+| Root orientation | 0.006229 degrees |
+| Linear velocity | 3.261018 mm/s |
+| Angular velocity | 2.470848 degrees/s |
+
+This proves one scoped source/replay comparison and successful selected action,
+not a full simulator state restore or universal fidelity bound. Robot joints,
+drives, contact warm starts, materials and game state remain unchecked. The job
+uses the earlier three-sample settling profile; the new twelve-sample pose-window
+pair is a separate live validation and is still pending. Replay runs are excluded
+from full-task A/B episode counts.
+
+Report SHA256: `c9eeed91769eb47a923fd0b7df86cf1f6ff4f5df0aff8a38e2313ce879ff4ae4`.
+Proof SHA256: `ecb497d19fd786057bf5308f1743bc8e61b02845c6689738f31e857d919b9f53`.
+Retained artifact: `geometry-kinematics-replay-validation-1006/prefix-validation.json`.
+MD/HTML now displays the four separate residuals.
