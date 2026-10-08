@@ -33,7 +33,7 @@ DEPENDENCIES = (
     'task/atomic/bindings.py',
     'task/atomic/landmarks.py',
     'task/atomic/materials.py',
-    'task/atomic/selection.py',
+    'task/atomic/selection.py', 'task/atomic/slot_semantics.py',
     'task/atomic/trajectory.py',
     'task/atomic/regions.py',
     'task/atomic/fit.py',

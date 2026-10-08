@@ -112,6 +112,15 @@ def apply_aborted_strike_validation(atomic,output):
     if rows:output['aborted_strike_diagnostics']=rows
 
 
+def apply_slot_semantics(atomic,output):
+    from task.atomic.slot_semantics import condition_slot
+    for condition in atomic.get('conditions',[]):
+        slot,correction=condition_slot(atomic,condition)
+        row=output['conditions'].get(condition['id'])
+        if row is not None and correction:
+            row.update(slot=slot,slot_validation=correction)
+
+
 def apply_stage_success_validation(atomic,output):
     from task.atomic.completion_validation import validate_stage_success
     for ident,raw in atomic.get('geometry',{}).items():
@@ -286,6 +295,7 @@ def validate_cached_recognition(report, scores):
             score['source_candidate_diagnostic']=audit_source_candidates(stage)
             apply_surface_capture_validation(stage,score)
             apply_aborted_strike_validation(stage,score)
+            apply_slot_semantics(stage,score)
 
 
 def apply_contact_validation(atomic, output):
@@ -408,6 +418,7 @@ def audit_atomic(atomic, variant=None):
     apply_support_validation(atomic, output)
     apply_contact_validation(atomic, output)
     apply_stage_success_validation(atomic,output)
+    apply_slot_semantics(atomic,output)
     if atomic.get("closest_approach"):
         alternate = {**atomic, "geometry": atomic["closest_approach"], "closest_approach": {}}
         output["closest_approach"] = audit_atomic(alternate, variant)["conditions"]

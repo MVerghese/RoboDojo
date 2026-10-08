@@ -9,6 +9,7 @@ import statistics
 import tarfile
 
 from scripts.atomic.storage import atomic_write_json, atomic_write_text
+from task.atomic.slot_semantics import condition_slot
 
 
 def contact_witness_summary(scores):
@@ -210,7 +211,8 @@ def build_report(manifest, result, matrix, root):
         definitions = defaultdict(list)
         for stage in programs[0]['stages']:
             for condition in stage.get('geometry', []):
-                key = (stage['family'], condition['id'], condition['kind'], condition['slot'])
+                slot,correction=condition_slot(stage,condition)
+                key = (stage['family'], condition['id'], condition['kind'], slot)
                 definition = {'stage_id': stage['id'], 'condition': condition}
                 if definition not in definitions[key]:
                     definitions[key].append(definition)
@@ -288,6 +290,9 @@ def build_report(manifest, result, matrix, root):
                 'eligible_candidates':s['selection'].get('eligible_candidates',[]),
                 'contact':s['selection']['contact_witness']}
                 for s in row.get('atomic_scores',[]) if (s.get('selection') or {}).get('contact_witness')]
+                for mode,row in (('baseline',ra),('conditioned',rb))},
+            'slot_validation': {mode: [{'stage_id':s['stage_id'],'condition_id':ident,**c['slot_validation']}
+                for s in row.get('atomic_scores',[]) for ident,c in s['conditions'].items() if c.get('slot_validation')]
                 for mode,row in (('baseline',ra),('conditioned',rb))},
             'program_sha256': {mode: cases[c]['program_sha256'] for mode, c in (
                 ('baseline', a['id']), ('conditioned', b['id']))},
@@ -788,6 +793,8 @@ def report_markdown(data):
         if selection_history_rows(task):
             lines += ['**Selected candidate force history:**','',SELECTION_HISTORY_SCOPE,'',
                 *table(SELECTION_HISTORY_HEADERS,selection_history_rows(task)),'']
+        for mode,corrections in task.get('slot_validation',{}).items():
+            if corrections:lines += ['**Slot metadata correction ('+mode+'):** `'+json.dumps(corrections,sort_keys=True)+'`. Measured values and frozen inputs are unchanged.','']
         for mode,boundaries in task.get('material_boundary_validation',{}).items():
             if boundaries:
                 lines += ['**Material boundary validation ('+mode+'):** `'+json.dumps(boundaries,sort_keys=True)+
@@ -890,6 +897,8 @@ def report_html(data):
             content += '<h3>Interrupted strike impact diagnostics</h3><p>'+esc(ABORTED_STRIKE_SCOPE)+'</p>'+html_table(ABORTED_STRIKE_HEADERS,aborted_strike_rows(task))
         if selection_history_rows(task):
             content += '<h3>Selected candidate force history</h3><p>'+esc(SELECTION_HISTORY_SCOPE)+'</p>'+html_table(SELECTION_HISTORY_HEADERS,selection_history_rows(task))
+        for mode,corrections in task.get('slot_validation',{}).items():
+            if corrections:content += '<p><strong>Slot metadata correction ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(corrections,sort_keys=True))+'</code>. Measured values and frozen inputs are unchanged.</p>'
         for mode,boundaries in task.get('material_boundary_validation',{}).items():
             if boundaries:
                 content += '<p><strong>Material boundary validation ('+esc(mode)+'):</strong> <code>'+esc(json.dumps(boundaries,sort_keys=True))+'</code>. Source exit and first transfer are separate from destination crossing and settled full quantity. Missing historical core frames remain partial; contradictions exclude geometry at affected boundaries.</p>'

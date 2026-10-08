@@ -7418,6 +7418,10 @@
       "sha256": "db1cc0ecc6f4b28706bd83b09a92ed73f460e44d40438f240cfae5ff50a88068"
     },
     {
+      "path": "task/atomic/slot_semantics.py",
+      "sha256": "98a7067a24099eb0b12e0c92161de5e3a50fd8fbea01d23c89f4342196a666cd"
+    },
+    {
       "path": "task/atomic/trajectory.py",
       "sha256": "8d783293da9fc57cf8d9d5cc52e72361806bb821aab6c3acb08706552a791d82"
     },

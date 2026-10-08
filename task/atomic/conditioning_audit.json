@@ -28,6 +28,7 @@
     "task/atomic/landmarks.py": "015a62be5899ecf77ad1c970aaf58fe0cf11e25e892f007063b6acdfc3c467a6",
     "task/atomic/materials.py": "0b42ca82fd5101a7b0dd409139181d629b443a8ed62d2253f545a60f5b9241b8",
     "task/atomic/selection.py": "db1cc0ecc6f4b28706bd83b09a92ed73f460e44d40438f240cfae5ff50a88068",
+    "task/atomic/slot_semantics.py": "98a7067a24099eb0b12e0c92161de5e3a50fd8fbea01d23c89f4342196a666cd",
     "task/atomic/trajectory.py": "8d783293da9fc57cf8d9d5cc52e72361806bb821aab6c3acb08706552a791d82",
     "task/atomic/regions.py": "7ce7192569cc22285678c3cac6f59d9f62af13a18ef85b3e9a1b409077a5c753",
     "task/atomic/fit.py": "9b92e845e0309301ff083d61b5ccdf7d666855d2490a6ec43c6e8254c73ed509",
@@ -49,9 +50,9 @@
   "slots": 54,
   "factor_cells": 270,
   "status_counts": {
-    "L": 29,
+    "L": 32,
     "C": 0,
-    "G": 138,
+    "G": 135,
     "F": 0,
     "S": 70,
     "M": 5,
@@ -906,30 +907,30 @@
         "P": {
           "kind": "point",
           "concept": "Spout exit at P during flow.",
-          "status": "G",
-          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The isolated geometry-spout-point-1006 pair measured actual model/file/scale-bound mouth position at the first qualified source exit relative to the initial frozen cup opening: 33.8886/31.2354 mm XYZ error to [0,0,80] mm, tolerance 25 mm. Both prototype pours qualified; native false/true. Source-exit/first-transfer and measurement clocks independently reproduced. This validates this mouth point, not whole vessel or statistical steering.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-mouth-and-vessel-slot-correction"
         },
         "T": {
           "kind": "pose",
           "concept": "Spout exit pose T during flow.",
-          "status": "G",
-          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-spout-pose-1006 pair measured actual calibrated mouth pose relative to the live cup opening at first qualified source exit: 31.3584/29.2117 mm translation and 169.2742/169.6298 degrees full orientation to the 80 mm offset and minus-90-degree local-y target, tolerances 25 mm/30 degrees. Source qualification, current transfer cores and exact measurement/event clocks independently reproduced; both native tasks passed. Historical bottle_mouth_at_transfer source-pose labels are corrected to spout metadata with frozen values preserved. This is not the vessel center frame.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-mouth-and-vessel-slot-correction"
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Spout offset from destination opening.",
-          "status": "G",
-          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-spout-displacement-1006 pair measured live mouth-to-opening displacement at first qualified source exit: 38.3483/28.9051 mm error to [0,0,80] mm, tolerance 25 mm. Both prototype pours passed, native false/true. Actual source/transfer witnesses and measurement event clocks reproduced. This named local-frame offset is distinct from an initial frozen-world target.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-mouth-and-vessel-slot-correction"
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Spout axis relative to opening axis.",
-          "status": "G",
-          "audit": "Rigid functional-frame math available only after verifying a real mouth/spout tag and transfer event. A vessel centre is not a spout; no live spout evidence.",
-          "live_evidence": null
+          "status": "L",
+          "audit": "The geometry-spout-orientation-1006 pair measured actual mouth local-z direction relative to the negative live cup-opening x axis at first qualified source exit: 155.7347/155.5290 degrees error, tolerance 30 degrees. Both prototype pours qualified, both native tasks failed. Source/transfer and same-event axis witnesses independently reproduced. Roll is unrestricted; this does not measure full orientation or stream velocity.",
+          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-mouth-and-vessel-slot-correction"
         },
         "R": {
           "kind": "spatial_relation",
@@ -998,7 +999,7 @@
           "kind": "pose",
           "concept": "Source pose at pour event T.",
           "status": "G",
-          "audit": "Use source vessel orientation for T/O and a verified spout point for R. Generic rigid math exists; no spout or stream measurement was observed live.",
+          "audit": "Use source vessel orientation for T/O and a verified spout point for R. Live spout frames and source-qualification tilt witnesses exist on the named liquid prototypes; a distinct prompted vessel-pose/tilt experiment is required for this slot.",
           "live_evidence": null
         },
         "D": {
@@ -1012,14 +1013,14 @@
           "kind": "relative_orientation",
           "concept": "Source rotation relative to destination/vertical.",
           "status": "G",
-          "audit": "Use source vessel orientation for T/O and a verified spout point for R. Generic rigid math exists; no spout or stream measurement was observed live.",
+          "audit": "Use source vessel orientation for T/O and a verified spout point for R. Live spout frames and source-qualification tilt witnesses exist on the named liquid prototypes; a distinct prompted vessel-pose/tilt experiment is required for this slot.",
           "live_evidence": null
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Spout above destination during tilt.",
           "status": "G",
-          "audit": "Use source vessel orientation for T/O and a verified spout point for R. Generic rigid math exists; no spout or stream measurement was observed live.",
+          "audit": "Use source vessel orientation for T/O and a verified spout point for R. Live spout frames and source-qualification tilt witnesses exist on the named liquid prototypes; a distinct prompted vessel-pose/tilt experiment is required for this slot.",
           "live_evidence": null
         }
       }
@@ -1039,9 +1040,9 @@
         "T": {
           "kind": "pose",
           "concept": "Source vessel frame at T during transfer.",
-          "status": "L",
-          "audit": "The geometry-source-candidates-1006 pair measured the actual model/file/scale-bound bottle mouth at first qualified cohort transfer: 36.4636/28.0270 mm translation and 165.8209/168.0390 degrees full orientation. Both atomic prototype pours passed (required_count=1), both native tasks failed. All 16 retained destination crossings reproduced with consistent source hold/tilt/cohort witnesses. This validates these named mouth frames and SE(3) measurements, not whole-fluid quantity, volume or continuous finite-body passage.",
-          "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#october-8-completed-source-candidate-validation"
+          "status": "G",
+          "audit": "Rigid point/frame geometry available. Bind to a calibrated landmark and explicit completion predicate; family recognition and live validation are separate.",
+          "live_evidence": null
         },
         "D": {
           "kind": "relative_displacement",

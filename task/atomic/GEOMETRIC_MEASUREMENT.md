@@ -2168,3 +2168,52 @@ runs already frozen under `5377a1b` keep their original snapshot/count evidence.
 A fresh immutable pair is needed to validate this new history capture live.
 
 Selection history gate: **444 atomic tests passed**, including earlier-sample corruption, gaps, contact loss, capped-history partial status and MD/HTML evidence separation.
+
+
+## October 8: mouth and vessel slot correction
+
+The taxonomy defines `source pour pose` as the source vessel frame or mesh
+center. Historical `bottle_mouth_at_transfer` programs used the actual
+model-calibrated source-mouth frame with that slot label. `slot_semantics.py`
+now groups such a measurement under **spout** only when its selector exactly
+matches the stage recognizer's source-mouth opening. Both report formats show
+the declared and effective slots and reason. Frozen programs, delivered prompts,
+raw measurements and native/atomic outcomes remain intact. This is a metadata
+correction, not a new policy execution or a change to the numeric target.
+The historical mouth result therefore does not validate the vessel-pose T cell.
+
+Four isolated spout pairs have completed under `dc668cb`, with independently
+consistent source-exit and first-transfer witnesses plus exact event/measurement
+clock bindings. Both arms of all four qualified the one-particle prototype.
+
+| Prompted factor | Baseline error | Conditioned error | Units | Target / tolerance | Native success B/C |
+|---|---:|---:|---|---|---|
+| Initial frozen-frame mouth point | 33.888596 | 31.235449 | mm | [0,0,80] mm in initial cup-opening frame / 25 mm | false / true |
+| Live mouth pose translation | 31.358418 | 29.211717 | mm | [0,0,80] mm in live cup-opening frame / 25 mm | true / true |
+| Live mouth pose full orientation | 169.274196 | 169.629843 | degrees | -90 degrees about opening y / 30 degrees | true / true |
+| Live mouth displacement | 38.348282 | 28.905101 | mm | [0,0,80] mm in current opening axes / 25 mm | false / true |
+| Live mouth local-z direction | 155.734678 | 155.529033 | degrees | negative opening x direction, roll unrestricted / 30 degrees | false / false |
+
+Actual values demonstrate measured target misses; a native pour can succeed
+while missing the requested mouth pose. These are one episode per arm and do
+not establish statistical steerability. The initial point and current offset
+are separate targets if the cup moves. The above/point-corridor pair is still
+collecting. Raw hashes and independent boundary summaries are retained in each
+suite's `independent-spout-boundary-summary.json`.
+
+### Distinct vessel-center pose trial
+
+`generate_vessel_pose_suite.py` adds an actual model/file/scale-bound vessel
+mesh-bounds-center frame with the source root axes. The target is derived from
+the reviewed mouth-center displacement so that the desired bottle mouth would
+be [0,0,80] mm in the live opening frame at the declared body orientation.
+The center target is approximately [108.535729, 0.000000, 80.000000] mm and
+-90 degrees about opening y, with separate 25 mm/30 degree tolerances, at the
+first qualified particle transfer. Exact values and rigid-frame composition
+are retained in `clone-provenance.json`. It is not an arbitrary IK feasibility
+certificate or a target fitted to policy outcomes. Both fresh programs correct
+the existing mouth slot to spout and add identical body-pose scoring; the
+conditioned append names only the vessel-center goal. This trial preserves
+physical recognition and does not certify full fluid quantity or density.
+
+Mouth/body metadata and target-composition gate: **446 atomic tests passed**.
