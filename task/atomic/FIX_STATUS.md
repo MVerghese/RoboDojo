@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **359 offline atomic tests**. Dated sections below
+The current source passes **365 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -366,3 +366,29 @@ verified pairs and 1,160 reproduced event scores with zero arithmetic mismatches
 Stage-only replay proofs remain separate. Single-ancestor routes inside concrete
 dependency graphs are now implemented and host-validated; merged dependencies
 and unresolved stateful programs remain unsupported.
+
+
+### Distinct physical target regions (October 7)
+
+Neighboring xylophone hit landmarks are about 42 mm apart; the original 40 mm
+recognition neighborhoods overlap. A real impact near the preceding landmark
+could therefore qualify for the next one. The native collision actor combines
+bars into one mesh, so its collider path cannot identify a bar.
+
+The optional `target_candidates` and `target_identity_margin_m` fields now
+require actual force-bearing contact points to be closer to the requested live
+landmark than to every competing live landmark by the declared margin. The
+reviewed profile uses all eight physical `hit_0` through `hit_7` frames and a
+2 mm distance margin. Ties, coincident landmark positions and neighboring-region
+contacts do not qualify. Tool/target radii, held-force interval, pre-impact speed,
+impulse and held retraction requirements remain in effect.
+
+Each qualifying event retains every candidate descriptor, resolved pose/source,
+physics step, selected index and contact distances. Independent validation
+recomputes assignment from those retained points/poses and excludes inconsistent
+windows from geometric aggregates. This certifies contact in a declared nearest-
+landmark region, not an exclusive single-bar hit, calibrated bar surface identity
+or musical timing. Multiple simultaneous contacts may include other regions.
+Geometric conditioning still measures all pair contacts at the event, so its
+maximum contact error can exceed the qualifying subset's recognition radius.
+Older frozen radius-only reports retain their declared scope.

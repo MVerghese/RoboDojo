@@ -110,11 +110,21 @@ def audit_selection(selection):
 
 
 def apply_recognition_validation(atomic, output):
-    if (atomic.get('recognition') or {}).get('kind') == 'held_tool_strike':
+    config=atomic.get('recognition') or {}
+    if config.get('kind') == 'held_tool_landmark_contact' and 'target_candidates' in config:
+        from task.atomic.target_regions import validate_target_region_witness
+        event=atomic.get('physical_events',{}).get('contact')
+        checks=validate_target_region_witness(config,event) if event is not None else {}
+        failed=[key for key,value in checks.items() if not value]
+        witness={'status':'unobserved' if event is None else 'inconsistent_evidence' if failed else 'consistent_evidence',
+                 'checks':checks,'failed_checks':failed}
+        invalid={'contact'} if failed else set()
+    elif config.get('kind') == 'held_tool_strike':
         from scripts.atomic.validate_strike_evidence import validate_strike
         witness = validate_strike(atomic)
         window_errors = {'event_order', 'elapsed_steps', 'same_arm_hold_interval',
                          'retraction_rise_from_raw_poses', 'contiguous_retraction_samples'}
+        window_errors.update(name for name in witness.get('failed_checks',[]) if name.startswith('target_region_'))
         invalid = {'impact', 'retracted', 'strike'} if window_errors.intersection(witness.get('failed_checks', [])) else set()
     else:
         from task.atomic.recognition_validation import validate_recognition_window

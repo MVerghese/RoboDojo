@@ -7391,7 +7391,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "bac20772c18ac4154b489b0021d06af37c1a769faa3ea00ef4f2874ae4b1122e"
+      "sha256": "660a517b22a4201cdb1de991b821edddc173b2e5529ec9cf6414ece970f8f574"
     },
     {
       "path": "task/atomic/diagnostics.py",
@@ -7484,6 +7484,10 @@
     {
       "path": "task/atomic/contact_validation.py",
       "sha256": "ce6a29ddb272a783872b632f96e2eebbb6fb84bfaf3931f7ec24b92049be7c5e"
+    },
+    {
+      "path": "task/atomic/target_regions.py",
+      "sha256": "49309d9d5c592f62d76cbabb87dd3dea50e515297bc742860e82ea08025061fa"
     },
     {
       "path": "src/eval_client/eval_env.py",

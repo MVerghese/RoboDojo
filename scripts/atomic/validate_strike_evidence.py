@@ -56,6 +56,9 @@ def validate_strike(stage):
         points = np.asarray(impact['contact_points'], dtype=float)
         rows = impact['tool_target_contacts']
         checks['contact_point_count'] = points.shape == (len(rows), 3) and len(rows) > 0
+        if 'target_candidates' in config:
+            from task.atomic.target_regions import validate_target_region_witness
+            checks.update(validate_target_region_witness(config,impact))
         distances = {}
         for side in ('tool', 'target'):
             distances[side] = np.linalg.norm(points-np.asarray(impact[f'{side}_landmark_position']), axis=1)

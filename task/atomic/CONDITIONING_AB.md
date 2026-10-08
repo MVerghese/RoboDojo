@@ -829,3 +829,22 @@ DAG. `prefix_stage_ids` records the verified route. The complete recorded contro
 trace is preserved; independent peer recognizers are omitted. Merged dependencies,
 noninitial route roots and unresolved gates/repeats/choices remain rejected.
 This extension has host validation; its dedicated live proof is pending.
+
+### Matched distinct strike target regions
+
+Generate a fresh pair from the reviewed eight-strike contact-frame suite:
+
+```bash
+python scripts/atomic/generate_strike_region_suite.py \
+  --source-suite /path/contact-frame-suite/suite.json \
+  --output-dir /path/fresh-strike-region-suite
+```
+
+Both arms receive the same stricter recognition settings: all eight live hit
+landmarks, with 2 mm minimum distance advantage for the requested target.
+The baseline/conditioned prompts and all geometric scoring definitions are
+preserved exactly from the source pair. This isolates an instrumentation change;
+it does not create a new prompt treatment. Freeze/package both arms together.
+The provenance file lists source hashes and the exact changed fields. These
+regions distinguish overlapping contact neighborhoods; they are not a claim
+of calibrated bar surfaces, exclusive single-key contact or musical timing.

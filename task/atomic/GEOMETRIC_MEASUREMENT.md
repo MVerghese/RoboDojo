@@ -3,11 +3,12 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 359 host tests; completed bowl, multiple-boundary button
+Current verification: 365 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs; independent support,
 finger-force and explicit contact-frame snapshot audits. A fresh 16-run contact-
 binding A/B batch is collecting. Explicit contact-frame pose/orientation has host
-validation; eight additional matched contact-frame runs are submitting at high-9000. Cloth force/material correspondence, unique task creases, full
+validation; all eight additional matched contact-frame runs are collected. A fresh pair
+with distinct strike target regions is being prepared at high-9000. Cloth force/material correspondence, unique task creases, full
 layering/volume transfer and general graph/game/material state restoration remain
 limited. Dated evidence sections retain their earlier snapshots; latest proof
 details are at the end of this document.
@@ -1186,3 +1187,29 @@ as do unresolved repeats, gates, choices and object-label templates.
 Host tests cover independent peer order, exact timed activation, trace preservation,
 required contact loss, noninitial roots and merged-parent rejection. Live proof
 of this graph-route extension remains pending.
+
+
+### Distinct physical target regions (October 7)
+
+Neighboring xylophone hit landmarks are about 42 mm apart; the original 40 mm
+recognition neighborhoods overlap. A real impact near the preceding landmark
+could therefore qualify for the next one. The native collision actor combines
+bars into one mesh, so its collider path cannot identify a bar.
+
+The optional `target_candidates` and `target_identity_margin_m` fields now
+require actual force-bearing contact points to be closer to the requested live
+landmark than to every competing live landmark by the declared margin. The
+reviewed profile uses all eight physical `hit_0` through `hit_7` frames and a
+2 mm distance margin. Ties, coincident landmark positions and neighboring-region
+contacts do not qualify. Tool/target radii, held-force interval, pre-impact speed,
+impulse and held retraction requirements remain in effect.
+
+Each qualifying event retains every candidate descriptor, resolved pose/source,
+physics step, selected index and contact distances. Independent validation
+recomputes assignment from those retained points/poses and excludes inconsistent
+windows from geometric aggregates. This certifies contact in a declared nearest-
+landmark region, not an exclusive single-bar hit, calibrated bar surface identity
+or musical timing. Multiple simultaneous contacts may include other regions.
+Geometric conditioning still measures all pair contacts at the event, so its
+maximum contact error can exceed the qualifying subset's recognition radius.
+Older frozen radius-only reports retain their declared scope.

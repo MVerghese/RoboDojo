@@ -84,8 +84,15 @@ def validate_recognition(config, family, validate_selector):
         raise ValueError(f'unsupported physical recognizer {kind!r} for {family}')
     fields = SCHEMAS[kind][1] | {'kind'}
     optional = {'flow', 'source_exit'} if kind in ('rigid_material_transfer', 'fluid_material_transfer') else set()
+    if kind in ('held_tool_strike','held_tool_landmark_contact'):
+        optional={'target_candidates','target_identity_margin_m'}
     if set(config) - optional != fields:
         raise ValueError(f'{kind} requires exactly {sorted(fields)}')
+    if {'target_candidates','target_identity_margin_m'} & set(config):
+        if not {'target_candidates','target_identity_margin_m'} <= set(config):
+            raise ValueError('target regions require both candidates and identity margin')
+        from task.atomic.target_regions import validate_target_regions
+        validate_target_regions(config,validate_selector)
     if 'flow' in config:
         from task.atomic.flow import validate_flow
         validate_flow(config['flow'], validate_selector)
@@ -647,9 +654,24 @@ class PhysicalRecognizer:
         tool_distance = np.linalg.norm(points - tool, axis=1)
         target_distance = np.linalg.norm(points - target, axis=1)
         eligible = (tool_distance <= self.c['tool_radius_m']) & (target_distance <= self.c['target_radius_m'])
+        identity=None
+        if 'target_candidates' in self.c:
+            from task.atomic.target_regions import region_membership
+            frames=[self.session._resolve_with_source(selector) for selector in self.c['target_candidates']]
+            poses=[np.asarray(pose).tolist() for pose,source in frames]
+            index=self.c['target_candidates'].index(self.c['target_point'])
+            membership=region_membership(points,poses,index,self.c['target_identity_margin_m'])
+            eligible &= np.asarray(membership['eligible'],dtype=bool)
+            identity={'kind':'nearest_landmark_region','candidate_selectors':deepcopy(self.c['target_candidates']),
+                'candidate_poses':poses,'candidate_sources':[{**source,'physics_step':self.contacts.steps} for pose,source in frames],
+                'target_index':index,'margin_m':self.c['target_identity_margin_m'],
+                'physics_step':self.contacts.steps,'frame':'environment_local_world',
+                'all_contact_points':points.tolist(),'all_contact_assignments':membership,
+                **{key:np.asarray(values)[eligible].tolist() for key,values in membership.items() if key!='eligible'}}
         rows = [row for row, accept in zip(pair['contacts'], eligible) if accept]
         impulse = sum(float(np.linalg.norm(row['impulse'])) for row in rows)
         return {'tool_target_contacts':rows,'contact_points':points[eligible].tolist(),'total_impulse_ns':impulse,
+                **({'target_identity':identity} if identity is not None else {}),
                 'tool_landmark_position':tool.tolist(),'target_landmark_position':target.tolist(),
                 'tool_landmark_distances_m':tool_distance[eligible].tolist(),
                 'target_landmark_distances_m':target_distance[eligible].tolist()}
@@ -702,6 +724,7 @@ class PhysicalRecognizer:
         speed=-float(velocity@normal)
         evidence=self._landmark_contact(pair)
         self.metrics.update(toward_surface_speed_m_s=speed,total_impulse_ns=evidence['total_impulse_ns'])
+        if 'target_identity' in evidence:self.metrics['target_identity']=deepcopy(evidence['target_identity'])
         if speed<self.c['min_approach_speed_m_s'] or not evidence['tool_target_contacts'] or evidence['total_impulse_ns']<self.c['min_impulse_ns']:
             return
         impact={'held_contact':hold,'approach_samples':previous,'relative_velocity_m_s':velocity.tolist(),
