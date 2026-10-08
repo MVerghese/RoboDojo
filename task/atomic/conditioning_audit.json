@@ -10,10 +10,11 @@
     "task/atomic/surfaces.py": "9969622ebca865b665008ddf3e3c1258ef5ca492462d52ccdd11338783d27331",
     "task/atomic/contacts.py": "6a35bfae2d344ebbca1096a9004c48922367f3b0dd0afc9f4a886adcefeb9ed4",
     "task/atomic/support_validation.py": "5ce41213101b6ed6f373208f8d6aeaac5d17a334f266b45598178bc4e0c7ed9a",
+    "task/atomic/settling_validation.py": "71f4f452fe1b3a4d968430bcd51abf0403379f761e50be5df036cbd2adcfa5c9",
     "task/atomic/contact_validation.py": "ce6a29ddb272a783872b632f96e2eebbb6fb84bfaf3931f7ec24b92049be7c5e",
     "task/atomic/target_regions.py": "49309d9d5c592f62d76cbabb87dd3dea50e515297bc742860e82ea08025061fa",
     "task/atomic/kinematics.py": "e419af221937a6621f12a7b8b69326f0df7a14a2bf2296c3faae01f825aeffed",
-    "task/atomic/recognizers.py": "f4c7668d360719a8844a5ec4f5a8315fc6b7392eafef8060c3a7f51a7b84aa1a",
+    "task/atomic/recognizers.py": "75dad73e3d3a11d89ce433a61617b7820b33df35c9bafa9ad3b81706d389a036",
     "task/atomic/twist_validation.py": "67c94c6144d26207d339d3a3e6316306dc7c6f0fe9407975db0fafed186756bf",
     "task/atomic/diagnostics.py": "8a012fc51aad60c978bde7206497e880cb869893c3b1c9140225806f64b1c569",
     "task/atomic/recognition_validation.py": "3e6c49ee5584ef536678151972bfb18d93aca342c73de6bd3beaca105d431001",
@@ -66,28 +67,28 @@
           "kind": "pose",
           "concept": "Select by initial pose T.",
           "status": "L",
-          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in seven collected episodes (displacement baseline still pending at this snapshot). Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
+          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in all eight collected episodes. Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
           "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#isolated-initial-referent-factors"
         },
         "D": {
           "kind": "relative_displacement",
           "concept": "Select object offset from a named landmark.",
           "status": "L",
-          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in seven collected episodes (displacement baseline still pending at this snapshot). Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
+          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in all eight collected episodes. Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
           "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#isolated-initial-referent-factors"
         },
         "O": {
           "kind": "relative_orientation",
           "concept": "Select object rotated relative to a landmark.",
           "status": "L",
-          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in seven collected episodes (displacement baseline still pending at this snapshot). Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
+          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in all eight collected episodes. Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
           "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#isolated-initial-referent-factors"
         },
         "R": {
           "kind": "spatial_relation",
           "concept": "Select object left of/inside another object.",
           "status": "L",
-          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in seven collected episodes (displacement baseline still pending at this snapshot). Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
+          "audit": "The geometry-referent suites resolved unique initial seed-0 block targets using separately isolated pose, displacement, full orientation and point-scope spatial-relation factors. Retained candidate/target arithmetic and actual selected-object roots, force fingers, arm and step independently reproduced in all eight collected episodes. Every observed first choice was block_2 rather than the geometric target. This validates these immutable initial candidate/selection measurements, not successful geometric following, whole-object relations or arbitrary referent roles.",
           "live_evidence": "task/atomic/GEOMETRIC_MEASUREMENT.md#isolated-initial-referent-factors"
         }
       }

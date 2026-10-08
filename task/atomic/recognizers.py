@@ -503,6 +503,7 @@ class PhysicalRecognizer:
                             transported_while_held=bool(self.state.get('transported')))
         if touch:
             self.state.pop('settling', None)
+            self.state.pop('settling_samples', None)
             self.state.pop('separated_since_step', None)
             self.state.pop('separated_steps', None)
             if 'release' in self.events and not self.session.success:
@@ -548,6 +549,7 @@ class PhysicalRecognizer:
         old = self.state.get('settling')
         if not support['contacts']:
             self.state.pop('settling', None)
+            self.state.pop('settling_samples', None)
             return
         stable = (old is not None and np.linalg.norm(pose[:3] - old[0][:3]) <= self.c['max_position_step_m']
                   and _angular_error(pose[3:], old[0][3:]) <= self.c['max_angle_step_rad']
@@ -556,6 +558,15 @@ class PhysicalRecognizer:
         count = old[1] + 1 if stable else 1
         anchor = old[2] if stable else pose.copy()
         self.state['settling'] = (pose.copy(), count, anchor)
+        sample={'physics_step':self.contacts.steps,'pose':pose.tolist(),
+            'dt_s':getattr(self.session.env,'dt',None),'robot_touching':False,
+            'support':deepcopy(support)}
+        if stable:
+            self.state['settling_samples'].append(sample)
+            del self.state['settling_samples'][:-self.c['settle_steps']]
+        else:
+            self.state['settling_samples']=[sample]
+            self.state['settle_anchor_step']=self.contacts.steps
         self.metrics.update(phase='settling', stable_steps=count,
                             settle_displacement_m=float(np.linalg.norm(pose[:3] - anchor[:3])),
                             settle_angle_rad=_angular_error(pose[3:], anchor[3:]))
@@ -566,6 +577,8 @@ class PhysicalRecognizer:
                 settle_angle_rad=_angular_error(pose[3:], anchor[3:]),
                 separated_since_step=self.state['separated_since_step'],
                 separated_steps=self.state['separated_steps'], robot_touching=False,
+                settling_samples=self.state['settling_samples'],settle_anchor_pose=anchor.tolist(),
+                settle_anchor_step=self.state['settle_anchor_step'],
                 post_release_recontacts=deepcopy(self.state.get('post_release_recontacts', {})))
 
     def _held_tool_push(self):

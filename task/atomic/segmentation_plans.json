@@ -7391,7 +7391,7 @@
     },
     {
       "path": "task/atomic/recognizers.py",
-      "sha256": "f4c7668d360719a8844a5ec4f5a8315fc6b7392eafef8060c3a7f51a7b84aa1a"
+      "sha256": "75dad73e3d3a11d89ce433a61617b7820b33df35c9bafa9ad3b81706d389a036"
     },
     {
       "path": "task/atomic/twist_validation.py",
@@ -7484,6 +7484,10 @@
     {
       "path": "task/atomic/support_validation.py",
       "sha256": "5ce41213101b6ed6f373208f8d6aeaac5d17a334f266b45598178bc4e0c7ed9a"
+    },
+    {
+      "path": "task/atomic/settling_validation.py",
+      "sha256": "71f4f452fe1b3a4d968430bcd51abf0403379f761e50be5df036cbd2adcfa5c9"
     },
     {
       "path": "task/atomic/contact_validation.py",

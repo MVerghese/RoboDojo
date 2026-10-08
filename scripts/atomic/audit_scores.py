@@ -138,6 +138,14 @@ def apply_recognition_validation(atomic, output):
             return
         invalid = set(witness.get('invalid_event_names', []))
     output['recognition_witness'] = witness
+    if config.get('kind')=='supported_release':
+        from task.atomic.settling_validation import validate_settling
+        motion=validate_settling(atomic);output['settling_witness']=motion
+        if motion['status']=='inconsistent_evidence':
+            invalid.add('settled')
+            witness['status']='inconsistent_evidence'
+            witness.setdefault('failed_checks',[]).extend(motion['failed_checks'])
+            witness['invalid_event_names']=sorted(set(witness.get('invalid_event_names',[]))|{'settled'})
     if not invalid:
         return
     conditions = {c['id']: c for c in atomic.get('conditions', [])}

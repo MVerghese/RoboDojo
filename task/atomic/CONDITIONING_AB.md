@@ -866,3 +866,13 @@ finger/constraint force rows. Running `scripts/atomic/audit_scores.py` applies
 independent history validation automatically, including cached-report refresh.
 Old/truncated histories stay partial. Keep both arms on a newly frozen runtime;
 changing requested orientations cannot replace missing physical twist history.
+
+### Calibrate supported-release observation duration
+
+`settle_steps` is a shared recognition parameter, separate from geometric
+conditioning. For a duration probe, keep both prompts and all geometric targets
+fixed and package both arms with the same new count. The current fresh bowl
+profile uses twelve adjacent states. Their actual duration is eleven physics
+intervals, measured from saved dt. Raw settling pose/support windows are checked
+automatically by `audit_scores.py`, including cached report refresh. Historical
+runs cannot supply missing poses, and bounded stability does not prove future rest.

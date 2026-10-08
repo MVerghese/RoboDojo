@@ -3,7 +3,7 @@
 Updated 2026-10-07. Describes the current `benchmark/atomic-geometry` source.
 Frozen runs retain their packaged implementation; consult each runtime hash.
 
-Current verification: 378 host tests; completed bowl, multiple-boundary button
+Current verification: 384 host tests; completed bowl, multiple-boundary button
 and single-ancestry graph selected-stage replay proofs. All sixteen contact-binding,
 eight contact-frame, eight isolated referent-factor, two nominal grasp-frame and
 two distinct strike-region cases are collected and independently audited.
@@ -1362,3 +1362,27 @@ of control 75, with four substeps dropped. Its scoped orientation/velocity
 comparison is pending; observed source capture does not prove replay fidelity.
 Evidence: `geometry-kinematics-prefix-capture-1006/runs/*/eval_report.json` and
 `geometry-kinematics-replay-validation-1006/capture-source.json`.
+
+
+### Independent supported-release settling windows
+
+Fresh supported-release events retain the required window of adjacent physics
+poses, support snapshots, recorded robot-separation states and simulation dt,
+plus the original settling anchor pose/step. Motion or loss of support resets
+that window; a one-jaw brush also restarts separation and settling. The observer
+still uses the same configured per-step and anchor-relative position/angle bounds.
+
+The independent validator reconstructs every retained position/rotation change,
+anchor-relative drift, final metrics, actual window duration, clock continuity,
+object/support identity and raw upward support forces. Equal endpoints cannot
+hide intermediate motion. Contradictory windows exclude settled-event geometry
+from aggregates while preserving its arithmetic and native/atomic outcomes.
+Historical missing pose windows stay partial; lifecycle-cached support forces
+retain their separate persistence limitation.
+
+A window of N adjacent sampled states spans (N-1)*dt seconds. It certifies the
+declared bounded-motion window, not zero velocity or future immobility. A fresh
+bowl pair uses twelve states in both arms instead of the earlier three, with
+identical task prompts and geometric targets. Its measured duration and pose/force
+proof are pending. Six host regressions cover hidden intermediate motion/rotation,
+clock/force/root/recontact corruption, cached exclusion and runtime history reset.

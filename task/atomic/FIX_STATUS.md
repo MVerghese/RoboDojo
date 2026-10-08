@@ -6,7 +6,7 @@ and missing adapters. See [instrumentation evidence](INSTRUMENTATION_AUDIT.md),
 
 ## Current verification snapshot (October 7)
 
-The current source passes **378 offline atomic tests**. Dated sections below
+The current source passes **384 offline atomic tests**. Dated sections below
 retain earlier checkpoints of implementation and verification. Current work adds
 model-bound ordered material curves, continuous edge-interior Hausdorff distance,
 bounded initial-layout candidate discovery, local closed shaft-section fit,
@@ -18,10 +18,12 @@ missing physical witnesses are reported separately.
 
 Explicit contact-frame adapters now cover the eight formerly F pose/orientation
 cells: real contact coordinates plus same-step named robot-link/tool axes.
-These are generic G adapters pending their fresh live evidence, not surface-
-normal frames. All eight fresh A/B cases are submitted at high-9000 from frozen
-`ecd7003`. Current source adds independent selected-referent force/root/arm/time
-validation and root-alias rejection; historical missing metadata stays partial.
+Specific pickup/direct-push/tool-touch cells now have independently checked live
+measurements; the source audit has 26 L cells, 141 G, 70 S, five M and 28 NA.
+These are physical link/tool axes, not surface-normal frames. All eight fresh
+contact-frame cases and later nominal/target-region/referent pairs are collected.
+Independent selected-referent force/root/arm/time validation and root-alias
+rejection also passed live; historical missing metadata stays partial.
 The single-ancestry graph prefix also passed live boundary validation, with
 0.000725 mm block-root drift; its subsequent selected placement failed.
 
@@ -453,3 +455,27 @@ requiring the completed-turn threshold. A measured 90 degree partial turn
 therefore stays a diagnostic with an unobserved completion event, not a successful
 twist or native task. The history cap is explicit; truncated histories remain
 partial. Empty invalid intervals do not repeatedly copy retained histories.
+
+
+### Independent supported-release settling windows
+
+Fresh supported-release events retain the required window of adjacent physics
+poses, support snapshots, recorded robot-separation states and simulation dt,
+plus the original settling anchor pose/step. Motion or loss of support resets
+that window; a one-jaw brush also restarts separation and settling. The observer
+still uses the same configured per-step and anchor-relative position/angle bounds.
+
+The independent validator reconstructs every retained position/rotation change,
+anchor-relative drift, final metrics, actual window duration, clock continuity,
+object/support identity and raw upward support forces. Equal endpoints cannot
+hide intermediate motion. Contradictory windows exclude settled-event geometry
+from aggregates while preserving its arithmetic and native/atomic outcomes.
+Historical missing pose windows stay partial; lifecycle-cached support forces
+retain their separate persistence limitation.
+
+A window of N adjacent sampled states spans (N-1)*dt seconds. It certifies the
+declared bounded-motion window, not zero velocity or future immobility. A fresh
+bowl pair uses twelve states in both arms instead of the earlier three, with
+identical task prompts and geometric targets. Its measured duration and pose/force
+proof are pending. Six host regressions cover hidden intermediate motion/rotation,
+clock/force/root/recontact corruption, cached exclusion and runtime history reset.
